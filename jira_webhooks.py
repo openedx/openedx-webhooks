@@ -1,3 +1,4 @@
+import os
 import json
 
 from flask import Flask, request
@@ -8,6 +9,12 @@ from urlobject import URLObject
 
 app = Flask(__name__)
 sentry = Sentry(app)
+
+username = os.environ.get("JIRA_USERNAME", None)
+password = os.environ.get("JIRA_PASSWORD", None)
+api = requests.Session()
+api.auth = (username, password)
+api.headers["Content-Type"] = "application/json"
 
 
 @app.route("/")
@@ -32,7 +39,7 @@ def issue_created():
     issue_url = URLObject(event["issue"]["self"])
     user_url = URLObject(event["user"]["self"])
     user_url = user_url.set_query_param("expand", "group")
-    user_resp = requests.get(user_url)
+    user_resp = api.get(user_url)
     if not user_resp.ok:
         raise requests.exceptions.RequestException(user_resp.text)
     user = user_resp.json()
@@ -46,7 +53,7 @@ def issue_created():
                 }]
             }
         }
-        issue_resp = requests.put(issue_url, data=json.dumps(body))
+        issue_resp = api.put(issue_url, data=json.dumps(body))
         if not issue_resp.ok:
             raise requests.exceptions.RequestException(issue_resp.text)
 
