@@ -45,17 +45,17 @@ def issue_created():
     user = user_resp.json()
     groups = {g["name"]: g["self"] for g in user["groups"]["items"]}
 
-    if "edx-employees" not in groups:
+    # skip "Needs Triage" if bug was created by edX employee
+    if "edx-employees" in groups:
+        transitions_url = issue_url.with_path(issue_url.path + "/transitions")
         body = {
-            "update": {
-                "labels": [{
-                    "add": "needs-triage",
-                }]
+            "transition": {
+                "name": "Open"
             }
         }
-        issue_resp = api.put(issue_url, data=json.dumps(body))
-        if not issue_resp.ok:
-            raise requests.exceptions.RequestException(issue_resp.text)
+        transition_resp = api.post(transitions_url, data=json.dumps(body))
+        if not transition_resp.ok:
+            raise requests.exceptions.RequestException(transition_resp.text)
 
     return "Processed"
 
