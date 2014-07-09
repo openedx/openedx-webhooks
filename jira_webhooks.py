@@ -48,9 +48,13 @@ def issue_created():
     # skip "Needs Triage" if bug was created by edX employee
     if "edx-employees" in groups:
         transitions_url = issue_url.with_path(issue_url.path + "/transitions")
+        transitions_resp = api.get(transitions_url)
+        if not transitions_resp.ok:
+            raise requests.exceptions.RequestException(transitions_resp.text)
+        transitions = {t["name"]: t["id"] for t in transitions_resp.json()["transitions"]}
         body = {
             "transition": {
-                "name": "Open"
+                "id": transitions["Open"]
             }
         }
         transition_resp = api.post(transitions_url, data=json.dumps(body))
