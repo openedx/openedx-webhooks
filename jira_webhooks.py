@@ -38,7 +38,7 @@ def issue_created():
     event = request.get_json()
     issue_url = URLObject(event["issue"]["self"])
     user_url = URLObject(event["user"]["self"])
-    user_url = user_url.set_query_param("expand", "group")
+    user_url = user_url.set_query_param("expand", "groups")
     user_resp = api.get(user_url)
     if not user_resp.ok:
         raise requests.exceptions.RequestException(user_resp.text)
