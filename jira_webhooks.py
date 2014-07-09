@@ -1,11 +1,13 @@
 import json
 
 from flask import Flask, request
+from raven.contrib.flask import Sentry
 import requests
 from urlobject import URLObject
 
 
 app = Flask(__name__)
+sentry = Sentry(app)
 
 
 @app.route("/")
