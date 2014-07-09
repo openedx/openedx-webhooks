@@ -1,0 +1,4 @@
+Flask==0.10.1
+requests==2.3.0
+URLObject==2.3.4
+gunicorn==19.0.0
