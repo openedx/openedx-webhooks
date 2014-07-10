@@ -1,4 +1,7 @@
+from __future__ import print_function
+
 import os
+import sys
 import json
 
 from flask import Flask, request
@@ -46,6 +49,7 @@ def issue_created():
     groups = {g["name"]: g["self"] for g in user["groups"]["items"]}
 
     # skip "Needs Triage" if bug was created by edX employee
+    transitioned = False
     if "edx-employees" in groups:
         transitions_url = issue_url.with_path(issue_url.path + "/transitions")
         transitions_resp = api.get(transitions_url)
@@ -60,7 +64,17 @@ def issue_created():
         transition_resp = api.post(transitions_url, data=json.dumps(body))
         if not transition_resp.ok:
             raise requests.exceptions.RequestException(transition_resp.text)
+        transitioned = True
 
+    # log to stderr
+    print(
+        "{key} created by {name} ({username}), {action}".format(
+            key=event["issue"]["key"], name=event["user"]["displayName"],
+            username=event["user"]["name"],
+            action="Transitioned to Open" if transitioned else "ignored",
+        ),
+        file=sys.stderr,
+    )
     return "Processed"
 
 
