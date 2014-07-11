@@ -38,8 +38,25 @@ def issue_created():
     Heroku's free plan, so it will be handled inline instead.
     (A worker dyno costs money.)
     """
-    event = request.get_json()
-    print(event, file=sys.stderr)
+    try:
+        event = request.get_json()
+    except ValueError:
+        raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
+
+    if app.debug:
+        print(json.dumps(event), file=sys.stderr)
+
+    issue_key = event["issue"]["key"]
+    issue_status = event["issue"]["fields"]["status"]["name"]
+    if issue_status != "Needs Triage":
+        print(
+            "{key} has status {status}, does not need to be processed".format(
+                key=issue_key, status=issue_status,
+            ),
+            file=sys.stderr,
+        )
+        return "issue does not need to be triaged"
+
     issue_url = URLObject(event["issue"]["self"])
     user_url = URLObject(event["user"]["self"])
     user_url = user_url.set_query_param("expand", "groups")
@@ -77,7 +94,7 @@ def issue_created():
     # log to stderr
     print(
         "{key} created by {name} ({username}), {action}".format(
-            key=event["issue"]["key"], name=event["user"]["displayName"],
+            key=issue_key, name=event["user"]["displayName"],
             username=event["user"]["name"],
             action="Transitioned to Open" if transitioned else "ignored",
         ),
