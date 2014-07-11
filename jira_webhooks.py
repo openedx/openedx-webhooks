@@ -28,7 +28,7 @@ api.headers["Content-Type"] = "application/json"
 def get(url):
     resp = requests.get(url)
     # check that we have JSON
-    resp.get_json()
+    resp.json()
     return resp
 
 
