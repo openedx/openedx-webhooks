@@ -26,7 +26,7 @@ api.headers["Content-Type"] = "application/json"
     max_tries=5,
 )
 def get(url):
-    resp = requests.get(url)
+    resp = api.get(url)
     # check that we have JSON
     resp.json()
     return resp
