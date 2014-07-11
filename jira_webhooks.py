@@ -8,7 +8,7 @@ from flask import Flask, request
 from raven.contrib.flask import Sentry
 import requests
 from urlobject import URLObject
-
+import backoff
 
 app = Flask(__name__)
 sentry = Sentry(app)
@@ -18,6 +18,18 @@ password = os.environ.get("JIRA_PASSWORD", None)
 api = requests.Session()
 api.auth = (username, password)
 api.headers["Content-Type"] = "application/json"
+
+
+@backoff.on_exception(
+    backoff.expo,
+    (requests.exceptions.RequestException, ValueError),
+    max_tries=5,
+)
+def get(url):
+    resp = requests.get(url)
+    # check that we have JSON
+    resp.get_json()
+    return resp
 
 
 @app.route("/")
@@ -60,7 +72,7 @@ def issue_created():
     issue_url = URLObject(event["issue"]["self"])
     user_url = URLObject(event["user"]["self"])
     user_url = user_url.set_query_param("expand", "groups")
-    user_resp = api.get(user_url)
+    user_resp = get(user_url)
     if not user_resp.ok:
         raise requests.exceptions.RequestException(user_resp.text)
     user = user_resp.json()
@@ -70,7 +82,7 @@ def issue_created():
     transitioned = False
     if "edx-employees" in groups:
         transitions_url = issue_url.with_path(issue_url.path + "/transitions")
-        transitions_resp = api.get(transitions_url)
+        transitions_resp = get(transitions_url)
         if not transitions_resp.ok:
             raise requests.exceptions.RequestException(transitions_resp.text)
         transitions = {t["name"]: t["id"] for t in transitions_resp.json()["transitions"]}
