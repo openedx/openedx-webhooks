@@ -56,9 +56,16 @@ def issue_created():
         if not transitions_resp.ok:
             raise requests.exceptions.RequestException(transitions_resp.text)
         transitions = {t["name"]: t["id"] for t in transitions_resp.json()["transitions"]}
+        if "Open" in transitions:
+            new_status = "Open"
+        elif "Design Backlog" in transitions:
+            new_status = "Design Backlog"
+        else:
+            raise ValueError("No valid transition! Possibilities are {}".format(transitions.keys()))
+
         body = {
             "transition": {
-                "id": transitions["Open"]
+                "id": transitions[new_status],
             }
         }
         transition_resp = api.post(transitions_url, data=json.dumps(body))
