@@ -39,6 +39,7 @@ def issue_created():
     (A worker dyno costs money.)
     """
     event = request.get_json()
+    print(event, file=sys.stderr)
     issue_url = URLObject(event["issue"]["self"])
     user_url = URLObject(event["user"]["self"])
     user_url = user_url.set_query_param("expand", "groups")
