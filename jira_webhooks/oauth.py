@@ -62,7 +62,7 @@ def jira_request(url, data=None, headers=None, method="GET",
     headers = headers or {}
     headers.setdefault("Accept", "application/json")
     if data:
-        kwargs["content_type"] = 'application/x-www-form-urlencoded'
+        kwargs["content_type"] = "application/json"
     if data and not isinstance(data, basestring):
         data = json.dumps(data)
     return jira.request(
