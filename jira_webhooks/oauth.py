@@ -67,6 +67,5 @@ def jira_request(url, data=None, headers=None, method="GET",
         data = json.dumps(data)
     return jira.request(
         url=url, data=data, headers=headers,
-        method=method, # content_type=content_type,
-        *args, **kwargs
+        method=method, *args, **kwargs
     )
