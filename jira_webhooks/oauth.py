@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import os
+import json
 
 from flask_oauthlib.client import OAuth
 from oauthlib.oauth1 import SIGNATURE_RSA
@@ -61,7 +62,7 @@ def jira_request(url, data=None, headers=None, method="GET",
     headers = headers or {}
     headers.setdefault("Accept", "application/json")
     if data and not isinstance(data, basestring):
-        data = jira.dumps(data)
+        data = json.dumps(data)
     return jira.get(
         url=url, data=data, headers=headers,
         method=method, content_type=content_type,
