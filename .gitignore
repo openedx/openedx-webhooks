@@ -1,1 +1,4 @@
 *.pyc
+jira.pem
+jira.pub
+jira.uuid

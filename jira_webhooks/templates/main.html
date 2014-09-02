@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+    <body>
+        <h1>JIRA Webhooks Home</h1>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+    <a href="{{ url_for("login") }}">Login</a>
+    </body>
+</html>
