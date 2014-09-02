@@ -53,7 +53,6 @@ def get_jira_token(token=None):
 
 @backoff.on_exception(backoff.expo, ValueError, max_tries=5)
 def jira_request(url, data=None, headers=None, method="GET",
-                 content_type="application/json",
                  *args, **kwargs):
     """
     JIRA sometimes returns an empty response to a perfectly valid GET request,
@@ -62,12 +61,10 @@ def jira_request(url, data=None, headers=None, method="GET",
     """
     headers = headers or {}
     headers.setdefault("Accept", "application/json")
-    headers.setdefault("Content-Type", content_type)
-    # if data and not isinstance(data, basestring):
-    #     data = json.dumps(data)
-    print("content_type = {}".format(content_type), file=sys.stderr)
+    if data and not isinstance(data, basestring):
+        data = json.dumps(data)
     return jira.request(
         url=url, data=data, headers=headers,
-        method=method, content_type=content_type,
+        method=method, # content_type=content_type,
         *args, **kwargs
     )
