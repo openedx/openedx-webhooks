@@ -15,7 +15,6 @@ from .models import db
 from bugsnag.flask import handle_exceptions
 
 app = Flask(__name__)
-app.debug = True
 handle_exceptions(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "secrettoeveryone")
