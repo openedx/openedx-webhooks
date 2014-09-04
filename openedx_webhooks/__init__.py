@@ -30,7 +30,7 @@ def index():
     return render_template("main.html")
 
 
-@app.route("/issue/created", methods=("POST",))
+@app.route("/jira/issue/created", methods=("POST",))
 def issue_created():
     """
     Received an "issue created" event from JIRA.
