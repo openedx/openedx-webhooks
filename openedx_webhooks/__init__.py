@@ -15,6 +15,7 @@ from .oauth import blueprint as oauth_blueprint, jira as oauth_jira
 from .oauth import jira_request
 from .models import db
 from .jira import Jira
+import bugsnag
 from bugsnag.flask import handle_exceptions
 
 app = Flask(__name__)
@@ -47,6 +48,7 @@ def jira_issue_created():
         event = request.get_json()
     except ValueError:
         raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
+    bugsnag.configure_request(meta_data={"event": event})
 
     if app.debug:
         print(json.dumps(event), file=sys.stderr)
@@ -125,13 +127,12 @@ def github_pull_request():
         event = request.get_json()
     except ValueError:
         raise ValueError("Invalid JSON from Github: {data}".format(data=request.data))
+    bugsnag_context = {"event": event}
+    bugsnag.configure_request(meta_data=bugsnag_context)
+
     pr = event["pull_request"]
-    if app.debug:
-        print(pr, file=sys.stderr)
 
     # get the list of organizations that the user is in
-    if not "user" in event:
-        print(pr, file=sys.stderr)
     orgs_resp = requests.get(event["user"]["organizations_url"])
     if not orgs_resp.ok:
         raise requests.exceptions.RequestException(orgs_resp.text)
@@ -169,6 +170,8 @@ def github_pull_request():
                 custom_fields["Repo"]: pr["base"]["repo"]["full_name"],
             }
         }
+        bugsnag_context["new_issue"] = new_issue
+        bugsnag.configure_request(meta_data=bugsnag_context)
         resp = jira.post("/rest/api/2/issue", as_json=new_issue)
         if resp.ok:
             return "created!"
