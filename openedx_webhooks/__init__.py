@@ -129,6 +129,16 @@ def github_pull_request():
     if app.debug:
         print(pr, file=sys.stderr)
 
+    # get the list of organizations that the user is in
+    orgs_resp = requests.get(event["user"]["organizations_url"])
+    if not orgs_resp.ok:
+        raise requests.exceptions.RequestException(orgs_resp.text)
+    orgs = set(org["login"] for org in orgs_resp.json())
+
+    if "edx" in orgs:
+        # not an open source pull request, don't create an issue for it
+        return "internal pull request"
+
     token, secret = oauth_jira.get_request_token()
     auth = OAuth1(
         client_key=os.environ["JIRA_CONSUMER_KEY"],
