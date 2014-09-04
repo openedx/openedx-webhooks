@@ -65,8 +65,10 @@ def get_jira_token(token=None):
 
 @blueprint.route('/jira')
 def jira_oauth():
-    return jira.authorize(callback=url_for('.jira_oauth_authorized',
-        next=request.args.get('next') or request.referrer or None))
+    return jira.authorize(callback=url_for(
+        '.jira_oauth_authorized',
+        next=request.args.get('next') or request.referrer or None
+    ))
 
 
 @blueprint.route("/jira/authorized")
@@ -106,6 +108,7 @@ github = oauth.remote_app(
     authorize_url=GITHUB_AUTHORIZE_URL,
 )
 
+
 @github.tokengetter
 def get_github_token(token=None):
     query = OAuthCredential.query.filter_by(name="github")
@@ -119,8 +122,11 @@ def get_github_token(token=None):
 
 @blueprint.route("/github")
 def github_oauth():
-    return github.authorize(callback=url_for('.github_oauth_authorized',
-        next=request.args.get('next') or request.referrer or None))
+    return github.authorize(callback=url_for(
+        '.github_oauth_authorized',
+        next=request.args.get('next') or request.referrer or None,
+        _external=True,
+    ))
 
 
 @blueprint.route("/github/authorized")
@@ -128,12 +134,16 @@ def github_oauth_authorized():
     resp = github.authorized_response()
     next_url = request.args.get('next') or url_for('index')
     if not resp:
-        flash("You denied the request to sign in.")
+        msg = "Access denied. Reason={reason} error={error}".format(
+            reason=request.args["error_reason"],
+            error=request.args["error_description"],
+        )
+        flash(msg)
         return redirect(next_url)
     creds = OAuthCredential(
         name="github",
-        token=resp["oauth_token"],
-        secret=resp["oauth_token_secret"],
+        token=resp["access_token"],
+        secret="",
         created_on=datetime.utcnow(),
     )
     db.session.add(creds)
