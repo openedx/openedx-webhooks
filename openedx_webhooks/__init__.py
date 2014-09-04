@@ -151,6 +151,8 @@ def github_pull_request():
         else:
             print(resp.json(), file=sys.stderr)
 
+    return "Don't know how to handle this.", 400
+
 
 if __name__ == "__main__":
     app.run()
