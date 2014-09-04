@@ -8,10 +8,13 @@ from urllib2 import URLError
 
 from flask import Flask, render_template, request, url_for, flash, redirect
 import requests
+from requests_oauthlib import OAuth1
+from oauthlib.oauth1 import SIGNATURE_RSA
 from urlobject import URLObject
-from .oauth import blueprint as oauth_blueprint
+from .oauth import blueprint as oauth_blueprint, jira as oauth_jira
 from .oauth import jira_request
 from .models import db
+from .jira import Jira
 from bugsnag.flask import handle_exceptions
 
 app = Flask(__name__)
@@ -31,7 +34,7 @@ def index():
 
 
 @app.route("/jira/issue/created", methods=("POST",))
-def issue_created():
+def jira_issue_created():
     """
     Received an "issue created" event from JIRA.
     https://developer.atlassian.com/display/JIRADEV/JIRA+Webhooks+Overview
@@ -104,6 +107,48 @@ def issue_created():
         file=sys.stderr,
     )
     return "Processed"
+
+
+@app.route("/github/pr", methods=("POST",))
+def github_pull_request():
+    try:
+        event = request.get_json()
+    except ValueError:
+        raise ValueError("Invalid JSON from Github: {data}".format(data=request.data))
+    pr = event["pull_request"]
+
+    token, secret = oauth_jira.get_request_token()
+    auth = OAuth1(
+        client_key=os.environ["JIRA_CONSUMER_KEY"],
+        rsa_key=os.environ["JIRA_RSA_KEY"],
+        signature_method=SIGNATURE_RSA,
+        resource_owner_key=token,
+        resource_owner_secret=secret,
+    )
+    jira = Jira(oauth_jira.base_url, auth=auth)
+    custom_fields = jira.custom_field_names
+
+    if event["action"] == "opened":
+        # create an issue on JIRA!
+        new_issue = {
+            "fields": {
+                "project": {
+                    "name": "Open Source Pull Requests",
+                },
+                "issuetype": {
+                    "name": "Pull Request Review",
+                },
+                "summary": pr["title"],
+                "description": pr["body"],
+                custom_fields["URL"] = pr["url"],
+                custom_fields["PR Number"] = pr["number"],
+            }
+        }
+        resp = jira.post("/rest/api/2/issue", as_json=new_issue)
+        if resp.ok:
+            return "created!"
+        else:
+            print(resp.json(), file=sys.stderr)
 
 
 if __name__ == "__main__":
