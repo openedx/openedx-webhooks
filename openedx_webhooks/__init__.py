@@ -116,6 +116,7 @@ def github_pull_request():
     except ValueError:
         raise ValueError("Invalid JSON from Github: {data}".format(data=request.data))
     pr = event["pull_request"]
+    print(pr, file=sys.stderr)
 
     token, secret = oauth_jira.get_request_token()
     auth = OAuth1(
