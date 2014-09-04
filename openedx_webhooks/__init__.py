@@ -142,7 +142,7 @@ def github_pull_request():
                 },
                 "summary": pr["title"],
                 "description": pr["body"],
-                custom_fields["URL"]: pr["url"],
+                custom_fields["URL"]: pr["html_url"],
                 custom_fields["PR Number"]: pr["number"],
                 custom_fields["Repo"]: pr["base"]["repo"]["full_name"],
             }
