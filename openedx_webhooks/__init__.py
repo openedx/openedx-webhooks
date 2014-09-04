@@ -16,7 +16,7 @@ from bugsnag.flask import handle_exceptions
 app = Flask(__name__)
 handle_exceptions(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
-app.secret_key = os.environ.get("SECRET_KEY", "secrettoeveryone")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "secrettoeveryone")
 db.init_app(app)
 
 
@@ -28,14 +28,14 @@ def index():
     return render_template("main.html")
 
 
-@app.route('/login')
-def login():
-    return jira.authorize(callback=url_for('oauth_authorized',
+@app.route('/oauth/jira')
+def jira_oauth():
+    return jira.authorize(callback=url_for('jira_oauth_authorized',
         next=request.args.get('next') or request.referrer or None))
 
 
-@app.route("/login/authorized")
-def oauth_authorized():
+@app.route("/oauth/jira/authorized")
+def jira_oauth_authorized():
     resp = jira.authorized_response()
     next_url = request.args.get('next') or url_for('index')
     if not resp:
