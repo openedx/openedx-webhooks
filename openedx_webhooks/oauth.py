@@ -125,7 +125,7 @@ def github_oauth():
 
 @blueprint.route("/github/authorized")
 def github_oauth_authorized():
-    resp = jira.authorized_response()
+    resp = github.authorized_response()
     next_url = request.args.get('next') or url_for('index')
     if not resp:
         flash("You denied the request to sign in.")
