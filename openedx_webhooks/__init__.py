@@ -133,7 +133,7 @@ def github_pull_request():
     pr = event["pull_request"]
 
     # get the list of organizations that the user is in
-    orgs_resp = requests.get(event["user"]["organizations_url"])
+    orgs_resp = requests.get(pr["user"]["organizations_url"])
     if not orgs_resp.ok:
         raise requests.exceptions.RequestException(orgs_resp.text)
     orgs = set(org["login"] for org in orgs_resp.json())
