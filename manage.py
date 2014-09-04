@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from flask.ext.script import Manager
-from jira_webhooks import app
-from jira_webhooks.models import db
+from openedx_webhooks import app
+from openedx_webhooks.models import db
 
 manager = Manager(app)
 
