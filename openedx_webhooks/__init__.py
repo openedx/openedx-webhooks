@@ -143,7 +143,7 @@ def github_pull_request():
                 "description": pr["body"],
                 custom_fields["URL"]: pr["url"],
                 custom_fields["PR Number"]: pr["number"],
-                custom_fields["Repo"]: pr["repo"]["full_name"],
+                custom_fields["Repo"]: pr["base"]["repo"]["full_name"],
             }
         }
         resp = jira.post("/rest/api/2/issue", as_json=new_issue)
