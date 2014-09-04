@@ -53,6 +53,7 @@ def jira_issue_created():
 
     issue_key = event["issue"]["key"]
     issue_status = event["issue"]["fields"]["status"]["name"]
+    project = event["issue"]["fields"]["project"]["key"]
     if issue_status != "Needs Triage":
         print(
             "{key} has status {status}, does not need to be processed".format(
@@ -61,6 +62,15 @@ def jira_issue_created():
             file=sys.stderr,
         )
         return "issue does not need to be triaged"
+    if project == "OSPR":
+        # open source pull requests do not skip Needs Triage
+        print(
+            "{key} is an open source pull request, and does not need to be processed.".format(
+                key=issue_key
+            ),
+            file=sys.stderr,
+        )
+        return "issue is OSPR"
 
     issue_url = URLObject(event["issue"]["self"])
     user_url = URLObject(event["user"]["self"])
