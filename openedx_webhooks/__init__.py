@@ -130,6 +130,8 @@ def github_pull_request():
         print(pr, file=sys.stderr)
 
     # get the list of organizations that the user is in
+    if not "user" in event:
+        print(pr, file=sys.stderr)
     orgs_resp = requests.get(event["user"]["organizations_url"])
     if not orgs_resp.ok:
         raise requests.exceptions.RequestException(orgs_resp.text)
