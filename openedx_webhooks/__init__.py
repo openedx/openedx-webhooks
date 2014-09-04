@@ -8,6 +8,7 @@ from urllib2 import URLError
 
 from flask import Flask, render_template, request, url_for, flash, redirect
 import requests
+import yaml
 from requests_oauthlib import OAuth1
 from oauthlib.oauth1 import SIGNATURE_RSA
 from urlobject import URLObject
@@ -131,14 +132,15 @@ def github_pull_request():
     bugsnag.configure_request(meta_data=bugsnag_context)
 
     pr = event["pull_request"]
+    user = pr["user"]["login"]
 
     # get the list of organizations that the user is in
-    orgs_resp = requests.get(pr["user"]["organizations_url"])
-    if not orgs_resp.ok:
-        raise requests.exceptions.RequestException(orgs_resp.text)
-    orgs = set(org["login"] for org in orgs_resp.json())
+    people_resp = requests.get("https://raw.githubusercontent.com/edx/repo-tools/master/people.yaml")
+    if not people_resp.ok:
+        raise requests.exceptions.RequestException(people_resp.text)
+    people = yaml.safe_load(people_resp.text)
 
-    if "edx" in orgs:
+    if user in people and people[user].get("institution", "") == "edX":
         # not an open source pull request, don't create an issue for it
         return "internal pull request"
 

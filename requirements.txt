@@ -11,3 +11,4 @@ gunicorn==19.0.0
 psycopg2==2.5.3
 bugsnag
 pycrypto==2.6.1
+PyYAML==3.11
