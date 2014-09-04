@@ -9,14 +9,17 @@ from urllib2 import URLError
 from flask import Flask, render_template, request, url_for, flash, redirect
 import requests
 from urlobject import URLObject
-from .oauth import jira, jira_request
-from .models import db, OAuthCredential
+from .oauth import blueprint as oauth_blueprint
+from .oauth import jira_request
+from .models import db
 from bugsnag.flask import handle_exceptions
 
 app = Flask(__name__)
+app.debug = True
 handle_exceptions(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "secrettoeveryone")
+app.register_blueprint(oauth_blueprint, url_prefix="/oauth")
 db.init_app(app)
 
 
@@ -26,48 +29,6 @@ def index():
     Just to verify that things are working
     """
     return render_template("main.html")
-
-
-@app.route('/oauth/jira')
-def jira_oauth():
-    return jira.authorize(callback=url_for('jira_oauth_authorized',
-        next=request.args.get('next') or request.referrer or None))
-
-
-@app.route("/oauth/jira/authorized")
-def jira_oauth_authorized():
-    resp = jira.authorized_response()
-    next_url = request.args.get('next') or url_for('index')
-    if not resp:
-        flash("You denied the request to sign in.")
-        return redirect(next_url)
-    creds = OAuthCredential(
-        name="jira",
-        token=resp["oauth_token"],
-        secret=resp["oauth_token_secret"],
-        created_on=datetime.utcnow(),
-    )
-    db.session.add(creds)
-    db.session.commit()
-
-    flash("Signed in successfully")
-    return redirect(next_url)
-
-
-@app.route("/test-comment")
-def test_comment():
-    resp = jira.post(
-        "/rest/api/2/issue/OSPR-1/comment",
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-        data=json.dumps({
-            "body": "Posted from Heroku over OAuth"
-        })
-    )
-    s = "{0} {1}".format(resp.status, resp.data)
-    if resp.status not in (200, 201):
-        print(s, file=sys.stderr)
-    return s
 
 
 @app.route("/issue/created", methods=("POST",))

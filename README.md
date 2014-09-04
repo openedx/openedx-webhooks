@@ -50,7 +50,7 @@ OAuth authentication for JIRA requires a RSA keypair. To set this up:
 2. The new application will give you a consumer key and consumer secret. Set
    these values in the Heroku environment:
     ```
-    $ heroku config:set GITHUB_CONSUMER_KEY=my-key GITHUB_CONSUMER_SECRET=my-secret
+    $ heroku config:set GITHUB_CLIENT_ID=my-id GITHUB_CLIENT_SECRET=my-secret
     ```
 
 # Deploy
