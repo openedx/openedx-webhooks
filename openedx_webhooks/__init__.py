@@ -142,6 +142,13 @@ def github_pull_request():
 
     if user in people and people[user].get("institution", "") == "edX":
         # not an open source pull request, don't create an issue for it
+        print(
+            "@{user} opened PR #{num} against {repo} (internal PR)".format(
+                user=user, repo=pr["base"]["repo"]["full_name"],
+                num=pr["number"]
+            ),
+            file=sys.stderr
+        )
         return "internal pull request"
 
     token, secret = oauth_jira.get_request_token()
