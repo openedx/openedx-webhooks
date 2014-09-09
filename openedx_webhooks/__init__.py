@@ -175,11 +175,26 @@ def github_pull_request():
         bugsnag_context["new_issue"] = new_issue
         bugsnag.configure_request(meta_data=bugsnag_context)
         resp = jira.post("/rest/api/2/issue", as_json=new_issue)
+        new_issue_body = resp.json()
         if resp.ok:
+            print(
+                "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
+                    user=user, repo=pr["base"]["repo"]["full_name"],
+                    num=pr["number"], issue=new_issue_body["key"]
+                ),
+                file=sys.stderr
+            )
             return "created!"
         else:
-            print(resp.json(), file=sys.stderr)
+            print(new_issue_body, file=sys.stderr)
 
+    print(
+        "Received {action} event on PR #{num} against {repo}, don't know how to handle it".format(
+            action=event["action"], repo=pr["base"]["repo"]["full_name"],
+            num=pr["number"]
+        ),
+        file=sys.stderr
+    )
     return "Don't know how to handle this.", 400
 
 
