@@ -1,12 +1,11 @@
 Flask==0.10.1
-git+https://github.com/singingwolfboy/flask-oauthlib.git@5c3e2f0a071380a170d2ed0f6ef3655bd94807ab#egg=Flask-OAuthlib
+git+https://github.com/singingwolfboy/flask-dance.git@0b3bfbbe77b#egg=Flask-Dance
 Flask-SQLAlchemy==2.0
 Flask-Script
 blinker
 requests==2.3.0
-requests-oauthlib==0.4.1
+git+https://github.com/singingwolfboy/requests-oauthlib.git@release-0.4.2#egg=requests-oauthlib
 URLObject==2.3.4
-backoff==1.0.3
 gunicorn==19.0.0
 psycopg2==2.5.3
 bugsnag

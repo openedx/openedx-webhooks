@@ -3,17 +3,12 @@ from __future__ import print_function, unicode_literals
 import os
 import sys
 import json
-from datetime import datetime
-from urllib2 import URLError
 
-from flask import Flask, render_template, request, url_for, flash, redirect
+from flask import Flask, render_template, request
 import requests
 import yaml
-from requests_oauthlib import OAuth1
-from oauthlib.oauth1 import SIGNATURE_RSA
 from urlobject import URLObject
-from .oauth import blueprint as oauth_blueprint, jira as oauth_jira
-from .oauth import jira_request
+from .oauth import jira_bp, jira, jira_get, github_bp
 from .models import db
 from .jira import Jira
 import bugsnag
@@ -23,7 +18,8 @@ app = Flask(__name__)
 handle_exceptions(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "secrettoeveryone")
-app.register_blueprint(oauth_blueprint, url_prefix="/oauth")
+app.register_blueprint(jira_bp, url_prefix="/login")
+app.register_blueprint(github_bp, url_prefix="/login")
 db.init_app(app)
 
 
@@ -78,21 +74,22 @@ def jira_issue_created():
     issue_url = URLObject(event["issue"]["self"])
     user_url = URLObject(event["user"]["self"])
     user_url = user_url.set_query_param("expand", "groups")
-    user_resp = jira_request(user_url)
 
-    if not 200 <= user_resp.status < 300:
-        raise URLError(user_resp.text)
-    user = user_resp.data
+    user_resp = jira_get(user_url)
+    if not user_resp.ok:
+        raise requests.exceptions.RequestException(user_resp.text)
+
+    user = user_resp.json()
     groups = {g["name"]: g["self"] for g in user["groups"]["items"]}
 
     # skip "Needs Triage" if bug was created by edX employee
     transitioned = False
     if "edx-employees" in groups:
         transitions_url = issue_url.with_path(issue_url.path + "/transitions")
-        transitions_resp = jira_request(transitions_url)
-        if not 200 <= transitions_resp.status < 300:
-            raise URLError(transitions_resp.text)
-        transitions = {t["name"]: t["id"] for t in transitions_resp.data["transitions"]}
+        transitions_resp = jira_get(transitions_url)
+        if not transitions_resp.ok:
+            raise requests.exceptions.RequestException(transitions_resp.text)
+        transitions = {t["name"]: t["id"] for t in transitions_resp.json()["transitions"]}
         if "Open" in transitions:
             new_status = "Open"
         elif "Design Backlog" in transitions:
@@ -105,9 +102,9 @@ def jira_issue_created():
                 "id": transitions[new_status],
             }
         }
-        transition_resp = jira_request(transitions_url, data=body, method="POST")
-        if not 200 <= transition_resp.status < 300:
-            raise URLError(transition_resp.text)
+        transition_resp = jira.post(transitions_url, data=body)
+        if not transition_resp.ok:
+            raise requests.exceptions.RequestException(transition_resp.text)
         transitioned = True
 
     # log to stderr
@@ -151,16 +148,7 @@ def github_pull_request():
         )
         return "internal pull request"
 
-    token, secret = oauth_jira.get_request_token()
-    auth = OAuth1(
-        client_key=os.environ["JIRA_CONSUMER_KEY"],
-        rsa_key=os.environ["JIRA_RSA_KEY"],
-        signature_method=SIGNATURE_RSA,
-        resource_owner_key=token,
-        resource_owner_secret=secret,
-    )
-    jira = Jira(oauth_jira.base_url, auth=auth)
-    custom_fields = jira.custom_field_names
+    custom_fields = Jira(session=jira).custom_field_names
 
     if event["action"] == "opened":
         # create an issue on JIRA!
@@ -181,7 +169,7 @@ def github_pull_request():
         }
         bugsnag_context["new_issue"] = new_issue
         bugsnag.configure_request(meta_data=bugsnag_context)
-        resp = jira.post("/rest/api/2/issue", as_json=new_issue)
+        resp = jira.post("/rest/api/2/issue", data=new_issue)
         new_issue_body = resp.json()
         if resp.ok:
             print(

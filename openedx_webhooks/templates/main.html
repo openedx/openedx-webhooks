@@ -11,7 +11,7 @@
     </ul>
   {% endif %}
 {% endwith %}
-    <a href="{{ url_for("oauth.github_oauth") }}">Github OAuth</a>
-    <a href="{{ url_for("oauth.jira_oauth") }}">JIRA OAuth</a>
+    <a href="{{ url_for("github.login") }}">Github OAuth</a>
+    <a href="{{ url_for("jira.login") }}">JIRA OAuth</a>
     </body>
 </html>
