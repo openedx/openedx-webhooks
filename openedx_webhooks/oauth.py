@@ -117,7 +117,7 @@ def get_github_token(identifier=None):
 
 
 @github_bp.logged_in
-def github_logged_in(token):
+def github_logged_in(self, token):
     if not token:
         flash("Failed to log in with Github")
     if "error_reason" in token:
