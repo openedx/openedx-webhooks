@@ -69,7 +69,7 @@ def get_jira_token(identifier=None):
 
 
 @jira_bp.logged_in
-def jira_logged_in(token):
+def jira_logged_in(self, token):
     if token:
         flash("Successfully signed in with JIRA")
     else:
