@@ -68,7 +68,7 @@ def jira_logged_in(token):
 github_bp = make_github_blueprint(
     client_id=os.environ["GITHUB_CLIENT_ID"],
     client_secret=os.environ["GITHUB_CLIENT_SECRET"],
-    scope=["admin:repo_hook", "repo", "user"],
+    scope="admin:repo_hook,repo,user",
     redirect_to="index",
 )
 github = github_bp.session
