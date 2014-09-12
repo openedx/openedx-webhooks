@@ -10,7 +10,7 @@ import yaml
 from urlobject import URLObject
 from .oauth import jira_bp, jira, jira_get, github_bp
 from .models import db
-from .jira import Jira
+from .utils import pop_dict_id
 import bugsnag
 from bugsnag.flask import handle_exceptions
 
@@ -148,7 +148,15 @@ def github_pull_request():
         )
         return "internal pull request"
 
-    custom_fields = Jira(session=jira).custom_field_names
+    field_resp = jira.get("/rest/api/2/field")
+    if not field_resp.ok:
+        raise requests.exceptions.RequestException(field_resp.text)
+    field_map = dict(pop_dict_id(f) for f in field_resp.json())
+    custom_fields = {
+        value["name"]: id
+        for id, value in field_map.items()
+        if value["custom"]
+    }
 
     if event["action"] == "opened":
         # create an issue on JIRA!

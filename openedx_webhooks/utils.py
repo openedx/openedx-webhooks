@@ -4,6 +4,12 @@ import functools
 import requests
 
 
+def pop_dict_id(d):
+    id = d["id"]
+    del d["id"]
+    return (id, d)
+
+
 def paginated_api(url, obj_name, session=None, start=0, retries=3, **fields):
     session = session or requests.Session()
     more_results = True
