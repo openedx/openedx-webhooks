@@ -4,10 +4,8 @@ import os
 from datetime import datetime
 
 from flask import request, flash
-from flask_dance.consumer import OAuth1ConsumerBlueprint
 from flask_dance.contrib.github import make_github_blueprint
-from oauthlib.oauth1 import SIGNATURE_RSA
-from urlobject import URLObject
+from flask_dance.contrib.jira import make_jira_blueprint
 from .models import db, OAuthCredential
 
 # Check for required environment variables
@@ -26,23 +24,13 @@ if missing:
 
 ## JIRA ##
 
-JIRA_URL = URLObject("https://openedx.atlassian.net")
-JIRA_REQUEST_TOKEN_URL = JIRA_URL.with_path("/plugins/servlet/oauth/request-token")
-JIRA_ACCESS_TOKEN_URL = JIRA_URL.with_path("/plugins/servlet/oauth/access-token")
-JIRA_AUTHORIZE_URL = JIRA_URL.with_path("/plugins/servlet/oauth/authorize")
-
-jira_bp = OAuth1ConsumerBlueprint("jira", __name__,
-    base_url=JIRA_URL,
-    request_token_url=JIRA_REQUEST_TOKEN_URL,
-    access_token_url=JIRA_ACCESS_TOKEN_URL,
-    authorization_url=JIRA_AUTHORIZE_URL,
-    client_key=os.environ["JIRA_CONSUMER_KEY"],
+jira_bp = make_jira_blueprint(
+    consumer_key=os.environ["JIRA_CONSUMER_KEY"],
     rsa_key=os.environ["JIRA_RSA_KEY"],
-    signature_method=SIGNATURE_RSA,
+    base_url="https://openedx.atlassian.net",
     redirect_to="index",
 )
 jira = jira_bp.session
-jira.headers["Content-Type"] = "application/json"
 
 
 @jira_bp.token_setter
@@ -76,11 +64,6 @@ def jira_logged_in(self, token):
         flash("You denied the request to sign in with JIRA")
 
 ## GITHUB ##
-
-GITHUB_URL = URLObject("https://github.com")
-GITHUB_API_URL = URLObject("https://api.github.com")
-GITHUB_ACCESS_TOKEN_URL = GITHUB_URL.with_path("/login/oauth/access_token")
-GITHUB_AUTHORIZE_URL = GITHUB_URL.with_path("/login/oauth/authorize")
 
 github_bp = make_github_blueprint(
     client_id=os.environ["GITHUB_CLIENT_ID"],
@@ -138,7 +121,7 @@ def jira_get(*args, **kwargs):
     so this will retry it a few times if that happens.
     """
     for _ in range(3):
-        resp = jira.get(*args, **kwargs)
+        resp = jira_bp.session.get(*args, **kwargs)
         if resp.content:
             return resp
-    return jira.get(*args, **kwargs)
+    return jira_bp.session.get(*args, **kwargs)
