@@ -85,7 +85,7 @@ GITHUB_AUTHORIZE_URL = GITHUB_URL.with_path("/login/oauth/authorize")
 github_bp = make_github_blueprint(
     client_id=os.environ["GITHUB_CLIENT_ID"],
     client_secret=os.environ["GITHUB_CLIENT_SECRET"],
-    scope="user,repo,admin:repo_hook",
+    scope=["admin:repo_hook", "repo", "user"],
     redirect_to="index",
 )
 github = github_bp.session
