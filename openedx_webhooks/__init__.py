@@ -102,7 +102,7 @@ def jira_issue_created():
                 "id": transitions[new_status],
             }
         }
-        transition_resp = jira.post(transitions_url, data=body)
+        transition_resp = jira.post(transitions_url, data=json.dumps(body))
         if not transition_resp.ok:
             raise requests.exceptions.RequestException(transition_resp.text)
         transitioned = True
