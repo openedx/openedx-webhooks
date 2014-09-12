@@ -57,7 +57,7 @@ def get_jira_token(identifier=None):
 
 
 @jira_bp.logged_in
-def jira_logged_in(self, token):
+def jira_logged_in(token):
     if token:
         flash("Successfully signed in with JIRA")
     else:
@@ -100,7 +100,7 @@ def get_github_token(identifier=None):
 
 
 @github_bp.logged_in
-def github_logged_in(self, token):
+def github_logged_in(token):
     if not token:
         flash("Failed to log in with Github")
     if "error_reason" in token:
