@@ -240,6 +240,9 @@ def github_pr_comment(pull_request, jira_issue, people):
     comment = (
         "Thanks for the pull request, @{user}! I've created "
         "[{issue_key}]({issue_url}) to keep track of it in JIRA. "
+        "Feel free to communicate additional information about this pull request "
+        "-- such as if it is related to a course running on edx.org and has "
+        "a time constraint -- on this JIRA ticket. "
         "As a reminder, [our process documentation is here]({doc_url})."
     ).format(
         user=pull_request["user"]["login"],
