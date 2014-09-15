@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals
 import os
 import sys
 import json
+import re
 
 from flask import Flask, render_template, request
 import requests
@@ -202,6 +203,41 @@ def github_pull_request():
         )
         return "created!"
 
+    if event["action"] == "closed":
+        merged = pr["merged"]
+        jira_issue_key = get_jira_issue_key(pr)
+        if not jira_issue_key:
+            print(
+                "Couldn't find JIRA issue for PR #{num} against {repo}".format(
+                    num=pr["number"], repo=repo,
+                ),
+                file=sys.stderr
+            )
+            return "no JIRA issue :("
+        bugsnag_context["jira_key"] = jira_issue_key
+        bugsnag.configure_request(meta_data=bugsnag_context)
+
+        # close the issue on JIRA
+        url = "/rest/api/2/issue/{key}/transitions".format(key=jira_issue_key)
+        transition_resp = jira.post(url, data=json.dumps({
+            "transition": {
+                "name": "Merged" if merged else "Rejected",
+            },
+            "fields": {
+                "resolution": "Done",
+            }
+        }))
+        if not transition_resp.ok:
+            raise requests.exceptions.RequestException(transition_resp.text)
+        print(
+            "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
+                num=pr["number"], repo=repo, action="merged" if merged else "closed",
+                issue=jira_issue_key, status="Merged" if merged else "Rejected",
+            ),
+            file=sys.stderr
+        )
+        return "closed!"
+
     print(
         "Received {action} event on PR #{num} against {repo}, don't know how to handle it".format(
             action=event["action"], repo=repo,
@@ -210,6 +246,27 @@ def github_pull_request():
         file=sys.stderr
     )
     return "Don't know how to handle this.", 400
+
+
+def get_jira_issue_key(pull_request):
+    # who am I?
+    self_resp = github.get("/user")
+    if not self_resp.ok:
+        raise requests.exceptions.RequestException(self_resp.text)
+    my_username = self_resp.json()["login"]
+    # get my first comment on this pull request
+    comments_resp = github.get("/repos/{repo}/issues/{num}/comments".format(
+        repo=pull_request["base"]["repo"]["full_name"], num=pull_request["number"],
+    ))
+    if not comments_resp.ok:
+        raise requests.exceptions.RequestException(comments_resp.text)
+    my_comments = [comment for comment in comments_resp.json()
+                   if comment["user"]["login"] == my_username]
+    # search for the first occurrance of a JIRA ticket key in the comment body
+    match = re.search(r"\b([A-Z]{2,}-\d+)\b", my_comments[0]["body"])
+    if match:
+        return match.group(0)
+    return None
 
 
 def github_pr_comment(pull_request, jira_issue, people):
