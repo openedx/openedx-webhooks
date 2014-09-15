@@ -59,6 +59,6 @@ OAuth authentication for JIRA requires a RSA keypair. To set this up:
 2. `git push heroku`
 3. Initialize the database by running `heroku run python manage.py dbcreate`
 4. Visit your website -- it should load!
-5. Visit `/oauth/jira` and authorize with JIRA
-6. Visit `/oauth/github` and authorize with Github
+5. Visit `/login/jira` and authorize with JIRA
+6. Visit `/login/github` and authorize with Github
 7. Enjoy the sweet, sweet taste of API integration
