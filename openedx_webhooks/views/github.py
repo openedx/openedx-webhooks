@@ -34,7 +34,7 @@ def github_pull_request():
     if event["action"] == "opened":
         return pr_opened(pr, bugsnag_context)
     if event["action"] == "closed":
-        return pr_closed(pr)
+        return pr_closed(pr, bugsnag_context)
 
     print(
         "Received {action} event on PR #{num} against {repo}, don't know how to handle it".format(
