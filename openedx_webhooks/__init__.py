@@ -166,6 +166,12 @@ def github_pull_request():
         if value["custom"]
     }
 
+    user_resp = github.get(pr["user"]["url"])
+    if user_resp.ok:
+        user_name = user_resp.json().get("name", user)
+    else:
+        user_name = user
+
     if event["action"] == "opened":
         # create an issue on JIRA!
         new_issue = {
@@ -181,10 +187,15 @@ def github_pull_request():
                 custom_fields["URL"]: pr["html_url"],
                 custom_fields["PR Number"]: pr["number"],
                 custom_fields["Repo"]: pr["base"]["repo"]["full_name"],
+                custom_fields["Contributor Name"]: user_name,
             }
         }
+        institution = people.get(user, {}).get("institution", None)
+        if institution:
+            new_issue["fields"][custom_fields["Customer"]] = [institution]
         bugsnag_context["new_issue"] = new_issue
         bugsnag.configure_request(meta_data=bugsnag_context)
+
         resp = jira.post("/rest/api/2/issue", data=json.dumps(new_issue))
         if not resp.ok:
             raise requests.exceptions.RequestException(resp.text)
