@@ -189,9 +189,10 @@ def github_pull_request():
         comment = {
             "body": github_pr_comment(pr, new_issue_body, people),
         }
-        comment_resp = github.post("/repos/{repo}/issues/{num}/comments".format(
+        url = "/repos/{repo}/issues/{num}/comments".format(
             repo=repo, num=pr["number"],
-        ))
+        )
+        comment_resp = github.post(url, data=json.dumps(comment))
         if not comment_resp.ok:
             raise requests.exceptions.RequestException(comment_resp.text)
         print(
