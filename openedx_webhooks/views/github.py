@@ -11,7 +11,15 @@ from flask import request
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
-from openedx_webhooks.utils import pop_dict_id
+from openedx_webhooks.utils import memoize, pop_dict_id
+
+
+@memoize
+def get_people_file():
+    people_resp = requests.get("https://raw.githubusercontent.com/edx/repo-tools/master/people.yaml")
+    if not people_resp.ok:
+        raise requests.exceptions.RequestException(people_resp.text)
+    return yaml.safe_load(people_resp.text)
 
 
 @app.route("/github/pr", methods=("POST",))
@@ -30,14 +38,27 @@ def github_pull_request():
         return "PONG"
 
     pr = event["pull_request"]
+    repo = pr["base"]["repo"]["full_name"]
+    if event["action"] == "opened":
+        return pr_opened(pr, bugsnag_context)
+    if event["action"] == "closed":
+        return pr_closed(pr)
+
+    print(
+        "Received {action} event on PR #{num} against {repo}, don't know how to handle it".format(
+            action=event["action"], repo=pr["base"]["repo"]["full_name"],
+            num=pr["number"]
+        ),
+        file=sys.stderr
+    )
+    return "Don't know how to handle this.", 400
+
+
+def pr_opened(pr, bugsnag_context=None):
+    bugsnag_context = bugsnag_context or {}
     user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
-
-    # get the list of organizations that the user is in
-    people_resp = requests.get("https://raw.githubusercontent.com/edx/repo-tools/master/people.yaml")
-    if not people_resp.ok:
-        raise requests.exceptions.RequestException(people_resp.text)
-    people = yaml.safe_load(people_resp.text)
+    people = get_people_file()
 
     if user in people and people[user].get("institution", "") == "edX":
         # not an open source pull request, don't create an issue for it
@@ -66,98 +87,98 @@ def github_pull_request():
     else:
         user_name = user
 
-    if event["action"] == "opened":
-        # create an issue on JIRA!
-        new_issue = {
-            "fields": {
-                "project": {
-                    "key": "OSPR",
-                },
-                "issuetype": {
-                    "name": "Pull Request Review",
-                },
-                "summary": pr["title"],
-                "description": pr["body"],
-                custom_fields["URL"]: pr["html_url"],
-                custom_fields["PR Number"]: pr["number"],
-                custom_fields["Repo"]: pr["base"]["repo"]["full_name"],
-                custom_fields["Contributor Name"]: user_name,
-            }
-        }
-        institution = people.get(user, {}).get("institution", None)
-        if institution:
-            new_issue["fields"][custom_fields["Customer"]] = [institution]
-        bugsnag_context["new_issue"] = new_issue
-        bugsnag.configure_request(meta_data=bugsnag_context)
-
-        resp = jira.post("/rest/api/2/issue", data=json.dumps(new_issue))
-        if not resp.ok:
-            raise requests.exceptions.RequestException(resp.text)
-        new_issue_body = resp.json()
-        bugsnag_context["new_issue"]["key"] = new_issue_body["key"]
-        bugsnag.configure_request(meta_data=bugsnag_context)
-        # add a comment to the Github pull request with a link to the JIRA issue
-        comment = {
-            "body": github_pr_comment(pr, new_issue_body, people),
-        }
-        url = "/repos/{repo}/issues/{num}/comments".format(
-            repo=repo, num=pr["number"],
-        )
-        comment_resp = github.post(url, data=json.dumps(comment))
-        if not comment_resp.ok:
-            raise requests.exceptions.RequestException(comment_resp.text)
-        print(
-            "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
-                user=user, repo=repo,
-                num=pr["number"], issue=new_issue_body["key"]
-            ),
-            file=sys.stderr
-        )
-        return "created!"
-
-    if event["action"] == "closed":
-        merged = pr["merged"]
-        jira_issue_key = get_jira_issue_key(pr)
-        if not jira_issue_key:
-            print(
-                "Couldn't find JIRA issue for PR #{num} against {repo}".format(
-                    num=pr["number"], repo=repo,
-                ),
-                file=sys.stderr
-            )
-            return "no JIRA issue :("
-        bugsnag_context["jira_key"] = jira_issue_key
-        bugsnag.configure_request(meta_data=bugsnag_context)
-
-        # close the issue on JIRA
-        url = "/rest/api/2/issue/{key}/transitions".format(key=jira_issue_key)
-        transition_resp = jira.post(url, data=json.dumps({
-            "transition": {
-                "name": "Merged" if merged else "Rejected",
+    # create an issue on JIRA!
+    new_issue = {
+        "fields": {
+            "project": {
+                "key": "OSPR",
             },
-            "fields": {
-                "resolution": "Done",
-            }
-        }))
-        if not transition_resp.ok:
-            raise requests.exceptions.RequestException(transition_resp.text)
-        print(
-            "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
-                num=pr["number"], repo=repo, action="merged" if merged else "closed",
-                issue=jira_issue_key, status="Merged" if merged else "Rejected",
-            ),
-            file=sys.stderr
-        )
-        return "closed!"
+            "issuetype": {
+                "name": "Pull Request Review",
+            },
+            "summary": pr["title"],
+            "description": pr["body"],
+            custom_fields["URL"]: pr["html_url"],
+            custom_fields["PR Number"]: pr["number"],
+            custom_fields["Repo"]: pr["base"]["repo"]["full_name"],
+            custom_fields["Contributor Name"]: user_name,
+        }
+    }
+    institution = people.get(user, {}).get("institution", None)
+    if institution:
+        new_issue["fields"][custom_fields["Customer"]] = [institution]
+    bugsnag_context["new_issue"] = new_issue
+    bugsnag.configure_request(meta_data=bugsnag_context)
 
+    resp = jira.post("/rest/api/2/issue", data=json.dumps(new_issue))
+    if not resp.ok:
+        raise requests.exceptions.RequestException(resp.text)
+    new_issue_body = resp.json()
+    bugsnag_context["new_issue"]["key"] = new_issue_body["key"]
+    bugsnag.configure_request(meta_data=bugsnag_context)
+    # add a comment to the Github pull request with a link to the JIRA issue
+    comment = {
+        "body": github_pr_comment(pr, new_issue_body, people),
+    }
+    url = "/repos/{repo}/issues/{num}/comments".format(
+        repo=repo, num=pr["number"],
+    )
+    comment_resp = github.post(url, data=json.dumps(comment))
+    if not comment_resp.ok:
+        raise requests.exceptions.RequestException(comment_resp.text)
     print(
-        "Received {action} event on PR #{num} against {repo}, don't know how to handle it".format(
-            action=event["action"], repo=repo,
-            num=pr["number"]
+        "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
+            user=user, repo=repo,
+            num=pr["number"], issue=new_issue_body["key"]
         ),
         file=sys.stderr
     )
-    return "Don't know how to handle this.", 400
+    return "created!"
+
+
+
+
+
+
+
+
+def pr_closed(pr, bugsnag_context=None):
+    bugsnag_context = bugsnag_context or {}
+    repo = pr["base"]["repo"]["full_name"]
+
+    merged = pr["merged"]
+    jira_issue_key = get_jira_issue_key(pr)
+    if not jira_issue_key:
+        print(
+            "Couldn't find JIRA issue for PR #{num} against {repo}".format(
+                num=pr["number"], repo=repo,
+            ),
+            file=sys.stderr
+        )
+        return "no JIRA issue :("
+    bugsnag_context["jira_key"] = jira_issue_key
+    bugsnag.configure_request(meta_data=bugsnag_context)
+
+    # close the issue on JIRA
+    url = "/rest/api/2/issue/{key}/transitions".format(key=jira_issue_key)
+    transition_resp = jira.post(url, data=json.dumps({
+        "transition": {
+            "name": "Merged" if merged else "Rejected",
+        },
+        "fields": {
+            "resolution": "Done",
+        }
+    }))
+    if not transition_resp.ok:
+        raise requests.exceptions.RequestException(transition_resp.text)
+    print(
+        "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
+            num=pr["number"], repo=repo, action="merged" if merged else "closed",
+            issue=jira_issue_key, status="Merged" if merged else "Rejected",
+        ),
+        file=sys.stderr
+    )
+    return "closed!"
 
 
 def get_jira_issue_key(pull_request):
@@ -183,7 +204,7 @@ def get_jira_issue_key(pull_request):
     return None
 
 
-def github_pr_comment(pull_request, jira_issue, people):
+def github_pr_comment(pull_request, jira_issue, people=None):
     """
     For a newly-created pull request from an open source contributor,
     write a welcoming comment on the pull request. The comment should:
@@ -193,6 +214,7 @@ def github_pr_comment(pull_request, jira_issue, people):
     * check for AUTHORS entry
     * contain a link to our process documentation
     """
+    people = people or get_people_file()
     people = {user.lower(): values for user, values in people.items()}
     pr_author = pull_request["user"]["login"].lower()
     # does the user have a signed contributor agreement?
