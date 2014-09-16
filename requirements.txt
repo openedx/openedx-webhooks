@@ -1,5 +1,5 @@
 Flask==0.10.1
-git+https://github.com/singingwolfboy/flask-dance.git@0f5d991b4d#egg=Flask-Dance
+Flask-Dance==0.1
 Flask-SQLAlchemy==2.0
 Flask-Script
 blinker

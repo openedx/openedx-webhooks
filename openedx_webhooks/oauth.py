@@ -30,11 +30,10 @@ jira_bp = make_jira_blueprint(
     base_url="https://openedx.atlassian.net",
     redirect_to="index",
 )
-jira = jira_bp.session
 
 
 @jira_bp.token_setter
-def set_jira_token(token, identifier=None):
+def set_jira_token(token):
     creds = OAuthCredential(
         name="jira",
         token=token["oauth_token"],
@@ -46,7 +45,7 @@ def set_jira_token(token, identifier=None):
 
 
 @jira_bp.token_getter
-def get_jira_token(identifier=None):
+def get_jira_token():
     creds = OAuthCredential.query.filter_by(name="jira").first()
     if creds:
         return {
@@ -71,11 +70,10 @@ github_bp = make_github_blueprint(
     scope="admin:repo_hook,repo,user",
     redirect_to="index",
 )
-github = github_bp.session
 
 
 @github_bp.token_setter
-def set_github_token(token, identifier=None):
+def set_github_token(token):
     creds = OAuthCredential(
         name="github",
         token=token["access_token"],
@@ -88,7 +86,7 @@ def set_github_token(token, identifier=None):
 
 
 @github_bp.token_getter
-def get_github_token(identifier=None):
+def get_github_token():
     creds = OAuthCredential.query.filter_by(name="github").first()
     if creds:
         return {
