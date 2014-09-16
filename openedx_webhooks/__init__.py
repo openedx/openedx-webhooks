@@ -129,6 +129,12 @@ def github_pull_request():
     bugsnag_context = {"event": event}
     bugsnag.configure_request(meta_data=bugsnag_context)
 
+    if "pull_request" not in event and "hook" in event and "zen" in event:
+        # this is a ping
+        repo = event.get("repository", {}).get("full_name")
+        print("ping from {repo}".format(repo=repo), file=sys.stderr)
+        return "PONG"
+
     pr = event["pull_request"]
     user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
