@@ -262,6 +262,8 @@ def get_jira_issue_key(pull_request):
         raise requests.exceptions.RequestException(comments_resp.text)
     my_comments = [comment for comment in comments_resp.json()
                    if comment["user"]["login"] == my_username]
+    if len(my_comments) < 1:
+        return None
     # search for the first occurrance of a JIRA ticket key in the comment body
     match = re.search(r"\b([A-Z]{2,}-\d+)\b", my_comments[0]["body"])
     if match:
