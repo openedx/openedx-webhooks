@@ -14,14 +14,6 @@ from openedx_webhooks import app
 from openedx_webhooks.utils import memoize, pop_dict_id
 
 
-@memoize
-def get_people_file():
-    people_resp = requests.get("https://raw.githubusercontent.com/edx/repo-tools/master/people.yaml")
-    if not people_resp.ok:
-        raise requests.exceptions.RequestException(people_resp.text)
-    return yaml.safe_load(people_resp.text)
-
-
 @app.route("/github/pr", methods=("POST",))
 def github_pull_request():
     try:
@@ -52,6 +44,14 @@ def github_pull_request():
         file=sys.stderr
     )
     return "Don't know how to handle this.", 400
+
+
+@memoize
+def get_people_file():
+    people_resp = requests.get("https://raw.githubusercontent.com/edx/repo-tools/master/people.yaml")
+    if not people_resp.ok:
+        raise requests.exceptions.RequestException(people_resp.text)
+    return yaml.safe_load(people_resp.text)
 
 
 def pr_opened(pr, bugsnag_context=None):
@@ -134,12 +134,6 @@ def pr_opened(pr, bugsnag_context=None):
         file=sys.stderr
     )
     return "created!"
-
-
-
-
-
-
 
 
 def pr_closed(pr, bugsnag_context=None):
