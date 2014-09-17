@@ -179,7 +179,7 @@ def get_jira_issue_key(pull_request):
     # who am I?
     self_resp = github.get("/user")
     rate_limit_info = {k: v for k, v in self_resp.headers.items() if "ratelimit" in k}
-    print("Rate limits: {}".format(rate_limit_info))
+    print("Rate limits: {}".format(rate_limit_info), file=sys.stderr)
     if not self_resp.ok:
         raise requests.exceptions.RequestException(self_resp.text)
     my_username = self_resp.json()["login"]
