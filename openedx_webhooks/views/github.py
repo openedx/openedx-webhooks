@@ -154,10 +154,31 @@ def pr_closed(pr, bugsnag_context=None):
     bugsnag.configure_request(meta_data=bugsnag_context)
 
     # close the issue on JIRA
-    url = "/rest/api/2/issue/{key}/transitions".format(key=jira_issue_key)
-    transition_resp = jira.post(url, data=json.dumps({
+    transition_url = (
+        "/rest/api/2/issue/{key}/transitions"
+        "?expand=transitions.fields".format(key=jira_issue_key)
+    )
+    transitions_resp = jira.get(transition_url)
+    if not transitions_resp.ok:
+        raise requests.exceptions.RequestException(transitions_resp.text)
+
+    transitions = transitions_resp.json()["transitions"]
+
+    bugsnag_context["transitions"] = transitions
+    bugsnag.configure_request(meta_data=bugsnag_context)
+
+    transition_name = "Merged" if merged else "Rejected"
+    transition_id = None
+    for t in transitions:
+        if t["to"]["name"] == transition_name:
+            transition_id = t["id"]
+            break
+
+    assert transition_id
+
+    transition_resp = jira.post(transition_url, data=json.dumps({
         "transition": {
-            "name": "Merged" if merged else "Rejected",
+            "id": transition_id,
         },
         "fields": {
             "resolution": "Done",
