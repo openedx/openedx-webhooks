@@ -179,9 +179,6 @@ def pr_closed(pr, bugsnag_context=None):
     transition_resp = jira.post(transition_url, data=json.dumps({
         "transition": {
             "id": transition_id,
-        },
-        "fields": {
-            "resolution": "Done",
         }
     }))
     if not transition_resp.ok:
