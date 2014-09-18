@@ -255,9 +255,14 @@ def github_pr_comment(pull_request, jira_issue, people=None):
     comment = (
         "Thanks for the pull request, @{user}! I've created "
         "[{issue_key}]({issue_url}) to keep track of it in JIRA. "
-        "Feel free to communicate additional information about this pull request "
-        "-- such as if it is related to a course running on edx.org and has "
-        "a time constraint -- on this JIRA ticket. "
+        "JIRA is a place for product owners to prioritize feature reviews "
+        "by the engineering development teams. Supporting information that is "
+        "good to add there is anything that can help Product understand the "
+        "context for the PR - supporting documentation, edx-code email threads, "
+        "timeline information ('this must be merged by XX date', and why that is), "
+        "partner information (this is for a course on edx.org, for example), etc. "
+        "\n\nAll techincal communication about the code itself will still be "
+        "done via the Github pull request interface. "
         "As a reminder, [our process documentation is here]({doc_url})."
     ).format(
         user=pull_request["user"]["login"],
@@ -266,7 +271,10 @@ def github_pr_comment(pull_request, jira_issue, people=None):
     if not has_signed_agreement or not in_authors_file:
         todo = ""
         if not has_signed_agreement:
-            todo += "submitted a [signed contributor agreement]({agreement_url})".format(
+            todo += (
+                "submitted a [signed contributor agreement]({agreement_url}) "
+                "or indicated your institutional affiliation"
+            ).format(
                 agreement_url=agreement_url,
             )
         if not has_signed_agreement and not in_authors_file:
