@@ -291,7 +291,7 @@ def github_pr_comment(pull_request, jira_issue, people=None):
                 authors_url=authors_url,
             )
         comment += ("\n\n"
-            "We can't start reviewing your pull request until you've {todo}."
+            "We can't start reviewing your pull request until you've {todo}. "
             "Please see the [CONTRIBUTING]({contributing_url}) file for "
             "more information."
         ).format(todo=todo, contributing_url=contributing_url)
