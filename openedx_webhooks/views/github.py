@@ -174,7 +174,14 @@ def pr_closed(pr, bugsnag_context=None):
             transition_id = t["id"]
             break
 
-    assert transition_id
+    fail_msg = (
+        "{key} cannot be transitioned directly to status {status}. "
+        "Valid status transitions are: {valid}".format(
+            key=jira_issue_key, status=transition_name,
+            valid=set(t["to"]["name"] for t in transitions),
+        )
+    )
+    assert transition_id, fail_msg
 
     transition_resp = jira.post(transition_url, data=json.dumps({
         "transition": {
