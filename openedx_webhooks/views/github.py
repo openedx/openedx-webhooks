@@ -141,8 +141,8 @@ def pr_closed(pr, bugsnag_context=None):
     repo = pr["base"]["repo"]["full_name"]
 
     merged = pr["merged"]
-    jira_issue_key = get_jira_issue_key(pr)
-    if not jira_issue_key:
+    issue_key = get_jira_issue_key(pr)
+    if not issue_key:
         print(
             "Couldn't find JIRA issue for PR #{num} against {repo}".format(
                 num=pr["number"], repo=repo,
@@ -150,13 +150,13 @@ def pr_closed(pr, bugsnag_context=None):
             file=sys.stderr
         )
         return "no JIRA issue :("
-    bugsnag_context["jira_key"] = jira_issue_key
+    bugsnag_context["jira_key"] = issue_key
     bugsnag.configure_request(meta_data=bugsnag_context)
 
     # close the issue on JIRA
     transition_url = (
         "/rest/api/2/issue/{key}/transitions"
-        "?expand=transitions.fields".format(key=jira_issue_key)
+        "?expand=transitions.fields".format(key=issue_key)
     )
     transitions_resp = jira.get(transition_url)
     if not transitions_resp.ok:
@@ -174,10 +174,26 @@ def pr_closed(pr, bugsnag_context=None):
             transition_id = t["id"]
             break
 
+    if not transition_id:
+        # maybe the issue is *already* in the right status?
+        issue_url = "/rest/api/2/issue/{key}".format(key=issue_key)
+        issue_resp = jira.get(issue_url)
+        if not issue_resp.ok:
+            raise requests.exceptions.RequestException(issue_resp.text)
+        issue = issue_resp.json()
+        bugsnag_context["jira_issue"] = issue
+        bugsnag.configure_request(meta_data=bugsnag_context)
+        if issue["fields"]["status"]["name"] == transition_name:
+            msg = "{key} is already in status {status}".format(
+                key=issue_key, status=transition_name
+            )
+            print(msg, file=sys.stderr)
+            return "nothing to do!"
+
     fail_msg = (
         "{key} cannot be transitioned directly to status {status}. "
         "Valid status transitions are: {valid}".format(
-            key=jira_issue_key, status=transition_name,
+            key=issue_key, status=transition_name,
             valid=set(t["to"]["name"] for t in transitions),
         )
     )
@@ -193,7 +209,7 @@ def pr_closed(pr, bugsnag_context=None):
     print(
         "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
             num=pr["number"], repo=repo, action="merged" if merged else "closed",
-            issue=jira_issue_key, status="Merged" if merged else "Rejected",
+            issue=issue_key, status="Merged" if merged else "Rejected",
         ),
         file=sys.stderr
     )
