@@ -131,14 +131,19 @@ def jira_issue_updated():
         print(json.dumps(event), file=sys.stderr)
 
     issue_key = event["issue"]["key"]
-    changelog = event["changelog"]["items"]
 
     # is the issue an open source pull request?
     if event["issue"]["fields"]["project"]["key"] != "OSPR":
         return "I don't care"
 
+    # is there a changelog?
+    changelog = event.get("changelog")
+    if not changelog:
+        # it was just someone adding a comment
+        return "I don't care"
+
     # did the issue change status?
-    status_changelog_items = [item["field"] == "status" for item in changelog]
+    status_changelog_items = [item["field"] == "status" for item in changelog["items"]]
     if len(status_changelog_items) == 0:
         return "I don't care"
 
