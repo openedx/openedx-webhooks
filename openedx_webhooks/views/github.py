@@ -284,7 +284,7 @@ def github_pr_comment(pull_request, jira_issue, people=None):
         "context for the PR - supporting documentation, edx-code email threads, "
         "timeline information ('this must be merged by XX date', and why that is), "
         "partner information (this is for a course on edx.org, for example), etc. "
-        "\n\nAll techincal communication about the code itself will still be "
+        "\n\nAll technical communication about the code itself will still be "
         "done via the Github pull request interface. "
         "As a reminder, [our process documentation is here]({doc_url})."
     ).format(
