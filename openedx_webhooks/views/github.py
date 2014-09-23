@@ -183,21 +183,24 @@ def pr_closed(pr, bugsnag_context=None):
         issue = issue_resp.json()
         bugsnag_context["jira_issue"] = issue
         bugsnag.configure_request(meta_data=bugsnag_context)
-        if issue["fields"]["status"]["name"] == transition_name:
+        current_status = issue["fields"]["status"]["name"]
+        if current_status == transition_name:
             msg = "{key} is already in status {status}".format(
                 key=issue_key, status=transition_name
             )
             print(msg, file=sys.stderr)
             return "nothing to do!"
 
-    fail_msg = (
-        "{key} cannot be transitioned directly to status {status}. "
-        "Valid status transitions are: {valid}".format(
-            key=issue_key, status=transition_name,
-            valid=set(t["to"]["name"] for t in transitions),
+        # nope, raise an error message
+        fail_msg = (
+            "{key} cannot be transitioned directly from status {curr_status} "
+            "to status {new_status}. Valid status transitions are: {valid}".format(
+                key=issue_key, new_status=transition_name,
+                curr_status=current_status,
+                valid=", ".join(t["to"]["name"] for t in transitions),
+            )
         )
-    )
-    assert transition_id, fail_msg
+        raise Exception(fail_msg)
 
     transition_resp = jira.post(transition_url, data=json.dumps({
         "transition": {
