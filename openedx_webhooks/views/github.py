@@ -12,6 +12,7 @@ from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
 from openedx_webhooks.utils import memoize, pop_dict_id
+from openedx_webhooks.views.jira import get_jira_custom_fields
 
 
 @app.route("/github/pr", methods=("POST",))
@@ -71,15 +72,7 @@ def pr_opened(pr, bugsnag_context=None):
         )
         return "internal pull request"
 
-    field_resp = jira.get("/rest/api/2/field")
-    if not field_resp.ok:
-        raise requests.exceptions.RequestException(field_resp.text)
-    field_map = dict(pop_dict_id(f) for f in field_resp.json())
-    custom_fields = {
-        value["name"]: id
-        for id, value in field_map.items()
-        if value["custom"]
-    }
+    custom_fields = get_jira_custom_fields()
 
     user_resp = github.get(pr["user"]["url"])
     if user_resp.ok:

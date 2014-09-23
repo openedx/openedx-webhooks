@@ -12,6 +12,21 @@ from openedx_webhooks import app
 from openedx_webhooks.oauth import jira_get
 
 
+def get_jira_custom_fields():
+    """
+    Return a name-to-id mapping for the custom fields on JIRA.
+    """
+    field_resp = jira.get("/rest/api/2/field")
+    if not field_resp.ok:
+        raise requests.exceptions.RequestException(field_resp.text)
+    field_map = dict(pop_dict_id(f) for f in field_resp.json())
+    return {
+        value["name"]: id
+        for id, value in field_map.items()
+        if value["custom"]
+    }
+
+
 @app.route("/jira/issue/created", methods=("POST",))
 def jira_issue_created():
     """
@@ -112,9 +127,39 @@ def jira_issue_updated():
         raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
     bugsnag.configure_request(meta_data={"event": event})
 
-    print(json.dumps(event), file=sys.stderr)
+    if app.debug:
+        print(json.dumps(event), file=sys.stderr)
 
     issue_key = event["issue"]["key"]
-    changelog = event["changelog"]
-    return "debugging", 400
+    changelog = event["changelog"]["items"]
+
+    # is the issue an open source pull request?
+    if event["issue"]["fields"]["project"]["key"] != "OSPR":
+        return "I don't care"
+
+    # did the issue change status?
+    status_changelog_items = [item["field"] == "status" for item in changelog]
+    if len(status_changelog_items) == 0:
+        return "I don't care"
+
+    # construct Github API URL
+    custom_fields = get_jira_custom_fields()
+    pr_repo = event["issue"]["fields"].get(custom_fields["Repo"], "")
+    pr_num = event["issue"]["fields"].get(custom_fields["PR Number"])
+    if not pr_repo or not pr_num:
+        fail_msg = '{key} is missing "Repo" or "PR Number" fields'.format(key=issue_key)
+        raise Exception(fail_msg)
+    pr_url = "/repos/{repo}/pulls/{num}".format(repo=pr_repo, num=pr_num)
+
+    old_status = status_changelog_items[0]["fromString"]
+    new_status = status_changelog_items[0]["toString"]
+
+    if new_status == "Rejected":
+        # close the pull request on Github
+        close_resp = github.patch(pr_url, data=json.dumps({"state": "closed"}))
+        if not close_resp.ok:
+            raise requests.exceptions.RequestException(close_resp.text)
+        return "Closed PR #{num}".format(num=pr_num)
+
+    return "no change necessary"
 
