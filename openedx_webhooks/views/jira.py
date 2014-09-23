@@ -98,3 +98,23 @@ def jira_issue_created():
         file=sys.stderr,
     )
     return "Processed"
+
+
+@app.route("/jira/issue/updated", methods=("POST",))
+def jira_issue_updated():
+    """
+    Received an "issue updated" event from JIRA.
+    https://developer.atlassian.com/display/JIRADEV/JIRA+Webhooks+Overview
+    """
+    try:
+        event = request.get_json()
+    except ValueError:
+        raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
+    bugsnag.configure_request(meta_data={"event": event})
+
+    print(json.dumps(event), file=sys.stderr)
+
+    issue_key = event["issue"]["key"]
+    changelog = event["changelog"]
+    return "debugging", 400
+
