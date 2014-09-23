@@ -11,7 +11,7 @@ from flask import request
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
-from openedx_webhooks.utils import memoize, pop_dict_id
+from openedx_webhooks.utils import memoize
 from openedx_webhooks.views.jira import get_jira_custom_fields
 
 

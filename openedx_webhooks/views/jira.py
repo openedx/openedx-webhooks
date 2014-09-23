@@ -9,6 +9,7 @@ from urlobject import URLObject
 from flask import request
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
+from openedx_webhooks.utils import pop_dict_id
 from openedx_webhooks.oauth import jira_get
 
 
