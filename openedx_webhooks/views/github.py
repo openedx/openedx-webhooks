@@ -254,15 +254,15 @@ def github_pr_comment(pull_request, jira_issue, people=None):
     has_signed_agreement = pr_author in people
     # is the user in the AUTHORS file?
     in_authors_file = False
-    authors_entry = people.get(pr_author, {}).get("authors_entry", "")
-    if authors_entry:
+    name = people.get(pr_author, {}).get("name", "")
+    if name:
         authors_url = "https://raw.githubusercontent.com/{repo}/{branch}/AUTHORS".format(
             repo=pull_request["head"]["repo"]["full_name"], branch=pull_request["head"]["ref"],
         )
         authors_resp = github.get(authors_url)
         if authors_resp.ok:
             authors_content = authors_resp.text
-            if authors_entry in authors_content:
+            if name in authors_content:
                 in_authors_file = True
 
     doc_url = "http://edx.readthedocs.org/projects/userdocs/en/latest/process/overview.html"
