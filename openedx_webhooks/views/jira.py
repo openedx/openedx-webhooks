@@ -144,7 +144,7 @@ def jira_issue_updated():
         return "I don't care"
 
     # did the issue change status?
-    status_changelog_items = [item["field"] == "status" for item in changelog["items"]]
+    status_changelog_items = [item for item in changelog["items"] if item["field"] == "status"]
     if len(status_changelog_items) == 0:
         return "I don't care"
 
