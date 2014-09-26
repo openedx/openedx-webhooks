@@ -177,6 +177,16 @@ def pr_opened(pr, bugsnag_context=None):
     comment_resp = github.post(url, json=comment)
     if not comment_resp.ok:
         raise requests.exceptions.RequestException(comment_resp.text)
+    needs_triage_label = {
+        "url": "https://api.github.com/repos/edx/edx-platform/labels/needs+triage",
+        "name": "needs triage",
+        "color": "e11d21"
+    }
+
+    label_resp = github.patch(issue_url, data=json.dumps({"labels": [needs_triage_label]}))
+    if not label_resp.ok:
+        raise requests.exceptions.RequestException(label_resp.text)
+
     print(
         "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
             user=user, repo=repo,
