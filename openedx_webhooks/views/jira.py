@@ -162,6 +162,7 @@ def jira_issue_updated():
     new_status = status_changelog_items[0]["toString"]
 
     if new_status == "Rejected":
+        print("pr_url = {}".format(pr_url), file=sys.stderr)
         # close the pull request on Github
         close_resp = github.patch(pr_url, data=json.dumps({"state": "closed"}))
         if not close_resp.ok:
