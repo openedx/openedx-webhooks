@@ -219,7 +219,7 @@ def jira_issue_updated():
             raise requests.exceptions.RequestException(close_resp.text)
         return "Closed PR #{num}".format(num=pr_num)
 
-    elif new_status in STATUS_LABEL_DICT.keys():
+    elif new_status in STATUS_LABEL_DICT:
         # Get all the existing labels on this PR
         label_list = github.get(issue_url)["labels"]
 
