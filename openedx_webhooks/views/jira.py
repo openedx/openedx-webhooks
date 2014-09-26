@@ -153,6 +153,7 @@ def jira_issue_updated():
     custom_fields = get_jira_custom_fields()
     pr_repo = event["issue"]["fields"].get(custom_fields["Repo"], "")
     pr_num = event["issue"]["fields"].get(custom_fields["PR Number"])
+    pr_num = int(pr_num)
     if not pr_repo or not pr_num:
         fail_msg = '{key} is missing "Repo" or "PR Number" fields'.format(key=issue_key)
         raise Exception(fail_msg)
