@@ -216,7 +216,12 @@ def jira_issue_updated():
             bugsnag_context['request_url'] = close_resp.request.url
             bugsnag_context['request_method'] = close_resp.request.method
             bugsnag.configure_request(meta_data=bugsnag_context)
-            raise requests.exceptions.RequestException(close_resp.text)
+            bug_text = ''
+            if not close_resp.ok:
+                bug_text += "Failed to close; " + close_resp.text
+            if not comment_resp.ok:
+                bug_text += "Failed to comment on the PR; " + comment_resp.text
+            raise requests.exceptions.RequestException(bug_text)
         return "Closed PR #{num}".format(num=pr_num)
 
     elif new_status in STATUS_LABEL_DICT:
@@ -233,7 +238,11 @@ def jira_issue_updated():
         # Post the new set of labels to github
         label_resp = github.patch(issue_url, data=json.dumps({"labels": label_list}))
         if not label_resp.ok:
-            raise requests.exceptions.RequestException(close_resp.text)
+            bugsnag_context['request_headers'] = label_resp.request.headers
+            bugsnag_context['request_url'] = label_resp.request.url
+            bugsnag_context['request_method'] = label_resp.request.method
+            bugsnag.configure_request(meta_data=bugsnag_context)
+            raise requests.exceptions.RequestException(label_resp.text)
         return "Changed label of PR #{num} to {labels}".format(num=pr_num, labels=label_list)
 
     return "no change necessary"
