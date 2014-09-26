@@ -168,6 +168,9 @@ def jira_issue_updated():
 
     # is the issue an open source pull request?
     if event["issue"]["fields"]["project"]["key"] != "OSPR":
+        # TODO: if the issue has just been moved from the OSPR project to a new project,
+        # change the label to "engineering review". Need to figure out if we can tell that
+        # the ticket has just moved projects.
         return "I don't care"
 
     # is there a changelog?
@@ -189,6 +192,7 @@ def jira_issue_updated():
     if not pr_repo or not pr_num:
         fail_msg = '{key} is missing "Repo" or "PR Number" fields'.format(key=issue_key)
         raise Exception(fail_msg)
+
     pr_url = "/repos/{repo}/pulls/{num}".format(repo=pr_repo, num=pr_num)
     # Need to use the Issues API for label manipulation
     issue_url = "/repos/{repo}/issues/{num}".format(repo=pr_repo, num=pr_num)
@@ -197,14 +201,17 @@ def jira_issue_updated():
     new_status = status_changelog_items[0]["toString"]
 
     if new_status == "Rejected":
-        # close the pull request on Github
-        ## TODO: Should also comment on the PR to explain to look at JIRA
-        ## Hello @{name}: We are unable to continue with review of your submission
-        ## at this time. Please see the associated JIRA ticket for more explanation.
+        # Comment on the PR to explain to look at JIRA
+        username = github.get(issue_url)["user"]["login"]
+        comment = {
+            "body": "Hello @{username}: We are unable to continue with review of your submission "
+            "at this time. Please see the associated JIRA ticket for more explanation.".format(username=username)
+        }
+        comment_resp = github.post(issue_url + "/comments", data=json.dumps(comment))
 
-        ## TODO: check if this is working (OSPR-35: rejecting ticket did not close PR)
+        # close the pull request on Github
         close_resp = github.patch(pr_url, data=json.dumps({"state": "closed"}))
-        if not close_resp.ok:
+        if not close_resp.ok or not comment_resp.ok:
             bugsnag_context['request_headers'] = close_resp.request.headers
             bugsnag_context['request_url'] = close_resp.request.url
             bugsnag_context['request_method'] = close_resp.request.method
@@ -214,7 +221,7 @@ def jira_issue_updated():
 
     elif new_status in STATUS_LABEL_DICT.keys():
         # Get all the existing labels on this PR
-        label_list = github.get(issue_url)[labels]
+        label_list = github.get(issue_url)["labels"]
 
         # Add in the new label and remove the old label
         label_list.append(STATUS_LABEL_DICT[new_status])
