@@ -127,7 +127,8 @@ def jira_issue_updated():
         event = request.get_json()
     except ValueError:
         raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
-    bugsnag.configure_request(meta_data={"event": event})
+    bugsnag_context = {"event": event}
+    bugsnag.configure_request(meta_data=bugsnag_context)
 
     if app.debug:
         print(json.dumps(event), file=sys.stderr)
@@ -163,10 +164,13 @@ def jira_issue_updated():
     new_status = status_changelog_items[0]["toString"]
 
     if new_status == "Rejected":
-        print("pr_url = {}".format(pr_url), file=sys.stderr)
         # close the pull request on Github
         close_resp = github.patch(pr_url, data=json.dumps({"state": "closed"}))
         if not close_resp.ok:
+            bugsnag_context['request_headers'] = close_resp.request.headers
+            bugsnag_context['request_url'] = close_resp.request.url
+            bugsnag_context['request_method'] = close_resp.request.method
+            bugsnag.configure_request(meta_data=bugsnag_context)
             raise requests.exceptions.RequestException(close_resp.text)
         return "Closed PR #{num}".format(num=pr_num)
 
