@@ -195,6 +195,11 @@ def jira_issue_updated():
 
     if new_status == "Rejected":
         # close the pull request on Github
+        ## TODO: Should also comment on the PR to explain to look at JIRA
+        ## Hello @{name}: We are unable to continue with review of your submission
+        ## at this time. Please see the associated JIRA ticket for more explanation.
+
+        ## TODO: check if this is working (OSPR-35: rejecting ticket did not close PR)
         close_resp = github.patch(pr_url, data=json.dumps({"state": "closed"}))
         if not close_resp.ok:
             raise requests.exceptions.RequestException(close_resp.text)
