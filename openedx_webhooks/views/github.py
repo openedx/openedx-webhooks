@@ -74,11 +74,13 @@ def pr_opened(pr, bugsnag_context=None):
 
     custom_fields = get_jira_custom_fields()
 
-    user_resp = github.get(pr["user"]["url"])
-    if user_resp.ok:
-        user_name = user_resp.json().get("name", user)
-    else:
-        user_name = user
+    user_name = people[user].get("name", "")
+    if not user_name:
+        user_resp = github.get(pr["user"]["url"])
+        if user_resp.ok:
+            user_name = user_resp.json().get("name", user)
+        else:
+            user_name = user
 
     # create an issue on JIRA!
     new_issue = {
@@ -255,6 +257,7 @@ def github_pr_comment(pull_request, jira_issue, people=None):
     # is the user in the AUTHORS file?
     in_authors_file = False
     name = people.get(pr_author, {}).get("name", "")
+    institution = people.get(pr_author, {}).get("institution", None)
     if name:
         authors_url = "https://raw.githubusercontent.com/{repo}/{branch}/AUTHORS".format(
             repo=pull_request["head"]["repo"]["full_name"], branch=pull_request["head"]["ref"],
