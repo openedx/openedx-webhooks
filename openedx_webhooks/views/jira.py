@@ -32,6 +32,11 @@ def get_jira_custom_fields():
 # TODO: should load this directly from labels.yaml so the color and name info is up to date.
 # Doesn't have the URL info but that is easily constructed.
 STATUS_LABEL_DICT = {
+    'Needs Triage': {
+        "url": "https://api.github.com/repos/edx/edx-platform/labels/needs+triage",
+        "name": "needs triage",
+        "color": "e11d21"
+    },
     'Product Review': {
         "url": "https://api.github.com/repos/edx/edx-platform/labels/product+review",
         "name": "product review",
@@ -48,9 +53,9 @@ STATUS_LABEL_DICT = {
         'color': 'fad8c7'
     },
     'Engineering Review': {
-        "url": "https://api.github.com/repos/edx/edx-platform/labels/community+manager+review",
-        "name": "community manager review",
-        "color": "207de5"
+        "url": "https://api.github.com/repos/edx/edx-platform/labels/engineering+review",
+        "name": "engineering review",
+        "color": "c7def8"
     },
     'Waiting on Author': {
         "url": "https://api.github.com/repos/edx/edx-platform/labels/waiting+on+author",
