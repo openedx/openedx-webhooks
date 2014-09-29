@@ -226,7 +226,7 @@ def jira_issue_updated():
 
     elif new_status in STATUS_LABEL_DICT:
         # Get all the existing labels on this PR
-        label_list = github.get(issue_url)["labels"]
+        label_list = github.get(issue_url).json()["labels"]
 
         # Add in the new label and remove the old label
         label_list.append(STATUS_LABEL_DICT[new_status])
