@@ -250,7 +250,6 @@ def github_pr_comment(pull_request, jira_issue, people=None):
     * check for AUTHORS entry
     * contain a link to our process documentation
     """
-    repo = pull_request["head"]["repo"]["full_name"]
     people = people or get_people_file()
     people = {user.lower(): values for user, values in people.items()}
     pr_author = pull_request["user"]["login"].lower()
@@ -262,7 +261,8 @@ def github_pr_comment(pull_request, jira_issue, people=None):
     institution = people.get(pr_author, {}).get("institution", None)
     if name:
         authors_url = "https://raw.githubusercontent.com/{repo}/{branch}/AUTHORS".format(
-            repo=repo, branch=pull_request["head"]["ref"],
+            repo=pull_request["head"]["repo"]["full_name"],
+            branch=pull_request["head"]["ref"],
         )
         authors_resp = github.get(authors_url)
         if authors_resp.ok:
@@ -275,7 +275,9 @@ def github_pr_comment(pull_request, jira_issue, people=None):
     issue_url = "https://openedx.atlassian.net/browse/{key}".format(key=issue_key)
     contributing_url = "https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst"
     agreement_url = "http://code.edx.org/individual-contributor-agreement.pdf"
-    authors_url = "https://github.com/{repo}/blob/master/AUTHORS".format(repo=repo)
+    authors_url = "https://github.com/{repo}/blob/master/AUTHORS".format(
+        repo=pull_request["base"]["repo"]["full_name"],
+    )
     comment = (
         "Thanks for the pull request, @{user}! I've created "
         "[{issue_key}]({issue_url}) to keep track of it in JIRA. "
