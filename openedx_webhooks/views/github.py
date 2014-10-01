@@ -74,8 +74,9 @@ def pr_opened(pr, bugsnag_context=None):
 
     custom_fields = get_jira_custom_fields()
 
-    user_name = people[user].get("name", "")
-    if not user_name:
+    if user in people:
+        user_name = people[user].get("name", "")
+    else:
         user_resp = github.get(pr["user"]["url"])
         if user_resp.ok:
             user_name = user_resp.json().get("name", user)
