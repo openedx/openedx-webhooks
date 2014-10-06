@@ -65,7 +65,7 @@ def rescan_open_github_pull_requests():
     for pull_request in paginated_get(url, session=github):
         bugsnag_context["pull_request"] = pull_request
         bugsnag.configure_request(meta_data=bugsnag_context)
-        if not get_jira_issue_key(pull_request):
+        if not get_jira_issue_key(pull_request) and not is_edx_pull_request(pull_request):
             created[pull_request["number"]] = "FAKE"
             # text = pr_opened(pull_request, bugsnag_context=bugsnag_context)
             # if "created" in text:
@@ -101,13 +101,18 @@ def get_people_file():
     return yaml.safe_load(people_resp.text)
 
 
-def pr_opened(pr, bugsnag_context=None):
-    bugsnag_context = bugsnag_context or {}
-    user = pr["user"]["login"].decode('utf-8')
-    repo = pr["base"]["repo"]["full_name"].decode('utf-8')
+def is_edx_pull_request(pull_request):
+    """
+    Was this pull request created by someone who works for edX?
+    """
     people = get_people_file()
+    author = pull_request["user"]["login"].decode('utf-8')
+    return (author in people and
+            people[author].get("institution", "") == "edX")
 
-    if user in people and people[user].get("institution", "") == "edX":
+
+def pr_opened(pr, bugsnag_context=None):
+    if is_edx_pull_request(pr):
         # not an open source pull request, don't create an issue for it
         print(
             "@{user} opened PR #{num} against {repo} (internal PR)".format(
@@ -117,7 +122,10 @@ def pr_opened(pr, bugsnag_context=None):
             file=sys.stderr
         )
         return "internal pull request"
-
+    bugsnag_context = bugsnag_context or {}
+    user = pr["user"]["login"].decode('utf-8')
+    repo = pr["base"]["repo"]["full_name"].decode('utf-8')
+    people = get_people_file()
     custom_fields = get_jira_custom_fields()
 
     if user in people:
