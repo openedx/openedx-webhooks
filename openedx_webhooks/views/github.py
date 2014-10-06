@@ -7,7 +7,7 @@ import re
 import bugsnag
 import requests
 import yaml
-from flask import request, render_template
+from flask import request, render_template, make_response
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
@@ -77,7 +77,9 @@ def rescan_open_github_pull_requests():
         ),
         file=sys.stderr
     )
-    return json.dumps(created)
+    resp = make_response(json.dumps(created), 200)
+    resp.headers["Content-Type"] = "application/json"
+    return resp
 
 
 @memoize
