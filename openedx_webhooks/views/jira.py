@@ -10,10 +10,11 @@ from flask import request
 from flask_dance.contrib.jira import jira
 from flask_dance.contrib.github import github
 from openedx_webhooks import app
-from openedx_webhooks.utils import pop_dict_id
+from openedx_webhooks.utils import pop_dict_id, memoize
 from openedx_webhooks.oauth import jira_get
 
 
+@memoize
 def get_jira_custom_fields():
     """
     Return a name-to-id mapping for the custom fields on JIRA.
@@ -207,7 +208,11 @@ def jira_issue_updated():
 
     if new_status == "Rejected":
         # Comment on the PR to explain to look at JIRA
-        username = github.get(issue_url)["user"]["login"]
+        issue_resp = github.get(issue_url)
+        if not issue_resp.ok:
+            raise requests.exceptions.RequestException(issue_resp.text)
+        issue = issue_resp.json()
+        username = issue["user"]["login"].decode('utf-8')
         comment = {"body": (
             "Hello @{username}: We are unable to continue with "
             "review of your submission at this time. Please see the "

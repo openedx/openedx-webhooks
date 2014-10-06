@@ -11,7 +11,7 @@ from flask import request
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
-from openedx_webhooks.utils import memoize
+from openedx_webhooks.utils import memoize, paginated_get
 from openedx_webhooks.views.jira import get_jira_custom_fields
 
 
@@ -46,6 +46,45 @@ def github_pull_request():
         file=sys.stderr
     )
     return "Don't know how to handle this.", 400
+
+
+@app.route("/github/rescan", methods=("POST",))
+def rescan_open_github_pull_requests():
+    """
+    Used to pick up PRs that might not have tickets associated with them.
+    """
+    repo = request.args.get("repo", "edx/edx-platform")
+    bugsnag_context = {"repo": repo}
+    bugsnag.configure_request(meta_data=bugsnag_context)
+    url = "/repos/{repo}/pulls".format(repo=repo)
+    created = {}
+
+    for pull_request in paginated_get(url, session=github):
+        bugsnag_context["pull_request"] = pull_request
+        bugsnag.configure_request(meta_data=bugsnag_context)
+        if not get_jira_issue_key(pull_request):
+            text = pr_opened(pull_request, bugsnag_context=bugsnag_context)
+            if "created" in text:
+                jira_key = text[8:]
+                created[pull_request["number"]] = jira_key
+
+    print(
+        "Created {num} JIRA issues. PRs are {prs}".format(
+            num=len(created), prs=created.keys(),
+        ),
+        file=sys.stderr
+    )
+    return json.dumps(created)
+
+
+@memoize
+def github_whoami():
+    self_resp = github.get("/user")
+    rate_limit_info = {k: v for k, v in self_resp.headers.items() if "ratelimit" in k}
+    print("Rate limits: {}".format(rate_limit_info), file=sys.stderr)
+    if not self_resp.ok:
+        raise requests.exceptions.RequestException(self_resp.text)
+    return self_resp.json()
 
 
 @memoize
@@ -111,7 +150,8 @@ def pr_opened(pr, bugsnag_context=None):
     if not resp.ok:
         raise requests.exceptions.RequestException(resp.text)
     new_issue_body = resp.json()
-    bugsnag_context["new_issue"]["key"] = new_issue_body["key"]
+    issue_key = new_issue_body["key"].decode('utf-8')
+    bugsnag_context["new_issue"]["key"] = issue_key
     bugsnag.configure_request(meta_data=bugsnag_context)
     # add a comment to the Github pull request with a link to the JIRA issue
     comment = {
@@ -126,11 +166,11 @@ def pr_opened(pr, bugsnag_context=None):
     print(
         "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
             user=user, repo=repo,
-            num=pr["number"], issue=new_issue_body["key"].decode('utf-8')
+            num=pr["number"], issue=issue_key,
         ),
         file=sys.stderr
     )
-    return "created!"
+    return "created {key}".format(key=issue_key)
 
 
 def pr_closed(pr, bugsnag_context=None):
@@ -217,13 +257,8 @@ def pr_closed(pr, bugsnag_context=None):
 
 
 def get_jira_issue_key(pull_request):
-    # who am I?
-    self_resp = github.get("/user")
-    rate_limit_info = {k: v for k, v in self_resp.headers.items() if "ratelimit" in k}
-    print("Rate limits: {}".format(rate_limit_info), file=sys.stderr)
-    if not self_resp.ok:
-        raise requests.exceptions.RequestException(self_resp.text)
-    my_username = self_resp.json()["login"]
+    me = github_whoami()
+    my_username = me["login"]
     # get my first comment on this pull request
     comments_resp = github.get("/repos/{repo}/issues/{num}/comments".format(
         repo=pull_request["base"]["repo"]["full_name"], num=pull_request["number"],

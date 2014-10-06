@@ -2,6 +2,7 @@ from __future__ import print_function, unicode_literals
 
 import functools
 import requests
+from urlobject import URLObject
 
 
 def pop_dict_id(d):
@@ -10,32 +11,34 @@ def pop_dict_id(d):
     return (id, d)
 
 
-def paginated_api(url, obj_name, session=None, start=0, retries=3, **fields):
+def paginated_get(url, session=None, limit=None, per_page=100, **kwargs):
+    """
+    Retrieve all objects from a paginated API.
+
+    Assumes that the pagination is specified in the "link" header, like
+    Github's v3 API.
+
+    The `limit` describes how many results you'd like returned.  You might get
+    more than this, but you won't make more requests to the server once this
+    limit has been exceeded.  For example, paginating by 100, if you set a
+    limit of 250, three requests will be made, and you'll get 300 objects.
+
+    """
+    url = URLObject(url).set_query_param('per_page', per_page)
+    limit = limit or 999999999
     session = session or requests.Session()
-    more_results = True
-    while more_results:
-        result_url = (
-            url.set_query_param("startAt", str(start))
-               .set_query_params(**fields)
-        )
-        for _ in xrange(retries):
-            try:
-                result_resp = session.get(result_url)
-                result = result_resp.json()
-                break
-            except ValueError:
-                continue
-        if not result_resp.ok:
-            raise requests.exceptions.RequestException(result)
-        result = result_resp.json()
-        for obj in result[obj_name]:
-            yield obj
-        returned = len(result[obj_name])
-        total = result["total"]
-        if start + returned < total:
-            start += returned
-        else:
-            more_results = False
+    returned = 0
+    while url:
+        resp = session.get(url, **kwargs)
+        result = resp.json()
+        if not resp.ok:
+            raise requests.exceptions.RequestException(result["message"])
+        for item in result:
+            yield item
+            returned += 1
+        url = None
+        if resp.links and returned < limit:
+            url = resp.links.get("next", {}).get("url", "")
 
 
 def memoize(func):
