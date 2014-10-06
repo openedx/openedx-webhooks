@@ -7,7 +7,7 @@ import re
 import bugsnag
 import requests
 import yaml
-from flask import request
+from flask import request, render_template
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
@@ -48,11 +48,14 @@ def github_pull_request():
     return "Don't know how to handle this.", 400
 
 
-@app.route("/github/rescan", methods=("POST",))
+@app.route("/github/rescan", methods=("GET", "POST"))
 def rescan_open_github_pull_requests():
     """
     Used to pick up PRs that might not have tickets associated with them.
     """
+    if request.method == "GET":
+        # just render the form
+        return render_template("rescan.html")
     repo = request.args.get("repo", "edx/edx-platform")
     bugsnag_context = {"repo": repo}
     bugsnag.configure_request(meta_data=bugsnag_context)

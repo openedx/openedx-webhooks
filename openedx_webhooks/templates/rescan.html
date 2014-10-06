@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+    </head>
+    <body>
+        <h1>Rescan Github</h1>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+    <form id="rescan-form" action="." method="POST">
+    <p>
+      Clicking this button will rescan all the open pull requests for the
+      repo you specify. Depending on the number of open pull requests, it may
+      take awhile. Do you want to do this?
+    </p>
+    <label for="repo">Repo to scan</label>
+    <input type="text" name="repo" value="edx/edx-platform" />
+    <input type="submit" value="Rescan" />
+    </form>
+    </body>
+</html>
