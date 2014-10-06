@@ -66,10 +66,11 @@ def rescan_open_github_pull_requests():
         bugsnag_context["pull_request"] = pull_request
         bugsnag.configure_request(meta_data=bugsnag_context)
         if not get_jira_issue_key(pull_request):
-            text = pr_opened(pull_request, bugsnag_context=bugsnag_context)
-            if "created" in text:
-                jira_key = text[8:]
-                created[pull_request["number"]] = jira_key
+            created[pull_request["number"]] = "FAKE"
+            # text = pr_opened(pull_request, bugsnag_context=bugsnag_context)
+            # if "created" in text:
+            #     jira_key = text[8:]
+            #     created[pull_request["number"]] = jira_key
 
     print(
         "Created {num} JIRA issues. PRs are {prs}".format(
