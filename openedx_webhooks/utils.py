@@ -24,7 +24,7 @@ def paginated_get(url, session=None, limit=None, per_page=100, **kwargs):
     limit of 250, three requests will be made, and you'll get 300 objects.
 
     """
-    url = URLObject(url).set_query_param('per_page', per_page)
+    url = URLObject(url).set_query_param('per_page', str(per_page))
     limit = limit or 999999999
     session = session or requests.Session()
     returned = 0
