@@ -31,7 +31,7 @@ def github_pull_request():
         return "PONG"
 
     pr = event["pull_request"]
-    repo = pr["base"]["repo"]["full_name"]
+    repo = pr["base"]["repo"]["full_name"].decode('utf-8')
     if event["action"] == "opened":
         return pr_opened(pr, bugsnag_context)
     if event["action"] == "closed":
@@ -39,8 +39,9 @@ def github_pull_request():
 
     print(
         "Received {action} event on PR #{num} against {repo}, don't know how to handle it".format(
-            action=event["action"], repo=pr["base"]["repo"]["full_name"],
-            num=pr["number"]
+            action=event["action"],
+            repo=pr["base"]["repo"]["full_name"].decode('utf-8'),
+            num=pr["number"],
         ),
         file=sys.stderr
     )
@@ -57,8 +58,8 @@ def get_people_file():
 
 def pr_opened(pr, bugsnag_context=None):
     bugsnag_context = bugsnag_context or {}
-    user = pr["user"]["login"]
-    repo = pr["base"]["repo"]["full_name"]
+    user = pr["user"]["login"].decode('utf-8')
+    repo = pr["base"]["repo"]["full_name"].decode('utf-8')
     people = get_people_file()
 
     if user in people and people[user].get("institution", "") == "edX":
@@ -125,7 +126,7 @@ def pr_opened(pr, bugsnag_context=None):
     print(
         "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
             user=user, repo=repo,
-            num=pr["number"], issue=new_issue_body["key"]
+            num=pr["number"], issue=new_issue_body["key"].decode('utf-8')
         ),
         file=sys.stderr
     )
@@ -134,7 +135,7 @@ def pr_opened(pr, bugsnag_context=None):
 
 def pr_closed(pr, bugsnag_context=None):
     bugsnag_context = bugsnag_context or {}
-    repo = pr["base"]["repo"]["full_name"]
+    repo = pr["base"]["repo"]["full_name"].decode('utf-8')
 
     merged = pr["merged"]
     issue_key = get_jira_issue_key(pr)
@@ -179,7 +180,7 @@ def pr_closed(pr, bugsnag_context=None):
         issue = issue_resp.json()
         bugsnag_context["jira_issue"] = issue
         bugsnag.configure_request(meta_data=bugsnag_context)
-        current_status = issue["fields"]["status"]["name"]
+        current_status = issue["fields"]["status"]["name"].decode("utf-8")
         if current_status == transition_name:
             msg = "{key} is already in status {status}".format(
                 key=issue_key, status=transition_name
@@ -193,7 +194,7 @@ def pr_closed(pr, bugsnag_context=None):
             "to status {new_status}. Valid status transitions are: {valid}".format(
                 key=issue_key, new_status=transition_name,
                 curr_status=current_status,
-                valid=", ".join(t["to"]["name"] for t in transitions),
+                valid=", ".join(t["to"]["name"].decode('utf-8') for t in transitions),
             )
         )
         raise Exception(fail_msg)
@@ -236,7 +237,7 @@ def get_jira_issue_key(pull_request):
     # search for the first occurrance of a JIRA ticket key in the comment body
     match = re.search(r"\b([A-Z]{2,}-\d+)\b", my_comments[0]["body"])
     if match:
-        return match.group(0)
+        return match.group(0).decode('utf-8')
     return None
 
 
@@ -252,7 +253,7 @@ def github_pr_comment(pull_request, jira_issue, people=None):
     """
     people = people or get_people_file()
     people = {user.lower(): values for user, values in people.items()}
-    pr_author = pull_request["user"]["login"].lower()
+    pr_author = pull_request["user"]["login"].decode('utf-8').lower()
     # does the user have a signed contributor agreement?
     has_signed_agreement = pr_author in people
     # is the user in the AUTHORS file?
@@ -261,8 +262,8 @@ def github_pr_comment(pull_request, jira_issue, people=None):
     institution = people.get(pr_author, {}).get("institution", None)
     if name:
         authors_url = "https://raw.githubusercontent.com/{repo}/{branch}/AUTHORS".format(
-            repo=pull_request["head"]["repo"]["full_name"],
-            branch=pull_request["head"]["ref"],
+            repo=pull_request["head"]["repo"]["full_name"].decode('utf-8'),
+            branch=pull_request["head"]["ref"].decode('utf-8'),
         )
         authors_resp = github.get(authors_url)
         if authors_resp.ok:
@@ -271,12 +272,12 @@ def github_pr_comment(pull_request, jira_issue, people=None):
                 in_authors_file = True
 
     doc_url = "http://edx.readthedocs.org/projects/userdocs/en/latest/process/overview.html"
-    issue_key = jira_issue["key"]
+    issue_key = jira_issue["key"].decode('utf-8')
     issue_url = "https://openedx.atlassian.net/browse/{key}".format(key=issue_key)
     contributing_url = "https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst"
     agreement_url = "http://code.edx.org/individual-contributor-agreement.pdf"
     authors_url = "https://github.com/{repo}/blob/master/AUTHORS".format(
-        repo=pull_request["base"]["repo"]["full_name"],
+        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
     )
     comment = (
         "Thanks for the pull request, @{user}! I've created "
@@ -291,7 +292,7 @@ def github_pr_comment(pull_request, jira_issue, people=None):
         "done via the Github pull request interface. "
         "As a reminder, [our process documentation is here]({doc_url})."
     ).format(
-        user=pull_request["user"]["login"],
+        user=pull_request["user"]["login"].decode('utf-8'),
         issue_key=issue_key, issue_url=issue_url, doc_url=doc_url,
     )
     if not has_signed_agreement or not in_authors_file:

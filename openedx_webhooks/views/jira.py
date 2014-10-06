@@ -73,15 +73,17 @@ def jira_issue_created():
     try:
         event = request.get_json()
     except ValueError:
-        raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
+        raise ValueError("Invalid JSON from JIRA: {data}".format(
+            data=request.data.decode('utf-8')
+        ))
     bugsnag.configure_request(meta_data={"event": event})
 
     if app.debug:
         print(json.dumps(event), file=sys.stderr)
 
-    issue_key = event["issue"]["key"]
-    issue_status = event["issue"]["fields"]["status"]["name"]
-    project = event["issue"]["fields"]["project"]["key"]
+    issue_key = event["issue"]["key"].decode('utf-8')
+    issue_status = event["issue"]["fields"]["status"]["name"].decode('utf-8')
+    project = event["issue"]["fields"]["project"]["key"].decode('utf-8')
     if issue_status != "Needs Triage":
         print(
             "{key} has status {status}, does not need to be processed".format(
@@ -139,8 +141,9 @@ def jira_issue_created():
     # log to stderr
     print(
         "{key} created by {name} ({username}), {action}".format(
-            key=issue_key, name=event["user"]["displayName"],
-            username=event["user"]["name"],
+            key=issue_key,
+            name=event["user"]["displayName"].decode('utf-8'),
+            username=event["user"]["name"].decode('utf-8'),
             action="Transitioned to Open" if transitioned else "ignored",
         ),
         file=sys.stderr,
@@ -157,14 +160,16 @@ def jira_issue_updated():
     try:
         event = request.get_json()
     except ValueError:
-        raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
+        raise ValueError("Invalid JSON from JIRA: {data}".format(
+            data=request.data.decode('utf-8')
+        ))
     bugsnag_context = {"event": event}
     bugsnag.configure_request(meta_data=bugsnag_context)
 
     if app.debug:
         print(json.dumps(event), file=sys.stderr)
 
-    issue_key = event["issue"]["key"]
+    issue_key = event["issue"]["key"].decode('utf-8')
 
     # is the issue an open source pull request?
     if event["issue"]["fields"]["project"]["key"] != "OSPR":
@@ -203,10 +208,11 @@ def jira_issue_updated():
     if new_status == "Rejected":
         # Comment on the PR to explain to look at JIRA
         username = github.get(issue_url)["user"]["login"]
-        comment = {
-            "body": "Hello @{username}: We are unable to continue with review of your submission "
-            "at this time. Please see the associated JIRA ticket for more explanation.".format(username=username)
-        }
+        comment = {"body": (
+            "Hello @{username}: We are unable to continue with "
+            "review of your submission at this time. Please see the "
+            "associated JIRA ticket for more explanation.".format(username=username)
+        )}
         comment_resp = github.post(issue_url + "/comments", data=json.dumps(comment))
 
         # close the pull request on Github
