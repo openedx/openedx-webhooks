@@ -264,20 +264,18 @@ def pr_closed(pr, bugsnag_context=None):
 def get_jira_issue_key(pull_request):
     me = github_whoami()
     my_username = me["login"]
-    # get my first comment on this pull request
-    comments_resp = github.get("/repos/{repo}/issues/{num}/comments".format(
-        repo=pull_request["base"]["repo"]["full_name"], num=pull_request["number"],
-    ))
-    if not comments_resp.ok:
-        raise requests.exceptions.RequestException(comments_resp.text)
-    my_comments = [comment for comment in comments_resp.json()
-                   if comment["user"]["login"] == my_username]
-    if len(my_comments) < 1:
-        return None
-    # search for the first occurrance of a JIRA ticket key in the comment body
-    match = re.search(r"\b([A-Z]{2,}-\d+)\b", my_comments[0]["body"])
-    if match:
-        return match.group(0).decode('utf-8')
+    comment_url = "/repos/{repo}/issues/{num}/comments".format(
+        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
+        num=pull_request["number"],
+    )
+    for comment in paginated_get(comment_url, session=github):
+        # I only care about comments I made
+        if comment["user"]["login"] != my_username:
+            continue
+        # search for the first occurrance of a JIRA ticket key in the comment body
+        match = re.search(r"\b([A-Z]{2,}-\d+)\b", comment["body"])
+        if match:
+            return match.group(0).decode('utf-8')
     return None
 
 
