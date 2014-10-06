@@ -111,6 +111,8 @@ def is_edx_pull_request(pull_request):
 
 
 def pr_opened(pr, bugsnag_context=None):
+    bugsnag_context = bugsnag_context or {}
+    user = pr["user"]["login"].decode('utf-8')
     if is_edx_pull_request(pr):
         # not an open source pull request, don't create an issue for it
         print(
@@ -121,8 +123,7 @@ def pr_opened(pr, bugsnag_context=None):
             file=sys.stderr
         )
         return "internal pull request"
-    bugsnag_context = bugsnag_context or {}
-    user = pr["user"]["login"].decode('utf-8')
+
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
     people = get_people_file()
     custom_fields = get_jira_custom_fields()
