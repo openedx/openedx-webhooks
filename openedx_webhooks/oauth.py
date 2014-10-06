@@ -6,7 +6,9 @@ from datetime import datetime
 from flask import request, flash
 from flask_dance.contrib.github import make_github_blueprint
 from flask_dance.contrib.jira import make_jira_blueprint
+from cachecontrol import CacheControlAdapter
 from .models import db, OAuthCredential
+
 
 # Check for required environment variables
 
@@ -109,6 +111,10 @@ def github_logged_in(token):
         flash(msg)
     else:
         flash("Successfully signed in with Github")
+
+
+# install CacheControl for github session, so we don't eat up API usage unnecessarily
+github_bp.session.mount(github_bp.session.base_url, CacheControlAdapter())
 
 
 ## UTILITY FUNCTIONS ##
