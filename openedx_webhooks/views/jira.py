@@ -207,11 +207,19 @@ def jira_issue_updated():
     new_status = status_changelog_items[0]["toString"]
 
     if new_status == "Rejected":
-        # Comment on the PR to explain to look at JIRA
         issue_resp = github.get(issue_url)
         if not issue_resp.ok:
             raise requests.exceptions.RequestException(issue_resp.text)
         issue = issue_resp.json()
+        if issue["state"] == "closed":
+            # nothing to do
+            msg = "{key} was rejected, but PR #{num} was already closed".format(
+                key=issue_key, num=pr_num
+            )
+            print(msg, file=sys.stderr)
+            return msg
+
+        # Comment on the PR to explain to look at JIRA
         username = issue["user"]["login"].decode('utf-8')
         comment = {"body": (
             "Hello @{username}: We are unable to continue with "
