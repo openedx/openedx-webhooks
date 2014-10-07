@@ -134,7 +134,7 @@ def jira_issue_created():
                 "id": transitions[new_status],
             }
         }
-        transition_resp = jira.post(transitions_url, data=json.dumps(body))
+        transition_resp = jira.post(transitions_url, json=body)
         if not transition_resp.ok:
             raise requests.exceptions.RequestException(transition_resp.text)
         transitioned = True
@@ -226,10 +226,10 @@ def jira_issue_updated():
             "review of your submission at this time. Please see the "
             "associated JIRA ticket for more explanation.".format(username=username)
         )}
-        comment_resp = github.post(issue_url + "/comments", data=json.dumps(comment))
+        comment_resp = github.post(issue_url + "/comments", json=comment)
 
         # close the pull request on Github
-        close_resp = github.patch(pr_url, data=json.dumps({"state": "closed"}))
+        close_resp = github.patch(pr_url, json={"state": "closed"})
         if not close_resp.ok or not comment_resp.ok:
             bugsnag_context['request_headers'] = close_resp.request.headers
             bugsnag_context['request_url'] = close_resp.request.url
@@ -255,7 +255,7 @@ def jira_issue_updated():
             print("PR {num} does not have label {old_label} to remove".format(num=pr_num, old_label=STATUS_LABEL_DICT[old_status]))
 
         # Post the new set of labels to github
-        label_resp = github.patch(issue_url, data=json.dumps({"labels": label_list}))
+        label_resp = github.patch(issue_url, json={"labels": label_list})
         if not label_resp.ok:
             bugsnag_context['request_headers'] = label_resp.request.headers
             bugsnag_context['request_url'] = label_resp.request.url

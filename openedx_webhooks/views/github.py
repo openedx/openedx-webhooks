@@ -160,7 +160,7 @@ def pr_opened(pr, bugsnag_context=None):
     bugsnag_context["new_issue"] = new_issue
     bugsnag.configure_request(meta_data=bugsnag_context)
 
-    resp = jira.post("/rest/api/2/issue", data=json.dumps(new_issue))
+    resp = jira.post("/rest/api/2/issue", json=new_issue)
     if not resp.ok:
         raise requests.exceptions.RequestException(resp.text)
     new_issue_body = resp.json()
@@ -174,7 +174,7 @@ def pr_opened(pr, bugsnag_context=None):
     url = "/repos/{repo}/issues/{num}/comments".format(
         repo=repo, num=pr["number"],
     )
-    comment_resp = github.post(url, data=json.dumps(comment))
+    comment_resp = github.post(url, json=comment)
     if not comment_resp.ok:
         raise requests.exceptions.RequestException(comment_resp.text)
     print(
@@ -253,11 +253,11 @@ def pr_closed(pr, bugsnag_context=None):
         )
         raise Exception(fail_msg)
 
-    transition_resp = jira.post(transition_url, data=json.dumps({
+    transition_resp = jira.post(transition_url, json={
         "transition": {
             "id": transition_id,
         }
-    }))
+    })
     if not transition_resp.ok:
         raise requests.exceptions.RequestException(transition_resp.text)
     print(

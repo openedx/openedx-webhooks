@@ -3,7 +3,7 @@ Flask-Dance==0.1
 Flask-SQLAlchemy==2.0
 Flask-Script
 blinker
-requests==2.3.0
+requests==2.4.3
 requests-oauthlib==0.4.1
 CacheControl==0.10.4
 URLObject==2.3.4
