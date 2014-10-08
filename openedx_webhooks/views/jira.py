@@ -56,7 +56,8 @@ def jira_issue_created():
         raise ValueError("Invalid JSON from JIRA: {data}".format(
             data=request.data.decode('utf-8')
         ))
-    bugsnag.configure_request(meta_data={"event": event})
+    bugsnag_context = {"event": event}
+    bugsnag.configure_request(meta_data=bugsnag_context)
 
     if app.debug:
         print(json.dumps(event), file=sys.stderr)
@@ -118,12 +119,19 @@ def jira_issue_created():
             raise requests.exceptions.RequestException(transition_resp.text)
         transitioned = True
 
+    try:
+        name = event["user"]["displayName"].decode('utf-8')
+    except:
+        bugsnag_context["name_type"] = type(event["user"]["displayName"])
+        bugsnag.configure_request(meta_data=bugsnag_context)
+        raise
+
     # log to stderr
     print(
         "{key} created by {name} ({username}), {action}".format(
             key=issue_key,
             name=event["user"]["displayName"].decode('utf-8'),
-            username=event["user"]["name"].decode('utf-8'),
+            username=name,
             action="Transitioned to Open" if transitioned else "ignored",
         ),
         file=sys.stderr,
