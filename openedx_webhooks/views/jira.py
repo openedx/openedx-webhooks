@@ -237,7 +237,8 @@ def jira_issue_updated():
         # Add in the new label and remove the old label
         label_list.append(STATUS_LABEL_DICT[new_status])
         try:
-            label_list.remove(STATUS_LABEL_DICT[old_status])
+            if old_status in STATUS_LABEL_DICT:
+                label_list.remove(STATUS_LABEL_DICT[old_status])
         except ValueError:
             print("PR {num} does not have label {old_label} to remove".format(num=pr_num, old_label=STATUS_LABEL_DICT[old_status]))
 
