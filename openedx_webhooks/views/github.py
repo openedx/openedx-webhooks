@@ -177,6 +177,12 @@ def pr_opened(pr, bugsnag_context=None):
     comment_resp = github.post(url, json=comment)
     if not comment_resp.ok:
         raise requests.exceptions.RequestException(comment_resp.text)
+
+    issue_url = "/repos/{repo}/issues/{num}".format(repo=repo, num=pr["number"])
+    label_resp = github.patch(issue_url, data=json.dumps({"labels": ["needs triage"]}))
+    if not label_resp.ok:
+        raise requests.exceptions.RequestException(label_resp.text)
+
     print(
         "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
             user=user, repo=repo,

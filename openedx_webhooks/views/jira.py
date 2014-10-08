@@ -29,35 +29,14 @@ def get_jira_custom_fields():
         if value["custom"]
     }
 
-# Maps JIRA status : Github label dictionary
-# TODO: should load this directly from labels.yaml so the color and name info is up to date.
-# Doesn't have the URL info but that is easily constructed.
+# Maps JIRA status : Github label name
 STATUS_LABEL_DICT = {
-    'Product Review': {
-        "url": "https://api.github.com/repos/edx/edx-platform/labels/product+review",
-        "name": "product review",
-        "color": "5319e7"
-    },
-    'Community Manager Review': {
-        "url": "https://api.github.com/repos/edx/edx-platform/labels/community+manager+review",
-        "name": "community manager review",
-        "color": "207de5"
-    },
-    'Awaiting Prioritization': {
-        'url': 'https://api.github.com/repos/edx/edx-platform/labels/awaiting+prioritization',
-        'name': 'awaiting prioritization',
-        'color': 'fad8c7'
-    },
-    'Engineering Review': {
-        "url": "https://api.github.com/repos/edx/edx-platform/labels/community+manager+review",
-        "name": "community manager review",
-        "color": "207de5"
-    },
-    'Waiting on Author': {
-        "url": "https://api.github.com/repos/edx/edx-platform/labels/waiting+on+author",
-        "name": "waiting on author",
-        "color": "0052cc"
-    },
+    'Needs Triage': "needs triage",
+    'Product Review': "product review",
+    'Community Manager Review': "community manager review",
+    'Awaiting Prioritization': "awaiting prioritization",
+    'Engineering Review': "engineering review",
+    'Waiting on Author': "waiting on author",
 }
 
 
