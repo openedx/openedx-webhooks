@@ -241,17 +241,12 @@ def jira_issue_updated():
                 label_list.remove(STATUS_LABEL_DICT[old_status])
         except ValueError:
             print("PR {num} does not have label {old_label} to remove".format(num=pr_num, old_label=STATUS_LABEL_DICT[old_status]))
-            print("PR {num} only has labels {labels}".format(num=pr_num, labels=label_list)
+            print("PR {num} only has labels {labels}".format(num=pr_num, labels=label_list))
 
         # Post the new set of labels to github
         label_resp = github.patch(issue_url, json={"labels": label_list})
         if not label_resp.ok:
-            bugsnag_context['request_headers'] = label_resp.request.headers
-            bugsnag_context['request_url'] = label_resp.request.url
-            bugsnag_context['request_method'] = label_resp.request.method
-            bugsnag.configure_request(meta_data=bugsnag_context)
             raise requests.exceptions.RequestException(label_resp.text)
         return "Changed label of PR #{num} to {labels}".format(num=pr_num, labels=label_list)
 
     return "no change necessary"
-
