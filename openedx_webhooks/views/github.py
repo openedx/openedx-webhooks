@@ -7,7 +7,7 @@ import re
 import bugsnag
 import requests
 import yaml
-from flask import request, render_template, make_response
+from flask import request, render_template, make_response, url_for
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
@@ -84,6 +84,45 @@ def rescan_open_github_pull_requests():
     return resp
 
 
+@app.route("/github/install", methods=("GET", "POST"))
+def install_github_webhooks():
+    if request.method == "GET":
+        return render_template("install.html")
+    repo = request.args.get("repo", "")
+    if repo:
+        repos = (repo,)
+    else:
+        repos = get_repos_file().keys()
+
+    success = []
+    failed = []
+    for repo in repos:
+        url = "/repos/{repo}/hooks".format(repo=repo)
+        body = {
+            "name": "web",
+            "events": ["pull_request"],
+            "config": {
+                "url": url_for("github_pull_request", _external=True),
+                "content_type": "json",
+            }
+        }
+        bugsnag_context = {"repo": repo, "body": body}
+        bugsnag.configure_request(meta_data=bugsnag_context)
+
+        hook_resp = github.post(url, json=body)
+        if hook_resp.ok:
+            success.append(repo)
+        else:
+            failed.append((repo, hook_resp.text))
+
+    if failed:
+        resp = make_response(json.dumps(failed), 502)
+    else:
+        resp = make_response(json.dumps(success), 200)
+    resp.headers["Content-Type"] = "application/json"
+    return resp
+
+
 @memoize
 def github_whoami():
     self_resp = github.get("/user")
@@ -100,6 +139,14 @@ def get_people_file():
     if not people_resp.ok:
         raise requests.exceptions.RequestException(people_resp.text)
     return yaml.safe_load(people_resp.text)
+
+
+@memoize
+def get_repos_file():
+    repo_resp = requests.get("https://raw.githubusercontent.com/edx/repo-tools/master/repos.yaml")
+    if not repo_resp.ok:
+        raise requests.exceptions.RequestException(repo_resp.text)
+    return yaml.safe_load(repo_resp.text)
 
 
 def is_edx_pull_request(pull_request):
