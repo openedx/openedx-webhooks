@@ -6,8 +6,9 @@ from datetime import datetime
 from flask import request, flash
 from flask_dance.contrib.github import make_github_blueprint
 from flask_dance.contrib.jira import make_jira_blueprint
+from flask_dance.consumer import oauth_authorized
 from cachecontrol import CacheControlAdapter
-from .models import db, OAuthCredential
+from .models import db, OAuth
 
 
 # Check for required environment variables
@@ -32,33 +33,11 @@ jira_bp = make_jira_blueprint(
     base_url="https://openedx.atlassian.net",
     redirect_to="index",
 )
+jira_bp.set_token_storage_sqlalchemy(OAuth, db.session)
 
 
-@jira_bp.token_setter
-def set_jira_token(token):
-    creds = OAuthCredential(
-        name="jira",
-        token=token["oauth_token"],
-        secret=token["oauth_token_secret"],
-        created_on=datetime.utcnow(),
-    )
-    db.session.add(creds)
-    db.session.commit()
-
-
-@jira_bp.token_getter
-def get_jira_token():
-    creds = OAuthCredential.query.filter_by(name="jira").first()
-    if creds:
-        return {
-            "oauth_token": creds.token,
-            "oauth_token_secret": creds.secret,
-        }
-    return None
-
-
-@jira_bp.logged_in
-def jira_logged_in(token):
+@oauth_authorized.connect_via(jira_bp)
+def jira_logged_in(blueprint, token):
     if token:
         flash("Successfully signed in with JIRA")
     else:
@@ -72,35 +51,11 @@ github_bp = make_github_blueprint(
     scope="admin:repo_hook,repo,user",
     redirect_to="index",
 )
+github_bp.set_token_storage_sqlalchemy(OAuth, db.session)
 
 
-@github_bp.token_setter
-def set_github_token(token):
-    creds = OAuthCredential(
-        name="github",
-        token=token["access_token"],
-        type=token["token_type"],
-        scope=token["scope"],
-        created_on=datetime.utcnow(),
-    )
-    db.session.add(creds)
-    db.session.commit()
-
-
-@github_bp.token_getter
-def get_github_token():
-    creds = OAuthCredential.query.filter_by(name="github").first()
-    if creds:
-        return {
-            "access_token": creds.token,
-            "token_type": creds.type,
-            "scope": creds.scope,
-        }
-    return None
-
-
-@github_bp.logged_in
-def github_logged_in(token):
+@oauth_authorized.connect_via(github_bp)
+def github_logged_in(blueprint, token):
     if not token:
         flash("Failed to log in with Github")
     if "error_reason" in token:
