@@ -12,3 +12,4 @@ psycopg2==2.5.3
 bugsnag
 pycrypto==2.6.1
 PyYAML==3.11
+sqlalchemy_utils
