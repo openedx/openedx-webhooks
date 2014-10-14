@@ -58,7 +58,7 @@ def rescan_open_github_pull_requests():
     if request.method == "GET":
         # just render the form
         return render_template("rescan.html")
-    repo = request.args.get("repo", "edx/edx-platform")
+    repo = request.form.get("repo", "edx/edx-platform")
     bugsnag_context = {"repo": repo}
     bugsnag.configure_request(meta_data=bugsnag_context)
     url = "/repos/{repo}/pulls".format(repo=repo)
@@ -88,8 +88,7 @@ def rescan_open_github_pull_requests():
 def install_github_webhooks():
     if request.method == "GET":
         return render_template("install.html")
-    repo = request.args.get("repo", "")
-    print("request.args = {}".format(request.args), file=sys.stderr)
+    repo = request.form.get("repo", "")
     if repo:
         repos = (repo,)
     else:
