@@ -89,6 +89,7 @@ def install_github_webhooks():
     if request.method == "GET":
         return render_template("install.html")
     repo = request.args.get("repo", "")
+    print("request.args = {}".format(request.args), file=sys.stderr)
     if repo:
         repos = (repo,)
     else:
@@ -116,6 +117,7 @@ def install_github_webhooks():
             success.append(repo)
         else:
             failed.append((repo, hook_resp.text))
+            print("api_url = {}".format(hook_resp.url), file=sys.stderr)
 
     if failed:
         resp = make_response(json.dumps(failed), 502)
