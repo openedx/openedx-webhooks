@@ -173,6 +173,16 @@ def pr_opened(pr, bugsnag_context=None):
         )
         return "internal pull request"
 
+    issue_key = get_jira_issue_key(pr)
+    if issue_key:
+        msg = "Already created {key} for PR #{num} against {repo}".format(
+            key=issue_key,
+            num=pr["number"],
+            repo=pr["base"]["repo"]["full_name"],
+        )
+        print(msg, file=sys.stderr)
+        return msg
+
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
     people = get_people_file()
     custom_fields = get_jira_custom_fields()
