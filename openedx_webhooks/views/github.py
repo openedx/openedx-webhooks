@@ -98,13 +98,11 @@ def install_github_webhooks():
     failed = []
     for repo in repos:
         url = "/repos/{repo}/hooks".format(repo=repo)
-        hook_url = url_for("github_pull_request", _external=True)
-        print("hook_url = {}".format(hook_url), file=sys.stderr)
         body = {
             "name": "web",
             "events": ["pull_request"],
             "config": {
-                "url": hook_url,
+                "url": url_for("github_pull_request", _external=True),
                 "content_type": "json",
             }
         }
@@ -116,7 +114,6 @@ def install_github_webhooks():
             success.append(repo)
         else:
             failed.append((repo, hook_resp.text))
-            print("api_url = {}".format(hook_resp.url), file=sys.stderr)
 
     if failed:
         resp = make_response(json.dumps(failed), 502)
