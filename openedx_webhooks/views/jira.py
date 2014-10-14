@@ -30,13 +30,33 @@ def get_jira_custom_fields():
     }
 
 # Maps JIRA status : Github label name
+# Sometimes the existing labels are just strings, but other times they're the full on
+# label dict with url, color, and name defined.
 STATUS_LABEL_DICT = {
-    'Needs Triage': "needs triage",
-    'Product Review': "product review",
-    'Community Manager Review': "community manager review",
-    'Awaiting Prioritization': "awaiting prioritization",
-    'Engineering Review': "engineering review",
-    'Waiting on Author': "waiting on author",
+    'Needs Triage': [
+        "needs triage",
+        {u'name': u'needs triage', u'color': u'e11d21', u'url': u'https://api.github.com/repos/{pr_repo}/labels/needs+triage'}
+    ],
+    'Product Review': [
+        "product review",
+        {"name": "product review", "color": "5319e7", "url": "https://api.github.com/repos/{pr_repo}/labels/product+review"}
+    ],
+    'Community Manager Review': [
+        "community manager review",
+        {"name": "community manager review", "color": "207de5", "url": "https://api.github.com/repos/{pr_repo}/labels/community+manager+review"}
+    ],
+    'Awaiting Prioritization': [
+        "awaiting prioritization",
+        {"name": "awaiting prioritization", "color": "fad8c7", "url": "https://api.github.com/repos/{pr_repo}/labels/awaiting+prioritization"}
+    ],
+    'Engineering Review': [
+        "engineering review",
+        {"name": "engineering review", "color": "c7def8", "url": "https://api.github.com/repos/{pr_repo}/labels/engineering+review"}
+    ],
+    'Waiting on Author': [
+        "waiting on author",
+        {"name": "waiting on author", "color": "0052cc", "url": "https://api.github.com/repos/{pr_repo}/labels/waiting+on+author"}
+    ],
 }
 
 
@@ -243,14 +263,24 @@ def jira_issue_updated():
         # Get all the existing labels on this PR
         label_list = github.get(issue_url).json()["labels"]
 
-        # Add in the new label and remove the old label
-        label_list.append(STATUS_LABEL_DICT[new_status])
-        try:
-            if old_status in STATUS_LABEL_DICT:
-                label_list.remove(STATUS_LABEL_DICT[old_status])
-        except ValueError:
-            print("PR {num} does not have label {old_label} to remove".format(num=pr_num, old_label=STATUS_LABEL_DICT[old_status]))
-            print("PR {num} only has labels {labels}".format(num=pr_num, labels=label_list))
+        # Add in the label representing the new status - just add in the plain string label
+        label_list.append(STATUS_LABEL_DICT[new_status][0])
+
+        # remove the label representing the old status, if it exists
+        if old_status in STATUS_LABEL_DICT:
+            # Sometimes labels are strings ("needs triage") whereas other times they're dictionaries
+            # with the label name, color, and url defined. Have not pinned down when or why this happens.
+            for old_label in STATUS_LABEL_DICT[old_status]:
+                try:
+                    if isinstance(old_label, dict):
+                        old_label["url"] = old_label["url"].format(pr_repo=pr_repo)
+                    label_list.remove(old_label)
+                except ValueError:
+                    print("PR {num} does not have label {old_label} to remove".format(num=pr_num, old_label=old_label))
+                    print("PR {num} only has labels {labels}".format(num=pr_num, labels=label_list))
+                else:
+                    print("PR {num}: Successfully removed label {old_label}".format(num=pr_num, old_label=old_label))
+                    break
 
         # Post the new set of labels to github
         label_resp = github.patch(issue_url, json={"labels": label_list})
