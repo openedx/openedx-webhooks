@@ -15,8 +15,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "secrettoeveryone")
 app.register_blueprint(jira_bp, url_prefix="/login")
 app.register_blueprint(github_bp, url_prefix="/login")
 db.init_app(app)
-sslify = SSLify()
-sslify.init_app(app)
+sslify = SSLify(app)
 
 from .views import *
 
