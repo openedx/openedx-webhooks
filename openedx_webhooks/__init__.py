@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals
 import os
 
 from flask import Flask
+from flask_sslify import SSLify
 from .oauth import jira_bp, github_bp
 from .models import db
 from bugsnag.flask import handle_exceptions
@@ -14,6 +15,8 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "secrettoeveryone")
 app.register_blueprint(jira_bp, url_prefix="/login")
 app.register_blueprint(github_bp, url_prefix="/login")
 db.init_app(app)
+sslify = SSLify()
+sslify.init_app(app)
 
 from .views import *
 
