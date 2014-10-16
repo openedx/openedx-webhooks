@@ -14,7 +14,7 @@
     </ul>
   {% endif %}
 {% endwith %}
-    <form id="install-form" action="{{ url_for("install_github_webhooks") }}" method="POST">
+    <form id="install-form" action="{{ url_for("github_install") }}" method="POST">
     <p>
       Clicking this button will install the Github webhook for the repo
       you specify. If you don't specify a repo, the webhook will be installed

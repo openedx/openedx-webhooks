@@ -85,7 +85,7 @@ def github_rescan():
 
 
 @app.route("/github/install", methods=("GET", "POST"))
-def install_github_webhooks():
+def github_install():
     if request.method == "GET":
         return render_template("install.html")
     repo = request.form.get("repo", "")

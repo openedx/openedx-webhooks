@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
     <body>
-        <h1>JIRA Webhooks Home</h1>
+        <h1>Open edX Webhooks Home</h1>
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     <ul class="flashes">
@@ -11,8 +11,35 @@
     </ul>
   {% endif %}
 {% endwith %}
-    <a href="https://github.com/singingwolfboy/openedx-webhooks">Source code</a>
-    <a href="{{ url_for("github.login") }}">Github OAuth</a>
-    <a href="{{ url_for("jira.login") }}">JIRA OAuth</a>
+    <p>This is an automated system that synchronizes several different services
+       to make developing <a href="http://openedx.org">Open edX</a> more smooth.
+       The code is open source and <a href="https://github.com/singingwolfboy/openedx-webhooks">
+       hosted on Github</a>.
+    </p>
+    <h2>Github</h2>
+    <ul>
+      <li>
+        {% if github_username %}
+        Authenticated as <strong>@{{github_username}}</strong>.
+        <a href="{{ url_for("github.login") }}">Re-authenticate?</a>
+        {% else %}
+        <a href="{{ url_for("github.login") }}">Authenticate</a>
+        {% endif %}
+      </li>
+      <li><a href="{{ url_for("github_rescan") }}">Rescan</a></li>
+      <li><a href="{{ url_for("github_install") }}">Install Webhooks</a></li>
+    </ul>
+    <h2>JIRA</h2>
+    <ul>
+      <li>
+        {% if jira_username %}
+        Authenticated as <strong>{{jira_username}}</strong>.
+        <a href="{{ url_for("jira.login") }}">Re-authenticate?</a>
+        {% else %}
+        <a href="{{ url_for("jira.login") }}">Authenticate</a>
+        {% endif %}
+      </li>
+      <li><a href="{{ url_for("jira_rescan") }}">Rescan</a></li>
+    </ul>
     </body>
 </html>
