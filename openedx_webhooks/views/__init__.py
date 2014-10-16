@@ -15,7 +15,7 @@ def index():
     Just to verify that things are working
     """
     github_username = None
-    if github.token:
+    if github._client.token:
         gh_user_resp = github.get("/user")
         if gh_user_resp.ok:
             github_username = gh_user_resp.json()["login"]
