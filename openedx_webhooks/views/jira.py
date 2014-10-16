@@ -141,7 +141,7 @@ def issue_opened(issue, bugsnag_context=None):
         return "issue is OSPR"
 
     issue_url = URLObject(issue["self"])
-    user_url = URLObject(issue["fields"]["author"]["self"])
+    user_url = URLObject(issue["fields"]["creator"]["self"])
     user_url = user_url.set_query_param("expand", "groups")
 
     user_resp = jira_get(user_url)
@@ -177,9 +177,9 @@ def issue_opened(issue, bugsnag_context=None):
         transitioned = True
 
     try:
-        name = issue["fields"]["author"]["displayName"].decode('utf-8')
+        name = issue["fields"]["creator"]["displayName"].decode('utf-8')
     except:
-        bugsnag_context["name_type"] = type(issue["fields"]["author"]["displayName"])
+        bugsnag_context["name_type"] = type(issue["fields"]["creator"]["displayName"])
         bugsnag.configure_request(meta_data=bugsnag_context)
         raise
 
@@ -188,7 +188,7 @@ def issue_opened(issue, bugsnag_context=None):
         "{key} created by {name} ({username}), {action}".format(
             key=issue_key,
             name=name,
-            username=issue["fields"]["author"]["name"].decode('utf-8'),
+            username=issue["fields"]["creator"]["name"].decode('utf-8'),
             action="Transitioned to Open" if transitioned else "ignored",
         ),
         file=sys.stderr,
