@@ -184,6 +184,7 @@ def issue_opened(issue, bugsnag_context=None):
         raise
 
     # log to stderr
+    action = "Transitioned to Open" if transitioned else "ignored"
     print(
         "{key} created by {name} ({username}), {action}".format(
             key=issue_key,
@@ -193,7 +194,7 @@ def issue_opened(issue, bugsnag_context=None):
         ),
         file=sys.stderr,
     )
-    return "Processed"
+    return action
 
 
 @app.route("/jira/issue/updated", methods=("POST",))
