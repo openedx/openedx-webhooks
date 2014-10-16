@@ -47,6 +47,7 @@ def jira_paginated_get(url, obj_name, session=None, start=0, retries=3, **fields
     are different from Github's conventions.
     """
     session = session or requests.Session()
+    url = URLObject(url)
     more_results = True
     while more_results:
         result_url = (
