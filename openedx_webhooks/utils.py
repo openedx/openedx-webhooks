@@ -41,6 +41,38 @@ def paginated_get(url, session=None, limit=None, per_page=100, **kwargs):
             url = resp.links.get("next", {}).get("url", "")
 
 
+def jira_paginated_get(url, obj_name, session=None, start=0, retries=3, **fields):
+    """
+    Like ``paginated_get``, but uses JIRA's conventions for a paginated API, which
+    are different from Github's conventions.
+    """
+    session = session or requests.Session()
+    more_results = True
+    while more_results:
+        result_url = (
+            url.set_query_param("startAt", str(start))
+               .set_query_params(**fields)
+        )
+        for _ in xrange(retries):
+            try:
+                result_resp = session.get(result_url)
+                result = result_resp.json()
+                break
+            except ValueError:
+                continue
+        if not result_resp.ok:
+            raise requests.exceptions.RequestException(result)
+        result = result_resp.json()
+        for obj in result[obj_name]:
+            yield obj
+        returned = len(result[obj_name])
+        total = result["total"]
+        if start + returned < total:
+            start += returned
+        else:
+            more_results = False
+
+
 def memoize(func):
     cache = {}
 
@@ -93,7 +125,7 @@ def memoize_except(values):
                 return cache[key]
             except KeyError:
                 value = func(*args, **kwargs)
-                if not value in values:
+                if value not in values:
                     cache[key] = value
                 return value
 

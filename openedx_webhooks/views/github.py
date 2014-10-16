@@ -51,14 +51,14 @@ def github_pull_request():
 
 
 @app.route("/github/rescan", methods=("GET", "POST"))
-def rescan_open_github_pull_requests():
+def github_rescan():
     """
     Used to pick up PRs that might not have tickets associated with them.
     """
     if request.method == "GET":
         # just render the form
-        return render_template("rescan.html")
-    repo = request.form.get("repo", "edx/edx-platform")
+        return render_template("github_rescan.html")
+    repo = request.form.get("repo") or "edx/edx-platform"
     bugsnag_context = {"repo": repo}
     bugsnag.configure_request(meta_data=bugsnag_context)
     url = "/repos/{repo}/pulls".format(repo=repo)

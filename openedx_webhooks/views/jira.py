@@ -6,11 +6,11 @@ import json
 import bugsnag
 import requests
 from urlobject import URLObject
-from flask import request
+from flask import request, render_template, make_response
 from flask_dance.contrib.jira import jira
 from flask_dance.contrib.github import github
 from openedx_webhooks import app
-from openedx_webhooks.utils import pop_dict_id, memoize
+from openedx_webhooks.utils import pop_dict_id, memoize, jira_paginated_get
 from openedx_webhooks.oauth import jira_get
 
 
@@ -28,6 +28,26 @@ def get_jira_custom_fields():
         for id, value in field_map.items()
         if value["custom"]
     }
+
+@app.route("/jira/rescan", methods=("GET", "POST"))
+def jira_rescan():
+    if request.method == "GET":
+        # just render the form
+        return render_template("jira_rescan.html")
+    jql = request.form.get("jql") or 'status = "Needs Triage" ORDER BY key'
+    bugsnag_context = {"jql": jql}
+    bugsnag.configure_request(meta_data=bugsnag_context)
+    issues = jira_paginated_get("/rest/api/2/search", "issues", jql=jql, session=jira)
+    results = {}
+
+    for issue in issues:
+        issue_key = issue["key"].decode('utf-8')
+        results[issue_key] = issue_opened(issue)
+
+    resp = make_response(json.dumps(results), 200)
+    resp.headers["Content-Type"] = "application/json"
+    return resp
+
 
 # Maps JIRA status : Github label name
 # Sometimes the existing labels are just strings, but other times they're the full on
@@ -91,9 +111,14 @@ def jira_issue_created():
         # If we don't have an "issue" key, it's junk.
         return "What is this shit!?", 400
 
-    issue_key = event["issue"]["key"].decode('utf-8')
-    issue_status = event["issue"]["fields"]["status"]["name"].decode('utf-8')
-    project = event["issue"]["fields"]["project"]["key"].decode('utf-8')
+    return issue_opened(event["issue"], bugsnag_context)
+
+
+def issue_opened(issue, bugsnag_context=None):
+    bugsnag_context = bugsnag_context or {}
+    issue_key = issue["key"].decode('utf-8')
+    issue_status = issue["fields"]["status"]["name"].decode('utf-8')
+    project = issue["fields"]["project"]["key"].decode('utf-8')
     if issue_status != "Needs Triage":
         print(
             "{key} has status {status}, does not need to be processed".format(
@@ -112,8 +137,8 @@ def jira_issue_created():
         )
         return "issue is OSPR"
 
-    issue_url = URLObject(event["issue"]["self"])
-    user_url = URLObject(event["user"]["self"])
+    issue_url = URLObject(issue["self"])
+    user_url = URLObject(issue["author"]["self"])
     user_url = user_url.set_query_param("expand", "groups")
 
     user_resp = jira_get(user_url)
@@ -149,9 +174,9 @@ def jira_issue_created():
         transitioned = True
 
     try:
-        name = event["user"]["displayName"].decode('utf-8')
+        name = issue["author"]["displayName"].decode('utf-8')
     except:
-        bugsnag_context["name_type"] = type(event["user"]["displayName"])
+        bugsnag_context["name_type"] = type(issue["author"]["displayName"])
         bugsnag.configure_request(meta_data=bugsnag_context)
         raise
 
@@ -159,8 +184,8 @@ def jira_issue_created():
     print(
         "{key} created by {name} ({username}), {action}".format(
             key=issue_key,
-            name=event["user"]["displayName"].decode('utf-8'),
-            username=name,
+            name=name,
+            username=issue["author"]["name"].decode('utf-8'),
             action="Transitioned to Open" if transitioned else "ignored",
         ),
         file=sys.stderr,
