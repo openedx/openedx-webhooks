@@ -215,6 +215,15 @@ def jira_issue_updated():
     if app.debug:
         print(json.dumps(event), file=sys.stderr)
 
+    if "issue" not in event:
+        # It's rare, but we occasionally see junk data from JIRA. For example,
+        # here's a real API request we've received on this handler:
+        #   {"baseUrl": "https://openedx.atlassian.net",
+        #    "key": "jira:1fec1026-b232-438f-adab-13b301059297",
+        #    "newVersion": 64005, "oldVersion": 64003}
+        # If we don't have an "issue" key, it's junk.
+        return "What is this shit!?", 400
+
     issue_key = event["issue"]["key"].decode('utf-8')
 
     # is the issue an open source pull request?
