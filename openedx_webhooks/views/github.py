@@ -387,7 +387,7 @@ def github_pr_comment(pull_request, jira_issue, people=None):
             if name in authors_content:
                 in_authors_file = True
 
-    doc_url = "http://edx.readthedocs.org/projects/userdocs/en/latest/process/overview.html"
+    doc_url = "http://edx-developer-guide.readthedocs.org/en/latest/process/overview.html"
     issue_key = jira_issue["key"].decode('utf-8')
     issue_url = "https://openedx.atlassian.net/browse/{key}".format(key=issue_key)
     contributing_url = "https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst"
