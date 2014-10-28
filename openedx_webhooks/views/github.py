@@ -376,7 +376,6 @@ def github_pr_comment(pull_request, jira_issue, people=None):
     # is the user in the AUTHORS file?
     in_authors_file = False
     name = people.get(pr_author, {}).get("name", "")
-    institution = people.get(pr_author, {}).get("institution", None)
     if name:
         authors_url = "https://raw.githubusercontent.com/{repo}/{branch}/AUTHORS".format(
             repo=pull_request["head"]["repo"]["full_name"].decode('utf-8'),
