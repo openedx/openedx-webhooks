@@ -145,3 +145,9 @@ def memoize_except(values):
         return memoized
 
     return decorator
+
+
+def to_unicode(s):
+    if isinstance(s, unicode):
+        return s
+    return s.decode('utf-8')
