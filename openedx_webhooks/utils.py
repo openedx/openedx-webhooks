@@ -138,7 +138,9 @@ def jira_users(session=None):
     It's used only by the admin pages, and it does authentication based on
     session cookies only. We'll use it anyway, since there is no alternative.
     """
-    session = session or requests.Session()
+    base_url = getattr(session, "base_url", None)
+    # make a new session
+    session = requests.Session()
     global STUDIO_CROWD_TOKENKEY
     if not STUDIO_CROWD_TOKENKEY:
         JIRA_USERNAME = os.environ.get("JIRA_USERNAME")
@@ -154,11 +156,12 @@ def jira_users(session=None):
     if not "studio.crowd.tokenkey" in session.cookies:
         session.cookies["studio.crowd.tokenkey"] = STUDIO_CROWD_TOKENKEY
 
-    return jira_paginated_get(
-        "/admin/rest/um/1/user/search",
-        start_param="start-index",
-        session=session,
-    )
+    if base_url:
+        url = URLObject(base_url).relative("/admin/rest/um/1/user/search")
+    else:
+        url = "/admin/rest/um/1/user/search"
+
+    return jira_paginated_get(url, start_param="start-index", session=session)
 
 
 def memoize(func):
