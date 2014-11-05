@@ -1,18 +1,11 @@
 from __future__ import unicode_literals, print_function
 
-import sys
 import json
-import re
-
 import bugsnag
-import requests
-import yaml
-from flask import request, render_template, make_response, url_for
-from flask_dance.contrib.github import github
+from flask import make_response
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
-from openedx_webhooks.utils import jira_paginated_get, jira_group_members
-from openedx_webhooks.views.jira import get_jira_custom_fields
+from openedx_webhooks.utils import jira_users, jira_group_members
 
 
 @app.route("/cron/daily", methods=("POST",))
@@ -27,12 +20,7 @@ def cron_daily():
 
     # for all users with an "@edx.org" email address, put them in the
     # edx-employees group
-    users = jira_paginated_get(
-        "/admin/rest/um/1/user/search",
-        start_param="start-index",
-        session=jira,
-    )
-    for user in users:
+    for user in jira_users(session=jira):
         if not user["email"].endswith("@edx.org"):
             pass
         username = user["name"]

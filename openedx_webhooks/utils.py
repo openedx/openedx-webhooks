@@ -1,5 +1,6 @@
 from __future__ import print_function, unicode_literals
 
+import os
 import functools
 import requests
 from urlobject import URLObject
@@ -114,6 +115,37 @@ def jira_group_members(groupname, session=None, start=0, retries=3):
             start += returned
         else:
             more_results = False
+
+
+STUDIO_CROWD_TOKENKEY = None
+
+def jira_users(session=None):
+    """
+    JIRA has an API for returning all users, but it's not ready for primetime.
+    It's used only by the admin pages, and it does authentication based on
+    session cookies only. We'll use it anyway, since there is no alternative.
+    """
+    session = session or requests.Session()
+    global STUDIO_CROWD_TOKENKEY
+    if not STUDIO_CROWD_TOKENKEY:
+        JIRA_USERNAME = os.environ.get("JIRA_USERNAME")
+        JIRA_PASSWORD = os.environ.get("JIRA_PASSWORD")
+        if not JIRA_USERNAME or not JIRA_PASSWORD:
+            raise ValueError("Must set JIRA_USERNAME and JIRA_PASSWORD to list users.")
+            login_url = "https://openedx.atlassian.net/login"
+            payload = {"username": JIRA_USERNAME, "password": JIRA_PASSWORD}
+            login_resp = session.post(login_url, data=payload, allow_redirects=False)
+            if not login_resp.status_code in (200, 303):
+                raise requests.exceptions.RequestException(login_resp.text)
+            STUDIO_CROWD_TOKENKEY = login_resp.cookies["studio.crowd.tokenkey"]
+    if not "studio.crowd.tokenkey" in session.cookie:
+        session.cookie["studio.crown.tokenkey"] = STUDIO_CROWD_TOKENKEY
+
+    return jira_paginated_get(
+        "/admin/rest/um/1/user/search",
+        start_param="start-index",
+        session=session,
+    )
 
 
 def memoize(func):
