@@ -6,8 +6,6 @@ import requests
 import bugsnag
 from urlobject import URLObject
 
-STUDIO_CROWD_TOKENKEY = None
-
 
 def pop_dict_id(d):
     id = d["id"]
@@ -57,9 +55,6 @@ def jira_paginated_get(url, session=None,
     are different from Github's conventions.
     """
     session = session or requests.Session()
-    global STUDIO_CROWD_TOKENKEY
-    if STUDIO_CROWD_TOKENKEY:
-        session.cookies["studio.crowd.tokenkey"] = STUDIO_CROWD_TOKENKEY
     url = URLObject(url)
     more_results = True
     while more_results:
@@ -141,30 +136,15 @@ def jira_users(session=None):
     It's used only by the admin pages, and it does authentication based on
     session cookies only. We'll use it anyway, since there is no alternative.
     """
-    base_url = getattr(session, "base_url", None)
-    # make a new session
-    session = requests.Session()
-    global STUDIO_CROWD_TOKENKEY
-    if not STUDIO_CROWD_TOKENKEY:
-        JIRA_USERNAME = os.environ.get("JIRA_USERNAME")
-        JIRA_PASSWORD = os.environ.get("JIRA_PASSWORD")
-        if not JIRA_USERNAME or not JIRA_PASSWORD:
-            raise ValueError("Must set JIRA_USERNAME and JIRA_PASSWORD to list users.")
-            login_url = "https://openedx.atlassian.net/login"
-            payload = {"username": JIRA_USERNAME, "password": JIRA_PASSWORD}
-            login_resp = session.post(login_url, data=payload, allow_redirects=False)
-            if not login_resp.status_code in (200, 303):
-                raise requests.exceptions.RequestException(login_resp.text)
-            STUDIO_CROWD_TOKENKEY = login_resp.cookies["studio.crowd.tokenkey"]
+    session = session or requests.Session()
+    session.cookies["studio.crowd.tokenkey"] = studio_crowd_tokenkey()
 
-    session.cookies["studio.crowd.tokenkey"] = STUDIO_CROWD_TOKENKEY
-
-    if base_url:
-        url = URLObject(base_url).relative("/admin/rest/um/1/user/search")
-    else:
-        url = "/admin/rest/um/1/user/search"
-
-    for user in jira_paginated_get(url, start_param="start-index", session=session):
+    users = jira_paginated_get(
+        "/admin/rest/um/1/user/search",
+        start_param="start-index",
+        session=session
+    )
+    for user in users:
         yield user
 
 
@@ -245,3 +225,22 @@ def to_unicode(s):
     if isinstance(s, unicode):
         return s
     return s.decode('utf-8')
+
+
+@memoize
+def studio_crowd_tokenkey(base_url="https://openedx.atlassian.net"):
+    """
+    This is the authentication cookie used to authenticate to the admin site.
+    """
+    JIRA_USERNAME = os.environ.get("JIRA_USERNAME")
+    JIRA_PASSWORD = os.environ.get("JIRA_PASSWORD")
+
+    if not JIRA_USERNAME or not JIRA_PASSWORD:
+        raise Exception("Missing required environment variables: JIRA_USERNAME, JIRA_PASSWORD")
+
+    login_url = URLObject(base_url).relative("/login")
+    payload = {"username": JIRA_USERNAME, "password": JIRA_PASSWORD}
+    login_resp = requests.post(login_url, data=payload, allow_redirects=False)
+    if not login_resp.status_code in (200, 303):
+        raise requests.exceptions.RequestException(login_resp.text)
+    return login_resp.cookies["studio.crowd.tokenkey"]
