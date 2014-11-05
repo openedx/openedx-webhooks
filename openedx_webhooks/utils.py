@@ -138,8 +138,8 @@ def jira_users(session=None):
             if not login_resp.status_code in (200, 303):
                 raise requests.exceptions.RequestException(login_resp.text)
             STUDIO_CROWD_TOKENKEY = login_resp.cookies["studio.crowd.tokenkey"]
-    if not "studio.crowd.tokenkey" in session.cookie:
-        session.cookie["studio.crown.tokenkey"] = STUDIO_CROWD_TOKENKEY
+    if not "studio.crowd.tokenkey" in session.cookies:
+        session.cookies["studio.crown.tokenkey"] = STUDIO_CROWD_TOKENKEY
 
     return jira_paginated_get(
         "/admin/rest/um/1/user/search",
