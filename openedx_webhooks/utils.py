@@ -164,7 +164,8 @@ def jira_users(session=None):
     else:
         url = "/admin/rest/um/1/user/search"
 
-    return jira_paginated_get(url, start_param="start-index", session=session)
+    for user in jira_paginated_get(url, start_param="start-index", session=session):
+        yield user
 
 
 def memoize(func):
