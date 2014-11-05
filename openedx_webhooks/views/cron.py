@@ -34,8 +34,8 @@ def cron_daily():
             if username not in usernames_in_group:
                 # add the user to the group!
                 resp = jira.post(
-                    "/rest/api/2/group/user",
-                    json={"name": username, "groupname": groupname},
+                    "/rest/api/2/group/user?groupname={}".format(groupname),
+                    json={"name": username},
                 )
                 if not resp.ok:
                     failures[groupname][username] = resp.text
