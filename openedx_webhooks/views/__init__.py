@@ -5,6 +5,7 @@ from flask import render_template
 
 from .github import github_pull_request, github_rescan, github_install
 from .jira import jira_issue_created, jira_rescan
+from .cron import cron_daily
 
 from flask_dance.contrib.github import github as github_session
 from flask_dance.contrib.jira import jira as jira_session
