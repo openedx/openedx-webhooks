@@ -135,7 +135,7 @@ def jira_group_members(groupname, session=None, start=0, retries=3, debug=False)
         users = result["users"]["items"]
         for user in users:
             yield user
-        returned = start + len(users)
+        returned = len(users)
         total = result["users"]["size"]
         if start + returned < total:
             start += returned
