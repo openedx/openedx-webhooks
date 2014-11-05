@@ -82,7 +82,7 @@ def jira_paginated_get(url, session=None,
             more_results = False
 
 
-def jira_group_members(groupname, session=None, start=0):
+def jira_group_members(groupname, session=None, start=0, retries=3):
     """
     JIRA's group members API is horrible. This makes it easier to use.
     """
