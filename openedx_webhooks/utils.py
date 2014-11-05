@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals
 import os
 import functools
 import requests
+import bugsnag
 from urlobject import URLObject
 
 
@@ -102,6 +103,10 @@ def jira_group_members(groupname, session=None, start=0, retries=3):
             except ValueError:
                 continue
         if not result_resp.ok:
+            bugsnag.configure_request(meta_data={
+                "session_headers": session.headers,
+                "session_cookies": session.cookies,
+            })
             raise requests.exceptions.RequestException(result_resp.text)
         result = result_resp.json()
         if not result:
