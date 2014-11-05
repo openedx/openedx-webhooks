@@ -19,7 +19,7 @@ def cron_daily():
     failures = defaultdict(dict)
 
     for groupname, domain in domain_groups.items():
-        users_in_group = jira_group_members("edx-employees", session=jira, debug=True)
+        users_in_group = jira_group_members(groupname, session=jira, debug=True)
         usernames_in_group = set(u["name"] for u in users_in_group)
         bugsnag_context = {
             "groupname": groupname,
