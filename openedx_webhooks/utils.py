@@ -1,5 +1,6 @@
 from __future__ import print_function, unicode_literals
 
+import sys
 import os
 import functools
 import requests
@@ -13,7 +14,7 @@ def pop_dict_id(d):
     return (id, d)
 
 
-def paginated_get(url, session=None, limit=None, per_page=100, **kwargs):
+def paginated_get(url, session=None, limit=None, per_page=100, debug=False, **kwargs):
     """
     Retrieve all objects from a paginated API.
 
@@ -32,6 +33,8 @@ def paginated_get(url, session=None, limit=None, per_page=100, **kwargs):
     returned = 0
     while url:
         resp = session.get(url, **kwargs)
+        if debug:
+            print(resp.url, file=sys.stderr)
         result = resp.json()
         if not resp.ok:
             bugsnag.configure_request(meta_data={
@@ -49,7 +52,7 @@ def paginated_get(url, session=None, limit=None, per_page=100, **kwargs):
 
 def jira_paginated_get(url, session=None,
                        start=0, start_param="startAt", obj_name=None,
-                       retries=3, **fields):
+                       retries=3, debug=False, **fields):
     """
     Like ``paginated_get``, but uses JIRA's conventions for a paginated API, which
     are different from Github's conventions.
@@ -64,6 +67,8 @@ def jira_paginated_get(url, session=None,
         )
         for _ in xrange(retries):
             try:
+                if debug:
+                    print(result_url, file=sys.stderr)
                 result_resp = session.get(result_url)
                 result = result_resp.json()
                 break
@@ -98,7 +103,7 @@ def jira_paginated_get(url, session=None,
             more_results = True  # just keep going until there are no more results.
 
 
-def jira_group_members(groupname, session=None, start=0, retries=3):
+def jira_group_members(groupname, session=None, start=0, retries=3, debug=False):
     """
     JIRA's group members API is horrible. This makes it easier to use.
     """
@@ -111,6 +116,8 @@ def jira_group_members(groupname, session=None, start=0, retries=3):
         result_url = url.set_query_param("expand", expand)
         for _ in xrange(retries):
             try:
+                if debug:
+                    print(result_url, file=sys.stderr)
                 result_resp = session.get(result_url)
                 result = result_resp.json()
                 break
@@ -136,7 +143,7 @@ def jira_group_members(groupname, session=None, start=0, retries=3):
             more_results = False
 
 
-def jira_users(session=None):
+def jira_users(session=None, debug=False):
     """
     JIRA has an API for returning all users, but it's not ready for primetime.
     It's used only by the admin pages, and it does authentication based on
@@ -148,7 +155,8 @@ def jira_users(session=None):
     users = jira_paginated_get(
         "/admin/rest/um/1/user/search",
         start_param="start-index",
-        session=session
+        session=session,
+        debug=debug,
     )
     for user in users:
         yield user

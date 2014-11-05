@@ -13,14 +13,14 @@ def cron_daily():
     new_edx_employees = []
     new_edx_employee_failures = {}
 
-    edx_employee_users = jira_group_members("edx-employees", session=jira)
+    edx_employee_users = jira_group_members("edx-employees", session=jira, debug=True)
     edx_employee_usernames = set(u["name"] for u in edx_employee_users)
     bugsnag_context = {"edx_employee_usernames": edx_employee_usernames}
     bugsnag.configure_request(meta_data=bugsnag_context)
 
     # for all users with an "@edx.org" email address, put them in the
     # edx-employees group
-    for user in jira_users(session=jira):
+    for user in jira_users(session=jira, debug=True):
         if not user["email"].endswith("@edx.org"):
             pass
         username = user["name"]
