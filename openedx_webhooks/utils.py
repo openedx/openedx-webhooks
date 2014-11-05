@@ -41,7 +41,9 @@ def paginated_get(url, session=None, limit=None, per_page=100, **kwargs):
             url = resp.links.get("next", {}).get("url", "")
 
 
-def jira_paginated_get(url, obj_name, session=None, start=0, retries=3, **fields):
+def jira_paginated_get(url, session=None,
+                       start=0, start_param="startAt", obj_name=None,
+                       retries=3, **fields):
     """
     Like ``paginated_get``, but uses JIRA's conventions for a paginated API, which
     are different from Github's conventions.
@@ -51,7 +53,7 @@ def jira_paginated_get(url, obj_name, session=None, start=0, retries=3, **fields
     more_results = True
     while more_results:
         result_url = (
-            url.set_query_param("startAt", str(start))
+            url.set_query_param(start_param, str(start))
                .set_query_params(**fields)
         )
         for _ in xrange(retries):
@@ -64,10 +66,50 @@ def jira_paginated_get(url, obj_name, session=None, start=0, retries=3, **fields
         if not result_resp.ok:
             raise requests.exceptions.RequestException(result)
         result = result_resp.json()
-        for obj in result[obj_name]:
+        if not result:
+            break
+        if obj_name:
+            objs = result[obj_name]
+        else:
+            objs = result
+        for obj in objs:
             yield obj
-        returned = len(result[obj_name])
+        returned = len(objs)
         total = result["total"]
+        if start + returned < total:
+            start += returned
+        else:
+            more_results = False
+
+
+def jira_group_members(groupname, session=None, start=0):
+    """
+    JIRA's group members API is horrible. This makes it easier to use.
+    """
+    session = session or requests.Session()
+    url = URLObject("/rest/api/2/group").set_query_param("groupname", groupname)
+    more_results = True
+    while more_results:
+        end = start + 49  # max 50 users per page
+        expand = "users[{start}:{end}]".format(start=start, end=end)
+        result_url = url.set_query_param("expand", expand)
+        for _ in xrange(retries):
+            try:
+                result_resp = session.get(result_url)
+                result = result_resp.json()
+                break
+            except ValueError:
+                continue
+        if not result_resp.ok:
+            raise requests.exceptions.RequestException(result)
+        result = result_resp.json()
+        if not result:
+            break
+        users = result["users"]["items"]
+        for user in users:
+            yield user
+        returned = start + len(users)
+        total = result["users"]["size"]
         if start + returned < total:
             start += returned
         else:

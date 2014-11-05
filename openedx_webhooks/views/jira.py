@@ -37,7 +37,9 @@ def jira_rescan():
     jql = request.form.get("jql") or 'status = "Needs Triage" ORDER BY key'
     bugsnag_context = {"jql": jql}
     bugsnag.configure_request(meta_data=bugsnag_context)
-    issues = jira_paginated_get("/rest/api/2/search", "issues", jql=jql, session=jira)
+    issues = jira_paginated_get(
+        "/rest/api/2/search", jql=jql, obj_name="issues", session=jira,
+    )
     results = {}
 
     for issue in issues:
