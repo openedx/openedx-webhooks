@@ -6,6 +6,8 @@ import requests
 import bugsnag
 from urlobject import URLObject
 
+STUDIO_CROWD_TOKENKEY = None
+
 
 def pop_dict_id(d):
     id = d["id"]
@@ -55,6 +57,9 @@ def jira_paginated_get(url, session=None,
     are different from Github's conventions.
     """
     session = session or requests.Session()
+    global STUDIO_CROWD_TOKENKEY
+    if STUDIO_CROWD_TOKENKEY:
+        session.cookies["studio.crowd.tokenkey"] = STUDIO_CROWD_TOKENKEY
     url = URLObject(url)
     more_results = True
     while more_results:
@@ -129,8 +134,6 @@ def jira_group_members(groupname, session=None, start=0, retries=3):
         else:
             more_results = False
 
-
-STUDIO_CROWD_TOKENKEY = None
 
 def jira_users(session=None):
     """
