@@ -94,6 +94,7 @@ def jira_paginated_get(url, session=None,
                 more_results = False
         else:
             # `result` is a list
+            start += len(result)
             more_results = True  # just keep going until there are no more results.
 
 
