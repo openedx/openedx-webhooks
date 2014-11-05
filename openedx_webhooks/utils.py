@@ -64,7 +64,7 @@ def jira_paginated_get(url, session=None,
             except ValueError:
                 continue
         if not result_resp.ok:
-            raise requests.exceptions.RequestException(result)
+            raise requests.exceptions.RequestException(result_resp.text)
         result = result_resp.json()
         if not result:
             break
@@ -101,7 +101,7 @@ def jira_group_members(groupname, session=None, start=0, retries=3):
             except ValueError:
                 continue
         if not result_resp.ok:
-            raise requests.exceptions.RequestException(result)
+            raise requests.exceptions.RequestException(result_resp.text)
         result = result_resp.json()
         if not result:
             break
