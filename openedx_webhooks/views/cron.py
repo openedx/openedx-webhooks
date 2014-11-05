@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, print_function
 
+import sys
 import json
 import bugsnag
 from flask import make_response
@@ -15,6 +16,7 @@ def cron_daily():
 
     edx_employee_users = jira_group_members("edx-employees", session=jira, debug=True)
     edx_employee_usernames = set(u["name"] for u in edx_employee_users)
+    print(edx_employee_usernames, file=sys.stderr)
     bugsnag_context = {"edx_employee_usernames": edx_employee_usernames}
     bugsnag.configure_request(meta_data=bugsnag_context)
 
