@@ -84,12 +84,17 @@ def jira_paginated_get(url, session=None,
             objs = result
         for obj in objs:
             yield obj
-        returned = len(objs)
-        total = result["total"]
-        if start + returned < total:
-            start += returned
+        # are we done yet?
+        if isinstance(result, dict):
+            returned = len(objs)
+            total = result["total"]
+            if start + returned < total:
+                start += returned
+            else:
+                more_results = False
         else:
-            more_results = False
+            # `result` is a list
+            more_results = True  # just keep going until there are no more results.
 
 
 def jira_group_members(groupname, session=None, start=0, retries=3):
