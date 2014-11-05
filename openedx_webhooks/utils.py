@@ -34,6 +34,10 @@ def paginated_get(url, session=None, limit=None, per_page=100, **kwargs):
         resp = session.get(url, **kwargs)
         result = resp.json()
         if not resp.ok:
+            bugsnag.configure_request(meta_data={
+                "session_headers": session.headers,
+                "session_cookies": session.cookies,
+            })
             raise requests.exceptions.RequestException(result["message"])
         for item in result:
             yield item
@@ -66,6 +70,10 @@ def jira_paginated_get(url, session=None,
             except ValueError:
                 continue
         if not result_resp.ok:
+            bugsnag.configure_request(meta_data={
+                "session_headers": session.headers,
+                "session_cookies": session.cookies,
+            })
             raise requests.exceptions.RequestException(result_resp.text)
         result = result_resp.json()
         if not result:
