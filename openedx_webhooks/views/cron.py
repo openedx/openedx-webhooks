@@ -20,7 +20,7 @@ def cron_daily():
 
     # for all users with an "@edx.org" email address, put them in the
     # edx-employees group
-    for user in jira_users(session=jira, debug=True):
+    for user in jira_users(filter="@edx.org", session=jira, debug=True):
         if not user["email"].endswith("@edx.org"):
             pass
         username = user["name"]

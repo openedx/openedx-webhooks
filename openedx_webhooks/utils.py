@@ -143,7 +143,7 @@ def jira_group_members(groupname, session=None, start=0, retries=3, debug=False)
             more_results = False
 
 
-def jira_users(session=None, debug=False):
+def jira_users(filter=None, session=None, debug=False):
     """
     JIRA has an API for returning all users, but it's not ready for primetime.
     It's used only by the admin pages, and it does authentication based on
@@ -154,6 +154,7 @@ def jira_users(session=None, debug=False):
 
     users = jira_paginated_get(
         "/admin/rest/um/1/user/search",
+        filter=filter,
         start_param="start-index",
         session=session,
         debug=debug,
