@@ -151,11 +151,14 @@ def issue_opened(issue, bugsnag_context=None):
         raise requests.exceptions.RequestException(user_resp.text)
 
     user = user_resp.json()
-    groups = {g["name"]: g["self"] for g in user["groups"]["items"]}
+    user_group_map = {g["name"]: g["self"] for g in user["groups"]["items"]}
+    user_groups = set(user_group_map)
 
-    # skip "Needs Triage" if bug was created by edX employee
+    # skip "Needs Triage" if bug was created by edX or Clarice
+    exempt_groups = set(("edx-employees", "clarice"))
+
     transitioned = False
-    if "edx-employees" in groups:
+    if user_groups.intersection(exempt_groups):
         transitions_url = issue_url.with_path(issue_url.path + "/transitions")
         transitions_resp = jira_get(transitions_url)
         if not transitions_resp.ok:
