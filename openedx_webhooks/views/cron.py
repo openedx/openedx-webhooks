@@ -4,7 +4,7 @@ import sys
 import json
 import bugsnag
 from collections import defaultdict
-from flask import make_response
+from flask import request, jsonify
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
 from openedx_webhooks.utils import jira_users, jira_group_members
@@ -18,7 +18,17 @@ def cron_daily():
     }
     failures = defaultdict(dict)
 
-    for groupname, domain in domain_groups.items():
+    requested_group = request.form.get("group")
+    if requested_group:
+        if requested_group not in domain_groups:
+            resp = jsonify({"error": "Not found", "groups": domain_groups.keys()})
+            resp.status_code = 404
+            return resp
+        requested_groups = {requested_group: domain_groups[requested_group]}
+    else:
+        requested_group = domain_groups
+
+    for groupname, domain in requested_groups.items():
         users_in_group = jira_group_members(groupname, session=jira, debug=True)
         usernames_in_group = set(u["name"] for u in users_in_group)
         bugsnag_context = {
@@ -40,6 +50,6 @@ def cron_daily():
                 if not resp.ok:
                     failures[groupname][username] = resp.text
 
-    resp = make_response(json.dumps(failures), 502 if failures else 200)
-    resp.headers["Content-Type"] = "application/json"
+    resp = jsonify(failures)
+    resp.status_code = 502 if failures else 200
     return resp
