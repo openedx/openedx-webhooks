@@ -1,5 +1,12 @@
 from __future__ import print_function, unicode_literals
 
+# UTF-8 stderr: http://stackoverflow.com/a/2001767/141395
+import codecs
+import sys
+sys.setdefaultencoding('utf-8')
+sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
+
 import os
 
 from flask import Flask
