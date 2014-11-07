@@ -26,7 +26,7 @@ def cron_daily():
             return resp
         requested_groups = {requested_group: domain_groups[requested_group]}
     else:
-        requested_group = domain_groups
+        requested_groups = domain_groups
 
     for groupname, domain in requested_groups.items():
         users_in_group = jira_group_members(groupname, session=jira, debug=True)
