@@ -27,5 +27,10 @@ if not app.debug:
 
 from .views import *
 
+@app.route("/unicode")
+def unicode_test():
+    print("☃", file=sys.stderr)
+    return "☃"
+
 if __name__ == "__main__":
     app.run()
