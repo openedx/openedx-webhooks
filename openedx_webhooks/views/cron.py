@@ -17,6 +17,7 @@ def cron_daily():
     domain_groups = {
         "edx-employees": "@edx.org",
         "clarice": "@claricetechnologies.com",
+        "bnotions": "@bnotions.com",
     }
     failures = defaultdict(dict)
 
