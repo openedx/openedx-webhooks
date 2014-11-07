@@ -14,7 +14,7 @@
     </ul>
   {% endif %}
 {% endwith %}
-    <form id="cron-form" action="{{ url_for("daily_cron") }}" method="POST">
+    <form id="cron-form" action="{{ url_for("cron_daily") }}" method="POST">
     <p>
       Clicking this button will move users into the appropriate groups
       based on their email address. This task is run automatically once a day,

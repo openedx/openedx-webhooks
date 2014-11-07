@@ -20,7 +20,7 @@ def cron_daily():
         "bnotions": "@bnotions.com",
     }
     if request.method == "GET":
-        return render_template("daily_cron.html", domain_groups=domain_groups)
+        return render_template("cron_daily.html", domain_groups=domain_groups)
 
     failures = defaultdict(dict)
 
