@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+    </head>
+    <body>
+        <h1>Rescan Github</h1>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+    <form id="cron-form" action="{{ url_for("daily_cron") }}" method="POST">
+    <p>
+      Clicking this button will move users into the appropriate groups
+      based on their email address. This task is run automatically once a day,
+      but if you want to run it now, you can manually start the task by clicking
+      this button.
+    </p>
+    <label for="group">Group:</label>
+    <select name="group" id="group">
+      <option value="" selected="selected">All</option>
+      {% for group, domain in domain_groups.items() %}
+      <option value="{{group}}">{{group}}</option>
+      {% endfor %}
+    </select>
+    <input type="submit" value="Process" />
+    </form>
+    </body>
+</html>

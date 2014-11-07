@@ -5,13 +5,13 @@ import sys
 import json
 import bugsnag
 from collections import defaultdict
-from flask import request, jsonify
+from flask import request, jsonify, render_template
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
 from openedx_webhooks.utils import jira_users, jira_group_members
 
 
-@app.route("/cron/daily", methods=("POST",))
+@app.route("/cron/daily", methods=("GET", "POST"))
 def cron_daily():
     # a mapping of group name to email domain
     domain_groups = {
@@ -19,6 +19,9 @@ def cron_daily():
         "clarice": "@claricetechnologies.com",
         "bnotions": "@bnotions.com",
     }
+    if request.method == "GET":
+        return render_template("daily_cron.html", domain_groups=domain_groups)
+
     failures = defaultdict(dict)
 
     requested_group = request.form.get("group")
