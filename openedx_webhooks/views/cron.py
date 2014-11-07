@@ -15,6 +15,7 @@ def cron_daily():
     # a mapping of group name to email domain
     domain_groups = {
         "edx-employees": "@edx.org",
+        "clarice": "@claricetechnologies.com",
     }
     failures = defaultdict(dict)
 
