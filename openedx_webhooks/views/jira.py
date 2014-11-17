@@ -144,7 +144,6 @@ def should_transition(issue):
         )
         return False
 
-    issue_url = URLObject(issue["self"])
     user_url = URLObject(issue["fields"]["creator"]["self"])
     user_url = user_url.set_query_param("expand", "groups")
 
@@ -168,6 +167,7 @@ def should_transition(issue):
         exempt_projects = exempt_groups[user_group]
         if "ALL" in exempt_projects:
             return True
+        print("project_key = {}, exempt_projects = {}".format(project_key, exempt_projects), file=sys.stderr)
         if project_key in exempt_projects:
             return True
 
