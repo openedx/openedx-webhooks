@@ -117,14 +117,14 @@ def jira_issue_created():
     return issue_opened(event["issue"], bugsnag_context)
 
 
-def issue_opened(issue, bugsnag_context=None):
-    bugsnag_context = bugsnag_context or {}
-    bugsnag_context = {"issue": issue}
-    bugsnag.configure_request(meta_data=bugsnag_context)
-
+def should_transition(issue):
+    """
+    Return a boolean indicating if the given issue should be transitioned
+    automatically from "Needs Triage" to an open status.
+    """
     issue_key = to_unicode(issue["key"])
     issue_status = to_unicode(issue["fields"]["status"]["name"])
-    project = to_unicode(issue["fields"]["project"]["key"])
+    project_key = to_unicode(issue["fields"]["project"]["key"])
     if issue_status != "Needs Triage":
         print(
             "{key} has status {status}, does not need to be processed".format(
@@ -132,8 +132,9 @@ def issue_opened(issue, bugsnag_context=None):
             ),
             file=sys.stderr,
         )
-        return "issue does not need to be triaged"
-    if project == "OSPR":
+        return False
+
+    if project_key == "OSPR":
         # open source pull requests do not skip Needs Triage
         print(
             "{key} is an open source pull request, and does not need to be processed.".format(
@@ -141,7 +142,7 @@ def issue_opened(issue, bugsnag_context=None):
             ),
             file=sys.stderr,
         )
-        return "issue is OSPR"
+        return False
 
     issue_url = URLObject(issue["self"])
     user_url = URLObject(issue["fields"]["creator"]["self"])
@@ -156,10 +157,33 @@ def issue_opened(issue, bugsnag_context=None):
     user_groups = set(user_group_map)
 
     # skip "Needs Triage" if bug was created by edX or Clarice
-    exempt_groups = set(("edx-employees", "clarice"))
+    exempt_groups = {
+        "edx-employees": set(("ALL")),
+        "clarice": set(("MOB")),
+        "bnotions": set(("MOB")),
+    }
+    for user_group in user_groups:
+        if user_group not in exempt_groups:
+            continue
+        exempt_projects = exempt_groups[user_group]
+        if "ALL" in exempt_projects:
+            return True
+        if project_key in exempt_projects:
+            return True
+
+    return False
+
+
+def issue_opened(issue, bugsnag_context=None):
+    bugsnag_context = bugsnag_context or {}
+    bugsnag_context = {"issue": issue}
+    bugsnag.configure_request(meta_data=bugsnag_context)
+
+    issue_key = to_unicode(issue["key"])
+    issue_url = URLObject(issue["self"])
 
     transitioned = False
-    if user_groups.intersection(exempt_groups):
+    if should_transition(issue):
         transitions_url = issue_url.with_path(issue_url.path + "/transitions")
         transitions_resp = jira_get(transitions_url)
         if not transitions_resp.ok:
