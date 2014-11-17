@@ -155,11 +155,11 @@ def should_transition(issue):
     user_group_map = {g["name"]: g["self"] for g in user["groups"]["items"]}
     user_groups = set(user_group_map)
 
-    # skip "Needs Triage" if bug was created by edX or Clarice
     exempt_groups = {
-        "edx-employees": set(("ALL")),
-        "clarice": set(("MOB")),
-        "bnotions": set(("MOB")),
+        # group name: set of projects that they can create non-triage issues
+        "edx-employees": set(("ALL",)),
+        "clarice": set(("MOB",)),
+        "bnotions": set(("MOB",)),
     }
     for user_group in user_groups:
         if user_group not in exempt_groups:
@@ -167,7 +167,6 @@ def should_transition(issue):
         exempt_projects = exempt_groups[user_group]
         if "ALL" in exempt_projects:
             return True
-        print("project_key = {}, exempt_projects = {}".format(project_key, exempt_projects), file=sys.stderr)
         if project_key in exempt_projects:
             return True
 
