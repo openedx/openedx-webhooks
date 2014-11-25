@@ -134,8 +134,12 @@ def should_transition(issue):
         )
         return False
 
-    if project_key == "OSPR":
-        # open source pull requests do not skip Needs Triage
+    # Open source pull requests do not skip Needs Triage.
+    # However, if someone creates a subtask on an OSPR issue, that subtasks
+    # might skip Needs Triage (it just follows the rest of the logic in this
+    # function.)
+    is_subtask = issue["fields"]["issuetype"]["subtask"]
+    if project_key == "OSPR" and not is_subtask:
         print(
             "{key} is an open source pull request, and does not need to be processed.".format(
                 key=issue_key
