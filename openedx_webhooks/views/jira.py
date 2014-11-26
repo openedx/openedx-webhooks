@@ -342,6 +342,10 @@ def jira_issue_updated():
                 except ValueError:
                     print("PR {num} does not have label {old_label} to remove".format(num=pr_num, old_label=old_label))
                     print("PR {num} only has labels {labels}".format(num=pr_num, labels=label_list))
+                    print("(we think this PR is in repo {repo}".format(repo=pr_repo))
+                    event = request.get_json()
+                    pr_repo = event["issue"]["fields"].get(custom_fields["Repo"], "")
+                    print("re-getting the pr_repo, we think it is now {repo}".format(repo=pr_repo))
                 else:
                     print("PR {num}: Successfully removed label {old_label}".format(num=pr_num, old_label=old_label))
                     break
