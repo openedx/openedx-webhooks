@@ -142,13 +142,7 @@ def should_transition(issue):
     if project_key == "OSPR" and not is_subtask:
         print(
             "{key} is an open source pull request, and does not need to be processed.".format(
-$ git remote -v
-                herokugit@heroku.com:openedx-webhooks.git (fetch)
-                herokugit@heroku.com:openedx-webhooks.git (push)
-                origingit@github.com:sarina/openedx-webhooks.git (fetch)
-                origingit@github.com:sarina/openedx-webhooks.git (push)
-                singingwolfboygit@github.com:singingwolfboy/openedx-webhooks.git (fetch)
-                singingwolfboygit@github.com:singingwolfboy/openedx-webhooks.git (push)                key=issue_key
+                key=issue_key
             ),
             file=sys.stderr,
         )
