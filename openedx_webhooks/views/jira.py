@@ -142,7 +142,13 @@ def should_transition(issue):
     if project_key == "OSPR" and not is_subtask:
         print(
             "{key} is an open source pull request, and does not need to be processed.".format(
-                key=issue_key
+$ git remote -v
+                herokugit@heroku.com:openedx-webhooks.git (fetch)
+                herokugit@heroku.com:openedx-webhooks.git (push)
+                origingit@github.com:sarina/openedx-webhooks.git (fetch)
+                origingit@github.com:sarina/openedx-webhooks.git (push)
+                singingwolfboygit@github.com:singingwolfboy/openedx-webhooks.git (fetch)
+                singingwolfboygit@github.com:singingwolfboy/openedx-webhooks.git (push)                key=issue_key
             ),
             file=sys.stderr,
         )
@@ -337,15 +343,12 @@ def jira_issue_updated():
             for old_label in STATUS_LABEL_DICT[old_status]:
                 try:
                     if isinstance(old_label, dict):
+                        old_label = old_label.copy()
                         old_label["url"] = old_label["url"].format(pr_repo=pr_repo)
                     label_list.remove(old_label)
                 except ValueError:
                     print("PR {num} does not have label {old_label} to remove".format(num=pr_num, old_label=old_label))
                     print("PR {num} only has labels {labels}".format(num=pr_num, labels=label_list))
-                    print("(we think this PR is in repo {repo}".format(repo=pr_repo))
-                    event = request.get_json()
-                    pr_repo = event["issue"]["fields"].get(custom_fields["Repo"], "")
-                    print("re-getting the pr_repo, we think it is now {repo}".format(repo=pr_repo))
                 else:
                     print("PR {num}: Successfully removed label {old_label}".format(num=pr_num, old_label=old_label))
                     break

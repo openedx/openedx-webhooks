@@ -243,6 +243,7 @@ def pr_opened(pr, bugsnag_context=None):
     if not comment_resp.ok:
         raise requests.exceptions.RequestException(comment_resp.text)
 
+    # Add the "Needs Triage" label to the PR
     issue_url = "/repos/{repo}/issues/{num}".format(repo=repo, num=pr["number"])
     label_resp = github.patch(issue_url, data=json.dumps({"labels": ["needs triage"]}))
     if not label_resp.ok:
