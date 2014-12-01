@@ -4,6 +4,7 @@ from __future__ import unicode_literals, print_function
 import sys
 import json
 import re
+from datetime import date
 
 import bugsnag
 import requests
@@ -162,7 +163,8 @@ def is_edx_pull_request(pull_request):
     people = get_people_file()
     author = pull_request["user"]["login"].decode('utf-8')
     return (author in people and
-            people[author].get("institution", "") == "edX")
+            people[author].get("institution", "") == "edX" and
+            people[author].get("expires_on", date.max) > date.today())
 
 
 def pr_opened(pr, bugsnag_context=None):
