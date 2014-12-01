@@ -375,8 +375,11 @@ def github_pr_comment(pull_request, jira_issue, people=None):
     people = people or get_people_file()
     people = {user.lower(): values for user, values in people.items()}
     pr_author = pull_request["user"]["login"].decode('utf-8').lower()
-    # does the user have a signed contributor agreement?
-    has_signed_agreement = pr_author in people
+    # does the user have a valid, signed contributor agreement?
+    has_signed_agreement = (
+        pr_author in people and
+        people[pr_author].get("expires_on", date.max) > date.today()
+    )
     # is the user in the AUTHORS file?
     in_authors_file = False
     name = people.get(pr_author, {}).get("name", "")
