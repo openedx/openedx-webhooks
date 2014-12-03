@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function
 
 import sys
 import json
+import re
 
 import bugsnag
 import requests
@@ -248,18 +249,13 @@ def jira_issue_updated():
         # If we don't have an "issue" key, it's junk.
         return "What is this shit!?", 400
 
-    issue_key = to_unicode(event["issue"]["key"])
-
     # is this a comment?
     comment = event.get("comment")
     if comment:
-        return jira_issue_comment_added(event)
+        return jira_issue_comment_added(event["issue"], comment, bugsnag_context)
 
     # is the issue an open source pull request?
     if event["issue"]["fields"]["project"]["key"] != "OSPR":
-        # TODO: if the issue has just been moved from the OSPR project to a new project,
-        # change the label to "engineering review". Need to figure out if we can tell that
-        # the ticket has just moved projects.
         return "I don't care"
 
     # is there a changelog?
@@ -390,7 +386,71 @@ def jira_issue_status_changed(issue, changelog, bugsnag_context=None):
     return "Changed labels of PR #{num} to {labels}".format(num=pr_num, labels=pr_labels)
 
 
-def jira_issue_comment_added(event, bugsnag_context=None):
+def jira_issue_comment_added(issue, comment, bugsnag_context=None):
     bugsnag_context = bugsnag_context or {}
-    print(event, file=sys.stderr)
-    return "I don't care"
+    issue_key = to_unicode(issue["key"])
+
+    # we want to parse comments on Course Launch issues to fill out the cert report
+    # see https://openedx.atlassian.net/browse/TOOLS-19
+    if issue["fields"]["project"]["key"] != "COR":
+        return "I don't care"
+
+    lines = comment['body'].splitlines()
+    if len(lines) < 2:
+        return "I don't care"
+
+    # the comment that we want should have precisely these headings in this order
+    headings = [
+        "course ID", "audit", "audit_enrolled", "downloadable",
+        "enrolled_current", "enrolled_total", "honor", "honor_enrolled",
+        "notpassing", "verified", "verified_enrolled",
+    ]
+    HEADING_RE = re.compile(r"\w+".join(headings))
+    TIMESTAMP_RE = re.compile(r"^\d\d:\d\d:\d\d ")
+
+    # test header/content pairs
+    values = None
+    for header, content in zip(lines, lines[1:]):
+        # if both header and content start with a timestamp, chop it off
+        if TIMESTAMP_RE.match(header) and TIMESTAMP_RE.match(content):
+            header = header[9:]
+            content = content[9:]
+
+        # does this have the headings we're expecting?
+        if not HEADING_RE.search(header):
+            # this is not the header, move on
+            continue
+
+        # this must be it! grab the values
+        values = content.split()
+
+        # check that we have the right number
+        if len(values) == len(headings):
+            # we got it!
+            break
+        else:
+            # aww, we were so close...
+            values = None
+
+    if not values:
+        return "Didn't find header/content pair"
+
+    custom_fields = get_jira_custom_fields()
+    fields = {
+        custom_fields["Course ID"]: values[0],
+        custom_fields["?"]: int(values[1]), # "audit"
+        custom_fields["Enrolled Audit"]: int(values[2]),
+        custom_fields["?"]: int(values[3]), # "downloadable"
+        custom_fields["Current Enrolled"]: int(values[4]),
+        custom_fields["Total Enrolled"]: int(values[5]),
+        custom_fields["?"]: int(values[6]), # "honor"
+        custom_fields["Enrolled Honor Code"]: int(values[7]),
+        custom_fields["Not Passing"]: int(values[8]),
+        custom_fields["?"]: int(values[9]), # "verified"
+        custom_fields["Enrolled Verified"]: int(values[10]),
+    }
+    issue_url = issue["self"]
+    update_resp = jira.put(issue_url, json={"fields": fields})
+    if not update_resp.ok:
+        raise requests.exceptions.RequestException(update_resp.text)
+    return "{key} cert info updated".format(key=issue_key)
