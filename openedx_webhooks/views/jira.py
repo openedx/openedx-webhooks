@@ -30,6 +30,7 @@ def get_jira_custom_fields():
         if value["custom"]
     }
 
+
 @app.route("/jira/rescan", methods=("GET", "POST"))
 def jira_rescan():
     if request.method == "GET":
@@ -223,6 +224,34 @@ def issue_opened(issue, bugsnag_context=None):
     return action
 
 
+def github_pr_repo(issue):
+    custom_fields = get_jira_custom_fields()
+    return issue["fields"].get(custom_fields["Repo"])
+
+
+def github_pr_num(issue):
+    custom_fields = get_jira_custom_fields()
+    pr_num = issue["fields"].get(custom_fields["PR Number"])
+    try:
+        return int(pr_num)
+    except:
+        return None
+
+
+def github_pr_url(issue):
+    """
+    Return the pull request URL for the given JIRA issue,
+    or raise an exception if they can't be determined.
+    """
+    pr_repo = github_pr_repo(issue)
+    pr_num = github_pr_num(issue)
+    if not pr_repo or not pr_num:
+        issue_key = to_unicode(issue["key"])
+        fail_msg = '{key} is missing "Repo" or "PR Number" fields'.format(key=issue_key)
+        raise Exception(fail_msg)
+    return "/repos/{repo}/pulls/{num}".format(repo=pr_repo, num=pr_num)
+
+
 @app.route("/jira/issue/updated", methods=("POST",))
 def jira_issue_updated():
     """
@@ -270,18 +299,10 @@ def jira_issue_updated():
     if len(status_changelog_items) == 0:
         return "I don't care"
 
-    # construct Github API URL
-    custom_fields = get_jira_custom_fields()
-    pr_repo = event["issue"]["fields"].get(custom_fields["Repo"], "")
-    pr_num = event["issue"]["fields"].get(custom_fields["PR Number"])
-    if not pr_repo or not pr_num:
-        fail_msg = '{key} is missing "Repo" or "PR Number" fields'.format(key=issue_key)
-        raise Exception(fail_msg)
-    pr_num = int(pr_num)
-
-    pr_url = "/repos/{repo}/pulls/{num}".format(repo=pr_repo, num=pr_num)
-    # Need to use the Issues API for label manipulation
-    issue_url = "/repos/{repo}/issues/{num}".format(repo=pr_repo, num=pr_num)
+    pr_num = github_pr_num(event["issue"])
+    pr_repo = github_pr_repo(event["issue"])
+    pr_url = github_pr_url(event["issue"])
+    issue_url = pr_url.replace("pulls", "issues")
 
     old_status = status_changelog_items[0]["fromString"]
     new_status = status_changelog_items[0]["toString"]
