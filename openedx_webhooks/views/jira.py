@@ -270,6 +270,10 @@ def jira_issue_updated():
         return "I don't care"
 
     pr_repo = github_pr_repo(event["issue"])
+    if not pr_repo:
+        issue_key = to_unicode(event["issue"]["key"])
+        fail_msg = '{key} is missing "Repo" field'.format(key=issue_key)
+        raise Exception(fail_msg)
     repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
     if not repo_labels_resp.ok:
         raise requests.exceptions.RequestException(repo_labels_resp.text)
