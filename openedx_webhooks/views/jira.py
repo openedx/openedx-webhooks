@@ -250,6 +250,11 @@ def jira_issue_updated():
 
     issue_key = to_unicode(event["issue"]["key"])
 
+    # is this a comment?
+    comment = event.get("comment")
+    if comment:
+        return jira_issue_comment_added(event)
+
     # is the issue an open source pull request?
     if event["issue"]["fields"]["project"]["key"] != "OSPR":
         # TODO: if the issue has just been moved from the OSPR project to a new project,
@@ -261,7 +266,7 @@ def jira_issue_updated():
     changelog = event.get("changelog")
     if not changelog:
         # it was just someone adding a comment
-        return jira_issue_comment_added(event)
+        return "I don't care"
 
     # did the issue change status?
     status_changelog_items = [item for item in changelog["items"] if item["field"] == "status"]
