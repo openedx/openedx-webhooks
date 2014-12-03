@@ -261,7 +261,7 @@ def jira_issue_updated():
     changelog = event.get("changelog")
     if not changelog:
         # it was just someone adding a comment
-        return "I don't care"
+        return jira_issue_comment_added(event)
 
     # did the issue change status?
     status_changelog_items = [item for item in changelog["items"] if item["field"] == "status"]
@@ -383,3 +383,9 @@ def jira_issue_status_changed(issue, changelog, bugsnag_context=None):
     if not update_label_resp.ok:
         raise requests.exceptions.RequestException(update_label_resp.text)
     return "Changed labels of PR #{num} to {labels}".format(num=pr_num, labels=pr_labels)
+
+
+def jira_issue_comment_added(event, bugsnag_context=None):
+    bugsnag_context = bugsnag_context or {}
+    print(event, file=sys.stderr)
+    return "I don't care"
