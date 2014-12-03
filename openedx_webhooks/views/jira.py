@@ -53,37 +53,6 @@ def jira_rescan():
     return resp
 
 
-# Maps JIRA status : Github label name
-# Sometimes the existing labels are just strings, but other times they're the full on
-# label dict with url, color, and name defined.
-STATUS_LABEL_DICT = {
-    'Needs Triage': [
-        "needs triage",
-        {u'name': u'needs triage', u'color': u'e11d21', u'url': u'https://api.github.com/repos/{pr_repo}/labels/needs+triage'}
-    ],
-    'Product Review': [
-        "product review",
-        {"name": "product review", "color": "5319e7", "url": "https://api.github.com/repos/{pr_repo}/labels/product+review"}
-    ],
-    'Community Manager Review': [
-        "community manager review",
-        {"name": "community manager review", "color": "207de5", "url": "https://api.github.com/repos/{pr_repo}/labels/community+manager+review"}
-    ],
-    'Awaiting Prioritization': [
-        "awaiting prioritization",
-        {"name": "awaiting prioritization", "color": "fad8c7", "url": "https://api.github.com/repos/{pr_repo}/labels/awaiting+prioritization"}
-    ],
-    'Engineering Review': [
-        "engineering review",
-        {"name": "engineering review", "color": "c7def8", "url": "https://api.github.com/repos/{pr_repo}/labels/engineering+review"}
-    ],
-    'Waiting on Author': [
-        "waiting on author",
-        {"name": "waiting on author", "color": "0052cc", "url": "https://api.github.com/repos/{pr_repo}/labels/waiting+on+author"}
-    ],
-}
-
-
 @app.route("/jira/issue/created", methods=("POST",))
 def jira_issue_created():
     """
@@ -304,6 +273,14 @@ def jira_issue_updated():
     pr_url = github_pr_url(event["issue"])
     issue_url = pr_url.replace("pulls", "issues")
 
+    repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
+    if not repo_labels_resp.ok:
+        raise requests.exceptions.RequestException(repo_labels_resp.text)
+    # map of label name to label URL
+    repo_labels = {l["name"]: l["url"] for l in repo_labels_resp.json()}
+    # map of label name lowercased to label name in the case that it is on Github
+    repo_labels_lower = {name.lower(): name for name in repo_labels}
+
     old_status = status_changelog_items[0]["fromString"]
     new_status = status_changelog_items[0]["toString"]
 
@@ -344,34 +321,28 @@ def jira_issue_updated():
             raise requests.exceptions.RequestException(bug_text)
         return "Closed PR #{num}".format(num=pr_num)
 
-    elif new_status in STATUS_LABEL_DICT:
+    elif new_status.lower() in repo_labels_lower:
+        issue_resp = github.get(issue_url)
+        if not issue_resp.ok:
+            raise requests.exceptions.RequestException(issue_resp.text)
+        issue = issue_resp.json()
+
         # Get all the existing labels on this PR
-        label_list = github.get(issue_url).json()["labels"]
+        pr_labels = issue["labels"]
 
-        # Add in the label representing the new status - just add in the plain string label
-        label_list.append(STATUS_LABEL_DICT[new_status][0])
+        # remove old status label
+        old_status_label = repo_labels_lower.get(old_status.lower(), old_status)
+        if old_status_label in pr_labels:
+            pr_labels.remove(old_status_label)
+        # add new status label
+        new_status_label = repo_labels_lower[new_status.lower()]
+        if new_status_label not in pr_labels:
+            pr_labels.append(new_status_label)
 
-        # remove the label representing the old status, if it exists
-        if old_status in STATUS_LABEL_DICT:
-            # Sometimes labels are strings ("needs triage") whereas other times they're dictionaries
-            # with the label name, color, and url defined. Have not pinned down when or why this happens.
-            for old_label in STATUS_LABEL_DICT[old_status]:
-                try:
-                    if isinstance(old_label, dict):
-                        old_label = old_label.copy()
-                        old_label["url"] = old_label["url"].format(pr_repo=pr_repo)
-                    label_list.remove(old_label)
-                except ValueError:
-                    print("PR {num} does not have label {old_label} to remove".format(num=pr_num, old_label=old_label))
-                    print("PR {num} only has labels {labels}".format(num=pr_num, labels=label_list))
-                else:
-                    print("PR {num}: Successfully removed label {old_label}".format(num=pr_num, old_label=old_label))
-                    break
-
-        # Post the new set of labels to github
-        label_resp = github.patch(issue_url, json={"labels": label_list})
-        if not label_resp.ok:
-            raise requests.exceptions.RequestException(label_resp.text)
-        return "Changed label of PR #{num} to {labels}".format(num=pr_num, labels=label_list)
+        # Update labels on github
+        update_label_resp = github.patch(issue_url, json={"labels": pr_labels})
+        if not update_label_resp.ok:
+            raise requests.exceptions.RequestException(update_label_resp.text)
+        return "Changed labels of PR #{num} to {labels}".format(num=pr_num, labels=pr_labels)
 
     return "no change necessary"
