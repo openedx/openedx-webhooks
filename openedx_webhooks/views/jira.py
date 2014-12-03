@@ -268,11 +268,7 @@ def jira_issue_updated():
     if len(status_changelog_items) == 0:
         return "I don't care"
 
-    pr_num = github_pr_num(event["issue"])
     pr_repo = github_pr_repo(event["issue"])
-    pr_url = github_pr_url(event["issue"])
-    issue_url = pr_url.replace("pulls", "issues")
-
     repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
     if not repo_labels_resp.ok:
         raise requests.exceptions.RequestException(repo_labels_resp.text)
@@ -284,65 +280,106 @@ def jira_issue_updated():
     old_status = status_changelog_items[0]["fromString"]
     new_status = status_changelog_items[0]["toString"]
 
+    changes = []
     if new_status == "Rejected":
-        issue_resp = github.get(issue_url)
-        if not issue_resp.ok:
-            raise requests.exceptions.RequestException(issue_resp.text)
-        issue = issue_resp.json()
-        if issue["state"] == "closed":
-            # nothing to do
-            msg = "{key} was rejected, but PR #{num} was already closed".format(
-                key=issue_key, num=pr_num
-            )
-            print(msg, file=sys.stderr)
-            return msg
+        change = jira_issue_rejected(event["issue"], bugsnag_context)
+        changes.append(change)
 
-        # Comment on the PR to explain to look at JIRA
-        username = to_unicode(issue["user"]["login"])
-        comment = {"body": (
-            "Hello @{username}: We are unable to continue with "
-            "review of your submission at this time. Please see the "
-            "associated JIRA ticket for more explanation.".format(username=username)
-        )}
-        comment_resp = github.post(issue_url + "/comments", json=comment)
+    if new_status.lower() in repo_labels_lower:
+        change = jira_issue_status_changed(event["issue"], event["changelog"], bugsnag_context)
+        changes.append(change)
 
-        # close the pull request on Github
-        close_resp = github.patch(pr_url, json={"state": "closed"})
-        if not close_resp.ok or not comment_resp.ok:
-            bugsnag_context['request_headers'] = close_resp.request.headers
-            bugsnag_context['request_url'] = close_resp.request.url
-            bugsnag_context['request_method'] = close_resp.request.method
-            bugsnag.configure_request(meta_data=bugsnag_context)
-            bug_text = ''
-            if not close_resp.ok:
-                bug_text += "Failed to close; " + close_resp.text
-            if not comment_resp.ok:
-                bug_text += "Failed to comment on the PR; " + comment_resp.text
-            raise requests.exceptions.RequestException(bug_text)
-        return "Closed PR #{num}".format(num=pr_num)
+    if changes:
+        return "\n".join(changes)
+    else:
+        return "no change necessary"
 
-    elif new_status.lower() in repo_labels_lower:
-        issue_resp = github.get(issue_url)
-        if not issue_resp.ok:
-            raise requests.exceptions.RequestException(issue_resp.text)
-        issue = issue_resp.json()
 
-        # Get all the existing labels on this PR
-        pr_labels = issue["labels"]
+def jira_issue_rejected(issue, bugsnag_context=None):
+    bugsnag_context = bugsnag_context or {}
+    issue_key = to_unicode(issue["key"])
 
-        # remove old status label
-        old_status_label = repo_labels_lower.get(old_status.lower(), old_status)
-        if old_status_label in pr_labels:
-            pr_labels.remove(old_status_label)
-        # add new status label
-        new_status_label = repo_labels_lower[new_status.lower()]
-        if new_status_label not in pr_labels:
-            pr_labels.append(new_status_label)
+    pr_num = github_pr_num(issue)
+    pr_url = github_pr_url(issue)
+    issue_url = pr_url.replace("pulls", "issues")
 
-        # Update labels on github
-        update_label_resp = github.patch(issue_url, json={"labels": pr_labels})
-        if not update_label_resp.ok:
-            raise requests.exceptions.RequestException(update_label_resp.text)
-        return "Changed labels of PR #{num} to {labels}".format(num=pr_num, labels=pr_labels)
+    gh_issue_resp = github.get(issue_url)
+    if not gh_issue_resp.ok:
+        raise requests.exceptions.RequestException(gh_issue_resp.text)
+    gh_issue = gh_issue_resp.json()
+    if gh_issue["state"] == "closed":
+        # nothing to do
+        msg = "{key} was rejected, but PR #{num} was already closed".format(
+            key=issue_key, num=pr_num
+        )
+        print(msg, file=sys.stderr)
+        return msg
 
-    return "no change necessary"
+    # Comment on the PR to explain to look at JIRA
+    username = to_unicode(issue["user"]["login"])
+    comment = {"body": (
+        "Hello @{username}: We are unable to continue with "
+        "review of your submission at this time. Please see the "
+        "associated JIRA ticket for more explanation.".format(username=username)
+    )}
+    comment_resp = github.post(issue_url + "/comments", json=comment)
+
+    # close the pull request on Github
+    close_resp = github.patch(pr_url, json={"state": "closed"})
+    if not close_resp.ok or not comment_resp.ok:
+        bugsnag_context['request_headers'] = close_resp.request.headers
+        bugsnag_context['request_url'] = close_resp.request.url
+        bugsnag_context['request_method'] = close_resp.request.method
+        bugsnag.configure_request(meta_data=bugsnag_context)
+        bug_text = ''
+        if not close_resp.ok:
+            bug_text += "Failed to close; " + close_resp.text
+        if not comment_resp.ok:
+            bug_text += "Failed to comment on the PR; " + comment_resp.text
+        raise requests.exceptions.RequestException(bug_text)
+    return "Closed PR #{num}".format(num=pr_num)
+
+
+def jira_issue_status_changed(issue, changelog, bugsnag_context=None):
+    bugsnag_context = bugsnag_context or {}
+    pr_num = github_pr_num(issue)
+    pr_repo = github_pr_repo(issue)
+    pr_url = github_pr_url(issue)
+    issue_url = pr_url.replace("pulls", "issues")
+
+    status_changelog = [item for item in changelog["items"] if item["field"] == "status"][0]
+    old_status = status_changelog["fromString"]
+    new_status = status_changelog["toString"]
+
+    # get github issue
+    gh_issue_resp = github.get(issue_url)
+    if not gh_issue_resp.ok:
+        raise requests.exceptions.RequestException(gh_issue_resp.text)
+    gh_issue = gh_issue_resp.json()
+
+    # get repo labels
+    repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
+    if not repo_labels_resp.ok:
+        raise requests.exceptions.RequestException(repo_labels_resp.text)
+    # map of label name to label URL
+    repo_labels = {l["name"]: l["url"] for l in repo_labels_resp.json()}
+    # map of label name lowercased to label name in the case that it is on Github
+    repo_labels_lower = {name.lower(): name for name in repo_labels}
+
+    # Get all the existing labels on this PR
+    pr_labels = gh_issue["labels"]
+
+    # remove old status label
+    old_status_label = repo_labels_lower.get(old_status.lower(), old_status)
+    if old_status_label in pr_labels:
+        pr_labels.remove(old_status_label)
+    # add new status label
+    new_status_label = repo_labels_lower[new_status.lower()]
+    if new_status_label not in pr_labels:
+        pr_labels.append(new_status_label)
+
+    # Update labels on github
+    update_label_resp = github.patch(issue_url, json={"labels": pr_labels})
+    if not update_label_resp.ok:
+        raise requests.exceptions.RequestException(update_label_resp.text)
+    return "Changed labels of PR #{num} to {labels}".format(num=pr_num, labels=pr_labels)
