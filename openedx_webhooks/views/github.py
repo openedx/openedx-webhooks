@@ -69,7 +69,7 @@ def github_rescan():
     for pull_request in paginated_get(url, session=github):
         bugsnag_context["pull_request"] = pull_request
         bugsnag.configure_request(meta_data=bugsnag_context)
-        if not get_jira_issue_key(pull_request) and not is_edx_pull_request(pull_request):
+        if not get_jira_issue_key(pull_request) and not is_internal_pull_request(pull_request):
             text = pr_opened(pull_request, bugsnag_context=bugsnag_context)
             if "created" in text:
                 jira_key = text[8:]

@@ -4,6 +4,7 @@ from __future__ import unicode_literals, print_function
 import sys
 import json
 import re
+from collections import defaultdict
 
 import bugsnag
 import requests
