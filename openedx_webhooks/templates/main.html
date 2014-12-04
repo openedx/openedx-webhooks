@@ -26,7 +26,7 @@
         <a href="{{ url_for("github.login") }}">Authenticate</a>
         {% endif %}
       </li>
-      <li><a href="{{ url_for("github_rescan") }}">Rescan</a></li>
+      <li><a href="{{ url_for("github_rescan") }}">Rescan Pull Requests</a></li>
       <li><a href="{{ url_for("github_install") }}">Install Webhooks</a></li>
     </ul>
     <h2>JIRA</h2>
@@ -39,13 +39,8 @@
         <a href="{{ url_for("jira.login") }}">Authenticate</a>
         {% endif %}
       </li>
-      <li><a href="{{ url_for("jira_rescan") }}">Rescan</a></li>
-    </ul>
-    <h2>Cron</h2>
-    <ul>
-      <li>
-        <a href="{{ url_for("cron_daily") }}">Daily</a>
-      </li>
+      <li><a href="{{ url_for("jira_rescan_issues") }}">Rescan Issues</a></li>
+      <li><a href="{{ url_for("jira_rescan_users") }}">Rescan Users</a></li>
     </ul>
     </body>
 </html>

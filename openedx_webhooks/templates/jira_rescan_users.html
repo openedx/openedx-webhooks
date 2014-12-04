@@ -4,7 +4,7 @@
         <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
     </head>
     <body>
-        <h1>Daily Cron</h1>
+        <h1>Rescan JIRA Users</h1>
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     <ul class="flashes">
@@ -14,7 +14,7 @@
     </ul>
   {% endif %}
 {% endwith %}
-    <form id="cron-form" action="{{ url_for("cron_daily") }}" method="POST">
+    <form id="rescan-form" action="{{ url_for("jira_rescan_users") }}" method="POST">
     <p>
       Clicking this button will move users into the appropriate groups
       based on their email address. This task is run automatically once a day,

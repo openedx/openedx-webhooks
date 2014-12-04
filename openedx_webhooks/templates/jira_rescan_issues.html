@@ -4,7 +4,7 @@
         <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
     </head>
     <body>
-        <h1>Rescan JIRA</h1>
+        <h1>Rescan JIRA Issues</h1>
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     <ul class="flashes">
@@ -14,7 +14,7 @@
     </ul>
   {% endif %}
 {% endwith %}
-    <form id="rescan-form" action="{{ url_for("jira_rescan") }}" method="POST">
+    <form id="rescan-form" action="{{ url_for("jira_rescan_issues") }}" method="POST">
     <p>
       Clicking this button will rescan all issues in the "Needs Triage" state.
     </p>
