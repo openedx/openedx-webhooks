@@ -9,12 +9,15 @@ from collections import defaultdict
 import bugsnag
 import requests
 from urlobject import URLObject
-from flask import request, render_template, make_response
+from flask import request, render_template, make_response, jsonify
 from flask_dance.contrib.jira import jira
 from flask_dance.contrib.github import github
 from openedx_webhooks import app
-from openedx_webhooks.utils import pop_dict_id, memoize, jira_paginated_get, to_unicode
 from openedx_webhooks.oauth import jira_get
+from openedx_webhooks.utils import (
+    pop_dict_id, memoize, jira_paginated_get, to_unicode,
+    jira_users, jira_group_members
+)
 
 
 @memoize
