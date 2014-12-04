@@ -162,7 +162,7 @@ def is_internal_pull_request(pull_request):
     """
     people = get_people_file()
     author = pull_request["user"]["login"].decode('utf-8')
-    internal_institutions = set("edX", "BNOTIONS")
+    internal_institutions = set(("edX", "BNOTIONS"))
     return (
         author in people and
         people[author].get("institution") in internal_institutions and
