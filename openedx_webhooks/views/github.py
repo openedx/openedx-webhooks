@@ -156,21 +156,24 @@ def get_repos_file():
     return yaml.safe_load(repo_resp.text)
 
 
-def is_edx_pull_request(pull_request):
+def is_internal_pull_request(pull_request):
     """
     Was this pull request created by someone who works for edX?
     """
     people = get_people_file()
     author = pull_request["user"]["login"].decode('utf-8')
-    return (author in people and
-            people[author].get("institution", "") == "edX" and
-            people[author].get("expires_on", date.max) > date.today())
+    internal_institutions = set("edX", "BNOTIONS")
+    return (
+        author in people and
+        people[author].get("institution") in internal_institutions and
+        people[author].get("expires_on", date.max) > date.today()
+    )
 
 
 def pr_opened(pr, bugsnag_context=None):
     bugsnag_context = bugsnag_context or {}
     user = pr["user"]["login"].decode('utf-8')
-    if is_edx_pull_request(pr):
+    if is_internal_pull_request(pr):
         # not an open source pull request, don't create an issue for it
         print(
             "@{user} opened PR #{num} against {repo} (internal PR)".format(
