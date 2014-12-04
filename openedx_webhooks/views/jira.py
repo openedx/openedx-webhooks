@@ -32,6 +32,15 @@ def get_jira_custom_fields():
     }
 
 
+@memoize
+def get_jira_parent(issue):
+    parent_ref = issue["fields"].get("parent")
+    if not parent_ref:
+        return None
+    parent_key = parent_ref["key"]
+    return jira_get("/rest/api/2/issue/{key}".format(key=parent_key))
+
+
 @app.route("/jira/rescan", methods=("GET", "POST"))
 def jira_rescan():
     if request.method == "GET":
@@ -196,12 +205,21 @@ def issue_opened(issue, bugsnag_context=None):
 
 def github_pr_repo(issue):
     custom_fields = get_jira_custom_fields()
-    return issue["fields"].get(custom_fields["Repo"])
+    pr_repo = issue["fields"].get(custom_fields["Repo"])
+    if not pr_repo:
+        parent = get_jira_parent(issue)
+        if parent:
+            pr_repo = parent["fields"].get(custom_fields["Repo"])
+    return pr_repo
 
 
 def github_pr_num(issue):
     custom_fields = get_jira_custom_fields()
     pr_num = issue["fields"].get(custom_fields["PR Number"])
+    if not pr_num:
+        parent = get_jira_parent(issue)
+        if parent:
+            pr_num = parent["fields"].get(custom_fields["PR Number"])
     try:
         return int(pr_num)
     except:
