@@ -276,6 +276,10 @@ def jira_issue_updated():
     if event["issue"]["fields"]["project"]["key"] != "OSPR":
         return "I don't care"
 
+    # we don't care about OSPR subtasks
+    if event["issue"]["fields"]["issuetype"]["subtask"]:
+        return "ignoring subtasks"
+
     # is there a changelog?
     changelog = event.get("changelog")
     if not changelog:
