@@ -394,7 +394,7 @@ def jira_issue_status_changed(issue, changelog, bugsnag_context=None):
     repo_labels_lower = {name.lower(): name for name in repo_labels}
 
     # Get all the existing labels on this PR
-    pr_labels = gh_issue["labels"]
+    pr_labels = [label["name"] for label in gh_issue["labels"]]
     print("old labels: {}".format(pr_labels), file=sys.stderr)
 
     # remove old status label
