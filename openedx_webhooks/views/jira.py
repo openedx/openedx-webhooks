@@ -395,6 +395,7 @@ def jira_issue_status_changed(issue, changelog, bugsnag_context=None):
 
     # Get all the existing labels on this PR
     pr_labels = gh_issue["labels"]
+    print("old labels: {}".format(pr_labels), file=sys.stderr)
 
     # remove old status label
     old_status_label = repo_labels_lower.get(old_status.lower(), old_status)
@@ -404,6 +405,8 @@ def jira_issue_status_changed(issue, changelog, bugsnag_context=None):
     new_status_label = repo_labels_lower[new_status.lower()]
     if new_status_label not in pr_labels:
         pr_labels.append(new_status_label)
+
+    print("new labels: {}".format(pr_labels), file=sys.stderr)
 
     # Update labels on github
     update_label_resp = github.patch(issue_url, json={"labels": pr_labels})
