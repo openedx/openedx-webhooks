@@ -9,7 +9,7 @@ from datetime import date
 import bugsnag
 import requests
 import yaml
-from flask import request, render_template, make_response, url_for
+from flask import request, render_template, make_response, url_for, jsonify
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 from openedx_webhooks import app
@@ -84,6 +84,25 @@ def github_rescan():
     resp = make_response(json.dumps(created), 200)
     resp.headers["Content-Type"] = "application/json"
     return resp
+
+
+@app.route("/github/process_pr", methods=("GET", "POST"))
+def github_process_pr():
+    if request.method == "GET":
+        return render_template("github_process_pr.html")
+    repo = request.form.get("repo", "")
+    if not repo:
+        resp = jsonify({"error": "repo required"})
+        resp.status_code = 400
+        return resp
+    num = request.form.get("number")
+    if not num:
+        resp = jsonify({"error": "num required"})
+        resp.status_code = 400
+        return resp
+    num = int(num)
+    pr = github.get("/repos/{repo}/pulls/{num}".format(repo=repo, num=num))
+    return pr_opened(pr, ignore_internal=False)
 
 
 @app.route("/github/install", methods=("GET", "POST"))
@@ -170,10 +189,10 @@ def is_internal_pull_request(pull_request):
     )
 
 
-def pr_opened(pr, bugsnag_context=None):
+def pr_opened(pr, ignore_internal=True, bugsnag_context=None):
     bugsnag_context = bugsnag_context or {}
     user = pr["user"]["login"].decode('utf-8')
-    if is_internal_pull_request(pr):
+    if ignore_internal and is_internal_pull_request(pr):
         # not an open source pull request, don't create an issue for it
         print(
             "@{user} opened PR #{num} against {repo} (internal PR)".format(

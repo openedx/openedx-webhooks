@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+    </head>
+    <body>
+        <h1>Process Github Pull Request</h1>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+    <form id="rescan-form" action="{{ url_for("github_process_pr") }}" method="POST">
+    <p>
+      Use this page to process a specific pull request on Github, which will
+      ensure that a JIRA ticket exists for it. This will create JIRA tickets
+      even for internal PRs.
+    </p>
+    <label for="repo">Repo to scan</label>
+    <input type="text" name="repo" id="repo" value="edx/edx-platform" />
+    <label for="number">PR Number</label>
+    <input type="number" name="number" id="number" />
+    <input type="submit" value="Process" />
+    </form>
+    </body>
+</html>
