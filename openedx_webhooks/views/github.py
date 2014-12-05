@@ -101,8 +101,12 @@ def github_process_pr():
         resp.status_code = 400
         return resp
     num = int(num)
-    pr = github.get("/repos/{repo}/pulls/{num}".format(repo=repo, num=num))
-    return pr_opened(pr, ignore_internal=False)
+    pr_resp = github.get("/repos/{repo}/pulls/{num}".format(repo=repo, num=num))
+    if not pr_resp.ok:
+        resp = jsonify({"error": pr_resp.text})
+        resp.status_code = 400
+        return resp
+    return pr_opened(pr_resp.json(), ignore_internal=False)
 
 
 @app.route("/github/install", methods=("GET", "POST"))
