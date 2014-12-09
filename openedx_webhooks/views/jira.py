@@ -340,6 +340,8 @@ def jira_issue_rejected(issue, bugsnag_context=None):
     if not gh_issue_resp.ok:
         raise requests.exceptions.RequestException(gh_issue_resp.text)
     gh_issue = gh_issue_resp.json()
+    bugsnag_context["github_issue"] = gh_issue
+    bugsnag.configure_request(meta_data=bugsnag_context)
     if gh_issue["state"] == "closed":
         # nothing to do
         msg = "{key} was rejected, but PR #{num} was already closed".format(
@@ -349,7 +351,7 @@ def jira_issue_rejected(issue, bugsnag_context=None):
         return msg
 
     # Comment on the PR to explain to look at JIRA
-    username = to_unicode(issue["user"]["login"])
+    username = to_unicode(gh_issue["user"]["login"])
     comment = {"body": (
         "Hello @{username}: We are unable to continue with "
         "review of your submission at this time. Please see the "
