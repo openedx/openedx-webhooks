@@ -1,4 +1,8 @@
 # coding=utf-8
+"""
+These are the views that process webhook events coming from JIRA.
+"""
+
 from __future__ import unicode_literals, print_function
 
 import sys
@@ -66,12 +70,13 @@ def jira_rescan_issues():
 @app.route("/jira/issue/created", methods=("POST",))
 def jira_issue_created():
     """
-    Received an "issue created" event from JIRA.
-    https://developer.atlassian.com/display/JIRADEV/JIRA+Webhooks+Overview
+    Received an "issue created" event from JIRA. See `JIRA's webhook docs`_.
 
     Ideally, this should be handled in a task queue, but we want to stay within
     Heroku's free plan, so it will be handled inline instead.
     (A worker dyno costs money.)
+
+    .. _JIRA's webhook docs: https://developer.atlassian.com/display/JIRADEV/JIRA+Webhooks+Overview
     """
     try:
         event = request.get_json()
@@ -243,8 +248,9 @@ def github_pr_url(issue):
 @app.route("/jira/issue/updated", methods=("POST",))
 def jira_issue_updated():
     """
-    Received an "issue updated" event from JIRA.
-    https://developer.atlassian.com/display/JIRADEV/JIRA+Webhooks+Overview
+    Received an "issue updated" event from JIRA. See `JIRA's webhook docs`_.
+
+    .. _JIRA's webhook docs: https://developer.atlassian.com/display/JIRADEV/JIRA+Webhooks+Overview
     """
     try:
         event = request.get_json()

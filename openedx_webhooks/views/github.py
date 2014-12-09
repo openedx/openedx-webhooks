@@ -1,4 +1,8 @@
 # coding=utf-8
+"""
+These are the views that process webhook events coming from Github.
+"""
+
 from __future__ import unicode_literals, print_function
 
 import sys
@@ -19,6 +23,11 @@ from openedx_webhooks.views.jira import get_jira_custom_fields
 
 @app.route("/github/pr", methods=("POST",))
 def github_pull_request():
+    """
+    Process a `PullRequestEvent`_ from Github.
+
+    .. _PullRequestEvent: https://developer.github.com/v3/activity/events/types/#pullrequestevent
+    """
     try:
         event = request.get_json()
     except ValueError:

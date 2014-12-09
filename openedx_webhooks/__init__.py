@@ -19,7 +19,7 @@ from bugsnag.flask import handle_exceptions
 
 app = Flask(__name__)
 handle_exceptions(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "secrettoeveryone")
 app.register_blueprint(jira_bp, url_prefix="/login")
 app.register_blueprint(github_bp, url_prefix="/login")
