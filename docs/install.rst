@@ -67,3 +67,19 @@ Deploy
 5. Visit ``/login/jira`` and authorize with JIRA
 6. Visit ``/login/github`` and authorize with Github
 7. Enjoy the sweet, sweet taste of API integration
+
+Recurring Tasks
+---------------
+
+Some of the tasks that our webhooks bot does are meant to be done on a regular,
+recurring basis. For example, :func:`~openedx_webhooks.views.jira.jira_rescan_users`
+should be run every hour or so. To do that, we use a second, separate Heroku project
+whose only function is to wake up once an hour, send an HTTP request to the
+Heroku project running this code, and then go to sleep again. Heroku provides
+the `Heroku Scheduler`_ addon for this exact purpose. Note that we want to use
+a separate Heroku project in order to avoid paying for this service: if we used
+the Heroku Scheduler within the same project, the total number of instance-hours
+used by the two dynos would exceed the free tier. Since each project has its own
+free tier, we can get around this by splitting these up into separate projects.
+
+.. _Heroku Scheduler: https://devcenter.heroku.com/articles/scheduler

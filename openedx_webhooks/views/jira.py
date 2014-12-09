@@ -493,6 +493,11 @@ def jira_issue_comment_added(issue, comment, bugsnag_context=None):
 
 @app.route("/jira/user/rescan", methods=("GET", "POST"))
 def jira_rescan_users():
+    """
+    This task goes through all users on JIRA and ensures that they are assigned
+    to the correct group based on the user's email address. It's meant to be
+    run regularly: once an hour or so.
+    """
     # a mapping of group name to email domain
     domain_groups = {
         "edx-employees": "@edx.org",
