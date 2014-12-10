@@ -9,6 +9,7 @@ import sys
 import json
 import re
 from datetime import date
+from collections import defaultdict
 
 import bugsnag
 import requests
@@ -546,3 +547,29 @@ def github_contractor_pr_comment(pull_request):
         jira_url=jira_url, ospr_issue_url=ospr_issue_url,
     )
     return comment
+
+
+@app.route("/github/check_contributors", methods=("GET", "POST"))
+def github_check_contributors():
+    if request.method == "GET":
+        return render_template("github_check_contributors.html")
+    repo = request.form.get("repo", "")
+    if repo:
+        repos = (repo,)
+    else:
+        repos = get_repos_file().keys()
+
+    people = get_people_file()
+    people_lower = {username.lower() for username in people.keys()}
+
+    missing_contributors = defaultdict(set)
+    for repo in repos:
+        bugsnag_context = {"repo": repo}
+        bugsnag.configure_request(meta_data=bugsnag_context)
+        contributors_url = "/repos/{repo}/contributors".format(repo=repo)
+        contributors = paginated_get(contributors_url)
+        for contributor in contributors:
+            if contributor["login"].lower() not in people_lower:
+                missing_contributors[repo].append(contributor["login"])
+
+    return jsonify(missing_contributors)
