@@ -447,10 +447,11 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
     people = people or get_people_file()
     people = {user.lower(): values for user, values in people.items()}
     pr_author = pull_request["user"]["login"].decode('utf-8').lower()
+    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
     # does the user have a valid, signed contributor agreement?
     has_signed_agreement = (
         pr_author in people and
-        people[pr_author].get("expires_on", date.max) > date.today()
+        people[pr_author].get("expires_on", date.max) > created_at
     )
     # is the user in the AUTHORS file?
     in_authors_file = False
