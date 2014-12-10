@@ -204,7 +204,7 @@ def is_internal_pull_request(pull_request):
     return (
         author in people and
         people[author].get("institution") in internal_institutions and
-        people[author].get("expires_on", date.max) > created_at
+        people[author].get("expires_on", date.max) > created_at.date()
     )
 
 
@@ -222,7 +222,7 @@ def is_contractor_pull_request(pull_request):
     return (
         author in people and
         people[author].get("institution") in contracting_orgs and
-        people[author].get("expires_on", date.max) > created_at
+        people[author].get("expires_on", date.max) > created_at.date()
     )
 
 
@@ -452,7 +452,7 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
     # does the user have a valid, signed contributor agreement?
     has_signed_agreement = (
         pr_author in people and
-        people[pr_author].get("expires_on", date.max) > created_at
+        people[pr_author].get("expires_on", date.max) > created_at.date()
     )
     # is the user in the AUTHORS file?
     in_authors_file = False
