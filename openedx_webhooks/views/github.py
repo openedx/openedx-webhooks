@@ -572,4 +572,9 @@ def github_check_contributors():
             if contributor["login"].lower() not in people_lower:
                 missing_contributors[repo].add(contributor["login"])
 
-    return jsonify(missing_contributors)
+    # convert sets to lists, so jsonify can handle them
+    output = {
+        repo: list(contributors)
+        for repo, contributors in missing_contributors.items()
+    }
+    return jsonify(output)
