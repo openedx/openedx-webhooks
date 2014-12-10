@@ -13,6 +13,7 @@ from datetime import date
 import bugsnag
 import requests
 import yaml
+from iso8601 import parse_date
 from flask import request, render_template, make_response, url_for, jsonify
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
@@ -194,27 +195,63 @@ def is_internal_pull_request(pull_request):
     """
     people = get_people_file()
     author = pull_request["user"]["login"].decode('utf-8')
-    internal_institutions = set(("edX", "BNOTIONS"))
+    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
+    # Arbisoft doesn't do any Open edX work that is not paid for by edX,
+    # so we can just treat them as "internal" rather than as a contractor.
+    # This may change in the future.
+    internal_institutions = set(("edX", "Arbisoft"))
     return (
         author in people and
         people[author].get("institution") in internal_institutions and
-        people[author].get("expires_on", date.max) > date.today()
+        people[author].get("expires_on", date.max) > created_at
+    )
+
+
+def is_contractor_pull_request(pull_request):
+    """
+    Was this pull request created by someone in an organization that does
+    paid contracting work for edX? If so, we don't know if this pull request
+    falls under edX's contract, or if it should be treated as a pull request
+    from the community.
+    """
+    people = get_people_file()
+    author = pull_request["user"]["login"].decode('utf-8')
+    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
+    contracting_orgs = set(("BNOTIONS", "OpenCraft", "ExtensionEngine"))
+    return (
+        author in people and
+        people[author].get("institution") in contracting_orgs and
+        people[author].get("expires_on", date.max) > created_at
     )
 
 
 def pr_opened(pr, ignore_internal=True, bugsnag_context=None):
     bugsnag_context = bugsnag_context or {}
     user = pr["user"]["login"].decode('utf-8')
+    repo = pr["base"]["repo"]["full_name"]
+    num = pr["number"]
     if ignore_internal and is_internal_pull_request(pr):
         # not an open source pull request, don't create an issue for it
         print(
             "@{user} opened PR #{num} against {repo} (internal PR)".format(
-                user=user, repo=pr["base"]["repo"]["full_name"],
-                num=pr["number"]
+                user=user, repo=repo, num=num,
             ),
             file=sys.stderr
         )
         return "internal pull request"
+
+    if is_contractor_pull_request(pr):
+        # don't create a JIRA issue, but leave a comment
+        comment = {
+            "body": github_contractor_pr_comment(pr),
+        }
+        url = "/repos/{repo}/issues/{num}/comments".format(
+            repo=repo, num=num,
+        )
+        comment_resp = github.post(url, json=comment)
+        if not comment_resp.ok:
+            raise requests.exceptions.RequestException(comment_resp.text)
+        return "contractor pull request"
 
     issue_key = get_jira_issue_key(pr)
     if issue_key:
@@ -271,7 +308,7 @@ def pr_opened(pr, ignore_internal=True, bugsnag_context=None):
     bugsnag.configure_request(meta_data=bugsnag_context)
     # add a comment to the Github pull request with a link to the JIRA issue
     comment = {
-        "body": github_pr_comment(pr, new_issue_body, people),
+        "body": github_community_pr_comment(pr, new_issue_body, people),
     }
     url = "/repos/{repo}/issues/{num}/comments".format(
         repo=repo, num=pr["number"],
@@ -397,7 +434,7 @@ def get_jira_issue_key(pull_request):
     return None
 
 
-def github_pr_comment(pull_request, jira_issue, people=None):
+def github_community_pr_comment(pull_request, jira_issue, people=None):
     """
     For a newly-created pull request from an open source contributor,
     write a welcoming comment on the pull request. The comment should:
@@ -475,4 +512,36 @@ def github_pr_comment(pull_request, jira_issue, people=None):
             "Please see the [CONTRIBUTING]({contributing_url}) file for "
             "more information."
         ).format(todo=todo, contributing_url=contributing_url)
+    return comment
+
+
+def github_contractor_pr_comment(pull_request):
+    """
+    For a newly-created pull request from a contractor that edX works with,
+    write a comment on the pull request. The comment should:
+
+    * Help the author determine if the work is paid for by edX or not
+    * If not, show the author how to trigger the creation of an OSPR issue
+    """
+    jira_url = "https://openedx.atlassian.net"
+    ospr_issue_url = url_for(
+        "github_process_pr",
+        repo=pull_request["base"]["repo"]["full_name"],
+        number=pull_request["number"],
+        _external=True,
+    )
+    comment = (
+        "Thanks for the pull request, @{user}! It looks like you're a member of "
+        "a company that does contract work for edX. If you're doing this work "
+        "as part of a paid contract with edX, you should talk to edX about "
+        "who will review this pull request. If this work is not part of a paid "
+        "contract with edX, then you should ensure that there is an OSPR issue "
+        "to track this work in [JIRA]({jira_url}), so that we don't lose track "
+        "of your pull request. "
+        "\n\nTo automatically create an OSPR issue for this pull request, just "
+        "visit this link: {ospr_issue_url}"
+    ).format(
+        user=pull_request["user"]["login"].decode('utf-8'),
+        jira_url=jira_url, ospr_issue_url=ospr_issue_url,
+    )
     return comment

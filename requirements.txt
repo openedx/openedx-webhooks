@@ -14,3 +14,4 @@ bugsnag
 pycrypto==2.6.1
 PyYAML==3.11
 sqlalchemy_utils
+iso8601
