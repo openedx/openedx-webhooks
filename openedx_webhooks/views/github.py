@@ -570,6 +570,6 @@ def github_check_contributors():
         contributors = paginated_get(contributors_url, session=github)
         for contributor in contributors:
             if contributor["login"].lower() not in people_lower:
-                missing_contributors[repo].append(contributor["login"])
+                missing_contributors[repo].add(contributor["login"])
 
     return jsonify(missing_contributors)
