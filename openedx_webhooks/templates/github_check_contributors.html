@@ -14,7 +14,7 @@
     </ul>
   {% endif %}
 {% endwith %}
-    <form id="rescan-form" action="{{ url_for("github_check_collaborators") }}" method="POST">
+    <form id="rescan-form" action="{{ url_for("github_check_contributors") }}" method="POST">
     <p>
       Clicking this button will check all contributors for the repo you specify,
       to be sure that they're all in the <code>people.yaml</code> file.
