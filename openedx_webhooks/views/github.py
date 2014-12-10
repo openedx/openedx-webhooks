@@ -567,7 +567,7 @@ def github_check_contributors():
         bugsnag_context = {"repo": repo}
         bugsnag.configure_request(meta_data=bugsnag_context)
         contributors_url = "/repos/{repo}/contributors".format(repo=repo)
-        contributors = paginated_get(contributors_url)
+        contributors = paginated_get(contributors_url, session=github)
         for contributor in contributors:
             if contributor["login"].lower() not in people_lower:
                 missing_contributors[repo].append(contributor["login"])
