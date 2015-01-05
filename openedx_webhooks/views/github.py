@@ -117,7 +117,7 @@ def github_process_pr():
         resp = jsonify({"error": pr_resp.text})
         resp.status_code = 400
         return resp
-    return pr_opened(pr_resp.json(), ignore_internal=False)
+    return pr_opened(pr_resp.json(), ignore_internal=False, check_contractor=False)
 
 
 @app.route("/github/install", methods=("GET", "POST"))
@@ -226,7 +226,7 @@ def is_contractor_pull_request(pull_request):
     )
 
 
-def pr_opened(pr, ignore_internal=True, bugsnag_context=None):
+def pr_opened(pr, ignore_internal=True, check_contractor=True, bugsnag_context=None):
     bugsnag_context = bugsnag_context or {}
     user = pr["user"]["login"].decode('utf-8')
     repo = pr["base"]["repo"]["full_name"]
@@ -241,7 +241,7 @@ def pr_opened(pr, ignore_internal=True, bugsnag_context=None):
         )
         return "internal pull request"
 
-    if is_contractor_pull_request(pr):
+    if check_contractor and is_contractor_pull_request(pr):
         # don't create a JIRA issue, but leave a comment
         comment = {
             "body": github_contractor_pr_comment(pr),
