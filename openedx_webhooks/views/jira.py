@@ -146,10 +146,10 @@ def should_transition(issue):
 
     exempt_groups = {
         # group name: set of projects that they can create non-triage issues
-        "edx-employees": set(("ALL",)),
-        "clarice": set(("MOB",)),
-        "bnotions": set(("MOB",)),
-        "opencraft": set(("SOL",)),
+        "edx-employees": {"ALL"},
+        "clarice": {"MOB"},
+        "bnotions": {"MOB"},
+        "opencraft": {"SOL"},
     }
     for user_group in user_groups:
         if user_group not in exempt_groups:
