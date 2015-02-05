@@ -508,6 +508,7 @@ def jira_rescan_users():
         "edx-employees": "@edx.org",
         "clarice": "@claricetechnologies.com",
         "bnotions": "@bnotions.com",
+        "qualcomm": ".qualcomm.com",
     }
     if request.method == "GET":
         return render_template("jira_rescan_users.html", domain_groups=domain_groups)
