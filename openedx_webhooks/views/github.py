@@ -51,6 +51,8 @@ def github_pull_request():
         return pr_closed(pr, bugsnag_context)
     if event["action"] == "labeled":
         return "Ignoring labeling events from github", 200
+    if event["action"] == "synchronize":
+        return "Ignoring synchronize events from github", 200
 
     print(
         "Received {action} event on PR #{num} against {repo}, don't know how to handle it".format(
