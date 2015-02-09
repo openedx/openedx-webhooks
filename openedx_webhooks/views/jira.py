@@ -319,6 +319,10 @@ def jira_issue_updated():
         change = jira_issue_rejected(event["issue"], bugsnag_context)
         changes.append(change)
 
+    elif 'blocked' in new_status.lower():
+        print("New status is: {}".format(new_status))
+        print("repo_labels_lower: {}".format(repo_labels_lower))
+
     if new_status.lower() in repo_labels_lower:
         change = jira_issue_status_changed(event["issue"], event["changelog"], bugsnag_context)
         changes.append(change)
