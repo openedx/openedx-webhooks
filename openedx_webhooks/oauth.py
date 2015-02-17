@@ -8,7 +8,6 @@ from flask import request, flash
 from flask_dance.contrib.github import make_github_blueprint
 from flask_dance.contrib.jira import make_jira_blueprint
 from flask_dance.consumer import oauth_authorized
-from cachecontrol import CacheControlAdapter
 from .models import db, OAuth
 
 
@@ -67,10 +66,6 @@ def github_logged_in(blueprint, token):
         flash(msg)
     else:
         flash("Successfully signed in with Github")
-
-
-# install CacheControl for github session, so we don't eat up API usage unnecessarily
-github_bp.session.mount(github_bp.session.base_url, CacheControlAdapter())
 
 
 ## UTILITY FUNCTIONS ##

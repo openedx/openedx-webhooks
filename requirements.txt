@@ -6,7 +6,6 @@ Flask-SSLify
 blinker
 requests==2.4.3
 requests-oauthlib==0.4.1
-CacheControl==0.10.4
 URLObject==2.3.4
 gunicorn==19.0.0
 psycopg2==2.5.3
