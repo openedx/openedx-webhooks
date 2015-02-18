@@ -220,7 +220,7 @@ def is_contractor_pull_request(pull_request):
     people = get_people_file()
     author = pull_request["user"]["login"].decode('utf-8')
     created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
-    contracting_orgs = set(("BNOTIONS", "OpenCraft", "ExtensionEngine"))
+    contracting_orgs = set(("BNOTIONS", "OpenCraft", "ExtensionEngine", "Clarice"))
     return (
         author in people and
         people[author].get("institution") in contracting_orgs and
