@@ -173,18 +173,34 @@ def issue_opened(issue, bugsnag_context=None):
 
     transitioned = False
     if should_transition(issue):
+        # In JIRA, a "transition" is how an issue changes from one status
+        # to another, like going from "Open" to "In Progress". The workflow
+        # defines what transitions are allowed, and this API will tell us
+        # what transitions are currently allowed by the workflow.
+        # Ref: https://docs.atlassian.com/jira/REST/ondemand/#d2e4954
         transitions_url = issue_url.with_path(issue_url.path + "/transitions")
         transitions_resp = jira_get(transitions_url)
         if not transitions_resp.ok:
             raise requests.exceptions.RequestException(transitions_resp.text)
+        # This transforms the API response into a simple mapping from the
+        # name of the transition (like "In Progress") to the ID of the transition.
+        # Note that a transition may not have the same name as the state that it
+        # goes to, so a transition to go from "Open" to "In Progress" may be
+        # named something like "Start Work".
         transitions = {t["name"]: t["id"] for t in transitions_resp.json()["transitions"]}
+        # We attempt to transition the issue into the "Open" state, so we
+        # look for a transition named "Open"
         if "Open" in transitions:
             new_status = "Open"
+        # UX uses "Design Backlog" instead of "Open", so check for that instead
         elif "Design Backlog" in transitions:
             new_status = "Design Backlog"
         else:
             raise ValueError("No valid transition! Possibilities are {}".format(transitions.keys()))
 
+        # This creates a new API request to tell JIRA to move the issue from
+        # one status to another using the specified transition. We have to
+        # tell JIRA the transition ID, so we use that mapping we set up earlier.
         body = {
             "transition": {
                 "id": transitions[new_status],
