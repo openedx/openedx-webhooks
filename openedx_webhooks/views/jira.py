@@ -195,6 +195,9 @@ def issue_opened(issue, bugsnag_context=None):
         # UX uses "Design Backlog" instead of "Open", so check for that instead
         elif "Design Backlog" in transitions:
             new_status = "Design Backlog"
+        # If it's an OSPR subtask (used by teams to manage reviews), transition to team backlog
+        elif to_unicode(issue["fields"]["project"]["key"]) == "OSPR" and issue["fields"]["issuetype"]["subtask"]:
+            new_status = "To Backlog"
         else:
             raise ValueError("No valid transition! Possibilities are {}".format(transitions.keys()))
 
