@@ -306,6 +306,10 @@ def jira_issue_updated():
     if event["issue"]["fields"]["issuetype"]["subtask"]:
         return "ignoring subtasks"
 
+    # don't care about feature proposals
+    if event["issue"]["fields"]["issuetype"]["name"] == "Feature Proposal":
+        return "ignoring feature propsals"
+
     # is there a changelog?
     changelog = event.get("changelog")
     if not changelog:
@@ -321,6 +325,7 @@ def jira_issue_updated():
     if not pr_repo:
         issue_key = to_unicode(event["issue"]["key"])
         fail_msg = '{key} is missing "Repo" field'.format(key=issue_key)
+        fail_msg += ' {0}'.format(event["issue"]["fields"]["issuetype"])
         raise Exception(fail_msg)
     repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
     if not repo_labels_resp.ok:
