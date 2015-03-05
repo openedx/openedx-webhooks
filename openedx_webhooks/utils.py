@@ -38,7 +38,9 @@ def paginated_get(url, session=None, limit=None, per_page=100, debug=False, **kw
             print(resp.url, file=sys.stderr)
         result = resp.json()
         if not resp.ok:
-            raise requests.exceptions.RequestException(result["message"])
+            raise requests.exceptions.RequestException("{url}: {message}".format(
+                url=url, message=result["message"],
+            ))
         for item in result:
             yield item
             returned += 1
