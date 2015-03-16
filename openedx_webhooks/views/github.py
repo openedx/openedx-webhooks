@@ -102,7 +102,7 @@ def github_rescan():
         return render_template("github_rescan.html")
     repo = request.form.get("repo") or "edx/edx-platform"
 
-    if repo = 'all':
+    if repo == 'all':
         repos = get_repos_file().keys()
         repos.remove("edx/edx-platform")
         created = {}
