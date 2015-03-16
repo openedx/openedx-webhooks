@@ -17,7 +17,9 @@
     <form id="rescan-form" action="{{ url_for("github_rescan") }}" method="POST">
     <p>
       Clicking this button will rescan all the open pull requests for the
-      repo you specify. Depending on the number of open pull requests, it may
+      repo you specify. Type "all" to scan all repos except for edx-platform.
+    </><p>
+      Depending on the number of open pull requests, it may
       take awhile. Do you want to do this?
     </p>
     <label for="repo">Repo to scan</label>
