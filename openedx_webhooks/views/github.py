@@ -84,8 +84,8 @@ def rescan_repo(repo):
                 created[pull_request["number"]] = jira_key
 
     print(
-        "Created {num} JIRA issues. PRs are {prs}".format(
-            num=len(created), prs=created.keys(),
+        "Created {num} JIRA issues on repo {repo}. PRs are {prs}".format(
+            num=len(created), repo=repo, prs=created.keys(),
         ),
         file=sys.stderr
     )
