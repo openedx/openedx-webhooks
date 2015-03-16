@@ -65,15 +65,10 @@ def github_pull_request():
     return "Don't know how to handle this.", 400
 
 
-@app.route("/github/rescan", methods=("GET", "POST"))
-def github_rescan():
+def rescan_repo(repo):
     """
-    Used to pick up PRs that might not have tickets associated with them.
+    rescans a single repo for new prs
     """
-    if request.method == "GET":
-        # just render the form
-        return render_template("github_rescan.html")
-    repo = request.form.get("repo") or "edx/edx-platform"
     bugsnag_context = {"repo": repo}
     bugsnag.configure_request(meta_data=bugsnag_context)
     url = "/repos/{repo}/pulls".format(repo=repo)
@@ -94,6 +89,28 @@ def github_rescan():
         ),
         file=sys.stderr
     )
+    return created
+
+
+@app.route("/github/rescan", methods=("GET", "POST"))
+def github_rescan():
+    """
+    Used to pick up PRs that might not have tickets associated with them.
+    """
+    if request.method == "GET":
+        # just render the form
+        return render_template("github_rescan.html")
+    repo = request.form.get("repo") or "edx/edx-platform"
+
+    if repo = 'all':
+        repos = get_repos_file().keys()
+        repos.remove("edx/edx-platform")
+        created = {}
+        for repo in repos:
+            created.update(rescan_repo(repo))
+    else:
+        created = rescan_repo(repo)
+
     resp = make_response(json.dumps(created), 200)
     resp.headers["Content-Type"] = "application/json"
     return resp
