@@ -491,7 +491,7 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
     issue_key = jira_issue["key"].decode('utf-8')
     issue_url = "https://openedx.atlassian.net/browse/{key}".format(key=issue_key)
     contributing_url = "https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst"
-    agreement_url = "http://code.edx.org/individual-contributor-agreement.pdf"
+    agreement_url = "http://open.edx.org/sites/default/files/wysiwyg/individual-contributor-agreement.pdf"
     authors_url = "https://github.com/{repo}/blob/master/AUTHORS".format(
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
     )
