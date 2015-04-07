@@ -339,7 +339,7 @@ def pr_opened(pr, ignore_internal=True, check_contractor=True, bugsnag_context=N
 
     # Add the "Needs Triage" label to the PR
     issue_url = "/repos/{repo}/issues/{num}".format(repo=repo, num=pr["number"])
-    label_resp = github.patch(issue_url, data=json.dumps({"labels": ["needs triage"]}))
+    label_resp = github.patch(issue_url, data=json.dumps({"labels": ["needs triage", "open-source-contribution"]}))
     if not label_resp.ok:
         raise requests.exceptions.RequestException(label_resp.text)
 
