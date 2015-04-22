@@ -192,14 +192,17 @@ def issue_opened(issue, bugsnag_context=None):
         # We attempt to transition the issue into the "Open" state for the given project
         # (some projects use a different name), so look for a transition with the right name
         new_status = None
+        action = None
         for state_name in ["Open", "Design Backlog", "To Do"]:
             if state_name in transitions:
                 new_status = state_name
+                action = "Transitioned to '{}'".format(state_name)
 
         if not new_status:
             # If it's an OSPR subtask (used by teams to manage reviews), transition to team backlog
             if to_unicode(issue["fields"]["project"]["key"]) == "OSPR" and issue["fields"]["issuetype"]["subtask"]:
                 new_status = "To Backlog"
+                action = "Transitioned to 'To Backlog'"
             else:
                 raise ValueError("No valid transition! Possibilities are {}".format(transitions.keys()))
 
@@ -217,7 +220,10 @@ def issue_opened(issue, bugsnag_context=None):
         transitioned = True
 
     # log to stderr
-    action = "Transitioned to Open" if transitioned else "ignored"
+    if transitioned and not action:
+        action = "Transitioned to Open"
+    else:
+        action = "ignored"
     print(
         "{key} created by {name} ({username}), {action}".format(
             key=issue_key,
