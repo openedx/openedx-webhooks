@@ -193,7 +193,7 @@ def issue_opened(issue, bugsnag_context=None):
         # (some projects use a different name), so look for a transition with the right name
         new_status = None
         action = None
-        for state_name in ["Open", "Design Backlog", "To Do"]:
+        for state_name in ["In Backlog", "Design Backlog", "To Do"]:
             if state_name in transitions:
                 new_status = state_name
                 action = "Transitioned to '{}'".format(state_name)
@@ -221,7 +221,7 @@ def issue_opened(issue, bugsnag_context=None):
 
     # log to stderr
     if transitioned and not action:
-        action = "Transitioned to Open"
+        action = "Transitioned to Backlog"
     else:
         action = "ignored"
     print(
