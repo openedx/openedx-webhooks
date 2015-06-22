@@ -412,7 +412,8 @@ def pr_closed(pr, bugsnag_context=None):
         fail_msg = (
             "{key} cannot be transitioned directly from status {curr_status} "
             "to status {new_status}. Valid status transitions are: {valid}".format(
-                key=issue_key, new_status=transition_name,
+                key=issue_key,
+                new_status=transition_name,
                 curr_status=current_status,
                 valid=", ".join(t["to"]["name"].decode('utf-8') for t in transitions),
             )
@@ -428,8 +429,11 @@ def pr_closed(pr, bugsnag_context=None):
         raise requests.exceptions.RequestException(transition_resp.text)
     print(
         "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
-            num=pr["number"], repo=repo, action="merged" if merged else "closed",
-            issue=issue_key, status="Merged" if merged else "Rejected",
+            num=pr["number"],
+            repo=repo,
+            action="merged" if merged else "closed",
+            issue=issue_key,
+            status="Merged" if merged else "Rejected",
         ),
         file=sys.stderr
     )
@@ -511,7 +515,9 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
         "As a reminder, [our process documentation is here]({doc_url})."
     ).format(
         user=pull_request["user"]["login"].decode('utf-8'),
-        issue_key=issue_key, issue_url=issue_url, doc_url=doc_url,
+        issue_key=issue_key,
+        issue_url=issue_url,
+        doc_url=doc_url,
     )
     if not has_signed_agreement or not in_authors_file:
         todo = ""
@@ -563,7 +569,8 @@ def github_contractor_pr_comment(pull_request):
         "visit this link: {ospr_issue_url}"
     ).format(
         user=pull_request["user"]["login"].decode('utf-8'),
-        jira_url=jira_url, ospr_issue_url=ospr_issue_url,
+        jira_url=jira_url,
+        ospr_issue_url=ospr_issue_url,
     )
     return comment
 
