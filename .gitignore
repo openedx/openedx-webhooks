@@ -3,3 +3,4 @@ jira.pem
 jira.pub
 jira.uuid
 docs/_build
+.coverage
