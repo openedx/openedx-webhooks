@@ -12,24 +12,26 @@ import yaml
 from openedx_webhooks.utils import memoize
 
 
-def read_repotools_yaml_file(filename):
+def _read_repotools_yaml_file(filename):
     """Read a YAML file from the repo-tools repo."""
+    return yaml.safe_load(_read_repotools_file(filename))
+
+@memoize
+def _read_repotools_file(filename):
+    """Read the text of a repo-tools file."""
     resp = requests.get("https://raw.githubusercontent.com/edx/repo-tools/master/" + filename)
     if not resp.ok:
         raise requests.exceptions.RequestException(resp.text)
-    return yaml.safe_load(resp.text)
+    return resp.text
 
-@memoize
 def get_people_file():
-    return read_repotools_yaml_file("people.yaml")
+    return _read_repotools_yaml_file("people.yaml")
 
-@memoize
 def get_repos_file():
-    return read_repotools_yaml_file("repos.yaml")
+    return _read_repotools_yaml_file("repos.yaml")
 
-@memoize
 def get_orgs_file():
-    return read_repotools_yaml_file("orgs.yaml")
+    return _read_repotools_yaml_file("orgs.yaml")
 
 def get_orgs(key):
     """Return the set of orgs with a true `key`."""

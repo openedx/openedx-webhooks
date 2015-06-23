@@ -1,13 +1,15 @@
 # coding=utf-8
 from __future__ import unicode_literals, print_function
 
-import os
 from datetime import datetime
+import os
+import warnings
 
 from flask import request, flash
 from flask_dance.contrib.github import make_github_blueprint
 from flask_dance.contrib.jira import make_jira_blueprint
 from flask_dance.consumer import oauth_authorized
+
 from .models import db, OAuth
 
 
@@ -19,10 +21,13 @@ req_env_vars = set((
 ))
 missing = req_env_vars - set(os.environ.keys())
 if missing:
-    raise Exception(
-        "You must define the following variables in your environment: {vars} "
-        "See the README for more information.".format(vars=", ".join(missing))
+    warnings.warn(
+        "You must define the following variables in your environment: {vars}. "
+        "Using dummy values, but you won't be able to use remote services. "
+        "See the docs for more information.".format(vars=", ".join(missing))
     )
+    for name in missing:
+        os.environ[name] = "xxx"
 
 
 ## JIRA ##
