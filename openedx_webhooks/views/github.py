@@ -13,12 +13,16 @@ from collections import defaultdict
 
 import bugsnag
 import requests
-import yaml
 from iso8601 import parse_date
 from flask import request, render_template, make_response, url_for, jsonify
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
+
 from openedx_webhooks import app
+from openedx_webhooks.info import (
+    get_people_file, get_repos_file,
+    is_internal_pull_request, is_contractor_pull_request,
+    )
 from openedx_webhooks.utils import memoize, paginated_get
 from openedx_webhooks.views.jira import get_jira_custom_fields
 
@@ -191,58 +195,6 @@ def github_whoami():
     if not self_resp.ok:
         raise requests.exceptions.RequestException(self_resp.text)
     return self_resp.json()
-
-
-@memoize
-def get_people_file():
-    people_resp = requests.get("https://raw.githubusercontent.com/edx/repo-tools/master/people.yaml")
-    if not people_resp.ok:
-        raise requests.exceptions.RequestException(people_resp.text)
-    return yaml.safe_load(people_resp.text)
-
-
-@memoize
-def get_repos_file():
-    repo_resp = requests.get("https://raw.githubusercontent.com/edx/repo-tools/master/repos.yaml")
-    if not repo_resp.ok:
-        raise requests.exceptions.RequestException(repo_resp.text)
-    return yaml.safe_load(repo_resp.text)
-
-
-def is_internal_pull_request(pull_request):
-    """
-    Was this pull request created by someone who works for edX?
-    """
-    people = get_people_file()
-    author = pull_request["user"]["login"].decode('utf-8')
-    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
-    # Arbisoft doesn't do any Open edX work that is not paid for by edX,
-    # so we can just treat them as "internal" rather than as a contractor.
-    # This may change in the future.
-    internal_institutions = set(("edX", "Arbisoft"))
-    return (
-        author in people and
-        people[author].get("institution") in internal_institutions and
-        people[author].get("expires_on", date.max) > created_at.date()
-    )
-
-
-def is_contractor_pull_request(pull_request):
-    """
-    Was this pull request created by someone in an organization that does
-    paid contracting work for edX? If so, we don't know if this pull request
-    falls under edX's contract, or if it should be treated as a pull request
-    from the community.
-    """
-    people = get_people_file()
-    author = pull_request["user"]["login"].decode('utf-8')
-    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
-    contracting_orgs = set(("BNOTIONS", "OpenCraft", "ExtensionEngine", "Clarice"))
-    return (
-        author in people and
-        people[author].get("institution") in contracting_orgs and
-        people[author].get("expires_on", date.max) > created_at.date()
-    )
 
 
 def pr_opened(pr, ignore_internal=True, check_contractor=True, bugsnag_context=None):
