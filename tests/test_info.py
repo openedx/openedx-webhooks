@@ -30,20 +30,32 @@ TEST_YAML = {
             # A person who works for edX now.
             agreement: institution
             institution: edX
+
         ex_edx_dude:
             # A person who used to work for edX.
             agreement: institution
             institution: edX
             expires_on: 2015-01-01
+
         hourly_worker:
             agreement: institution
             institution: HourlyDudes
+
         left_but_still_a_fan:
             agreement: individual
             before:
                 2015-01-01:
                     agreement: institution
                     institution: edX
+
+        external_committer:
+            agreement: individual
+            committer: true
+
+        external_committer_at_org:
+            agreement: institution
+            institution: HourlyDudes
+            committer: true
         """,
 }
 
@@ -100,3 +112,7 @@ class TestPullRequestCategories(BaseTestCase):
     def test_left_but_still_a_fan(self):
         self.assert_is_internal(user="left_but_still_a_fan", is_internal=False)
         # Note: openedx_webhooks doesn't understand the "before" keys.
+
+    def test_committers(self):
+        self.assert_is_internal(user="external_committer")
+        self.assert_is_internal(user="external_committer_at_org")

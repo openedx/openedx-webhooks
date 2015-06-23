@@ -43,16 +43,7 @@ def is_internal_pull_request(pull_request):
     """
     Was this pull request created by someone who works for edX?
     """
-    people = get_people_file()
-    author = pull_request["user"]["login"].decode('utf-8')
-    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
-    committer_institutions = get_orgs("committer")
-    return (
-        author in people and
-        people[author].get("institution") in committer_institutions and
-        people[author].get("expires_on", date.max) > created_at.date()
-    )
-
+    return _is_pull_request(pull_request, "committer")
 
 def is_contractor_pull_request(pull_request):
     """
@@ -61,12 +52,40 @@ def is_contractor_pull_request(pull_request):
     falls under edX's contract, or if it should be treated as a pull request
     from the community.
     """
+    return _is_pull_request("contractor")
+
+
+def _is_pull_request(pull_request, kind):
+    """
+    Is this pull request of a certain kind?
+
+    Arguments:
+        pull_request: the dict data read from GitHub.
+        kind (str): either "committer" or "contractor".
+
+    Returns:
+        bool
+
+    """
     people = get_people_file()
     author = pull_request["user"]["login"].decode('utf-8')
+    if author not in people:
+        # We don't know this person!
+        return False
+
+    person = people[author]
     created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
-    contractor_orgs = get_orgs("contractor")
-    return (
-        author in people and
-        people[author].get("institution") in contractor_orgs and
-        people[author].get("expires_on", date.max) > created_at.date()
-    )
+    if person.get("expires_on", date.max) <= created_at.date():
+        # This person's agreement has expired.
+        return False
+
+    if person.get(kind, False):
+        # This person has the flag personally.
+        return True
+
+    the_orgs = get_orgs(kind)
+    if person.get("institution") in the_orgs:
+        # This person's institution has the flag.
+        return True
+
+    return False
