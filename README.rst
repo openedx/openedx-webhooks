@@ -3,6 +3,12 @@ designed to be deployed onto `Heroku`_.
 
 Docs: |docs|
 
+Tests::
+
+    $ pip install -r test_requirements.txt
+    $ coverage run -m unittest discover
+
+
 .. _Open edX: http://openedx.org
 .. _JIRA: https://openedx.atlassian.net
 .. _Github: https://github.com/edx
