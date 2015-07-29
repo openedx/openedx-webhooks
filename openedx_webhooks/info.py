@@ -52,7 +52,7 @@ def is_contractor_pull_request(pull_request):
     falls under edX's contract, or if it should be treated as a pull request
     from the community.
     """
-    return _is_pull_request("contractor")
+    return _is_pull_request(pull_request, "contractor")
 
 
 def _is_pull_request(pull_request, kind):
