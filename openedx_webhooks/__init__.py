@@ -20,6 +20,12 @@ from bugsnag.flask import handle_exceptions
 app = Flask(__name__)
 handle_exceptions(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+config_env_vars = (
+    "JIRA_OAUTH_CONSUMER_KEY", "JIRA_OAUTH_RSA_KEY",
+    "GITHUB_OAUTH_CLIENT_ID", "GITHUB_OAUTH_CLIENT_SECRET",
+)
+for env_var in config_env_vars:
+    app.config[env_var] = os.environ.get(env_var)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "secrettoeveryone")
 app.register_blueprint(jira_bp, url_prefix="/login")
 app.register_blueprint(github_bp, url_prefix="/login")
