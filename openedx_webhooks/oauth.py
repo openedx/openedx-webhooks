@@ -1,44 +1,21 @@
 # coding=utf-8
 from __future__ import unicode_literals, print_function
 
-from datetime import datetime
-import os
-import warnings
-
 from flask import request, flash
 from flask_dance.contrib.github import make_github_blueprint
 from flask_dance.contrib.jira import make_jira_blueprint
 from flask_dance.consumer import oauth_authorized
+from flask_dance.consumer.backend.sqla import SQLAlchemyBackend
 
 from .models import db, OAuth
-
-
-# Check for required environment variables
-
-req_env_vars = set((
-    "JIRA_CONSUMER_KEY", "JIRA_RSA_KEY",
-    "GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET",
-))
-missing = req_env_vars - set(os.environ.keys())
-if missing:
-    warnings.warn(
-        "You must define the following variables in your environment: {vars}. "
-        "Using dummy values, but you won't be able to use remote services. "
-        "See the docs for more information.".format(vars=", ".join(missing))
-    )
-    for name in missing:
-        os.environ[name] = "xxx"
-
 
 ## JIRA ##
 
 jira_bp = make_jira_blueprint(
-    consumer_key=os.environ["JIRA_CONSUMER_KEY"],
-    rsa_key=os.environ["JIRA_RSA_KEY"],
     base_url="https://openedx.atlassian.net",
     redirect_to="index",
+    backend=SQLAlchemyBackend(OAuth, db.session),
 )
-jira_bp.set_token_storage_sqlalchemy(OAuth, db.session)
 
 
 @oauth_authorized.connect_via(jira_bp)
@@ -51,12 +28,10 @@ def jira_logged_in(blueprint, token):
 ## GITHUB ##
 
 github_bp = make_github_blueprint(
-    client_id=os.environ["GITHUB_CLIENT_ID"],
-    client_secret=os.environ["GITHUB_CLIENT_SECRET"],
     scope="admin:repo_hook,repo,user",
     redirect_to="index",
+    backend=SQLAlchemyBackend(OAuth, db.session),
 )
-github_bp.set_token_storage_sqlalchemy(OAuth, db.session)
 
 
 @oauth_authorized.connect_via(github_bp)

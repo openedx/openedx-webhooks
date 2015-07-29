@@ -18,15 +18,6 @@ import sys, os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
 
-# Set dummy values for required environment variables
-req_env_vars = (
-    "JIRA_CONSUMER_KEY", "JIRA_RSA_KEY",
-    "GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET",
-)
-for env_var in req_env_vars:
-    if env_var not in os.environ:
-        os.environ[env_var] = "DUMMY_" + env_var
-
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.

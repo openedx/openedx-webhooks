@@ -42,9 +42,10 @@ OAuth authentication for JIRA requires a RSA keypair. To set this up:
 
     .. code-block:: bash
 
-        $ export JIRA_RSA_KEY="$(<jira.pem)"
-        $ export JIRA_CONSUMER_KEY="$(<jira.uuid)"
-        $ heroku config:set JIRA_RSA_KEY=$JIRA_RSA_KEY JIRA_CONSUMER_KEY=$JIRA_CONSUMER_KEY
+        $ export JIRA_OAUTH_RSA_KEY="$(<jira.pem)"
+        $ export JIRA_OAUTH_CONSUMER_KEY="$(<jira.uuid)"
+        $ heroku config:set JIRA_OAUTH_RSA_KEY=$JIRA_OAUTH_RSA_KEY
+        $ heroku config:set JIRA_OAUTH_CONSUMER_KEY=$JIRA_OAUTH_CONSUMER_KEY
 
 Github
 ~~~~~~
@@ -55,7 +56,7 @@ Github
 
    .. code-block:: bash
 
-      $ heroku config:set GITHUB_CLIENT_ID=my-id GITHUB_CLIENT_SECRET=my-secret
+      $ heroku config:set GITHUB_OAUTH_CLIENT_ID=my-id GITHUB_OAUTH_CLIENT_SECRET=my-secret
 
 Deploy
 ------
