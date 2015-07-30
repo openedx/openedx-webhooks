@@ -11,7 +11,6 @@ import re
 from collections import defaultdict
 
 import bugsnag
-import requests
 from urlobject import URLObject
 from flask import request, render_template, make_response, jsonify
 from flask_dance.contrib.jira import jira
@@ -30,8 +29,7 @@ def get_jira_custom_fields():
     Return a name-to-id mapping for the custom fields on JIRA.
     """
     field_resp = jira.get("/rest/api/2/field")
-    if not field_resp.ok:
-        raise requests.exceptions.RequestException(field_resp.text)
+    field_resp.raise_for_status()
     field_map = dict(pop_dict_id(f) for f in field_resp.json())
     return {
         value["name"]: id
@@ -137,8 +135,7 @@ def should_transition(issue):
     user_url = user_url.set_query_param("expand", "groups")
 
     user_resp = jira_get(user_url)
-    if not user_resp.ok:
-        raise requests.exceptions.RequestException(user_resp.text)
+    user_resp.raise_for_status()
 
     user = user_resp.json()
     user_group_map = {g["name"]: g["self"] for g in user["groups"]["items"]}
@@ -180,8 +177,7 @@ def issue_opened(issue, bugsnag_context=None):
         # Ref: https://docs.atlassian.com/jira/REST/ondemand/#d2e4954
         transitions_url = issue_url.with_path(issue_url.path + "/transitions")
         transitions_resp = jira_get(transitions_url)
-        if not transitions_resp.ok:
-            raise requests.exceptions.RequestException(transitions_resp.text)
+        transitions_resp.raise_for_status()
         # This transforms the API response into a simple mapping from the
         # name of the transition (like "In Progress") to the ID of the transition.
         # Note that a transition may not have the same name as the state that it
@@ -215,8 +211,7 @@ def issue_opened(issue, bugsnag_context=None):
             }
         }
         transition_resp = jira.post(transitions_url, json=body)
-        if not transition_resp.ok:
-            raise requests.exceptions.RequestException(transition_resp.text)
+        transition_resp.raise_for_status()
         transitioned = True
 
     # log to stderr
@@ -336,8 +331,7 @@ def jira_issue_updated():
         fail_msg += ' {0}'.format(event["issue"]["fields"]["issuetype"])
         raise Exception(fail_msg)
     repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
-    if not repo_labels_resp.ok:
-        raise requests.exceptions.RequestException(repo_labels_resp.text)
+    repo_labels_resp.raise_for_status()
     # map of label name to label URL
     repo_labels = {l["name"]: l["url"] for l in repo_labels_resp.json()}
     # map of label name lowercased to label name in the case that it is on Github
@@ -374,8 +368,7 @@ def jira_issue_rejected(issue, bugsnag_context=None):
     issue_url = pr_url.replace("pulls", "issues")
 
     gh_issue_resp = github.get(issue_url)
-    if not gh_issue_resp.ok:
-        raise requests.exceptions.RequestException(gh_issue_resp.text)
+    gh_issue_resp.raise_for_status()
     gh_issue = gh_issue_resp.json()
     bugsnag_context["github_issue"] = gh_issue
     bugsnag.configure_request(meta_data=bugsnag_context)
@@ -395,20 +388,12 @@ def jira_issue_rejected(issue, bugsnag_context=None):
         "associated JIRA ticket for more explanation.".format(username=username)
     )}
     comment_resp = github.post(issue_url + "/comments", json=comment)
+    comment_resp.raise_for_status()
 
     # close the pull request on Github
     close_resp = github.patch(pr_url, json={"state": "closed"})
-    if not close_resp.ok or not comment_resp.ok:
-        bugsnag_context['request_headers'] = close_resp.request.headers
-        bugsnag_context['request_url'] = close_resp.request.url
-        bugsnag_context['request_method'] = close_resp.request.method
-        bugsnag.configure_request(meta_data=bugsnag_context)
-        bug_text = ''
-        if not close_resp.ok:
-            bug_text += "Failed to close; " + close_resp.text
-        if not comment_resp.ok:
-            bug_text += "Failed to comment on the PR; " + comment_resp.text
-        raise requests.exceptions.RequestException(bug_text)
+    close_resp.raise_for_status()
+
     return "Closed PR #{num}".format(num=pr_num)
 
 
@@ -425,14 +410,12 @@ def jira_issue_status_changed(issue, changelog, bugsnag_context=None):
 
     # get github issue
     gh_issue_resp = github.get(issue_url)
-    if not gh_issue_resp.ok:
-        raise requests.exceptions.RequestException(gh_issue_resp.text)
+    gh_issue_resp.raise_for_status()
     gh_issue = gh_issue_resp.json()
 
     # get repo labels
     repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
-    if not repo_labels_resp.ok:
-        raise requests.exceptions.RequestException(repo_labels_resp.text)
+    repo_labels_resp.raise_for_status()
     # map of label name to label URL
     repo_labels = {l["name"]: l["url"] for l in repo_labels_resp.json()}
     # map of label name lowercased to label name in the case that it is on Github
@@ -457,8 +440,7 @@ def jira_issue_status_changed(issue, changelog, bugsnag_context=None):
 
     # Update labels on github
     update_label_resp = github.patch(issue_url, json={"labels": pr_labels})
-    if not update_label_resp.ok:
-        raise requests.exceptions.RequestException(update_label_resp.text)
+    update_label_resp.raise_for_status()
     return "Changed labels of PR #{num} to {labels}".format(num=pr_num, labels=pr_labels)
 
 
@@ -527,8 +509,7 @@ def jira_issue_comment_added(issue, comment, bugsnag_context=None):
     }
     issue_url = issue["self"]
     update_resp = jira.put(issue_url, json={"fields": fields})
-    if not update_resp.ok:
-        raise requests.exceptions.RequestException(update_resp.text)
+    update_resp.raise_for_status()
     return "{key} cert info updated".format(key=issue_key)
 
 
