@@ -10,5 +10,6 @@ install:
 script:
   - py.test --cov=openedx_webhooks
   - cd docs && make html
+  - cd ..
 after_success:
   - codecov
