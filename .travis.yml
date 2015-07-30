@@ -4,9 +4,9 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install -r dev-requirements.txt
-  - pip install coveralls
+  - pip install codecov
 script:
   - py.test --cov=openedx_webhooks
   - cd docs && make html
 after_success:
-  - coveralls
+  - codecov

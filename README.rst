@@ -15,8 +15,8 @@ Tests::
 .. _Heroku: http://heroku.com
 .. |build-status| image:: https://travis-ci.org/edx/openedx-webhooks.svg?branch=master
    :target: https://travis-ci.org/edx/openedx-webhooks
-.. |coverage-status| image:: https://coveralls.io/repos/edx/openedx-webhooks/badge.png
-   :target: https://coveralls.io/r/edx/openedx-webhooks
+.. |coverage-status| image:: http://codecov.io/github/edx/openedx-webhooks/coverage.svg?branch=master
+   :target: http://codecov.io/github/edx/openedx-webhooks?branch=master
 .. |docs| image:: https://readthedocs.org/projects/openedx-webhooks/badge/?version=latest
    :target: http://openedx-webhooks.readthedocs.org/en/latest/
    :alt: Documentation badge
