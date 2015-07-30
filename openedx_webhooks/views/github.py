@@ -12,7 +12,6 @@ from datetime import date
 from collections import defaultdict
 
 import bugsnag
-import requests
 from iso8601 import parse_date
 from flask import request, render_template, make_response, url_for, jsonify
 from flask_dance.contrib.github import github
@@ -192,8 +191,7 @@ def github_whoami():
     self_resp = github.get("/user")
     rate_limit_info = {k: v for k, v in self_resp.headers.items() if "ratelimit" in k}
     print("Rate limits: {}".format(rate_limit_info), file=sys.stderr)
-    if not self_resp.ok:
-        raise requests.exceptions.RequestException(self_resp.text)
+    self_resp.raise_for_status()
     return self_resp.json()
 
 
@@ -221,8 +219,7 @@ def pr_opened(pr, ignore_internal=True, check_contractor=True, bugsnag_context=N
             repo=repo, num=num,
         )
         comment_resp = github.post(url, json=comment)
-        if not comment_resp.ok:
-            raise requests.exceptions.RequestException(comment_resp.text)
+        comment_resp.raise_for_status()
         return "contractor pull request"
 
     issue_key = get_jira_issue_key(pr)
@@ -272,8 +269,7 @@ def pr_opened(pr, ignore_internal=True, check_contractor=True, bugsnag_context=N
     bugsnag.configure_request(meta_data=bugsnag_context)
 
     resp = jira.post("/rest/api/2/issue", json=new_issue)
-    if not resp.ok:
-        raise requests.exceptions.RequestException(resp.text)
+    resp.raise_for_status()
     new_issue_body = resp.json()
     issue_key = new_issue_body["key"].decode('utf-8')
     bugsnag_context["new_issue"]["key"] = issue_key
@@ -286,14 +282,12 @@ def pr_opened(pr, ignore_internal=True, check_contractor=True, bugsnag_context=N
         repo=repo, num=pr["number"],
     )
     comment_resp = github.post(url, json=comment)
-    if not comment_resp.ok:
-        raise requests.exceptions.RequestException(comment_resp.text)
+    comment_resp.raise_for_status()
 
     # Add the "Needs Triage" label to the PR
     issue_url = "/repos/{repo}/issues/{num}".format(repo=repo, num=pr["number"])
     label_resp = github.patch(issue_url, data=json.dumps({"labels": ["needs triage", "open-source-contribution"]}))
-    if not label_resp.ok:
-        raise requests.exceptions.RequestException(label_resp.text)
+    label_resp.raise_for_status()
 
     print(
         "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
@@ -328,8 +322,7 @@ def pr_closed(pr, bugsnag_context=None):
         "?expand=transitions.fields".format(key=issue_key)
     )
     transitions_resp = jira.get(transition_url)
-    if not transitions_resp.ok:
-        raise requests.exceptions.RequestException(transitions_resp.text)
+    transitions_resp.raise_for_status()
 
     transitions = transitions_resp.json()["transitions"]
 
@@ -347,8 +340,7 @@ def pr_closed(pr, bugsnag_context=None):
         # maybe the issue is *already* in the right status?
         issue_url = "/rest/api/2/issue/{key}".format(key=issue_key)
         issue_resp = jira.get(issue_url)
-        if not issue_resp.ok:
-            raise requests.exceptions.RequestException(issue_resp.text)
+        issue_resp.raise_for_status()
         issue = issue_resp.json()
         bugsnag_context["jira_issue"] = issue
         bugsnag.configure_request(meta_data=bugsnag_context)
@@ -377,8 +369,7 @@ def pr_closed(pr, bugsnag_context=None):
             "id": transition_id,
         }
     })
-    if not transition_resp.ok:
-        raise requests.exceptions.RequestException(transition_resp.text)
+    transition_resp.raise_for_status()
     print(
         "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
             num=pr["number"],

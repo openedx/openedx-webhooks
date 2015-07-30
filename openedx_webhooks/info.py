@@ -20,8 +20,7 @@ def _read_repotools_yaml_file(filename):
 def _read_repotools_file(filename):
     """Read the text of a repo-tools file."""
     resp = requests.get("https://raw.githubusercontent.com/edx/repo-tools/master/" + filename)
-    if not resp.ok:
-        raise requests.exceptions.RequestException(resp.text)
+    resp.raise_for_status()
     return resp.text
 
 def get_people_file():

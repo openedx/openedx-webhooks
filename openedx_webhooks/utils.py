@@ -38,9 +38,12 @@ def paginated_get(url, session=None, limit=None, per_page=100, debug=False, **kw
             print(resp.url, file=sys.stderr)
         result = resp.json()
         if not resp.ok:
-            raise requests.exceptions.RequestException("{url}: {message}".format(
-                url=url, message=result["message"],
-            ))
+            msg = "{code} error for url {url}: {message}".format(
+                code=resp.status_code,
+                url=resp.url,
+                message=result["message"]
+            )
+            raise requests.exceptions.HTTPError(msg, response=resp)
         for item in result:
             yield item
             returned += 1
@@ -73,8 +76,7 @@ def jira_paginated_get(url, session=None,
                 break
             except ValueError:
                 continue
-        if not result_resp.ok:
-            raise requests.exceptions.RequestException(result_resp.text)
+        result_resp.raise_for_status()
         result = result_resp.json()
         if not result:
             break
@@ -118,8 +120,7 @@ def jira_group_members(groupname, session=None, start=0, retries=3, debug=False)
                 break
             except ValueError:
                 continue
-        if not result_resp.ok:
-            raise requests.exceptions.RequestException(result_resp.text)
+        result_resp.raise_for_status()
         result = result_resp.json()
         if not result:
             break
