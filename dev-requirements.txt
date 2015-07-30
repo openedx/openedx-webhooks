@@ -1,0 +1,7 @@
+# tests
+pytest
+pytest-cover
+betamax
+
+# docs
+sphinx
