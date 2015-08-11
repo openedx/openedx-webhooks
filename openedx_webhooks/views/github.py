@@ -105,9 +105,16 @@ def github_rescan():
         return render_template("github_rescan.html")
     repo = request.form.get("repo") or "edx/edx-platform"
 
-    if repo == 'all':
+    if repo.startswith('all'):
         repos = get_repos_file().keys()
         repos.remove("edx/edx-platform")
+        num_repos = len(repos)
+
+        if repo == 'all.1':
+            repos = repos[:num_repos/2]
+        elif repo == 'all.2':
+            repos = repos[num_repos/2:]
+
         created = {}
         for repo in repos:
             created.update(rescan_repo(repo))
