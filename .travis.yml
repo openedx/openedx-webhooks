@@ -13,3 +13,6 @@ script:
   - cd ..
 after_success:
   - codecov
+branches:
+    only:
+      - master
