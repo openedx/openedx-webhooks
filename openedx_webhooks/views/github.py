@@ -159,11 +159,7 @@ def github_install():
     else:
         repos = get_repos_file().keys()
 
-    secure = request.is_secure or request.headers.get("X-Forwarded-Proto", "http") == "https"
-    api_url = url_for(
-        "github_pull_request", _external=True,
-        _scheme="https" if secure else "http",
-    )
+    api_url = url_for("github_pull_request", _external=True)
     success = []
     failed = []
     for repo in repos:

@@ -12,6 +12,7 @@ sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
 import os
 
 from flask import Flask
+from werkzeug.contrib.fixers import ProxyFix
 from flask_sslify import SSLify
 from .oauth import jira_bp, github_bp
 from .models import db
@@ -19,6 +20,7 @@ from bugsnag.flask import handle_exceptions
 
 app = Flask(__name__)
 handle_exceptions(app)
+app.wsgi_app = ProxyFix(app.wsgi_app)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 config_env_vars = (
     "JIRA_OAUTH_CONSUMER_KEY", "JIRA_OAUTH_RSA_KEY",
