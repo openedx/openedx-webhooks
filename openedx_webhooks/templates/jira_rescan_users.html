@@ -14,7 +14,7 @@
     </ul>
   {% endif %}
 {% endwith %}
-    <form id="rescan-form" action="{{ url_for("jira_rescan_users") }}" method="POST">
+    <form id="rescan-form" action="{{ url_for("jira_views.rescan_users") }}" method="POST">
     <p>
       Clicking this button will move users into the appropriate groups
       based on their email address. This task is run automatically once every hour,

@@ -13,21 +13,22 @@ from collections import defaultdict
 
 import bugsnag
 from iso8601 import parse_date
-from flask import request, render_template, make_response, url_for, jsonify
+from flask import Blueprint, request, render_template, make_response, url_for, jsonify
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 
-from openedx_webhooks import app
 from openedx_webhooks.info import (
     get_people_file, get_repos_file,
     is_internal_pull_request, is_contractor_pull_request,
     )
 from openedx_webhooks.utils import memoize, paginated_get
-from openedx_webhooks.views.jira import get_jira_custom_fields
+from openedx_webhooks.jira_views import get_jira_custom_fields
+
+github_bp = Blueprint('github_views', __name__)
 
 
-@app.route("/github/pr", methods=("POST",))
-def github_pull_request():
+@github_bp.route("/pr", methods=("POST",))
+def pull_request():
     """
     Process a `PullRequestEvent`_ from Github.
 
@@ -95,8 +96,8 @@ def rescan_repo(repo):
     return created
 
 
-@app.route("/github/rescan", methods=("GET", "POST"))
-def github_rescan():
+@github_bp.route("/rescan", methods=("GET", "POST"))
+def rescan():
     """
     Used to pick up PRs that might not have tickets associated with them.
     """
@@ -126,8 +127,8 @@ def github_rescan():
     return resp
 
 
-@app.route("/github/process_pr", methods=("GET", "POST"))
-def github_process_pr():
+@github_bp.route("/process_pr", methods=("GET", "POST"))
+def process_pr():
     if request.method == "GET":
         return render_template("github_process_pr.html")
     repo = request.form.get("repo", "")
@@ -149,8 +150,8 @@ def github_process_pr():
     return pr_opened(pr_resp.json(), ignore_internal=False, check_contractor=False)
 
 
-@app.route("/github/install", methods=("GET", "POST"))
-def github_install():
+@github_bp.route("/install", methods=("GET", "POST"))
+def install():
     if request.method == "GET":
         return render_template("install.html")
     repo = request.form.get("repo", "")
@@ -159,7 +160,7 @@ def github_install():
     else:
         repos = get_repos_file().keys()
 
-    api_url = url_for("github_pull_request", _external=True)
+    api_url = url_for("github_views.pull_request", _external=True)
     success = []
     failed = []
     for repo in repos:
@@ -498,7 +499,7 @@ def github_contractor_pr_comment(pull_request):
     """
     jira_url = "https://openedx.atlassian.net"
     ospr_issue_url = url_for(
-        "github_process_pr",
+        "github_views.process_pr",
         repo=pull_request["base"]["repo"]["full_name"],
         number=pull_request["number"],
         _external=True,
@@ -521,8 +522,8 @@ def github_contractor_pr_comment(pull_request):
     return comment
 
 
-@app.route("/github/check_contributors", methods=("GET", "POST"))
-def github_check_contributors():
+@github_bp.route("/check_contributors", methods=("GET", "POST"))
+def check_contributors():
     if request.method == "GET":
         return render_template("github_check_contributors.html")
     repo = request.form.get("repo", "")

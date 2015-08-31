@@ -14,7 +14,7 @@
     </ul>
   {% endif %}
 {% endwith %}
-    <form id="rescan-form" action="{{ url_for("github_rescan") }}" method="POST">
+    <form id="rescan-form" action="{{ url_for("github_views.rescan") }}" method="POST">
     <p>
       Clicking this button will rescan all the open pull requests for the
       repo you specify.

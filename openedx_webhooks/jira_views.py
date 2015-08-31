@@ -12,15 +12,16 @@ from collections import defaultdict
 
 import bugsnag
 from urlobject import URLObject
-from flask import request, render_template, make_response, jsonify
+from flask import Blueprint, request, render_template, make_response, jsonify
 from flask_dance.contrib.jira import jira
 from flask_dance.contrib.github import github
-from openedx_webhooks import app
 from openedx_webhooks.oauth import jira_get
 from openedx_webhooks.utils import (
     pop_dict_id, memoize, jira_paginated_get, to_unicode,
     jira_users, jira_group_members
 )
+
+jira_bp = Blueprint('jira_views', __name__)
 
 
 @memoize
@@ -43,8 +44,8 @@ def get_jira_issue(key):
     return jira_get("/rest/api/2/issue/{key}".format(key=key))
 
 
-@app.route("/jira/issue/rescan", methods=("GET", "POST"))
-def jira_rescan_issues():
+@jira_bp.route("/issue/rescan", methods=("GET", "POST"))
+def rescan_issues():
     if request.method == "GET":
         # just render the form
         return render_template("jira_rescan_issues.html")
@@ -65,8 +66,8 @@ def jira_rescan_issues():
     return resp
 
 
-@app.route("/jira/issue/created", methods=("POST",))
-def jira_issue_created():
+@jira_bp.route("/issue/created", methods=("POST",))
+def issue_created():
     """
     Received an "issue created" event from JIRA. See `JIRA's webhook docs`_.
 
@@ -268,8 +269,8 @@ def github_pr_url(issue):
     return "/repos/{repo}/pulls/{num}".format(repo=pr_repo, num=pr_num)
 
 
-@app.route("/jira/issue/updated", methods=("POST",))
-def jira_issue_updated():
+@jira_bp.route("/issue/updated", methods=("POST",))
+def issue_updated():
     """
     Received an "issue updated" event from JIRA. See `JIRA's webhook docs`_.
 
@@ -513,8 +514,8 @@ def jira_issue_comment_added(issue, comment, bugsnag_context=None):
     return "{key} cert info updated".format(key=issue_key)
 
 
-@app.route("/jira/user/rescan", methods=("GET", "POST"))
-def jira_rescan_users():
+@jira_bp.route("/user/rescan", methods=("GET", "POST"))
+def rescan_users():
     """
     This task goes through all users on JIRA and ensures that they are assigned
     to the correct group based on the user's email address. It's meant to be
