@@ -1,0 +1,31 @@
+Thanks for the pull request, @{{ user }}! I've created
+[{{ issue_key }}](https://openedx.atlassian.net/browse/{{ issue_key }})
+to keep track of it in JIRA. JIRA is a place for product owners to prioritize
+feature reviews by the engineering development teams.
+
+Feel free to add as much of the following information to the ticket:
+- supporting documentation
+- edx-code email threads
+- timeline information ("this must be merged by XX date", and why that is)
+- partner information ("this is a course on edx.org")
+- any other information that can help Product understand the context for the PR
+
+All technical communication about the code itself will still be done via the
+GitHub pull request interface. As a reminder,
+[our process documentation is here](http://edx-developer-guide.readthedocs.org/en/latest/process/overview.html).
+
+{%- if not has_signed_agreement or not in_authors_file %}
+We can't start reviewing your pull request until you've
+  {%- if not has_signed_agreement %}
+  submitted a [signed contributor agreement](http://open.edx.org/sites/default/files/wysiwyg/individual-contributor-agreement.pdf)
+  or indicated your institutional affiliation
+  {%- endif %}
+  {%- if not has_signed_agreement and not in_authors_file %}
+  and
+  {%- endif %}
+  {%- if not in_authors_file %}
+  added yourself to the [AUTHORS](https://github.com/{{ repo }}/blob/master/AUTHORS) file
+  {%- endif %}
+. Please see the [CONTRIBUTING](https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst)
+file for more information.
+{%- endif %}
