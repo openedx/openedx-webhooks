@@ -12,7 +12,9 @@ from collections import defaultdict
 
 import bugsnag
 from urlobject import URLObject
-from flask import Blueprint, request, render_template, make_response, jsonify
+from flask import (
+    Blueprint, request, render_template, make_response, jsonify, current_app
+)
 from flask_dance.contrib.jira import jira
 from flask_dance.contrib.github import github
 from openedx_webhooks.oauth import jira_get
@@ -86,7 +88,7 @@ def issue_created():
     bugsnag_context = {"event": event}
     bugsnag.configure_request(meta_data=bugsnag_context)
 
-    if app.debug:
+    if current_app.debug:
         print(json.dumps(event), file=sys.stderr)
 
     if "issue" not in event:
@@ -285,7 +287,7 @@ def issue_updated():
     bugsnag_context = {"event": event}
     bugsnag.configure_request(meta_data=bugsnag_context)
 
-    if app.debug:
+    if current_app.debug:
         print(json.dumps(event), file=sys.stderr)
 
     if "issue" not in event:
