@@ -40,6 +40,7 @@ def test_community_pr_comment(app, github_session):
         comment = github_community_pr_comment(pr, jira, session=github_session)
     assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
     assert "can't start reviewing your pull request" in comment
+    assert not comment.startswith((" ", "\n", "\t"))
 
 def test_contractor_pr_comment(app):
     pr = make_pull_request(user="FakeUser")
@@ -50,3 +51,4 @@ def test_contractor_pr_comment(app):
         comment = github_contractor_pr_comment(pr)
     assert "you're a member of a company that does contract work for edX" in comment
     assert "visit this link: https://" in comment
+    assert not comment.startswith((" ", "\n", "\t"))
