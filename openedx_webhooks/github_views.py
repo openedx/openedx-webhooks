@@ -106,7 +106,7 @@ def rescan():
     repo = request.form.get("repo") or "edx/edx-platform"
 
     if repo.startswith('all'):
-        repos = get_repos_file().keys()
+        repos = get_repos_file(session=github).keys()
         repos.remove("edx/edx-platform")
         num_repos = len(repos)
 
@@ -157,7 +157,7 @@ def install():
     if repo:
         repos = (repo,)
     else:
-        repos = get_repos_file().keys()
+        repos = get_repos_file(session=github).keys()
 
     api_url = url_for("github_views.pull_request", _external=True)
     success = []
@@ -234,7 +234,7 @@ def pr_opened(pr, ignore_internal=True, check_contractor=True):
         return msg
 
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
-    people = get_people_file()
+    people = get_people_file(session=github)
     custom_fields = get_jira_custom_fields()
 
     if user in people:
@@ -463,9 +463,9 @@ def check_contributors():
     if repo:
         repos = (repo,)
     else:
-        repos = get_repos_file().keys()
+        repos = get_repos_file(session=github).keys()
 
-    people = get_people_file()
+    people = get_people_file(session=github)
     people_lower = {username.lower() for username in people.keys()}
 
     missing_contributors = defaultdict(set)
