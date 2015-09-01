@@ -40,7 +40,7 @@ def github_session(request):
 
     cassette_name += request.function.__name__
 
-    github_token = os.environ.get("GITHUB_TOKEN")
+    github_token = os.environ.get("GITHUB_TOKEN", "faketoken")
     token = {"access_token": github_token, "token_type": "bearer"}
     session = OAuth2Session(token=token)
     recorder = betamax.Betamax(session)
