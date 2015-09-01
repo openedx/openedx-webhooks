@@ -1,0 +1,14 @@
+{% filter replace("\n", " ") %}
+Thanks for the pull request, @{{ user }}! It looks like you're a member of a
+company that does contract work for edX. If you're doing this work as part of
+a paid contract with edX, you should talk to edX about who will review this
+pull request. If this work is not part of a paid contract with edX, then you
+should ensure that there is an OSPR issue to track this work in
+[JIRA](https://openedx.atlassian.net), so that we don't lose track of your
+pull request.
+{% endfilter %}
+
+{% filter replace("\n", " ") %}
+To automatically create an OSPR issue for this pull request, just visit this link:
+{{ url_for("github_views.process_pr", repo=repo, number=number, _external=True) }}
+{% endfilter %}
