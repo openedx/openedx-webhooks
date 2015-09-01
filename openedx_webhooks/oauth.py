@@ -6,8 +6,8 @@ from flask_dance.contrib.github import make_github_blueprint
 from flask_dance.contrib.jira import make_jira_blueprint
 from flask_dance.consumer import oauth_authorized
 from flask_dance.consumer.backend.sqla import SQLAlchemyBackend
-
-from .models import db, OAuth
+from openedx_webhooks import db
+from openedx_webhooks.models import OAuth
 
 ## JIRA ##
 

@@ -14,29 +14,67 @@ import os
 from flask import Flask
 from werkzeug.contrib.fixers import ProxyFix
 from flask_sslify import SSLify
-from .oauth import jira_bp, github_bp
-from .models import db
 from bugsnag.flask import handle_exceptions
-
-app = Flask(__name__)
-handle_exceptions(app)
-app.wsgi_app = ProxyFix(app.wsgi_app)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-config_env_vars = (
-    "JIRA_OAUTH_CONSUMER_KEY", "JIRA_OAUTH_RSA_KEY",
-    "GITHUB_OAUTH_CLIENT_ID", "GITHUB_OAUTH_CLIENT_SECRET",
-)
-for env_var in config_env_vars:
-    app.config[env_var] = os.environ.get(env_var)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "secrettoeveryone")
-app.register_blueprint(jira_bp, url_prefix="/login")
-app.register_blueprint(github_bp, url_prefix="/login")
-db.init_app(app)
-if not app.debug:
-    sslify = SSLify(app)
-
-from .views import *
+from bugsnag.celery import connect_failure_handler
+from flask_sqlalchemy import SQLAlchemy
+from celery import Celery
 
 
-if __name__ == "__main__":
-    app.run()
+db = SQLAlchemy()
+celery = Celery()
+
+
+def expand_config(name=None):
+    if not name:
+        name = "default"
+    return "openedx_webhooks.config.{classname}Config".format(
+        classname=name.capitalize(),
+    )
+
+
+def create_app(config=None):
+    app = Flask(__name__)
+    handle_exceptions(app)
+    app.wsgi_app = ProxyFix(app.wsgi_app)
+    config = config or os.environ.get("OPENEDX_WEBHOOKS_CONFIG") or "default"
+    app.config.from_object(expand_config(config))
+
+    db.init_app(app)
+    create_celery_app(app)
+    if not app.debug:
+        SSLify(app)
+
+    # attach Flask-Dance blueprints
+    from .oauth import jira_bp as jira_oauth_bp
+    app.register_blueprint(jira_oauth_bp, url_prefix="/login")
+    from .oauth import github_bp as github_oauth_bp
+    app.register_blueprint(github_oauth_bp, url_prefix="/login")
+
+    # attach our blueprints
+    from .github_views import github_bp
+    app.register_blueprint(github_bp, url_prefix="/github")
+    from .jira_views import jira_bp
+    app.register_blueprint(jira_bp, url_prefix="/jira")
+    from .ui import ui as ui_blueprint
+    app.register_blueprint(ui_blueprint)
+
+    return app
+
+
+def create_celery_app(app=None, config="worker"):
+    """
+    adapted from http://flask.pocoo.org/docs/0.10/patterns/celery/
+    """
+    app = app or create_app(config=config)
+    celery.main = app.import_name
+    celery.conf["BROKER_URL"] = app.config["CELERY_BROKER_URL"]
+    celery.conf.update(app.config)
+    TaskBase = celery.Task
+    class ContextTask(TaskBase):
+        abstract = True
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+    celery.Task = ContextTask
+    connect_failure_handler()
+    return celery

@@ -26,10 +26,10 @@
         <a href="{{ url_for("github.login") }}">Authenticate</a>
         {% endif %}
       </li>
-      <li><a href="{{ url_for("github_rescan") }}">Rescan Pull Requests</a></li>
-      <li><a href="{{ url_for("github_process_pr") }}">Process Pull Request</a></li>
-      <li><a href="{{ url_for("github_check_contributors") }}">Check Contributors</a></li>
-      <li><a href="{{ url_for("github_install") }}">Install Webhooks</a></li>
+      <li><a href="{{ url_for("github_views.rescan") }}">Rescan Pull Requests</a></li>
+      <li><a href="{{ url_for("github_views.process_pr") }}">Process Pull Request</a></li>
+      <li><a href="{{ url_for("github_views.check_contributors") }}">Check Contributors</a></li>
+      <li><a href="{{ url_for("github_views.install") }}">Install Webhooks</a></li>
     </ul>
     <h2>JIRA</h2>
     <ul>
@@ -41,8 +41,8 @@
         <a href="{{ url_for("jira.login") }}">Authenticate</a>
         {% endif %}
       </li>
-      <li><a href="{{ url_for("jira_rescan_issues") }}">Rescan Issues</a></li>
-      <li><a href="{{ url_for("jira_rescan_users") }}">Rescan Users</a></li>
+      <li><a href="{{ url_for("jira_views.rescan_issues") }}">Rescan Issues</a></li>
+      <li><a href="{{ url_for("jira_views.rescan_users") }}">Rescan Users</a></li>
     </ul>
     </body>
 </html>

@@ -14,7 +14,7 @@
     </ul>
   {% endif %}
 {% endwith %}
-    <form id="rescan-form" action="{{ url_for("jira_rescan_issues") }}" method="POST">
+    <form id="rescan-form" action="{{ url_for("jira_views.rescan_issues") }}" method="POST">
     <p>
       Clicking this button will rescan all issues in the "Needs Triage" state.
     </p>

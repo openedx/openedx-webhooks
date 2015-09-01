@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from flask.ext.script import Manager, prompt_bool
-from openedx_webhooks import app
+from openedx_webhooks import create_app
 from openedx_webhooks.models import db
 
-manager = Manager(app)
+manager = Manager(create_app)
 
 
 @manager.command

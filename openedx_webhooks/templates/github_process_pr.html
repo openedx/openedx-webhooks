@@ -14,7 +14,7 @@
     </ul>
   {% endif %}
 {% endwith %}
-    <form id="rescan-form" action="{{ url_for("github_process_pr") }}" method="POST">
+    <form id="rescan-form" action="{{ url_for("github_views.process_pr") }}" method="POST">
     <p>
       Use this page to process a specific pull request on Github, which will
       ensure that a JIRA ticket exists for it. This will create JIRA tickets
