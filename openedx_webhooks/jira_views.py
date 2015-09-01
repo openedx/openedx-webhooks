@@ -52,7 +52,7 @@ def rescan_issues():
         # just render the form
         return render_template("jira_rescan_issues.html")
     jql = request.form.get("jql") or 'status = "Needs Triage" ORDER BY key'
-    sentry.client.context.merge({"jql": jql})
+    sentry.client.extra_context({"jql": jql})
     issues = jira_paginated_get(
         "/rest/api/2/search", jql=jql, obj_name="issues", session=jira,
     )
@@ -84,7 +84,7 @@ def issue_created():
         raise ValueError("Invalid JSON from JIRA: {data}".format(
             data=request.data.decode('utf-8')
         ))
-    sentry.client.context.merge({"event": event})
+    sentry.client.extra_context({"event": event})
 
     if current_app.debug:
         print(json.dumps(event), file=sys.stderr)
@@ -162,7 +162,7 @@ def should_transition(issue):
 
 
 def issue_opened(issue):
-    sentry.client.context.merge({"issue": issue})
+    sentry.client.extra_context({"issue": issue})
 
     issue_key = to_unicode(issue["key"])
     issue_url = URLObject(issue["self"])
@@ -280,7 +280,7 @@ def issue_updated():
         raise ValueError("Invalid JSON from JIRA: {data}".format(
             data=request.data.decode('utf-8')
         ))
-    sentry.client.context.merge({"event": event})
+    sentry.client.extra_context({"event": event})
 
     if current_app.debug:
         print(json.dumps(event), file=sys.stderr)
@@ -367,7 +367,7 @@ def jira_issue_rejected(issue):
     gh_issue_resp = github.get(issue_url)
     gh_issue_resp.raise_for_status()
     gh_issue = gh_issue_resp.json()
-    sentry.client.context.merge({"github_issue": gh_issue})
+    sentry.client.extra_context({"github_issue": gh_issue})
     if gh_issue["state"] == "closed":
         # nothing to do
         msg = "{key} was rejected, but PR #{num} was already closed".format(
@@ -541,7 +541,7 @@ def rescan_users():
     for groupname, domain in requested_groups.items():
         users_in_group = jira_group_members(groupname, session=jira, debug=True)
         usernames_in_group = set(u["name"] for u in users_in_group)
-        sentry.client.context.merge({
+        sentry.client.extra_context({
             "groupname": groupname,
             "usernames_in_group": usernames_in_group,
         })
