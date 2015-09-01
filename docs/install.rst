@@ -11,7 +11,7 @@ Install Add-ons
 This project uses:
 
 * `Heroku Postgres <https://addons.heroku.com/heroku-postgresql>`_
-* `Bugsnag <https://addons.heroku.com/bugsnag>`_
+* `Sentry <https://addons.heroku.com/sentry>`_
 
 Flask Secret Key
 ~~~~~~~~~~~~~~~~
