@@ -78,7 +78,9 @@ def rescan_repo(repo):
 
     for pull_request in paginated_get(url, session=github):
         sentry.client.extra_context({"pull_request": pull_request})
-        if not get_jira_issue_key(pull_request) and not is_internal_pull_request(pull_request):
+        issue_key = get_jira_issue_key(pull_request)
+        is_internal = is_internal_pull_request(pull_request, session=github)
+        if not issue_key and not is_internal:
             text = pr_opened(pull_request)
             if "created" in text:
                 jira_key = text[8:]
@@ -199,7 +201,7 @@ def pr_opened(pr, ignore_internal=True, check_contractor=True):
     user = pr["user"]["login"].decode('utf-8')
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
-    if ignore_internal and is_internal_pull_request(pr):
+    if ignore_internal and is_internal_pull_request(pr, session=github):
         # not an open source pull request, don't create an issue for it
         print(
             "@{user} opened PR #{num} against {repo} (internal PR)".format(
@@ -209,7 +211,7 @@ def pr_opened(pr, ignore_internal=True, check_contractor=True):
         )
         return "internal pull request"
 
-    if check_contractor and is_contractor_pull_request(pr):
+    if check_contractor and is_contractor_pull_request(pr, session=github):
         # don't create a JIRA issue, but leave a comment
         comment = {
             "body": github_contractor_pr_comment(pr),
