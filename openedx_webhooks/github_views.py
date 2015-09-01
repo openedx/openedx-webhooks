@@ -405,7 +405,7 @@ def get_jira_issue_key(pull_request):
     return None
 
 
-def github_community_pr_comment(pull_request, jira_issue, people=None):
+def github_community_pr_comment(pull_request, jira_issue, people=None, session=None):
     """
     For a newly-created pull request from an open source contributor,
     write a welcoming comment on the pull request. The comment should:
@@ -415,7 +415,7 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
     * check for AUTHORS entry
     * contain a link to our process documentation
     """
-    people = people or get_people_file()
+    people = people or get_people_file(session=session)
     people = {user.lower(): values for user, values in people.items()}
     pr_author = pull_request["user"]["login"].decode('utf-8').lower()
     created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
@@ -438,55 +438,14 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
             if name in authors_content:
                 in_authors_file = True
 
-    doc_url = "http://edx-developer-guide.readthedocs.org/en/latest/process/overview.html"
-    issue_key = jira_issue["key"].decode('utf-8')
-    issue_url = "https://openedx.atlassian.net/browse/{key}".format(key=issue_key)
-    contributing_url = "https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst"
-    agreement_url = "http://open.edx.org/sites/default/files/wysiwyg/individual-contributor-agreement.pdf"
-    authors_url = "https://github.com/{repo}/blob/master/AUTHORS".format(
-        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
-    )
-    comment = (
-        "Thanks for the pull request, @{user}! I've created "
-        "[{issue_key}]({issue_url}) to keep track of it in JIRA. "
-        "JIRA is a place for product owners to prioritize feature reviews "
-        "by the engineering development teams. "
-        "\n\nFeel free to add as much of the following information to the ticket:"
-        "\n- supporting documentation"
-        "\n- edx-code email threads"
-        "\n- timeline information ('this must be merged by XX date', and why that is)"
-        "\n- partner information ('this is a course on edx.org')"
-        "\n- any other information that can help Product understand the context for the PR"
-        "\n\nAll technical communication about the code itself will still be "
-        "done via the Github pull request interface. "
-        "As a reminder, [our process documentation is here]({doc_url})."
-    ).format(
+    return render_template("github_community_pr_comment.md.j2",
         user=pull_request["user"]["login"].decode('utf-8'),
-        issue_key=issue_key,
-        issue_url=issue_url,
-        doc_url=doc_url,
+        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
+        number=pull_request["number"],
+        issue_key=jira_issue["key"].decode('utf-8'),
+        has_signed_agreement=has_signed_agreement,
+        in_authors_file=in_authors_file,
     )
-    if not has_signed_agreement or not in_authors_file:
-        todo = ""
-        if not has_signed_agreement:
-            todo += (
-                "submitted a [signed contributor agreement]({agreement_url}) "
-                "or indicated your institutional affiliation"
-            ).format(
-                agreement_url=agreement_url,
-            )
-        if not has_signed_agreement and not in_authors_file:
-            todo += " and "
-        if not in_authors_file:
-            todo += "added yourself to the [AUTHORS]({authors_url}) file".format(
-                authors_url=authors_url,
-            )
-        comment += ("\n\n"
-            "We can't start reviewing your pull request until you've {todo}. "
-            "Please see the [CONTRIBUTING]({contributing_url}) file for "
-            "more information."
-        ).format(todo=todo, contributing_url=contributing_url)
-    return comment
 
 
 def github_contractor_pr_comment(pull_request):
@@ -497,29 +456,11 @@ def github_contractor_pr_comment(pull_request):
     * Help the author determine if the work is paid for by edX or not
     * If not, show the author how to trigger the creation of an OSPR issue
     """
-    jira_url = "https://openedx.atlassian.net"
-    ospr_issue_url = url_for(
-        "github_views.process_pr",
-        repo=pull_request["base"]["repo"]["full_name"],
-        number=pull_request["number"],
-        _external=True,
-    )
-    comment = (
-        "Thanks for the pull request, @{user}! It looks like you're a member of "
-        "a company that does contract work for edX. If you're doing this work "
-        "as part of a paid contract with edX, you should talk to edX about "
-        "who will review this pull request. If this work is not part of a paid "
-        "contract with edX, then you should ensure that there is an OSPR issue "
-        "to track this work in [JIRA]({jira_url}), so that we don't lose track "
-        "of your pull request. "
-        "\n\nTo automatically create an OSPR issue for this pull request, just "
-        "visit this link: {ospr_issue_url}"
-    ).format(
+    return render_template("github_contractor_pr_comment.md.j2",
         user=pull_request["user"]["login"].decode('utf-8'),
-        jira_url=jira_url,
-        ospr_issue_url=ospr_issue_url,
+        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
+        number=pull_request["number"],
     )
-    return comment
 
 
 @github_bp.route("/check_contributors", methods=("GET", "POST"))
