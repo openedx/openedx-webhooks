@@ -10,13 +10,13 @@ import json
 import re
 from collections import defaultdict
 
-import bugsnag
 from urlobject import URLObject
 from flask import (
     Blueprint, request, render_template, make_response, jsonify, current_app
 )
 from flask_dance.contrib.jira import jira
 from flask_dance.contrib.github import github
+from openedx_webhooks import sentry
 from openedx_webhooks.oauth import jira_get
 from openedx_webhooks.utils import (
     pop_dict_id, memoize, jira_paginated_get, to_unicode,
@@ -52,8 +52,7 @@ def rescan_issues():
         # just render the form
         return render_template("jira_rescan_issues.html")
     jql = request.form.get("jql") or 'status = "Needs Triage" ORDER BY key'
-    bugsnag_context = {"jql": jql}
-    bugsnag.configure_request(meta_data=bugsnag_context)
+    sentry.client.context.merge({"jql": jql})
     issues = jira_paginated_get(
         "/rest/api/2/search", jql=jql, obj_name="issues", session=jira,
     )
@@ -85,8 +84,7 @@ def issue_created():
         raise ValueError("Invalid JSON from JIRA: {data}".format(
             data=request.data.decode('utf-8')
         ))
-    bugsnag_context = {"event": event}
-    bugsnag.configure_request(meta_data=bugsnag_context)
+    sentry.client.context.merge({"event": event})
 
     if current_app.debug:
         print(json.dumps(event), file=sys.stderr)
@@ -100,7 +98,7 @@ def issue_created():
         # If we don't have an "issue" key, it's junk.
         return "What is this shit!?", 400
 
-    return issue_opened(event["issue"], bugsnag_context)
+    return issue_opened(event["issue"])
 
 
 def should_transition(issue):
@@ -163,10 +161,8 @@ def should_transition(issue):
     return False
 
 
-def issue_opened(issue, bugsnag_context=None):
-    bugsnag_context = bugsnag_context or {}
-    bugsnag_context = {"issue": issue}
-    bugsnag.configure_request(meta_data=bugsnag_context)
+def issue_opened(issue):
+    sentry.client.context.merge({"issue": issue})
 
     issue_key = to_unicode(issue["key"])
     issue_url = URLObject(issue["self"])
@@ -284,8 +280,7 @@ def issue_updated():
         raise ValueError("Invalid JSON from JIRA: {data}".format(
             data=request.data.decode('utf-8')
         ))
-    bugsnag_context = {"event": event}
-    bugsnag.configure_request(meta_data=bugsnag_context)
+    sentry.client.context.merge({"event": event})
 
     if current_app.debug:
         print(json.dumps(event), file=sys.stderr)
@@ -302,7 +297,7 @@ def issue_updated():
     # is this a comment?
     comment = event.get("comment")
     if comment:
-        return jira_issue_comment_added(event["issue"], comment, bugsnag_context)
+        return jira_issue_comment_added(event["issue"], comment)
 
     # is the issue an open source pull request?
     if event["issue"]["fields"]["project"]["key"] != "OSPR":
@@ -345,7 +340,7 @@ def issue_updated():
 
     changes = []
     if new_status == "Rejected":
-        change = jira_issue_rejected(event["issue"], bugsnag_context)
+        change = jira_issue_rejected(event["issue"])
         changes.append(change)
 
     elif 'blocked' in new_status.lower():
@@ -353,7 +348,7 @@ def issue_updated():
         print("repo_labels_lower: {}".format(repo_labels_lower))
 
     if new_status.lower() in repo_labels_lower:
-        change = jira_issue_status_changed(event["issue"], event["changelog"], bugsnag_context)
+        change = jira_issue_status_changed(event["issue"], event["changelog"])
         changes.append(change)
 
     if changes:
@@ -362,8 +357,7 @@ def issue_updated():
         return "no change necessary"
 
 
-def jira_issue_rejected(issue, bugsnag_context=None):
-    bugsnag_context = bugsnag_context or {}
+def jira_issue_rejected(issue):
     issue_key = to_unicode(issue["key"])
 
     pr_num = github_pr_num(issue)
@@ -373,8 +367,7 @@ def jira_issue_rejected(issue, bugsnag_context=None):
     gh_issue_resp = github.get(issue_url)
     gh_issue_resp.raise_for_status()
     gh_issue = gh_issue_resp.json()
-    bugsnag_context["github_issue"] = gh_issue
-    bugsnag.configure_request(meta_data=bugsnag_context)
+    sentry.client.context.merge({"github_issue": gh_issue})
     if gh_issue["state"] == "closed":
         # nothing to do
         msg = "{key} was rejected, but PR #{num} was already closed".format(
@@ -400,8 +393,7 @@ def jira_issue_rejected(issue, bugsnag_context=None):
     return "Closed PR #{num}".format(num=pr_num)
 
 
-def jira_issue_status_changed(issue, changelog, bugsnag_context=None):
-    bugsnag_context = bugsnag_context or {}
+def jira_issue_status_changed(issue, changelog):
     pr_num = github_pr_num(issue)
     pr_repo = github_pr_repo(issue)
     pr_url = github_pr_url(issue)
@@ -447,8 +439,7 @@ def jira_issue_status_changed(issue, changelog, bugsnag_context=None):
     return "Changed labels of PR #{num} to {labels}".format(num=pr_num, labels=pr_labels)
 
 
-def jira_issue_comment_added(issue, comment, bugsnag_context=None):
-    bugsnag_context = bugsnag_context or {}
+def jira_issue_comment_added(issue, comment):
     issue_key = to_unicode(issue["key"])
 
     # we want to parse comments on Course Launch issues to fill out the cert report
@@ -550,11 +541,10 @@ def rescan_users():
     for groupname, domain in requested_groups.items():
         users_in_group = jira_group_members(groupname, session=jira, debug=True)
         usernames_in_group = set(u["name"] for u in users_in_group)
-        bugsnag_context = {
+        sentry.client.context.merge({
             "groupname": groupname,
             "usernames_in_group": usernames_in_group,
-        }
-        bugsnag.configure_request(meta_data=bugsnag_context)
+        })
 
         for user in jira_users(filter=domain, session=jira, debug=True):
             if not user["email"].endswith(domain):

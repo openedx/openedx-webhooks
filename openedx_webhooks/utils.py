@@ -5,7 +5,6 @@ import sys
 import os
 import functools
 import requests
-import bugsnag
 from urlobject import URLObject
 
 
