@@ -38,7 +38,7 @@ def pull_request():
         event = request.get_json()
     except ValueError:
         raise ValueError("Invalid JSON from Github: {data}".format(data=request.data))
-    sentry.client.context.merge({"event": event})
+    sentry.client.extra_context({"event": event})
 
     if "pull_request" not in event and "hook" in event and "zen" in event:
         # this is a ping
@@ -72,12 +72,12 @@ def rescan_repo(repo):
     """
     rescans a single repo for new prs
     """
-    sentry.client.context.merge({"repo": repo})
+    sentry.client.extra_context({"repo": repo})
     url = "/repos/{repo}/pulls".format(repo=repo)
     created = {}
 
     for pull_request in paginated_get(url, session=github):
-        sentry.client.context.merge({"pull_request": pull_request})
+        sentry.client.extra_context({"pull_request": pull_request})
         if not get_jira_issue_key(pull_request) and not is_internal_pull_request(pull_request):
             text = pr_opened(pull_request)
             if "created" in text:
@@ -170,7 +170,7 @@ def install():
                 "content_type": "json",
             }
         }
-        sentry.client.context.merge({"repo": repo, "body": body})
+        sentry.client.extra_context({"repo": repo, "body": body})
 
         hook_resp = github.post(url, json=body)
         if hook_resp.ok:
@@ -264,14 +264,14 @@ def pr_opened(pr, ignore_internal=True, check_contractor=True):
     institution = people.get(user, {}).get("institution", None)
     if institution:
         new_issue["fields"][custom_fields["Customer"]] = [institution]
-    sentry.client.context.merge({"new_issue": new_issue})
+    sentry.client.extra_context({"new_issue": new_issue})
 
     resp = jira.post("/rest/api/2/issue", json=new_issue)
     resp.raise_for_status()
     new_issue_body = resp.json()
     issue_key = new_issue_body["key"].decode('utf-8')
     new_issue["key"] = issue_key
-    sentry.client.context.merge({"new_issue": new_issue})
+    sentry.client.extra_context({"new_issue": new_issue})
     # add a comment to the Github pull request with a link to the JIRA issue
     comment = {
         "body": github_community_pr_comment(pr, new_issue_body, people),
@@ -310,7 +310,7 @@ def pr_closed(pr):
             file=sys.stderr
         )
         return "no JIRA issue :("
-    sentry.client.context.merge({"jira_key": issue_key})
+    sentry.client.extra_context({"jira_key": issue_key})
 
     # close the issue on JIRA
     transition_url = (
@@ -322,7 +322,7 @@ def pr_closed(pr):
 
     transitions = transitions_resp.json()["transitions"]
 
-    sentry.client.context.merge({"transitions": transitions})
+    sentry.client.extra_context({"transitions": transitions})
 
     transition_name = "Merged" if merged else "Rejected"
     transition_id = None
@@ -337,7 +337,7 @@ def pr_closed(pr):
         issue_resp = jira.get(issue_url)
         issue_resp.raise_for_status()
         issue = issue_resp.json()
-        sentry.client.context.merge({"jira_issue": issue})
+        sentry.client.extra_context({"jira_issue": issue})
         current_status = issue["fields"]["status"]["name"].decode("utf-8")
         if current_status == transition_name:
             msg = "{key} is already in status {status}".format(
@@ -468,7 +468,7 @@ def check_contributors():
 
     missing_contributors = defaultdict(set)
     for repo in repos:
-        sentry.client.context.merge({"repo": repo})
+        sentry.client.extra_context({"repo": repo})
         contributors_url = "/repos/{repo}/contributors".format(repo=repo)
         contributors = paginated_get(contributors_url, session=github)
         for contributor in contributors:
