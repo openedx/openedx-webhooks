@@ -11,6 +11,7 @@ Install Add-ons
 This project uses:
 
 * `Heroku Postgres <https://addons.heroku.com/heroku-postgresql>`_
+* `RabbitMQ Bigwig <https://addons.heroku.com/rabbitmq-bigwig>`_
 * `Sentry <https://addons.heroku.com/sentry>`_
 
 Flask Secret Key
