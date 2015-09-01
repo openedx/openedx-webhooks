@@ -14,12 +14,13 @@ import os
 from flask import Flask
 from werkzeug.contrib.fixers import ProxyFix
 from flask_sslify import SSLify
-from bugsnag.flask import handle_exceptions
-from bugsnag.celery import connect_failure_handler
+from raven.contrib.flask import Sentry
+from raven.contrib.celery import register_signal, register_logger_signal
 from flask_sqlalchemy import SQLAlchemy
 from celery import Celery
 
 
+sentry = Sentry()
 db = SQLAlchemy()
 celery = Celery()
 
@@ -34,11 +35,11 @@ def expand_config(name=None):
 
 def create_app(config=None):
     app = Flask(__name__)
-    handle_exceptions(app)
     app.wsgi_app = ProxyFix(app.wsgi_app)
     config = config or os.environ.get("OPENEDX_WEBHOOKS_CONFIG") or "default"
     app.config.from_object(expand_config(config))
 
+    sentry.init_app(app)
     db.init_app(app)
     create_celery_app(app)
     if not app.debug:
@@ -76,5 +77,6 @@ def create_celery_app(app=None, config="worker"):
             with app.app_context():
                 return TaskBase.__call__(self, *args, **kwargs)
     celery.Task = ContextTask
-    connect_failure_handler()
+    register_logger_signal(sentry.client)
+    register_signal(sentry.client)
     return celery

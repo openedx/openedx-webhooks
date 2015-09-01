@@ -11,7 +11,7 @@ cryptography
 URLObject==2.3.4
 gunicorn==19.3.0
 psycopg2==2.5.3
-bugsnag
+raven
 PyYAML==3.11
 sqlalchemy_utils
 iso8601

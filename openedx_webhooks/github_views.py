@@ -11,12 +11,12 @@ import re
 from datetime import date
 from collections import defaultdict
 
-import bugsnag
 from iso8601 import parse_date
 from flask import Blueprint, request, render_template, make_response, url_for, jsonify
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 
+from openedx_webhooks import sentry
 from openedx_webhooks.info import (
     get_people_file, get_repos_file,
     is_internal_pull_request, is_contractor_pull_request,
@@ -38,8 +38,7 @@ def pull_request():
         event = request.get_json()
     except ValueError:
         raise ValueError("Invalid JSON from Github: {data}".format(data=request.data))
-    bugsnag_context = {"event": event}
-    bugsnag.configure_request(meta_data=bugsnag_context)
+    sentry.client.context.merge({"event": event})
 
     if "pull_request" not in event and "hook" in event and "zen" in event:
         # this is a ping
@@ -50,9 +49,9 @@ def pull_request():
     pr = event["pull_request"]
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
     if event["action"] == "opened":
-        return pr_opened(pr, bugsnag_context)
+        return pr_opened(pr)
     if event["action"] == "closed":
-        return pr_closed(pr, bugsnag_context)
+        return pr_closed(pr)
     if event["action"] == "labeled":
         return "Ignoring labeling events from github", 200
     if event["action"] == "synchronize":
@@ -73,16 +72,14 @@ def rescan_repo(repo):
     """
     rescans a single repo for new prs
     """
-    bugsnag_context = {"repo": repo}
-    bugsnag.configure_request(meta_data=bugsnag_context)
+    sentry.client.context.merge({"repo": repo})
     url = "/repos/{repo}/pulls".format(repo=repo)
     created = {}
 
     for pull_request in paginated_get(url, session=github):
-        bugsnag_context["pull_request"] = pull_request
-        bugsnag.configure_request(meta_data=bugsnag_context)
+        sentry.client.context.merge({"pull_request": pull_request})
         if not get_jira_issue_key(pull_request) and not is_internal_pull_request(pull_request):
-            text = pr_opened(pull_request, bugsnag_context=bugsnag_context)
+            text = pr_opened(pull_request)
             if "created" in text:
                 jira_key = text[8:]
                 created[pull_request["number"]] = jira_key
@@ -173,8 +170,7 @@ def install():
                 "content_type": "json",
             }
         }
-        bugsnag_context = {"repo": repo, "body": body}
-        bugsnag.configure_request(meta_data=bugsnag_context)
+        sentry.client.context.merge({"repo": repo, "body": body})
 
         hook_resp = github.post(url, json=body)
         if hook_resp.ok:
@@ -199,8 +195,7 @@ def github_whoami():
     return self_resp.json()
 
 
-def pr_opened(pr, ignore_internal=True, check_contractor=True, bugsnag_context=None):
-    bugsnag_context = bugsnag_context or {}
+def pr_opened(pr, ignore_internal=True, check_contractor=True):
     user = pr["user"]["login"].decode('utf-8')
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
@@ -269,15 +264,14 @@ def pr_opened(pr, ignore_internal=True, check_contractor=True, bugsnag_context=N
     institution = people.get(user, {}).get("institution", None)
     if institution:
         new_issue["fields"][custom_fields["Customer"]] = [institution]
-    bugsnag_context["new_issue"] = new_issue
-    bugsnag.configure_request(meta_data=bugsnag_context)
+    sentry.client.context.merge({"new_issue": new_issue})
 
     resp = jira.post("/rest/api/2/issue", json=new_issue)
     resp.raise_for_status()
     new_issue_body = resp.json()
     issue_key = new_issue_body["key"].decode('utf-8')
-    bugsnag_context["new_issue"]["key"] = issue_key
-    bugsnag.configure_request(meta_data=bugsnag_context)
+    new_issue["key"] = issue_key
+    sentry.client.context.merge({"new_issue": new_issue})
     # add a comment to the Github pull request with a link to the JIRA issue
     comment = {
         "body": github_community_pr_comment(pr, new_issue_body, people),
@@ -303,8 +297,7 @@ def pr_opened(pr, ignore_internal=True, check_contractor=True, bugsnag_context=N
     return "created {key}".format(key=issue_key)
 
 
-def pr_closed(pr, bugsnag_context=None):
-    bugsnag_context = bugsnag_context or {}
+def pr_closed(pr):
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
 
     merged = pr["merged"]
@@ -317,8 +310,7 @@ def pr_closed(pr, bugsnag_context=None):
             file=sys.stderr
         )
         return "no JIRA issue :("
-    bugsnag_context["jira_key"] = issue_key
-    bugsnag.configure_request(meta_data=bugsnag_context)
+    sentry.client.context.merge({"jira_key": issue_key})
 
     # close the issue on JIRA
     transition_url = (
@@ -330,8 +322,7 @@ def pr_closed(pr, bugsnag_context=None):
 
     transitions = transitions_resp.json()["transitions"]
 
-    bugsnag_context["transitions"] = transitions
-    bugsnag.configure_request(meta_data=bugsnag_context)
+    sentry.client.context.merge({"transitions": transitions})
 
     transition_name = "Merged" if merged else "Rejected"
     transition_id = None
@@ -346,8 +337,7 @@ def pr_closed(pr, bugsnag_context=None):
         issue_resp = jira.get(issue_url)
         issue_resp.raise_for_status()
         issue = issue_resp.json()
-        bugsnag_context["jira_issue"] = issue
-        bugsnag.configure_request(meta_data=bugsnag_context)
+        sentry.client.context.merge({"jira_issue": issue})
         current_status = issue["fields"]["status"]["name"].decode("utf-8")
         if current_status == transition_name:
             msg = "{key} is already in status {status}".format(
@@ -478,8 +468,7 @@ def check_contributors():
 
     missing_contributors = defaultdict(set)
     for repo in repos:
-        bugsnag_context = {"repo": repo}
-        bugsnag.configure_request(meta_data=bugsnag_context)
+        sentry.client.context.merge({"repo": repo})
         contributors_url = "/repos/{repo}/contributors".format(repo=repo)
         contributors = paginated_get(contributors_url, session=github)
         for contributor in contributors:
