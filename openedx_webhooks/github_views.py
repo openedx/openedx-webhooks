@@ -189,8 +189,9 @@ def install():
 
 
 @memoize
-def github_whoami():
-    self_resp = github.get("/user")
+def github_whoami(session=None):
+    session = session or github
+    self_resp = session.get("/user")
     rate_limit_info = {k: v for k, v in self_resp.headers.items() if "ratelimit" in k}
     print("Rate limits: {}".format(rate_limit_info), file=sys.stderr)
     self_resp.raise_for_status()
@@ -212,6 +213,10 @@ def pr_opened(pr, ignore_internal=True, check_contractor=True):
         return "internal pull request"
 
     if check_contractor and is_contractor_pull_request(pr, session=github):
+        # have we already left a contractor comment?
+        if has_contractor_comment(pr, session=github):
+            return "contract pull request (commented)"
+
         # don't create a JIRA issue, but leave a comment
         comment = {
             "body": github_contractor_pr_comment(pr),
@@ -453,6 +458,23 @@ def github_contractor_pr_comment(pull_request):
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
         number=pull_request["number"],
     )
+
+
+def has_contractor_comment(pull_request, session=None):
+    me = github_whoami(session=session)
+    my_username = me["login"]
+    comment_url = "/repos/{repo}/issues/{num}/comments".format(
+        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
+        num=pull_request["number"],
+    )
+    for comment in paginated_get(comment_url, session=github):
+        # I only care about comments I made
+        if comment["user"]["login"] != my_username:
+            continue
+        magic_phrase = "It looks like you're a member of a company that does contract work for edX."
+        if magic_phrase in comment["body"]:
+            return True
+    return False
 
 
 @github_bp.route("/check_contributors", methods=("GET", "POST"))
