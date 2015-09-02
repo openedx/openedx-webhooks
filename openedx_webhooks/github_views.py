@@ -461,6 +461,11 @@ def github_contractor_pr_comment(pull_request):
 
 
 def has_contractor_comment(pull_request, session=None):
+    """
+    Given a pull request, this function returns a boolean indicating whether
+    we have already left a comment on that pull request that suggests
+    making an OSPR issue for the pull request.
+    """
     me = github_whoami(session=session)
     my_username = me["login"]
     comment_url = "/repos/{repo}/issues/{num}/comments".format(
