@@ -6,6 +6,7 @@ import os
 import functools
 import requests
 from urlobject import URLObject
+from flask import request
 
 
 def pop_dict_id(d):
@@ -250,3 +251,12 @@ def studio_crowd_tokenkey(base_url="https://openedx.atlassian.net"):
     if not login_resp.status_code in (200, 303):
         raise requests.exceptions.RequestException(login_resp.text)
     return login_resp.cookies["studio.crowd.tokenkey"]
+
+
+def minimal_wsgi_environ():
+    values = set((
+        "HTTP_HOST", "SERVER_NAME", "SERVER_PORT", "REQUEST_METHOD",
+        "SCRIPT_NAME", "PATH_INFO", "QUERY_STRING", "wsgi.url_scheme",
+    ))
+    return {key: value for key, value in request.environ.items()
+            if key in values}

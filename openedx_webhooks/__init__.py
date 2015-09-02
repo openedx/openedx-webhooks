@@ -67,6 +67,7 @@ def create_app(config=None):
 def create_celery_app(app=None, config="worker"):
     """
     adapted from http://flask.pocoo.org/docs/0.10/patterns/celery/
+    (added the request_context stuff)
     """
     app = app or create_app(config=config)
     celery.main = app.import_name
@@ -76,8 +77,17 @@ def create_celery_app(app=None, config="worker"):
     class ContextTask(TaskBase):
         abstract = True
         def __call__(self, *args, **kwargs):
+            if "wsgi_environ" in kwargs:
+                wsgi_environ = kwargs.pop("wsgi_environ")
+            else:
+                wsgi_environ = None
             with app.app_context():
-                return TaskBase.__call__(self, *args, **kwargs)
+                if wsgi_environ:
+                    with app.request_context(wsgi_environ):
+                        return TaskBase.__call__(self, *args, **kwargs)
+                else:
+                    return TaskBase.__call__(self, *args, **kwargs)
+
     celery.Task = ContextTask
     register_logger_signal(sentry.client)
     register_signal(sentry.client)

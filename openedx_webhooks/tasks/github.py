@@ -60,7 +60,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
     people = get_people_file(session=github)
-    custom_fields = get_jira_custom_fields()
+    custom_fields = get_jira_custom_fields(jira)
 
     if user in people:
         user_name = people[user].get("name", "")

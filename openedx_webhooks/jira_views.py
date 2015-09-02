@@ -27,11 +27,12 @@ jira_bp = Blueprint('jira_views', __name__)
 
 
 @memoize
-def get_jira_custom_fields():
+def get_jira_custom_fields(session=None):
     """
     Return a name-to-id mapping for the custom fields on JIRA.
     """
-    field_resp = jira.get("/rest/api/2/field")
+    session = session or jira
+    field_resp = session.get("/rest/api/2/field")
     field_resp.raise_for_status()
     field_map = dict(pop_dict_id(f) for f in field_resp.json())
     return {

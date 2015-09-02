@@ -18,7 +18,7 @@ from openedx_webhooks.info import (
     get_people_file, get_repos_file,
     is_internal_pull_request, is_contractor_pull_request,
     )
-from openedx_webhooks.utils import paginated_get
+from openedx_webhooks.utils import paginated_get, minimal_wsgi_environ
 from openedx_webhooks.tasks.github import (
     pull_request_opened, pull_request_closed, rescan_repository
 )
@@ -52,7 +52,7 @@ def pull_request():
     if event["action"] == "synchronize":
         return "Ignoring synchronize events from github", 200
     if event["action"] == "opened":
-        result = pull_request_opened.delay(pr)
+        result = pull_request_opened.delay(pr, wsgi_environ=minimal_wsgi_environ())
         status_url = url_for("tasks.status", task_id=result.id, _external=True)
         resp = jsonify({"message": "queued", "status_url": status_url})
         resp.status_code = 202
@@ -86,14 +86,14 @@ def rescan():
         # just render the form
         return render_template("github_rescan.html")
     repo = request.form.get("repo") or "edx/edx-platform"
-
     if repo == 'all':
         repos = get_repos_file(session=github).keys()
         result = group(
-            rescan_repository.s(repo) for repo in repos
+            rescan_repository.s(repo, wsgi_environ=minimal_wsgi_environ())
+            for repo in repos
         )
     else:
-        result = rescan_repository.delay(repo)
+        result = rescan_repository.delay(repo, wsgi_environ=minimal_wsgi_environ())
 
     status_url = url_for("tasks.status", task_id=result.id, _external=True)
     resp = jsonify({"message": "queued", "status_url": status_url})
@@ -124,7 +124,10 @@ def process_pr():
         return resp
 
     pr = pr_resp.json()
-    result = pull_request_opened.delay(pr, ignore_internal=False, check_contractor=False)
+    result = pull_request_opened.delay(
+        pr, ignore_internal=False, check_contractor=False,
+        wsgi_environ=minimal_wsgi_environ(),
+    )
     status_url = url_for("tasks.status", task_id=result.id, _external=True)
     resp = jsonify({"message": "queued", "status_url": status_url})
     resp.status_code = 202
