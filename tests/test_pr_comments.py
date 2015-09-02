@@ -3,7 +3,7 @@ import pytest
 import requests
 from datetime import datetime
 import openedx_webhooks
-from openedx_webhooks.github_views import (
+from openedx_webhooks.tasks.github import (
     github_community_pr_comment, github_contractor_pr_comment,
     has_contractor_comment
 )

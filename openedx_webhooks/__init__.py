@@ -58,6 +58,8 @@ def create_app(config=None):
     app.register_blueprint(jira_bp, url_prefix="/jira")
     from .ui import ui as ui_blueprint
     app.register_blueprint(ui_blueprint)
+    from .tasks import tasks as tasks_blueprint
+    app.register_blueprint(tasks_blueprint, url_prefix="/tasks")
 
     return app
 
