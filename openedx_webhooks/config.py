@@ -15,6 +15,7 @@ class DefaultConfig(object):
     CELERY_RESULT_SERIALIZER = "json"
     CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
     CELERY_BROKER_URL = os.environ.get("RABBITMQ_BIGWIG_TX_URL", "amqp://")
+    CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://")
 
 
 class WorkerConfig(DefaultConfig):
