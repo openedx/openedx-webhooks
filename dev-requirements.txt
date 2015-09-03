@@ -2,6 +2,7 @@
 pytest
 pytest-cover
 betamax
+responses
 
 # docs
 sphinx

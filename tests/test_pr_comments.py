@@ -1,8 +1,11 @@
+import json
 import pytest
+import requests
 from datetime import datetime
 import openedx_webhooks
 from openedx_webhooks.github_views import (
-    github_community_pr_comment, github_contractor_pr_comment
+    github_community_pr_comment, github_contractor_pr_comment,
+    has_contractor_comment
 )
 
 
@@ -42,13 +45,118 @@ def test_community_pr_comment(app, github_session):
     assert "can't start reviewing your pull request" in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
+
 def test_contractor_pr_comment(app):
     pr = make_pull_request(user="FakeUser")
-    ctx = app.test_request_context(
+    appctx = app.test_request_context(
         '/', environ_overrides={"wsgi.url_scheme": "https"}
     )
-    with ctx:
+    with appctx:
         comment = github_contractor_pr_comment(pr)
     assert "you're a member of a company that does contract work for edX" in comment
     assert "visit this link: https://" in comment
     assert not comment.startswith((" ", "\n", "\t"))
+
+
+def test_has_contractor_comment(app, responses):
+    appctx = app.test_request_context(
+        '/', environ_overrides={"wsgi.url_scheme": "https"}
+    )
+    responses.add(
+        responses.GET,
+        "https://api.github.com/user",
+        body='{"login": "testuser"}',
+        content_type="application/json",
+    )
+    pr = make_pull_request(
+        user="testuser", number=1, base_repo_name="edx/edx-platform",
+    )
+    with appctx:
+        comment = github_contractor_pr_comment(pr)
+    comment_json = {
+        "user": {
+            "login": "testuser",
+        },
+        "body": comment
+    }
+    responses.add(
+        responses.GET,
+        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
+        body=json.dumps([comment_json]),
+        content_type="application/json",
+    )
+
+    with appctx:
+        app.preprocess_request()
+        result = has_contractor_comment(pr)
+    assert result is True
+
+
+def test_has_contractor_comment_unrelated_comments(app, responses):
+    appctx = app.test_request_context(
+        '/', environ_overrides={"wsgi.url_scheme": "https"}
+    )
+    responses.add(
+        responses.GET,
+        "https://api.github.com/user",
+        body='{"login": "testuser"}',
+        content_type="application/json",
+    )
+    pr = make_pull_request(
+        user="testuser", number=1, base_repo_name="edx/edx-platform",
+    )
+    with appctx:
+        comment = github_contractor_pr_comment(pr)
+    comments_json = [
+        {
+            "user": {
+                "login": "testuser",
+            },
+            "body": "this comment is unrelated",
+        },
+        {
+            # this comment will be ignored
+            # because it's not made by our bot user
+            "user": {
+                "login": "different_user",
+            },
+            "body": "It looks like you're a member of a company that does contract work for edX.",
+        }
+    ]
+    responses.add(
+        responses.GET,
+        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
+        body=json.dumps(comments_json),
+        content_type="application/json",
+    )
+
+    with appctx:
+        app.preprocess_request()
+        result = has_contractor_comment(pr)
+    assert result is False
+
+
+def test_has_contractor_comment_no_comments(app, responses):
+    appctx = app.test_request_context(
+        '/', environ_overrides={"wsgi.url_scheme": "https"}
+    )
+    responses.add(
+        responses.GET,
+        "https://api.github.com/user",
+        body='{"login": "testuser"}',
+        content_type="application/json",
+    )
+    pr = make_pull_request(
+        user="testuser", number=1, base_repo_name="edx/edx-platform",
+    )
+    responses.add(
+        responses.GET,
+        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
+        body='[]',
+        content_type="application/json",
+    )
+
+    with appctx:
+        app.preprocess_request()
+        result = has_contractor_comment(pr)
+    assert result is False

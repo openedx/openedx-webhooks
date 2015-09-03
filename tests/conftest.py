@@ -2,7 +2,9 @@ import os
 import base64
 import pytest
 import betamax
+import responses as responses_module
 from requests_oauthlib import OAuth2Session
+from flask_dance.contrib.github import make_github_blueprint
 import openedx_webhooks
 
 if not os.path.exists('tests/cassettes'):
@@ -48,6 +50,14 @@ def github_session(request):
     recorder.start()
     request.addfinalizer(recorder.stop)
     return session
+
+
+@pytest.yield_fixture
+def responses():
+    responses_module.mock.start()
+    yield responses_module.mock
+    responses_module.mock.stop()
+    responses_module.mock.reset()
 
 
 @pytest.fixture
