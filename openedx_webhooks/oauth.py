@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import unicode_literals, print_function
 
+import os
 from flask import request, flash
 from flask_dance.contrib.github import make_github_blueprint
 from flask_dance.contrib.jira import make_jira_blueprint
@@ -12,6 +13,11 @@ from openedx_webhooks.models import OAuth
 ## JIRA ##
 
 jira_bp = make_jira_blueprint(
+    # this *should* pick up the client_key and rsa_key from app.config,
+    # but it doesn't seem to be doing so... :(
+    consumer_key=os.environ.get("JIRA_OAUTH_CONSUMER_KEY"),
+    rsa_key=os.environ.get("JIRA_OAUTH_RSA_KEY"),
+    # these are actually necessary
     base_url="https://openedx.atlassian.net",
     redirect_to="index",
     backend=SQLAlchemyBackend(OAuth, db.session),
