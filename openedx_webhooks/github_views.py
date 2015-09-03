@@ -47,34 +47,32 @@ def pull_request():
 
     pr = event["pull_request"]
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
-    if event["action"] == "labeled":
-        return "Ignoring labeling events from github", 200
-    if event["action"] == "synchronize":
-        return "Ignoring synchronize events from github", 200
-    if event["action"] == "opened":
-        result = pull_request_opened.delay(pr, wsgi_environ=minimal_wsgi_environ())
-        status_url = url_for("tasks.status", task_id=result.id, _external=True)
-        resp = jsonify({"message": "queued", "status_url": status_url})
-        resp.status_code = 202
-        resp.headers["Location"] = status_url
-        return resp
-    if event["action"] == "closed":
-        result = pull_request_closed.delay(pr)
-        status_url = url_for("tasks.status", task_id=result.id, _external=True)
-        resp = jsonify({"message": "queued", "status_url": status_url})
-        resp.status_code = 202
-        resp.headers["Location"] = status_url
-        return resp
+    action = event["action"]
+    ignored_actions = set(("labeled", "synchronize"))
+    if action in ignored_actions:
+        msg = "Ignoring {action} events from github".format(action=action)
+        return msg, 200
 
-    print(
-        "Received {action} event on PR #{num} against {repo}, don't know how to handle it".format(
-            action=event["action"],
-            repo=pr["base"]["repo"]["full_name"].decode('utf-8'),
-            num=pr["number"],
-        ),
-        file=sys.stderr
-    )
-    return "Don't know how to handle this.", 400
+    if action == "opened":
+        result = pull_request_opened.delay(pr, wsgi_environ=minimal_wsgi_environ())
+    elif action == "closed":
+        result = pull_request_closed.delay(pr)
+    else:
+        print(
+            "Received {action} event on PR #{num} against {repo}, don't know how to handle it".format(
+                action=event["action"],
+                repo=pr["base"]["repo"]["full_name"].decode('utf-8'),
+                num=pr["number"],
+            ),
+            file=sys.stderr
+        )
+        return "Don't know how to handle this.", 400
+
+    status_url = url_for("tasks.status", task_id=result.id, _external=True)
+    resp = jsonify({"message": "queued", "status_url": status_url})
+    resp.status_code = 202
+    resp.headers["Location"] = status_url
+    return resp
 
 
 @github_bp.route("/rescan", methods=("GET", "POST"))
