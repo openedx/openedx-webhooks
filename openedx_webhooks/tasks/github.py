@@ -64,7 +64,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
     if user in people:
         user_name = people[user].get("name", "")
-    else:
+    if not user_name:
         user_resp = github.get(pr["user"]["url"])
         if user_resp.ok:
             user_name = user_resp.json().get("name", user)
