@@ -88,10 +88,11 @@ def rescan():
     repo = request.form.get("repo") or "edx/edx-platform"
     if repo == 'all':
         repos = get_repos_file(session=github).keys()
-        result = group(
+        workflow = group(
             rescan_repository.s(repo, wsgi_environ=minimal_wsgi_environ())
             for repo in repos
         )
+        result = workflow.delay()
     else:
         result = rescan_repository.delay(repo, wsgi_environ=minimal_wsgi_environ())
 
