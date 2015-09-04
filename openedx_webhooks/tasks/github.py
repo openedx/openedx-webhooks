@@ -9,7 +9,9 @@ from iso8601 import parse_date
 from flask import render_template
 
 from openedx_webhooks import sentry, celery
-from openedx_webhooks.tasks import logger, github, jira
+from openedx_webhooks.tasks import logger
+from openedx_webhooks.tasks import github_session as github
+from openedx_webhooks.tasks import jira_session as jira
 from openedx_webhooks.info import (
     get_people_file, is_internal_pull_request, is_contractor_pull_request
 )
