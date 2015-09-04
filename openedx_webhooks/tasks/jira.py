@@ -31,7 +31,18 @@ def rescan_users(domain_groups):
                     json={"name": username},
                 )
                 if not resp.ok:
-                    failures[groupname][username] = resp.text
+                    # Is this a failure saying that the user is already in
+                    # the group? If so, ignore it.
+                    nothing_to_do_msg = (
+                        "Cannot add user '{username}', "
+                        "user is already a member of '{groupname}'"
+                    ).format(username=username, groupname=groupname)
+                    error = resp.json()
+                    if error.get("errorMessages", []) == [nothing_to_do_msg]:
+                        continue
+                    else:
+                        # it's some other kind of failure, so log it
+                        failures[groupname][username] = resp.text
 
     if failures:
         logger.error("Failures in trying to rescan JIRA users: {}".format(failures))
