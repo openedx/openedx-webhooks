@@ -8,20 +8,20 @@ from __future__ import unicode_literals, print_function
 import sys
 import json
 import re
-from collections import defaultdict
 
 from urlobject import URLObject
 from flask import (
-    Blueprint, request, render_template, make_response, jsonify, current_app
+    Blueprint, request, render_template, make_response, jsonify, current_app,
+    url_for
 )
 from flask_dance.contrib.jira import jira
 from flask_dance.contrib.github import github
 from openedx_webhooks import sentry
 from openedx_webhooks.oauth import jira_get
 from openedx_webhooks.utils import (
-    pop_dict_id, memoize, jira_paginated_get, to_unicode,
-    jira_users, jira_group_members
+    pop_dict_id, memoize, jira_paginated_get, to_unicode
 )
+from openedx_webhooks.tasks.jira import rescan_users as rescan_user_task
 
 jira_bp = Blueprint('jira_views', __name__)
 
@@ -527,8 +527,6 @@ def rescan_users():
     if request.method == "GET":
         return render_template("jira_rescan_users.html", domain_groups=domain_groups)
 
-    failures = defaultdict(dict)
-
     requested_group = request.form.get("group")
     if requested_group:
         if requested_group not in domain_groups:
@@ -539,27 +537,9 @@ def rescan_users():
     else:
         requested_groups = domain_groups
 
-    for groupname, domain in requested_groups.items():
-        users_in_group = jira_group_members(groupname, session=jira, debug=True)
-        usernames_in_group = set(u["name"] for u in users_in_group)
-        sentry.client.extra_context({
-            "groupname": groupname,
-            "usernames_in_group": usernames_in_group,
-        })
-
-        for user in jira_users(filter=domain, session=jira, debug=True):
-            if not user["email"].endswith(domain):
-                pass
-            username = user["name"]
-            if username not in usernames_in_group:
-                # add the user to the group!
-                resp = jira.post(
-                    "/rest/api/2/group/user?groupname={}".format(groupname),
-                    json={"name": username},
-                )
-                if not resp.ok:
-                    failures[groupname][username] = resp.text
-
-    resp = jsonify(failures)
-    resp.status_code = 502 if failures else 200
+    result = rescan_user_task.delay(requested_groups)
+    status_url = url_for("tasks.status", task_id=result.id, _external=True)
+    resp = jsonify({"message": "queued", "status_url": status_url})
+    resp.status_code = 202
+    resp.headers["Location"] = status_url
     return resp

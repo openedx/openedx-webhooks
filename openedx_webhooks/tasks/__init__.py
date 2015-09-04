@@ -25,5 +25,5 @@ def status(task_id):
 
 # Working in a Celery task means we can't take advantage of Flask-Dance's
 # session proxies, so we'll explicitly define the sessions here.
-github = github_bp.session
-jira = jira_bp.session
+github_session = github_bp.session
+jira_session = jira_bp.session
