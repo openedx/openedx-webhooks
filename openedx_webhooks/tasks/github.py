@@ -62,6 +62,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     people = get_people_file(session=github)
     custom_fields = get_jira_custom_fields(jira)
 
+    user_name = None
     if user in people:
         user_name = people[user].get("name", "")
     if not user_name:
