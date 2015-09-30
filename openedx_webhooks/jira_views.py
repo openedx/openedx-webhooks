@@ -146,8 +146,6 @@ def should_transition(issue):
     exempt_groups = {
         # group name: set of projects that they can create non-triage issues
         "edx-employees": {"ALL"},
-        "clarice": {"MOB"},
-        "bnotions": {"MOB"},
         "opencraft": {"SOL"},
     }
     for user_group in user_groups:
@@ -518,8 +516,6 @@ def rescan_users():
     # a mapping of group name to email domain
     domain_groups = {
         "edx-employees": "@edx.org",
-        "clarice": "@claricetechnologies.com",
-        "bnotions": "@bnotions.com",
         "qualcomm": ".qualcomm.com",
         "ubc": "@cs.ubc.ca",
         "ubc": "@ubc.ca",
