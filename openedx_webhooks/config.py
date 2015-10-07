@@ -14,12 +14,14 @@ class DefaultConfig(object):
     CELERY_TASK_SERIALIZER = "json"
     CELERY_RESULT_SERIALIZER = "json"
     CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
-    CELERY_BROKER_URL = os.environ.get("RABBITMQ_BIGWIG_TX_URL", "amqp://")
+    # CELERY_BROKER_URL = os.environ.get("RABBITMQ_BIGWIG_TX_URL", "amqp://")
+    CELERY_BROKER_URL = "ironmq://"  # project ID and token are automatically read from env vars
     CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://")
 
 
 class WorkerConfig(DefaultConfig):
-    CELERY_BROKER_URL = os.environ.get("RABBITMQ_BIGWIG_RX_URL", "amqp://")
+    # CELERY_BROKER_URL = os.environ.get("RABBITMQ_BIGWIG_RX_URL", "amqp://")
+    pass
 
 
 class DevelopmentConfig(DefaultConfig):
