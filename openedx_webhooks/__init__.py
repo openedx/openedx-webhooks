@@ -18,6 +18,7 @@ from raven.contrib.flask import Sentry
 from raven.contrib.celery import register_signal, register_logger_signal
 from flask_sqlalchemy import SQLAlchemy
 from celery import Celery
+import iron_celery
 
 
 sentry = Sentry()
