@@ -20,10 +20,21 @@ tasks = Blueprint('tasks', __name__)
 @tasks.route('/status/<task_id>')
 def status(task_id):
     result = celery.AsyncResult(task_id)
+    subtask_count = 0
+    completed_subtask_count = 0
+    failed_subtask_count = 0
+    for subtask in result.iterdeps():
+        subtask_count += 1
+        if subtask.successful():
+            completed_subtask_count += 1
+        if subtask.failed():
+            failed_subtask_count += 1
+
     return jsonify({
         "status": result.state,
-        "subtask_count": len(result.results),
-        "completed_subtask_count": result.completed_count(),
+        "subtask_count": subtask_count,
+        "completed_subtask_count": completed_subtask_count,
+        "failed_subtask_count": failed_subtask_count,
     })
 
 
