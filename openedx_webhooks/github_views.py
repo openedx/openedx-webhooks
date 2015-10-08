@@ -84,6 +84,10 @@ def rescan():
         # just render the form
         return render_template("github_rescan.html")
     repo = request.form.get("repo") or "edx/edx-platform"
+    inline = request.form.get("inline", False)
+    if inline:
+        return jsonify(rescan_repository(repo))
+
     if repo == 'all':
         repos = get_repos_file(session=github).keys()
         workflow = group(

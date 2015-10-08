@@ -232,7 +232,7 @@ def rescan_repository(self, repo):
         self.update_state(state='STARTED', meta={'repo': repo})
 
     def page_callback(response):
-        if not response.ok:
+        if not response.ok or self.request.called_directly:
             return
         current_url = URLObject(response.url)
         current_page = int(current_url.query_dict.get("page", 1))
