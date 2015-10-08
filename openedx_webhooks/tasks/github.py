@@ -228,7 +228,7 @@ def rescan_repository(self, repo):
     url = "/repos/{repo}/pulls".format(repo=repo)
     created = {}
     if not self.request.called_directly:
-        self.update_status(state='STARTED', meta={'repo': repo})
+        self.update_state(state='STARTED', meta={'repo': repo})
 
     for pull_request in paginated_get(url, session=github):
         sentry.client.extra_context({"pull_request": pull_request})
