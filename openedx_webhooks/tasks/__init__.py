@@ -39,7 +39,7 @@ def group_status(group_id):
         elif result.failed():
             failed_task_ids.append(result.id)
         else:
-            pending_task_ids.append(result.ids)
+            pending_task_ids.append(result.id)
     return jsonify({
         "task_count": len(group_result.results),
         "completed_task_count": len(completed_task_ids),
