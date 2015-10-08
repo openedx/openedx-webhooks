@@ -23,7 +23,7 @@ def status(task_id):
     subtask_count = 0
     completed_subtask_count = 0
     failed_subtask_count = 0
-    for subtask in result.iterdeps():
+    for subtask in result.children:
         subtask_count += 1
         if subtask.successful():
             completed_subtask_count += 1
