@@ -90,9 +90,9 @@ def rescan():
             rescan_repository.s(repo, wsgi_environ=minimal_wsgi_environ())
             for repo in repos
         )
-        result = workflow.delay()
-        result.save()  # this is necessary for groups, for some reason
-        status_url = url_for("tasks.group_status", group_id=workflow.id, _external=True)
+        group_result = workflow.delay()
+        group_result.save()  # this is necessary for groups, for some reason
+        status_url = url_for("tasks.group_status", group_id=group_result.id, _external=True)
     else:
         result = rescan_repository.delay(repo, wsgi_environ=minimal_wsgi_environ())
         status_url = url_for("tasks.status", task_id=result.id, _external=True)
