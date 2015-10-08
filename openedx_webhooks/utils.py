@@ -15,7 +15,7 @@ def pop_dict_id(d):
     return (id, d)
 
 
-def paginated_get(url, session=None, limit=None, per_page=100, debug=False, **kwargs):
+def paginated_get(url, session=None, limit=None, per_page=100, callback=None, **kwargs):
     """
     Retrieve all objects from a paginated API.
 
@@ -34,8 +34,8 @@ def paginated_get(url, session=None, limit=None, per_page=100, debug=False, **kw
     returned = 0
     while url:
         resp = session.get(url, **kwargs)
-        if debug:
-            print(resp.url, file=sys.stderr)
+        if callable(callback):
+            callback(resp)
         result = resp.json()
         if not resp.ok:
             msg = "{code} error for url {url}: {message}".format(

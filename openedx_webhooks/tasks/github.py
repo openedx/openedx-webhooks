@@ -7,6 +7,7 @@ from datetime import date
 
 from iso8601 import parse_date
 from flask import render_template
+from urlobject import URLObject
 
 from openedx_webhooks import sentry, celery
 from openedx_webhooks.tasks import logger
@@ -230,7 +231,25 @@ def rescan_repository(self, repo):
     if not self.request.called_directly:
         self.update_state(state='STARTED', meta={'repo': repo})
 
-    for pull_request in paginated_get(url, session=github):
+    def page_callback(response):
+        if not response.ok:
+            return
+        current_url = URLObject(response.url)
+        current_page = int(url.query_dict.get("page", 1))
+        link_last = response.links.get("last")
+        if link_last:
+            last_url = URLObject(link_last['url'])
+            last_page = int(last_url.query_dict["page"])
+        else:
+            last_page = current_page
+        state_meta = {
+            "repo": repo,
+            "current_page": current_page,
+            "last_page": last_page
+        }
+        self.update_state(state='STARTED', meta=state_meta)
+
+    for pull_request in paginated_get(url, session=github, callback=page_callback):
         sentry.client.extra_context({"pull_request": pull_request})
         issue_key = get_jira_issue_key(pull_request)
         is_internal = is_internal_pull_request(pull_request, session=github)
