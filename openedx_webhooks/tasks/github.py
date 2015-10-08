@@ -21,6 +21,19 @@ from openedx_webhooks.jira_views import get_jira_custom_fields
 
 @celery.task
 def pull_request_opened(pull_request, ignore_internal=True, check_contractor=True):
+    """
+    Process a pull request. This is called when a pull request is opened, or
+    when the pull requests of a repo are re-scanned. By default, this function
+    will ignore internal pull requests, and will add a comment to pull requests
+    made by contractors (if if has not yet added a comment). However,
+    this function can be called in such a way that it processes those pull
+    requests anyway.
+
+    Returns a 2-tuple. The first element in the tuple is the key of the JIRA
+    issue associated with the pull request, if any, as a string. The second
+    element in the tuple is a boolean indicating if this function did any
+    work, such as making a JIRA issue or commenting on the pull request.
+    """
     pr = pull_request
     user = pr["user"]["login"].decode('utf-8')
     repo = pr["base"]["repo"]["full_name"]
@@ -32,12 +45,12 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
                 user=user, repo=repo, num=num,
             ),
         )
-        return "internal pull request"
+        return None, False
 
     if check_contractor and is_contractor_pull_request(pr, session=github):
         # have we already left a contractor comment?
         if has_contractor_comment(pr, session=github):
-            return "contract pull request (commented)"
+            return None, False
 
         # don't create a JIRA issue, but leave a comment
         comment = {
@@ -48,7 +61,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         )
         comment_resp = github.post(url, json=comment)
         comment_resp.raise_for_status()
-        return "contractor pull request"
+        return None, True
 
     issue_key = get_jira_issue_key(pr)
     if issue_key:
@@ -58,7 +71,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
             repo=pr["base"]["repo"]["full_name"],
         )
         logger.info(msg)
-        return msg
+        return issue_key, False
 
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
     people = get_people_file(session=github)
@@ -123,7 +136,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
             num=pr["number"], issue=issue_key,
         ),
     )
-    return "created {key}".format(key=issue_key)
+    return issue_key, True
 
 
 @celery.task
@@ -220,10 +233,15 @@ def rescan_repository(repo):
         issue_key = get_jira_issue_key(pull_request)
         is_internal = is_internal_pull_request(pull_request, session=github)
         if not issue_key and not is_internal:
-            text = pull_request_opened(pull_request)
-            if "created" in text:
-                jira_key = text[8:]
-                created[pull_request["number"]] = jira_key
+            # `pull_request_opened()` is a celery task, but by calling it as
+            # a function instead of calling `.delay()` on it, we're eagerly
+            # executing the task now, instead of adding it to the task queue
+            # so it is executed later. As a result, this will return the values
+            # that the `pull_request_opened()` function returns, rather than
+            # return an AsyncResult object.
+            issue_key, issue_created = pull_request_opened(pull_request)
+            if issue_created:
+                created[pull_request["number"]] = issue_key
 
     logger.info(
         "Created {num} JIRA issues on repo {repo}. PRs are {prs}".format(
