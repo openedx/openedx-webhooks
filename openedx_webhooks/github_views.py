@@ -91,10 +91,12 @@ def rescan():
             for repo in repos
         )
         result = workflow.delay()
+        result.save()  # this is necessary for groups, for some reason
+        status_url = url_for("tasks.group_status", group_id=workflow.id, _external=True)
     else:
         result = rescan_repository.delay(repo, wsgi_environ=minimal_wsgi_environ())
+        status_url = url_for("tasks.status", task_id=result.id, _external=True)
 
-    status_url = url_for("tasks.status", task_id=result.id, _external=True)
     resp = jsonify({"message": "queued", "status_url": status_url})
     resp.status_code = 202
     resp.headers["Location"] = status_url

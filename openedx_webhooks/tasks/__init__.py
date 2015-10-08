@@ -20,22 +20,27 @@ tasks = Blueprint('tasks', __name__)
 @tasks.route('/status/<task_id>')
 def status(task_id):
     result = celery.AsyncResult(task_id)
-    info = {"status": result.state}
-    if result.children:
-        subtask_count = 0
-        completed_subtask_count = 0
-        failed_subtask_count = 0
-        for subtask in result.children:
-            subtask_count += 1
-            if subtask.successful():
-                completed_subtask_count += 1
-            if subtask.failed():
-                failed_subtask_count += 1
-        info["subtask_count"] = subtask_count
-        info["completed_subtask_count"] = completed_subtask_count
-        info["failed_subtask_count"] = failed_subtask_count
+    return jsonify({"status": result.state})
 
-    return jsonify(info)
+@tasks.route('/status/group:<group_id>')
+def group_status(group_id):
+    # NOTE: This will only work if the GroupResult
+    # has previously called .save() on itself
+    group_result = celery.GroupResult.restore(group_id)
+    task_count = 0
+    completed_task_count = 0
+    failed_task_count = 0
+    for result in group_result.results:
+        task_count += 1
+        if task.successful():
+            completed_task_count += 1
+        if task.failed():
+            failed_task_count += 1
+    return jsonify({
+        "task_count": task_count,
+        "completed_task_count": completed_task_count,
+        "failed_task_count": failed_task_count,
+    })
 
 
 # Working in a Celery task means we can't take advantage of Flask-Dance's
