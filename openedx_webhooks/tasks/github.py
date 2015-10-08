@@ -235,7 +235,7 @@ def rescan_repository(self, repo):
         if not response.ok:
             return
         current_url = URLObject(response.url)
-        current_page = int(url.query_dict.get("page", 1))
+        current_page = int(current_url.query_dict.get("page", 1))
         link_last = response.links.get("last")
         if link_last:
             last_url = URLObject(link_last['url'])
