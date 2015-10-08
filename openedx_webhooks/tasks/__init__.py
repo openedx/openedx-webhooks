@@ -30,24 +30,24 @@ def group_status(group_id):
     # NOTE: This will only work if the GroupResult
     # has previously called .save() on itself
     group_result = celery.GroupResult.restore(group_id)
-    completed_task_info = []
-    failed_task_info = []
-    pending_task_info = []
+    completed_task_ids = []
+    failed_task_ids = []
+    pending_task_ids = []
     for result in group_result.results:
         if result.successful():
-            completed_task_info.append(result.info)
+            completed_task_ids.append(result.id)
         elif result.failed():
-            failed_task_info.append(result.info)
+            failed_task_ids.append(result.id)
         else:
-            pending_task_info.append(result.info)
+            pending_task_ids.append(result.ids)
     return jsonify({
-        "task_count": len(completed_task_info) + len(failed_task_info) + len(pending_task_info),
-        "completed_task_count": len(completed_task_info),
-        "completed_task_info": completed_task_info,
-        "failed_task_count": len(failed_task_info),
-        "failed_task_info": failed_task_info,
-        "pending_task_count": len(pending_task_info),
-        "pending_task_info": pending_task_info,
+        "task_count": len(group_result.results),
+        "completed_task_count": len(completed_task_ids),
+        "completed_task_ids": completed_task_ids,
+        "failed_task_count": len(failed_task_ids),
+        "failed_task_info": failed_task_ids,
+        "pending_task_count": len(pending_task_ids),
+        "pending_task_info": pending_task_ids,
     })
 
 

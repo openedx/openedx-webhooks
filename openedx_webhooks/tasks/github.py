@@ -187,7 +187,7 @@ def pull_request_closed(pull_request):
                 key=issue_key, status=transition_name
             )
             logger.info(msg)
-            return "nothing to do!"
+            return False
 
         # nope, raise an error message
         fail_msg = (
@@ -216,17 +216,19 @@ def pull_request_closed(pull_request):
             status="Merged" if merged else "Rejected",
         ),
     )
-    return "closed!"
+    return True
 
 
-@celery.task
-def rescan_repository(repo):
+@celery.task(bind=True)
+def rescan_repository(self, repo):
     """
     rescans a single repo for new prs
     """
     sentry.client.extra_context({"repo": repo})
     url = "/repos/{repo}/pulls".format(repo=repo)
     created = {}
+    if not self.request.called_directly:
+        self.update_status(state='STARTED', meta={'repo': repo})
 
     for pull_request in paginated_get(url, session=github):
         sentry.client.extra_context({"pull_request": pull_request})
@@ -248,7 +250,10 @@ def rescan_repository(repo):
             num=len(created), repo=repo, prs=created.keys(),
         ),
     )
-    return created
+    info = {"repo": repo}
+    if created:
+        info["created"] = created
+    return info
 
 
 def get_jira_issue_key(pull_request):
