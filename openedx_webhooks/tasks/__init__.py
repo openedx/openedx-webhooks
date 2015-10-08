@@ -20,7 +20,11 @@ tasks = Blueprint('tasks', __name__)
 @tasks.route('/status/<task_id>')
 def status(task_id):
     result = celery.AsyncResult(task_id)
-    return jsonify({"status": result.state})
+    return jsonify({
+        "status": result.state,
+        "subtask_count": len(result.results),
+        "completed_subtask_count": result.completed_count(),
+    })
 
 
 # Working in a Celery task means we can't take advantage of Flask-Dance's
