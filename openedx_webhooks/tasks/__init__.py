@@ -20,26 +20,34 @@ tasks = Blueprint('tasks', __name__)
 @tasks.route('/status/<task_id>')
 def status(task_id):
     result = celery.AsyncResult(task_id)
-    return jsonify({"status": result.state})
+    return jsonify({
+        "status": result.state,
+        "info": result.info,
+    })
 
 @tasks.route('/status/group:<group_id>')
 def group_status(group_id):
     # NOTE: This will only work if the GroupResult
     # has previously called .save() on itself
     group_result = celery.GroupResult.restore(group_id)
-    task_count = 0
-    completed_task_count = 0
-    failed_task_count = 0
+    completed_task_info = []
+    failed_task_info = []
+    pending_task_info = []
     for result in group_result.results:
-        task_count += 1
         if result.successful():
-            completed_task_count += 1
-        if result.failed():
-            failed_task_count += 1
+            completed_task_info.append(result.info)
+        elif result.failed():
+            failed_task_info.append(result.info)
+        else:
+            pending_task_info.append(result.info)
     return jsonify({
-        "task_count": task_count,
-        "completed_task_count": completed_task_count,
-        "failed_task_count": failed_task_count,
+        "task_count": len(completed_task_info) + len(failed_task_info) + len(pending_task_info),
+        "completed_task_count": len(completed_task_info),
+        "completed_task_info": completed_task_info,
+        "failed_task_count": len(failed_task_info),
+        "failed_task_info": failed_task_info,
+        "pending_task_count": len(pending_task_info),
+        "pending_task_info": pending_task_info,
     })
 
 
