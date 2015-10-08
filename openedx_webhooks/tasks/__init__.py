@@ -32,9 +32,9 @@ def group_status(group_id):
     failed_task_count = 0
     for result in group_result.results:
         task_count += 1
-        if task.successful():
+        if result.successful():
             completed_task_count += 1
-        if task.failed():
+        if result.failed():
             failed_task_count += 1
     return jsonify({
         "task_count": task_count,
