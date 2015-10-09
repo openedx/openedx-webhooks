@@ -68,7 +68,7 @@ def create_app(config=None):
 def create_celery_app(app=None, config="worker"):
     """
     adapted from http://flask.pocoo.org/docs/0.10/patterns/celery/
-    (added the request_context stuff)
+    (added the wsgi_environ stuff)
     """
     app = app or create_app(config=config)
     celery.main = app.import_name
