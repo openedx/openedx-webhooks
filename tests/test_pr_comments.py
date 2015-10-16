@@ -46,22 +46,16 @@ def test_community_pr_comment(app, github_session):
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-def test_contractor_pr_comment(app):
+def test_contractor_pr_comment(app, reqctx):
     pr = make_pull_request(user="FakeUser")
-    appctx = app.test_request_context(
-        '/', environ_overrides={"wsgi.url_scheme": "https"}
-    )
-    with appctx:
+    with reqctx:
         comment = github_contractor_pr_comment(pr)
     assert "you're a member of a company that does contract work for edX" in comment
     assert "visit this link: https://" in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-def test_has_contractor_comment(app, responses):
-    appctx = app.test_request_context(
-        '/', environ_overrides={"wsgi.url_scheme": "https"}
-    )
+def test_has_contractor_comment(app, reqctx, responses):
     responses.add(
         responses.GET,
         "https://api.github.com/user",
@@ -71,7 +65,7 @@ def test_has_contractor_comment(app, responses):
     pr = make_pull_request(
         user="testuser", number=1, base_repo_name="edx/edx-platform",
     )
-    with appctx:
+    with reqctx:
         comment = github_contractor_pr_comment(pr)
     comment_json = {
         "user": {
@@ -86,16 +80,13 @@ def test_has_contractor_comment(app, responses):
         content_type="application/json",
     )
 
-    with appctx:
+    with reqctx:
         app.preprocess_request()
         result = has_contractor_comment(pr)
     assert result is True
 
 
-def test_has_contractor_comment_unrelated_comments(app, responses):
-    appctx = app.test_request_context(
-        '/', environ_overrides={"wsgi.url_scheme": "https"}
-    )
+def test_has_contractor_comment_unrelated_comments(app, reqctx, responses):
     responses.add(
         responses.GET,
         "https://api.github.com/user",
@@ -105,7 +96,7 @@ def test_has_contractor_comment_unrelated_comments(app, responses):
     pr = make_pull_request(
         user="testuser", number=1, base_repo_name="edx/edx-platform",
     )
-    with appctx:
+    with reqctx:
         comment = github_contractor_pr_comment(pr)
     comments_json = [
         {
@@ -130,16 +121,13 @@ def test_has_contractor_comment_unrelated_comments(app, responses):
         content_type="application/json",
     )
 
-    with appctx:
+    with reqctx:
         app.preprocess_request()
         result = has_contractor_comment(pr)
     assert result is False
 
 
-def test_has_contractor_comment_no_comments(app, responses):
-    appctx = app.test_request_context(
-        '/', environ_overrides={"wsgi.url_scheme": "https"}
-    )
+def test_has_contractor_comment_no_comments(app, reqctx, responses):
     responses.add(
         responses.GET,
         "https://api.github.com/user",
@@ -156,7 +144,7 @@ def test_has_contractor_comment_no_comments(app, responses):
         content_type="application/json",
     )
 
-    with appctx:
+    with reqctx:
         app.preprocess_request()
         result = has_contractor_comment(pr)
     assert result is False
