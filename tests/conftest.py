@@ -63,3 +63,13 @@ def responses():
 @pytest.fixture
 def app(request):
     return openedx_webhooks.create_app(config="testing")
+
+
+@pytest.fixture
+def reqctx(app):
+    """
+    Needed to make the app understand it's running under HTTPS
+    """
+    return app.test_request_context(
+        '/', base_url="https://openedx-webhooks.herokuapp.com"
+    )
