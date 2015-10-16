@@ -5,11 +5,16 @@ from datetime import datetime
 import openedx_webhooks
 from openedx_webhooks.tasks.github import (
     github_community_pr_comment, github_contractor_pr_comment,
-    has_contractor_comment
+    github_internal_cover_letter,
+    has_contractor_comment, has_internal_cover_letter
 )
 
 
-def make_pull_request(user, number=1, base_repo_name="edx/edx-platform", head_repo_name="edx/edx-platform", created_at=None):
+def make_pull_request(
+        user, title="generic title", body="generic body", number=1,
+        base_repo_name="edx/edx-platform", head_repo_name="edx/edx-platform",
+        created_at=None
+    ):
     "this should really use a framework like factory_boy"
     created_at = created_at or datetime.now().replace(microsecond=0)
     return {
@@ -17,6 +22,8 @@ def make_pull_request(user, number=1, base_repo_name="edx/edx-platform", head_re
             "login": user,
         },
         "number": number,
+        "title": title,
+        "body": body,
         "created_at": created_at.isoformat(),
         "head": {
             "repo": {
@@ -147,4 +154,34 @@ def test_has_contractor_comment_no_comments(app, reqctx, responses):
     with reqctx:
         app.preprocess_request()
         result = has_contractor_comment(pr)
+    assert result is False
+
+
+def test_internal_pr_cover_letter(reqctx):
+    pr = make_pull_request(user="FakeUser", body="this is my first pull request")
+    with reqctx:
+        body = github_internal_cover_letter(pr)
+    assert "this is my first pull request" in body
+    assert "### Sandbox" in body
+    assert "### Testing" in body
+    assert "### Reviewers" in body
+    assert "### DevOps assistance" in body
+
+
+def test_has_internal_pr_cover_letter(reqctx):
+    pr = make_pull_request(
+        user="testuser", body="omg this code is teh awesomezors",
+    )
+    with reqctx:
+        body = github_internal_cover_letter(pr)
+    pr["body"] = body
+    result = has_internal_cover_letter(pr)
+    assert result is True
+
+
+def test_has_internal_pr_cover_letter_false():
+    pr = make_pull_request(
+        user="testuser", body="omg this code is teh awesomezors",
+    )
+    result = has_internal_cover_letter(pr)
     assert result is False
