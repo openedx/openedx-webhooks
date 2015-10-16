@@ -302,6 +302,11 @@ def issue_updated():
     if event["issue"]["fields"]["project"]["key"] != "OSPR":
         return "I don't care"
 
+    # is it a pull request against an edX repo?
+    pr_repo = github_pr_repo(event["issue"])
+    if pr_repo and not pr_repo.startswith("edx/"):
+        return "ignoring PR on external repo"
+
     # we don't care about OSPR subtasks
     if event["issue"]["fields"]["issuetype"]["subtask"]:
         return "ignoring subtasks"
@@ -321,7 +326,6 @@ def issue_updated():
     if len(status_changelog_items) == 0:
         return "I don't care"
 
-    pr_repo = github_pr_repo(event["issue"])
     if not pr_repo:
         issue_key = to_unicode(event["issue"]["key"])
         fail_msg = '{key} is missing "Repo" field'.format(key=issue_key)
