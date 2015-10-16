@@ -181,7 +181,7 @@ def issue_opened(issue):
         # Note that a transition may not have the same name as the state that it
         # goes to, so a transition to go from "Open" to "In Progress" may be
         # named something like "Start Work".
-        transitions = {t["name"]: t["id"] for t in transitions_resp.json()["transitions"]}
+        transitions = {t["to"]["name"]: t["id"] for t in transitions_resp.json()["transitions"]}
 
         # We attempt to transition the issue into the "Open" state for the given project
         # (some projects use a different name), so look for a transition with the right name
