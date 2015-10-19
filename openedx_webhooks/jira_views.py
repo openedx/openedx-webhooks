@@ -187,7 +187,7 @@ def issue_opened(issue):
         # (some projects use a different name), so look for a transition with the right name
         new_status = None
         action = None
-        for state_name in ["Open", "Design Backlog", "To Do"]:
+        for state_name in ["Open", "Design Backlog", "To Do", "In Backlog"]:
             if state_name in transitions:
                 new_status = state_name
                 action = "Transitioned to '{}'".format(state_name)
