@@ -195,8 +195,14 @@ def issue_opened(issue):
         if not new_status:
             # If it's an OSPR subtask (used by teams to manage reviews), transition to team backlog
             if to_unicode(issue["fields"]["project"]["key"]) == "OSPR" and issue["fields"]["issuetype"]["subtask"]:
-                new_status = "To Backlog"
-                action = "Transitioned to 'To Backlog'"
+                new_status = "Awaiting Prioritization"
+                if new_status not in transitions:
+                    msg = (
+                        'OSPR subtask {key} does not have an '
+                        '"Awaiting Prioritization" transition'
+                    ).format(key=issue_key)
+                    raise ValueError(msg)
+                action = "Transitioned to '{}'".format(new_status)
             else:
                 raise ValueError("No valid transition! Possibilities are {}".format(transitions.keys()))
 
