@@ -234,7 +234,8 @@ def github_pr_repo(issue):
     pr_repo = issue["fields"].get(custom_fields["Repo"])
     parent_ref = parent_ref = issue["fields"].get("parent")
     if not pr_repo and parent_ref:
-        parent = get_jira_issue(parent_ref["key"])
+        parent_resp = get_jira_issue(parent_ref["key"])
+        parent = parent_resp.json()
         pr_repo = parent["fields"].get(custom_fields["Repo"])
     return pr_repo
 
