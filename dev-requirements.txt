@@ -1,6 +1,7 @@
 # tests
 pytest
 pytest-cover
+pytest-mock
 betamax
 responses
 
