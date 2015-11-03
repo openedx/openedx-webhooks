@@ -17,6 +17,7 @@ class DefaultConfig(object):
     # CELERY_BROKER_URL = os.environ.get("RABBITMQ_BIGWIG_TX_URL", "amqp://")
     CELERY_BROKER_URL = "ironmq://"  # project ID and token are automatically read from env vars
     CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://")
+    SENTRY_PROCESSORS = ["openedx_webhooks.raven_processors.RequestsURLProcessor"]
 
 
 class WorkerConfig(DefaultConfig):

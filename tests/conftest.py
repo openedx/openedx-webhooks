@@ -6,6 +6,8 @@ import responses as responses_module
 from requests_oauthlib import OAuth2Session
 from flask_dance.contrib.github import make_github_blueprint
 import openedx_webhooks
+from raven.contrib.flask import make_client as make_sentry_client
+from raven.base import DummyClient
 
 if not os.path.exists('tests/cassettes'):
     os.makedirs('tests/cassettes')
@@ -62,7 +64,12 @@ def responses():
 
 @pytest.fixture
 def app(request):
-    return openedx_webhooks.create_app(config="testing")
+    _app = openedx_webhooks.create_app(config="testing")
+    # use a dummy Sentry session, so that we don't actually
+    # contact getsentry.com when running tests
+    _app.extensions['sentry'].client = make_sentry_client(DummyClient, app=_app)
+    # and return!
+    return _app
 
 
 @pytest.fixture
