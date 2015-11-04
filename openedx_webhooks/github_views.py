@@ -138,7 +138,6 @@ def process_pr():
         resp.status_code = 400
         return resp
 
-    pr = pr_resp.json()
     result = pull_request_opened.delay(
         pr, ignore_internal=False, check_contractor=False,
         wsgi_environ=minimal_wsgi_environ(),
