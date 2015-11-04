@@ -132,10 +132,10 @@ def process_pr():
         return resp
 
     repo_resp = github.get("/repos/{repo}".format(repo=repo))
-    repo = repo_resp.json()
-    if not repo["permissions"]["admin"]:
+    repo_json = repo_resp.json()
+    if not repo_json["permissions"]["admin"]:
         resp = jsonify({
-            "error": "This bot does not have permissions for repo {}. Please manually make an OSPR ticket on JIRA.".format(repo)
+            "error": "This bot does not have permissions for repo '{}'.\n\nPlease manually make an OSPR ticket on JIRA.".format(repo)
         })
         resp.status_code = 400
         return resp
