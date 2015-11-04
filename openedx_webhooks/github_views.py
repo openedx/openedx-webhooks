@@ -133,7 +133,7 @@ def process_pr():
 
     repo_resp = github.get("/repos/{repo}".format(repo=repo))
     repo = repo_resp.json()
-    if not repo["base"]["repo"]["permissions"]["admin"]:
+    if not repo["permissions"]["admin"]:
         resp = jsonify({
             "error": "This bot does not have permissions for repo {}. Please manually make an OSPR ticket on JIRA.".format(repo)
         })
