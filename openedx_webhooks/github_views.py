@@ -130,14 +130,17 @@ def process_pr():
         resp = jsonify({"error": pr_resp.text})
         resp.status_code = 400
         return resp
-    pr = pr_resp.json()
-    if not pr["base"]["repo"]["permissions"]["admin"]:
+
+    repo_resp = github.get("/repos/{repo}".format(repo=repo))
+    repo = repo_resp.json()
+    if not repo["base"]["repo"]["permissions"]["admin"]:
         resp = jsonify({
             "error": "This bot does not have permissions for repo {}. Please manually make an OSPR ticket on JIRA.".format(repo)
         })
         resp.status_code = 400
         return resp
 
+    pr = pr_resp.json()
     result = pull_request_opened.delay(
         pr, ignore_internal=False, check_contractor=False,
         wsgi_environ=minimal_wsgi_environ(),
