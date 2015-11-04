@@ -116,18 +116,24 @@ def process_pr():
         return render_template("github_process_pr.html")
     repo = request.form.get("repo", "")
     if not repo:
-        resp = jsonify({"error": "repo required"})
+        resp = jsonify({"error": "Pull request repo required"})
         resp.status_code = 400
         return resp
     num = request.form.get("number")
     if not num:
-        resp = jsonify({"error": "num required"})
+        resp = jsonify({"error": "Pull request number required"})
         resp.status_code = 400
         return resp
     num = int(num)
     pr_resp = github.get("/repos/{repo}/pulls/{num}".format(repo=repo, num=num))
     if not pr_resp.ok:
         resp = jsonify({"error": pr_resp.text})
+        resp.status_code = 400
+        return resp
+    if not pr_response["base"]["repo"]["permissions"]["admin"]:
+        resp = jsonify({
+            "error": "This bot does not have permissions for repo {}. Please manually make an OSPR ticket on JIRA.".format(repo)
+        })
         resp.status_code = 400
         return resp
 
