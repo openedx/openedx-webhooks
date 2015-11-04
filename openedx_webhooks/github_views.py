@@ -130,7 +130,8 @@ def process_pr():
         resp = jsonify({"error": pr_resp.text})
         resp.status_code = 400
         return resp
-    if not pr_response["base"]["repo"]["permissions"]["admin"]:
+    pr = pr_resp.json()
+    if not pr["base"]["repo"]["permissions"]["admin"]:
         resp = jsonify({
             "error": "This bot does not have permissions for repo {}. Please manually make an OSPR ticket on JIRA.".format(repo)
         })
