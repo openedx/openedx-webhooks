@@ -27,13 +27,8 @@ GitHub pull request interface. As a reminder,
   or indicated your institutional affiliation.
   {%- endif %}
   {%- if not in_authors_file %}
-  This PR can only be merged when you have added yourself to the
-  [AUTHORS](https://github.com/{{ repo }}/blob/master/AUTHORS) file.
-  However, please wait for the results of the review process before
-  doing so.  When this PR is approved, then please add yourself to the
-  [AUTHORS](https://github.com/{{ repo }}/blob/master/AUTHORS) file in
-  a SEPARATE PR, and then reference it in this PR, after which BOTH
-  PRs can be merged.
+  You haven't added yourself to the [AUTHORS](https://github.com/{{ repo }}/blob/master/AUTHORS) 
+  file for this repo. Please create a new pull request to do so!
   {%- endif %}
   {%- if not has_signed_agreement or not in_authors_file %}
   Please see the [CONTRIBUTING](https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst)
