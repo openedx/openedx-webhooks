@@ -55,11 +55,15 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
                 repo=repo, num=num,
             ),
         )
-        updates = {
+        comment = {
             "body": github_internal_cover_letter(pr),
         }
-        cover_letter_resp = github.patch(pr['url'], json=updates)
-        cover_letter_resp.raise_for_status()
+        url = "/repos/{repo}/issues/{num}/comments".format(
+            repo=repo, num=num,
+        )
+
+        comment_resp = github.post(url, json=comment)
+        comment_resp.raise_for_status()
 
     if ignore_internal and is_internal_pr:
 >>>>>>> Add feature to update internal pull requests with cover letters
@@ -416,7 +420,6 @@ def github_internal_cover_letter(pull_request):
     """
     return render_template("github_pr_cover_letter.md.j2",
         user=pull_request["user"]["login"].decode('utf-8'),
-        body=pull_request["body"].decode('utf-8'),
     )
 
 
@@ -425,14 +428,28 @@ def has_internal_cover_letter(pull_request):
     Given a pull request, this function returns a boolean indicating whether
     the body has already been replaced with the cover letter template.
     """
-    body = pull_request["body"].decode('utf-8')
-    magic_phrases = [
-        "### Sandbox",
-        "### Testing",
-        "### Reviewers",
-        "### DevOps assistance",
-    ]
-    return all(magic_phrase in body for magic_phrase in magic_phrases)
+
+    me = github_whoami(session=session)
+    my_username = me["login"]
+    comment_url = "/repos/{repo}/issues/{num}/comments".format(
+        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
+        num=pull_request["number"],
+    )
+    for comment in paginated_get(comment_url, session=github):
+        # I only care about comments I made
+        if comment["user"]["login"] != my_username:
+            continue
+
+        body = comment["body"].decode('utf-8')
+        magic_phrases = [
+            "### Sandbox",
+            "### Testing",
+            "### Reviewers",
+            "### DevOps assistance",
+        ]
+        if all(magic_phrase in body for magic_phrase in magic_phrases):
+            return True
+    return False
 
 
 @memoize
