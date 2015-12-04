@@ -63,6 +63,12 @@ def is_contractor_pull_request(pull_request):
     """
     return _is_pull_request(pull_request, "contractor")
 
+def is_beta_tester_pull_request(pull_request, session=None):
+    """
+    Was this pull request created by someone who has volunteered to
+    betatest bot features?
+    """
+    return _is_pull_request(pull_request, "beta", session=session)
 
 def _is_pull_request(pull_request, kind):
     """

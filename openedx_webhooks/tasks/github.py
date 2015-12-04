@@ -49,7 +49,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 =======
     is_internal_pr = is_internal_pull_request(pr, session=github)
 
-    if is_internal_pr and not has_internal_cover_letter(pr):
+    if is_internal_pr and not has_internal_cover_letter(pr) and is_beta_tester_pull_request(pr, session=github):
         logger.info(
             "Adding cover letter template to PR #{num} against {repo}".format(
                 repo=repo, num=num,
