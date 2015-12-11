@@ -9,6 +9,7 @@ from openedx_webhooks.tasks.github import (
     has_contractor_comment, has_internal_cover_letter
 )
 
+pytestmark = pytest.mark.usefixtures('mock_github')
 
 def make_pull_request(
         user, title="generic title", body="generic body", number=1,
