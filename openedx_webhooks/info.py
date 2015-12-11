@@ -8,62 +8,62 @@ from datetime import date
 from iso8601 import parse_date
 import requests
 import yaml
+from flask_dance.contrib.github import github
 
 from openedx_webhooks.utils import memoize
 
 
-def _read_repotools_yaml_file(filename, session=None):
+def _read_repotools_yaml_file(filename):
     """Read a YAML file from the repo-tools-data repo."""
     # All yaml files are private data, so read from the private repo
-    return yaml.safe_load(_read_repotools_file(filename, session=session, private=True))
+    return yaml.safe_load(_read_repotools_file(filename, private=True))
 
 @memoize
-def _read_repotools_file(filename, session=None, private=False):
+def _read_repotools_file(filename, private=False):
     """
     Read the text of a repo-tools file.
 
     `private` should be set to True to read the data from the private repo-tools repo.
     """
-    session = session or requests.Session()
     if private:
-        resp = session.get("https://raw.githubusercontent.com/edx/repo-tools-data/master/" + filename)
+        resp = github.get("https://raw.githubusercontent.com/edx/repo-tools-data/master/" + filename)
     else:
-        resp = session.get("https://raw.githubusercontent.com/edx/repo-tools/master/" + filename)
+        resp = github.get("https://raw.githubusercontent.com/edx/repo-tools/master/" + filename)
     resp.raise_for_status()
     return resp.text
 
-def get_people_file(session=None):
-    return _read_repotools_yaml_file("people.yaml", session=session)
+def get_people_file():
+    return _read_repotools_yaml_file("people.yaml")
 
-def get_repos_file(session=None):
-    return _read_repotools_yaml_file("repos.yaml", session=session)
+def get_repos_file():
+    return _read_repotools_yaml_file("repos.yaml")
 
-def get_orgs_file(session=None):
-    return _read_repotools_yaml_file("orgs.yaml", session=session)
+def get_orgs_file():
+    return _read_repotools_yaml_file("orgs.yaml")
 
-def get_orgs(key, session=None):
+def get_orgs(key):
     """Return the set of orgs with a true `key`."""
-    orgs = get_orgs_file(session=session)
+    orgs = get_orgs_file()
     return set(o for o, info in orgs.items() if info.get(key, False))
 
 
-def is_internal_pull_request(pull_request, session=None):
+def is_internal_pull_request(pull_request):
     """
     Was this pull request created by someone who works for edX?
     """
-    return _is_pull_request(pull_request, "committer", session=session)
+    return _is_pull_request(pull_request, "committer")
 
-def is_contractor_pull_request(pull_request, session=None):
+def is_contractor_pull_request(pull_request):
     """
     Was this pull request created by someone in an organization that does
     paid contracting work for edX? If so, we don't know if this pull request
     falls under edX's contract, or if it should be treated as a pull request
     from the community.
     """
-    return _is_pull_request(pull_request, "contractor", session=session)
+    return _is_pull_request(pull_request, "contractor")
 
 
-def _is_pull_request(pull_request, kind, session=None):
+def _is_pull_request(pull_request, kind):
     """
     Is this pull request of a certain kind?
 
@@ -75,7 +75,7 @@ def _is_pull_request(pull_request, kind, session=None):
         bool
 
     """
-    people = get_people_file(session=session)
+    people = get_people_file()
     author = pull_request["user"]["login"].decode('utf-8')
     if author not in people:
         # We don't know this person!
@@ -91,7 +91,7 @@ def _is_pull_request(pull_request, kind, session=None):
         # This person has the flag personally.
         return True
 
-    the_orgs = get_orgs(kind, session=session)
+    the_orgs = get_orgs(kind)
     if person.get("institution") in the_orgs:
         # This person's institution has the flag.
         return True

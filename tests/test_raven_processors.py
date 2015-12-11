@@ -19,5 +19,6 @@ def test_requests_processor(app, mocker, betamax_session):
     assert sentry.client.send.called
     sentry_args = sentry.client.send.call_args[1]
     serialized_url = sentry.client.transform("http://httpbin.org/status/404")
-    assert sentry_args['extra']['request_url'] == serialized_url
+    bin_serialized_url = sentry.client.transform(b"http://httpbin.org/status/404")
+    assert sentry_args['extra']['request_url'] in (serialized_url, bin_serialized_url)
 
