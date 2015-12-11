@@ -36,11 +36,11 @@ def make_jira_issue(key="ABC-123"):
     }
 
 
-def test_community_pr_comment(app, github_session):
+def test_community_pr_comment(app, mock_github):
     pr = make_pull_request(user="FakeUser")
     jira = make_jira_issue(key="FOO-1")
     with app.test_request_context('/'):
-        comment = github_community_pr_comment(pr, jira, session=github_session)
+        comment = github_community_pr_comment(pr, jira)
     assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
     assert "can't start reviewing your pull request" in comment
     assert not comment.startswith((" ", "\n", "\t"))

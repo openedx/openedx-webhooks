@@ -39,7 +39,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     user = pr["user"]["login"].decode('utf-8')
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
-    if ignore_internal and is_internal_pull_request(pr, session=github):
+    if ignore_internal and is_internal_pull_request(pr):
         # not an open source pull request, don't create an issue for it
         logger.info(
             "@{user} opened PR #{num} against {repo} (internal PR)".format(
@@ -48,9 +48,9 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         )
         return None, False
 
-    if check_contractor and is_contractor_pull_request(pr, session=github):
+    if check_contractor and is_contractor_pull_request(pr):
         # have we already left a contractor comment?
-        if has_contractor_comment(pr, session=github):
+        if has_contractor_comment(pr):
             return None, False
 
         # don't create a JIRA issue, but leave a comment
@@ -75,7 +75,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         return issue_key, False
 
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
-    people = get_people_file(session=github)
+    people = get_people_file()
     custom_fields = get_jira_custom_fields(jira)
 
     user_name = None
@@ -252,7 +252,7 @@ def rescan_repository(self, repo):
     for pull_request in paginated_get(url, session=github, callback=page_callback):
         sentry.client.extra_context({"pull_request": pull_request})
         issue_key = get_jira_issue_key(pull_request)
-        is_internal = is_internal_pull_request(pull_request, session=github)
+        is_internal = is_internal_pull_request(pull_request)
         if not issue_key and not is_internal:
             # `pull_request_opened()` is a celery task, but by calling it as
             # a function instead of calling `.delay()` on it, we're eagerly
@@ -293,7 +293,7 @@ def get_jira_issue_key(pull_request):
     return None
 
 
-def github_community_pr_comment(pull_request, jira_issue, people=None, session=None):
+def github_community_pr_comment(pull_request, jira_issue, people=None):
     """
     For a newly-created pull request from an open source contributor,
     write a welcoming comment on the pull request. The comment should:
@@ -303,7 +303,7 @@ def github_community_pr_comment(pull_request, jira_issue, people=None, session=N
     * check for AUTHORS entry
     * contain a link to our process documentation
     """
-    people = people or get_people_file(session=session)
+    people = people or get_people_file()
     people = {user.lower(): values for user, values in people.items()}
     pr_author = pull_request["user"]["login"].decode('utf-8').lower()
     created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
@@ -351,13 +351,13 @@ def github_contractor_pr_comment(pull_request):
     )
 
 
-def has_contractor_comment(pull_request, session=None):
+def has_contractor_comment(pull_request):
     """
     Given a pull request, this function returns a boolean indicating whether
     we have already left a comment on that pull request that suggests
     making an OSPR issue for the pull request.
     """
-    me = github_whoami(session=session)
+    me = github_whoami()
     my_username = me["login"]
     comment_url = "/repos/{repo}/issues/{num}/comments".format(
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
@@ -374,8 +374,7 @@ def has_contractor_comment(pull_request, session=None):
 
 
 @memoize
-def github_whoami(session=None):
-    session = session or github
-    self_resp = session.get("/user")
+def github_whoami():
+    self_resp = github.get("/user")
     self_resp.raise_for_status()
     return self_resp.json()

@@ -3,8 +3,7 @@ import base64
 import pytest
 import betamax
 import responses as responses_module
-from requests_oauthlib import OAuth2Session
-from flask_dance.contrib.github import make_github_blueprint
+from flask_dance.consumer.requests import OAuth2Session
 import openedx_webhooks
 from raven.contrib.flask import make_client as make_sentry_client
 from raven.base import DummyClient
@@ -28,9 +27,23 @@ with betamax.Betamax.configure() as config:
             github_token.encode('utf-8')
         )
 
+class FakeBlueprint(object):
+    def __init__(self, token):
+        self.token = token
 
 @pytest.fixture
-def github_session(request):
+def github_session():
+    github_token = os.environ.get("GITHUB_TOKEN", "faketoken")
+    token = {"access_token": github_token, "token_type": "bearer"}
+    session = OAuth2Session(
+        base_url="https://api.github.com/",
+        blueprint=FakeBlueprint(token),
+    )
+    return session
+
+
+@pytest.fixture
+def betamax_github_session(request, github_session):
     """
     Like Betamax's built-in `betamax_session`, but with GitHub auth set up.
     """
@@ -44,14 +57,18 @@ def github_session(request):
 
     cassette_name += request.function.__name__
 
-    github_token = os.environ.get("GITHUB_TOKEN", "faketoken")
-    token = {"access_token": github_token, "token_type": "bearer"}
-    session = OAuth2Session(token=token)
-    recorder = betamax.Betamax(session)
+    recorder = betamax.Betamax(github_session)
     recorder.use_cassette(cassette_name)
     recorder.start()
     request.addfinalizer(recorder.stop)
-    return session
+    return github_session
+
+
+@pytest.fixture
+def mock_github(mocker, betamax_github_session):
+    mocker.patch("flask_dance.contrib.github.github", betamax_github_session)
+    mocker.patch("openedx_webhooks.info.github", betamax_github_session)
+    return betamax_github_session
 
 
 @pytest.yield_fixture

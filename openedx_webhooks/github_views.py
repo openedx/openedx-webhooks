@@ -92,7 +92,7 @@ def rescan():
         return jsonify(rescan_repository(repo))
 
     if repo == 'all':
-        repos = get_repos_file(session=github).keys()
+        repos = get_repos_file().keys()
         workflow = group(
             rescan_repository.s(repo, wsgi_environ=minimal_wsgi_environ())
             for repo in repos
@@ -160,7 +160,7 @@ def install():
     if repo:
         repos = (repo,)
     else:
-        repos = get_repos_file(session=github).keys()
+        repos = get_repos_file().keys()
 
     api_url = url_for("github_views.pull_request", _external=True)
     success = []
@@ -199,9 +199,9 @@ def check_contributors():
     if repo:
         repos = (repo,)
     else:
-        repos = get_repos_file(session=github).keys()
+        repos = get_repos_file().keys()
 
-    people = get_people_file(session=github)
+    people = get_people_file()
     people_lower = {username.lower() for username in people.keys()}
 
     missing_contributors = defaultdict(set)
