@@ -6,7 +6,7 @@ import re
 from datetime import date
 
 from iso8601 import parse_date
-from flask import render_template
+from flask import render_template, render_template_string
 from urlobject import URLObject
 
 from openedx_webhooks import sentry, celery
@@ -44,19 +44,18 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     user = pr["user"]["login"].decode('utf-8')
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
-<<<<<<< aa92a90cf6b4b4b00daf8651ad5a0e3358ccbece
-    if ignore_internal and is_internal_pull_request(pr):
-=======
-    is_internal_pr = is_internal_pull_request(pr, session=github)
+    is_internal_pr = is_internal_pull_request(pr)
+    has_cl = has_internal_cover_letter(pr)
+    is_beta = is_beta_tester_pull_request(pr)
 
-    if is_internal_pr and not has_internal_cover_letter(pr) and is_beta_tester_pull_request(pr, session=github):
+    if is_internal_pr and not has_cl and is_beta:
         logger.info(
             "Adding cover letter template to PR #{num} against {repo}".format(
                 repo=repo, num=num,
             ),
         )
         comment = {
-            "body": github_internal_cover_letter(pr),
+            "body": github_internal_cover_letter(pr, session=github),
         }
         url = "/repos/{repo}/issues/{num}/comments".format(
             repo=repo, num=num,
@@ -66,7 +65,6 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         comment_resp.raise_for_status()
 
     if ignore_internal and is_internal_pr:
->>>>>>> Add feature to update internal pull requests with cover letters
         # not an open source pull request, don't create an issue for it
         logger.info(
             "@{user} opened PR #{num} against {repo} (internal PR)".format(
@@ -415,12 +413,22 @@ def has_contractor_comment(pull_request):
 def github_internal_cover_letter(pull_request):
     """
     For a newly-created pull request an edX internal developer,
-    return a new body for the pull request that has a cover letter after the
-    original body.
+    return a comment for the pull request that contains the cover letter.
     """
-    return render_template("github_pr_cover_letter.md.j2",
-        user=pull_request["user"]["login"].decode('utf-8'),
+    # check for a `.coverletter.md.j2` in repo, use that if it exists
+    coverletter_url = "https://raw.githubusercontent.com/{repo}/{branch}/.coverletter.md.j2".format(
+        repo=pull_request["head"]["repo"]["full_name"].decode('utf-8'),
+        branch=pull_request["head"]["ref"].decode('utf-8'),
     )
+    coverletter_resp = github.get(coverletter_url)
+    ctx = {
+        "user": pull_request["user"]["login"].decode('utf-8'),
+    }
+    if coverletter_resp.ok:
+        template_string = coverletter_resp.text
+        return render_template_string(template_string, **ctx)
+    else:
+        return render_template("github_pr_cover_letter.md.j2", **ctx)
 
 
 def has_internal_cover_letter(pull_request):
@@ -429,7 +437,7 @@ def has_internal_cover_letter(pull_request):
     the body has already been replaced with the cover letter template.
     """
 
-    me = github_whoami(session=session)
+    me = github_whoami()
     my_username = me["login"]
     comment_url = "/repos/{repo}/issues/{num}/comments".format(
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
@@ -442,10 +450,10 @@ def has_internal_cover_letter(pull_request):
 
         body = comment["body"].decode('utf-8')
         magic_phrases = [
-            "### Sandbox",
-            "### Testing",
-            "### Reviewers",
-            "### DevOps assistance",
+            "# Sandbox",
+            "# Testing",
+            "# Reviewers",
+            "# DevOps assistance",
         ]
         if all(magic_phrase in body for magic_phrase in magic_phrases):
             return True

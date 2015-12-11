@@ -12,7 +12,8 @@ from openedx_webhooks.tasks.github import (
 
 def make_pull_request(
         user, title="generic title", body="generic body", number=1,
-        base_repo_name="edx/edx-platform", head_repo_name="edx/edx-platform",
+        base_repo_name="edx/edx-platform", head_repo_name="testuser/edx-platform",
+        base_ref="master", head_ref="patch-1",
         created_at=None
     ):
     "this should really use a framework like factory_boy"
@@ -28,12 +29,14 @@ def make_pull_request(
         "head": {
             "repo": {
                 "full_name": head_repo_name,
-            }
+            },
+            "ref": head_ref,
         },
         "base": {
             "repo": {
                 "full_name": base_repo_name,
-            }
+            },
+            "ref": base_ref,
         }
     }
 
@@ -43,7 +46,7 @@ def make_jira_issue(key="ABC-123"):
     }
 
 
-def test_community_pr_comment(app, mock_github):
+def test_community_pr_comment(app):
     pr = make_pull_request(user="FakeUser")
     jira = make_jira_issue(key="FOO-1")
     with app.test_request_context('/'):
@@ -160,21 +163,48 @@ def test_has_contractor_comment_no_comments(app, reqctx, responses):
 def test_internal_pr_cover_letter(reqctx):
     pr = make_pull_request(user="FakeUser", body="this is my first pull request")
     with reqctx:
-        body = github_internal_cover_letter(pr)
-    assert "this is my first pull request" in body
-    assert "### Sandbox" in body
-    assert "### Testing" in body
-    assert "### Reviewers" in body
-    assert "### DevOps assistance" in body
+        comment = github_internal_cover_letter(pr)
+    assert "this is my first pull request" not in comment
+    assert "# Sandbox" in comment
+    assert "# Testing" in comment
+    assert "# Reviewers" in comment
+    assert "# DevOps assistance" in comment
 
 
-def test_has_internal_pr_cover_letter(reqctx):
+def test_has_internal_pr_cover_letter(reqctx, responses):
     pr = make_pull_request(
-        user="testuser", body="omg this code is teh awesomezors",
+        user="different_user", body="omg this code is teh awesomezors",
+        head_repo_name="different_user/edx-platform", head_ref="patch-1",
     )
+    responses.add(
+        responses.GET,
+        "https://api.github.com/user",
+        body='{"login": "testuser"}',
+        content_type="application/json",
+    )
+    responses.add(
+        responses.GET,
+        "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.coverletter.md.j2",
+        status=404,
+    )
+
     with reqctx:
-        body = github_internal_cover_letter(pr)
-    pr["body"] = body
+        comment_body = github_internal_cover_letter(pr)
+    comments_json = [
+        {
+            "user": {
+                "login": "testuser",
+            },
+            "body": comment_body,
+        },
+    ]
+    responses.add(
+        responses.GET,
+        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
+        body=json.dumps(comments_json),
+        content_type="application/json",
+    )
+
     result = has_internal_cover_letter(pr)
     assert result is True
 
@@ -185,3 +215,25 @@ def test_has_internal_pr_cover_letter_false():
     )
     result = has_internal_cover_letter(pr)
     assert result is False
+
+
+def test_custom_internal_pr_cover(reqctx, responses):
+    pr = make_pull_request(
+        user="different_user", body="omg this code is teh awesomezors",
+        head_repo_name="different_user/edx-platform", head_ref="patch-1",
+    )
+    responses.add(
+        responses.GET,
+        "https://api.github.com/user",
+        body='{"login": "testuser"}',
+        content_type="application/json",
+    )
+    responses.add(
+        responses.GET,
+        "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.coverletter.md.j2",
+        body='custom cover letter for PR from @{{ user }}',
+    )
+
+    with reqctx:
+        comment_body = github_internal_cover_letter(pr)
+    assert comment_body == 'custom cover letter for PR from @different_user'
