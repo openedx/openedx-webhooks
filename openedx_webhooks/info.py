@@ -8,7 +8,7 @@ from datetime import date
 from iso8601 import parse_date
 import requests
 import yaml
-from flask_dance.contrib.github import github
+from openedx_webhooks.oauth import github_bp
 
 from openedx_webhooks.utils import memoize
 
@@ -25,6 +25,7 @@ def _read_repotools_file(filename, private=False):
 
     `private` should be set to True to read the data from the private repo-tools repo.
     """
+    github = github_bp.session
     if private:
         resp = github.get("https://raw.githubusercontent.com/edx/repo-tools-data/master/" + filename)
     else:
