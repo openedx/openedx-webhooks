@@ -1,5 +1,6 @@
 import os
 import base64
+import mock
 import pytest
 import betamax
 import responses as responses_module
@@ -67,7 +68,9 @@ def betamax_github_session(request, github_session):
 @pytest.fixture
 def mock_github(mocker, betamax_github_session):
     mocker.patch("flask_dance.contrib.github.github", betamax_github_session)
-    mocker.patch("openedx_webhooks.info.github", betamax_github_session)
+    mock_bp = mock.Mock()
+    mock_bp.session = betamax_github_session
+    mocker.patch("openedx_webhooks.info.github_bp", mock_bp)
     return betamax_github_session
 
 
