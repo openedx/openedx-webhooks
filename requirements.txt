@@ -9,7 +9,7 @@ requests-oauthlib==0.6.0
 oauthlib[signedtoken]==1.0.3
 cryptography
 URLObject==2.4.0
-gunicorn==19.3.0
+gunicorn==19.4.1
 psycopg2==2.5.3
 raven
 PyYAML==3.11
