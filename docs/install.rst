@@ -14,7 +14,7 @@ This project uses:
 * `Heroku Postgres <https://elements.heroku.com/addons/heroku-postgresql>`_
 * `Heroku Redis <https://elements.heroku.com/addons/heroku-redis>`_
 * `Heroku Scheduler <https://elements.heroku.com/addons/scheduler>`_
-* `IronMQ <https://elements.heroku.com/addons/iron_mq>`_
+* `IronMQ Add-On <https://elements.heroku.com/addons/iron_mq>`_
 
 This project also uses `Sentry <https://getsentry.com>`_ as a monitoring system,
 but doesn't use the official Sentry add-on for Heroku. Sentry offers a free
