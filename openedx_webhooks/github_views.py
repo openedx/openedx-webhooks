@@ -75,14 +75,26 @@ def pull_request():
     return resp
 
 
-@github_bp.route("/rescan", methods=("GET", "POST"))
+@github_bp.route("/rescan", methods=("GET",))
+def rescan_get():
+    """
+    Display a friendly HTML form for rescanning GitHub pull requests.
+    """
+    return render_template("github_rescan.html")
+
+
+@github_bp.route("/rescan", methods=("POST",))
 def rescan():
     """
-    Used to pick up PRs that might not have tickets associated with them.
+    Re-scan GitHub repositories to find pull requests that need OSPR issues
+    on JIRA, and do not have them. If this method finds pull requests that are
+    missing JIRA issues, it will automatically process those pull requests
+    just as though the pull request was newly created.
+
+    Note that this rescan functionality is the reason why
+    :func:`~openedx_webhooks.tasks.github.pull_request_opened`
+    must be idempotent. It could run many times over the same pull request.
     """
-    if request.method == "GET":
-        # just render the form
-        return render_template("github_rescan.html")
     repo = request.form.get("repo") or "edx/edx-platform"
     inline = request.form.get("inline", False)
     if repo == 'all' and inline:
@@ -110,7 +122,15 @@ def rescan():
     return resp
 
 
-@github_bp.route("/process_pr", methods=("GET", "POST"))
+@github_bp.route("/process_pr", methods=("GET",))
+def process_pr_get():
+    """
+    Display a friendly HTML form for processing or re-processing a pull request.
+    """
+    return render_template("github_process_pr.html")
+
+
+@github_bp.route("/process_pr", methods=("POST",))
 def process_pr():
     """
     Process (or re-process) a pull request.
@@ -122,8 +142,6 @@ def process_pr():
     checks. We will make a JIRA ticket if one doesn't already exist, without
     checking to see if the author is special.
     """
-    if request.method == "GET":
-        return render_template("github_process_pr.html")
     repo = request.form.get("repo", "")
     if not repo:
         resp = jsonify({"error": "Pull request repo required"})
@@ -162,13 +180,20 @@ def process_pr():
     return resp
 
 
-@github_bp.route("/install", methods=("GET", "POST"))
+@github_bp.route("/install", methods=("GET",))
+def install_get():
+    """
+    Display a friendly HTML form for installing GitHub webhooks
+    into a repo.
+    """
+    return render_template("install.html")
+
+
+@github_bp.route("/install", methods=("POST",))
 def install():
     """
     Install GitHub webhooks for a repo.
     """
-    if request.method == "GET":
-        return render_template("install.html")
     repo = request.form.get("repo", "")
     if repo:
         repos = (repo,)
@@ -204,14 +229,21 @@ def install():
     return resp
 
 
-@github_bp.route("/check_contributors", methods=("GET", "POST"))
+@github_bp.route("/check_contributors", methods=("GET",))
+def check_contributors_get():
+    """
+    Display a friendly HTML form for identifying missing contributors in a
+    repository.
+    """
+    return render_template("github_check_contributors.html")
+
+
+@github_bp.route("/check_contributors", methods=("POST",))
 def check_contributors():
     """
     Identify missing contributors: people who have commits in a repository,
     but who are not listed in the AUTHORS file.
     """
-    if request.method == "GET":
-        return render_template("github_check_contributors.html")
     repo = request.form.get("repo", "")
     if repo:
         repos = (repo,)

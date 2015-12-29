@@ -30,6 +30,11 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     this function can be called in such a way that it processes those pull
     requests anyway.
 
+    This function must be idempotent. Every time the repositories are re-scanned,
+    this function will be called for pull requests that have already been opened.
+    As a result, it should not comment on the pull request without checking to
+    see if it has *already* commented on the pull request.
+
     Returns a 2-tuple. The first element in the tuple is the key of the JIRA
     issue associated with the pull request, if any, as a string. The second
     element in the tuple is a boolean indicating if this function did any

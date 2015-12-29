@@ -47,7 +47,15 @@ def get_jira_issue(key):
     return jira_get("/rest/api/2/issue/{key}".format(key=key))
 
 
-@jira_bp.route("/issue/rescan", methods=("GET", "POST"))
+@jira_bp.route("/issue/rescan", methods=("GET",))
+def rescan_issues_get():
+    """
+    Display a friendly HTML form for re-scanning JIRA issues.
+    """
+    return render_template("jira_rescan_issues.html")
+
+
+@jira_bp.route("/issue/rescan", methods=("POST",))
 def rescan_issues():
     """
     Re-scan all JIRA issues that are in the "Needs Triage" state. If any were
@@ -59,9 +67,6 @@ def rescan_issues():
     or this bot going offline. This endpoint is used to clean up after these
     kind of problems.
     """
-    if request.method == "GET":
-        # just render the form
-        return render_template("jira_rescan_issues.html")
     jql = request.form.get("jql") or 'status = "Needs Triage" ORDER BY key'
     sentry.client.extra_context({"jql": jql})
     issues = jira_paginated_get(
@@ -520,23 +525,30 @@ def jira_issue_comment_added(issue, comment):
     return "{key} cert info updated".format(key=issue_key)
 
 
-@jira_bp.route("/user/rescan", methods=("GET", "POST"))
+# a mapping of group name to email domain
+domain_groups = {
+    "edx-employees": "@edx.org",
+    "qualcomm": ".qualcomm.com",
+    "ubc": "@cs.ubc.ca",
+    "ubc": "@ubc.ca",
+}
+
+
+@jira_bp.route("/user/rescan", methods=("GET",))
+def rescan_users_get():
+    """
+    Display a friendly HTML form for rescanning JIRA users.
+    """
+    return render_template("jira_rescan_users.html", domain_groups=domain_groups)
+
+
+@jira_bp.route("/user/rescan", methods=("POST",))
 def rescan_users():
     """
     This task goes through all users on JIRA and ensures that they are assigned
     to the correct group based on the user's email address. It's meant to be
     run regularly: once an hour or so.
     """
-    # a mapping of group name to email domain
-    domain_groups = {
-        "edx-employees": "@edx.org",
-        "qualcomm": ".qualcomm.com",
-        "ubc": "@cs.ubc.ca",
-        "ubc": "@ubc.ca",
-    }
-    if request.method == "GET":
-        return render_template("jira_rescan_users.html", domain_groups=domain_groups)
-
     requested_group = request.form.get("group")
     if requested_group:
         if requested_group not in domain_groups:
