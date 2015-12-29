@@ -11,7 +11,8 @@ ui = Blueprint('ui', __name__)
 @ui.route("/")
 def index():
     """
-    Just to verify that things are working
+    Display an HTML overview page, with links to other functions that
+    this application can perform.
     """
     github_username = None
     if github_session.authorized:
