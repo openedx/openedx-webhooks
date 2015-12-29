@@ -13,9 +13,11 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   about
    install
    endpoints
-
+   things-that-go-wrong
+   future
 
 
 Indices and tables
