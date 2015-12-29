@@ -1,5 +1,5 @@
 GitHub Webhooks
 ===============
 
-.. automodule:: openedx_webhooks.views.github
+.. automodule:: openedx_webhooks.github_views
    :members:
