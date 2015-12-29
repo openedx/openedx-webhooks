@@ -73,10 +73,6 @@ def issue_created():
     """
     Received an "issue created" event from JIRA. See `JIRA's webhook docs`_.
 
-    Ideally, this should be handled in a task queue, but we want to stay within
-    Heroku's free plan, so it will be handled inline instead.
-    (A worker dyno costs money.)
-
     .. _JIRA's webhook docs: https://developer.atlassian.com/display/JIRADEV/JIRA+Webhooks+Overview
     """
     try:
