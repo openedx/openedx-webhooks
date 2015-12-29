@@ -112,6 +112,16 @@ def rescan():
 
 @github_bp.route("/process_pr", methods=("GET", "POST"))
 def process_pr():
+    """
+    Process (or re-process) a pull request.
+
+    Normally, when a pull request is opened, we check to see if the author is
+    an edX employee, or a contractor working for edX. If so, we don't process
+    the pull request normally -- either it is skipped, or we add an informative
+    comment without making a JIRA ticket. Using this endpoint will skip those
+    checks. We will make a JIRA ticket if one doesn't already exist, without
+    checking to see if the author is special.
+    """
     if request.method == "GET":
         return render_template("github_process_pr.html")
     repo = request.form.get("repo", "")
@@ -154,6 +164,9 @@ def process_pr():
 
 @github_bp.route("/install", methods=("GET", "POST"))
 def install():
+    """
+    Install GitHub webhooks for a repo.
+    """
     if request.method == "GET":
         return render_template("install.html")
     repo = request.form.get("repo", "")
@@ -193,6 +206,10 @@ def install():
 
 @github_bp.route("/check_contributors", methods=("GET", "POST"))
 def check_contributors():
+    """
+    Identify missing contributors: people who have commits in a repository,
+    but who are not listed in the AUTHORS file.
+    """
     if request.method == "GET":
         return render_template("github_check_contributors.html")
     repo = request.form.get("repo", "")

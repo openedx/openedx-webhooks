@@ -49,6 +49,16 @@ def get_jira_issue(key):
 
 @jira_bp.route("/issue/rescan", methods=("GET", "POST"))
 def rescan_issues():
+    """
+    Re-scan all JIRA issues that are in the "Needs Triage" state. If any were
+    created by edX employees, they will be automatically transitioned to an
+    "Open" state.
+
+    Normally, issues are processed automatically. However, sometimes an issue
+    is skipped accidentally, either due to a network hiccup, a bug in JIRA,
+    or this bot going offline. This endpoint is used to clean up after these
+    kind of problems.
+    """
     if request.method == "GET":
         # just render the form
         return render_template("jira_rescan_issues.html")

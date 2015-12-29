@@ -16,6 +16,7 @@ Contents:
    install
    github
    jira
+   endpoints
 
 
 
