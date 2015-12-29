@@ -45,7 +45,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Open edX Webhooks Bot'
-copyright = u'2014, David Baumgold, Sarina Canelake'
+copyright = u'2016, David Baumgold, Sarina Canelake'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
