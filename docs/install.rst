@@ -3,17 +3,39 @@ Installation
 
 Make an app on Heroku
 ---------------------
-Don't worry, it's free for one dyno.
+You can use the free tier if you want, but then the application won't run
+all the time. If you need it to run all the time, you'll need to pay.
 
 Install Add-ons
 ~~~~~~~~~~~~~~~
 
 This project uses:
 
-* `Heroku Postgres <https://addons.heroku.com/heroku-postgresql>`_
-* `Heroku Redis <https://addons.heroku.com/heroku-redis>`_
-* `RabbitMQ Bigwig <https://addons.heroku.com/rabbitmq-bigwig>`_
-* `Sentry <https://addons.heroku.com/sentry>`_
+* `Heroku Postgres <https://elements.heroku.com/addons/heroku-postgresql>`_
+* `Heroku Redis <https://elements.heroku.com/addons/heroku-redis>`_
+* `Heroku Scheduler <https://elements.heroku.com/addons/scheduler>`_
+* `IronMQ <https://elements.heroku.com/addons/iron_mq>`_
+
+This project also uses `Sentry <https://getsentry.com>`_ as a monitoring system,
+but doesn't use the official Sentry add-on for Heroku. Sentry offers a free
+tier which is enough for our needs, but their Heroku add-on doesn't support
+the free tier. Instead, we set the ``SENTRY_DSN`` config variable in the project
+settings, and log in on the Sentry website to view the tracebacks.
+
+This project uses `Celery`_ for managing asynchronous tasks.
+Celery needs a "`message broker`_" and a "`result backend`_" to run.
+Celery recommends using `RabbitMQ`_ as a message broker, but we had problems
+with a few RabbitMQ providers on Heroku. Instead, we switched to `IronMQ`_,
+which seems to work better. We can always switch back to RabbitMQ in the future,
+or switch to a different message broker if necessary. Celery recommends using
+`Redis`_ as a result backend, which is why we're using the Heroku Redis add-on.
+
+.. _Celery: http://www.celeryproject.org/
+.. _message broker: http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html#choosing-a-broker
+.. _result backend: http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-result-backends
+.. _RabbitMQ: https://www.rabbitmq.com/
+.. _IronMQ: http://www.iron.io/mq/
+.. _Redis: http://redis.io/
 
 Flask Secret Key
 ~~~~~~~~~~~~~~~~
@@ -49,10 +71,10 @@ OAuth authentication for JIRA requires a RSA keypair. To set this up:
         $ heroku config:set JIRA_OAUTH_RSA_KEY=$JIRA_OAUTH_RSA_KEY
         $ heroku config:set JIRA_OAUTH_CONSUMER_KEY=$JIRA_OAUTH_CONSUMER_KEY
 
-Github
+GitHub
 ~~~~~~
 
-1. `Register a new application on Github <https://github.com/settings/applications/new>`_
+1. `Register a new application on GitHub <https://github.com/settings/applications/new>`_
 2. The new application will give you a consumer key and consumer secret. Set
    these values in the Heroku environment:
 
@@ -68,7 +90,7 @@ Deploy
 3. Initialize the database by running ``heroku run python manage.py dbcreate``
 4. Visit your website -- it should load!
 5. Visit ``/login/jira`` and authorize with JIRA
-6. Visit ``/login/github`` and authorize with Github
+6. Visit ``/login/github`` and authorize with GitHub
 7. Enjoy the sweet, sweet taste of API integration
 
 Recurring Tasks
@@ -76,13 +98,16 @@ Recurring Tasks
 
 Some of the tasks that our webhooks bot does are meant to be done on a regular,
 recurring basis. For example, :func:`~openedx_webhooks.views.jira.jira_rescan_users`
-should be run every hour or so. To do that, we use a second, separate Heroku project
-whose only function is to wake up once an hour, send an HTTP request to the
-Heroku project running this code, and then go to sleep again. Heroku provides
-the `Heroku Scheduler`_ addon for this exact purpose. Note that we want to use
-a separate Heroku project in order to avoid paying for this service: if we used
-the Heroku Scheduler within the same project, the total number of instance-hours
-used by the two dynos would exceed the free tier. Since each project has its own
-free tier, we can get around this by splitting these up into separate projects.
+should be run every hour or so. To do that, we use the `Heroku Scheduler`_
+add-on, which executes whatever code you want it to at whatever interval you
+specify.
 
-.. _Heroku Scheduler: https://devcenter.heroku.com/articles/scheduler
+Go to your Heroku project's dashboard, and click on the "Heroku Scheduler" add-on
+you installed. That will open a new page where you can manage scheduled jobs.
+Add one job to hit the ``/jira/user/rescan`` endpoint with a POST request
+once per hour. If your app is named "openedx-webhooks", the command you want
+to run is:
+
+.. code-block:: bash
+
+    $ curl -X POST https://openedx-webhooks.herokuapp.com/jira/user/rescan
