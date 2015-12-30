@@ -32,7 +32,7 @@ def jira_logged_in(blueprint, token):
 
 
 @oauth_error.connect_via(jira_bp)
-def jira_error(blueprint, message, request=None):
+def jira_error(blueprint, message, response=None):
     flash(message, category="error")
 
 
