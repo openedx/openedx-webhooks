@@ -1,5 +1,5 @@
 Flask==0.10.1
-Flask-Dance[sqla]==0.8.1
+Flask-Dance[sqla]==0.8.2
 Flask-SQLAlchemy==2.0
 Flask-Script
 Flask-SSLify
