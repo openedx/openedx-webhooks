@@ -5,7 +5,7 @@ import os
 from flask import request, flash
 from flask_dance.contrib.github import make_github_blueprint
 from flask_dance.contrib.jira import make_jira_blueprint
-from flask_dance.consumer import oauth_authorized
+from flask_dance.consumer import oauth_authorized, oauth_error
 from flask_dance.consumer.backend.sqla import SQLAlchemyBackend
 from openedx_webhooks import db
 from openedx_webhooks.models import OAuth
@@ -29,6 +29,13 @@ def jira_logged_in(blueprint, token):
         flash("Successfully signed in with JIRA")
     else:
         flash("You denied the request to sign in with JIRA")
+
+
+@oauth_error.connect_via(jira_bp)
+def jira_error(blueprint, request):
+    msg = "Error signing in to JIRA. Message is: {}".format(request.text)
+    flash(msg, category="error")
+
 
 ## GITHUB ##
 
