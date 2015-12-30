@@ -32,9 +32,8 @@ def jira_logged_in(blueprint, token):
 
 
 @oauth_error.connect_via(jira_bp)
-def jira_error(blueprint, request):
-    msg = "Error signing in to JIRA. Message is: {}".format(request.text)
-    flash(msg, category="error")
+def jira_error(blueprint, message, request=None):
+    flash(message, category="error")
 
 
 ## GITHUB ##
