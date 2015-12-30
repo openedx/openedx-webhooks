@@ -19,7 +19,6 @@ jira_bp = make_jira_blueprint(
     rsa_key=os.environ.get("JIRA_OAUTH_RSA_KEY"),
     # these are actually necessary
     base_url="https://openedx.atlassian.net",
-    redirect_to="index",
     backend=SQLAlchemyBackend(OAuth, db.session),
 )
 
@@ -35,7 +34,6 @@ def jira_logged_in(blueprint, token):
 
 github_bp = make_github_blueprint(
     scope="admin:repo_hook,repo,user",
-    redirect_to="index",
     backend=SQLAlchemyBackend(OAuth, db.session),
 )
 
