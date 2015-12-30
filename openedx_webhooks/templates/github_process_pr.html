@@ -4,7 +4,7 @@
         <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
     </head>
     <body>
-        <h1>Process Github Pull Request</h1>
+        <h1>Process GitHub Pull Request</h1>
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     <ul class="flashes">
@@ -16,7 +16,7 @@
 {% endwith %}
     <form id="rescan-form" action="{{ url_for("github_views.process_pr") }}" method="POST">
     <p>
-      Use this page to process a specific pull request on Github, which will
+      Use this page to process a specific pull request on GitHub, which will
       ensure that a JIRA ticket exists for it. This will create JIRA tickets
       even for PRs made by edX employees and contractors working with edX.
     </p>
