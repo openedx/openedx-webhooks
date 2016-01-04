@@ -18,20 +18,6 @@ been logged, and verify that the repos that have the missing pull requests
 are under the bot's management. (You can check the list of webhooks on the
 repository admin page.)
 
-Spurious OAuth errors
----------------------
-
-Once the bot is logged into GitHub and JIRA via OAuth, you shouldn't need to
-worry about OAuth authorization ever again. However, sometimes search engine
-spiders follow links from the dashboard page, which can set up the OAuth
-dance. When this happens, it can lead to spurious errors in Sentry.
-
-It would be nice to find out how to make these errors not happen in the first
-place. Perhaps a pull request to `Flask-Dance`_, or a ``robots.txt`` to keep the
-spiders out. (Although ``robots.txt`` won't help for curious humans...)
-
-.. _Flask-Dance: https://github.com/singingwolfboy/flask-dance
-
 Request timeout from Heroku
 ---------------------------
 
