@@ -5,12 +5,13 @@ from collections import defaultdict
 
 from openedx_webhooks import sentry, celery
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.tasks import jira_session as jira
+from openedx_webhooks.oauth import jira_bp
 from openedx_webhooks.utils import jira_users, jira_group_members
 
 
 @celery.task
 def rescan_users(domain_groups):
+    jira = jira_bp.session
     failures = defaultdict(dict)
     for groupname, domain in domain_groups.items():
         users_in_group = jira_group_members(groupname, session=jira, debug=True)

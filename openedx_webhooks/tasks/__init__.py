@@ -49,9 +49,3 @@ def group_status(group_id):
         "pending_task_count": len(pending_task_ids),
         "pending_task_info": pending_task_ids,
     })
-
-
-# Working in a Celery task means we can't take advantage of Flask-Dance's
-# session proxies, so we'll explicitly define the sessions here.
-github_session = github_bp.session
-jira_session = jira_bp.session
