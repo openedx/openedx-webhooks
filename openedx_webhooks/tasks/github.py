@@ -11,8 +11,7 @@ from urlobject import URLObject
 
 from openedx_webhooks import sentry, celery
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.tasks import github_session as github
-from openedx_webhooks.tasks import jira_session as jira
+from openedx_webhooks.oauth import github_bp, jira_bp
 from openedx_webhooks.info import (
     get_people_file, is_internal_pull_request, is_contractor_pull_request
 )
@@ -40,6 +39,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     element in the tuple is a boolean indicating if this function did any
     work, such as making a JIRA issue or commenting on the pull request.
     """
+    github = github_bp.session
     pr = pull_request
     user = pr["user"]["login"].decode('utf-8')
     repo = pr["base"]["repo"]["full_name"]
@@ -81,7 +81,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
     people = get_people_file()
-    custom_fields = get_jira_custom_fields(jira)
+    custom_fields = get_jira_custom_fields(jira_bp.session)
 
     user_name = None
     if user in people:
@@ -115,7 +115,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         new_issue["fields"][custom_fields["Customer"]] = [institution]
     sentry.client.extra_context({"new_issue": new_issue})
 
-    resp = jira.post("/rest/api/2/issue", json=new_issue)
+    resp = jira_bp.session.post("/rest/api/2/issue", json=new_issue)
     resp.raise_for_status()
     new_issue_body = resp.json()
     issue_key = new_issue_body["key"].decode('utf-8')
@@ -147,6 +147,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
 @celery.task
 def pull_request_closed(pull_request):
+    jira = jira_bp.session
     pr = pull_request
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
 
@@ -230,6 +231,7 @@ def rescan_repository(self, repo):
     """
     rescans a single repo for new prs
     """
+    github = github_bp.session
     sentry.client.extra_context({"repo": repo})
     url = "/repos/{repo}/pulls".format(repo=repo)
     created = {}
@@ -287,7 +289,7 @@ def get_jira_issue_key(pull_request):
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
         num=pull_request["number"],
     )
-    for comment in paginated_get(comment_url, session=github):
+    for comment in paginated_get(comment_url, session=github_bp.session):
         # I only care about comments I made
         if comment["user"]["login"] != my_username:
             continue
@@ -308,6 +310,7 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
     * check for AUTHORS entry
     * contain a link to our process documentation
     """
+    github = github_bp.session
     people = people or get_people_file()
     people = {user.lower(): values for user, values in people.items()}
     pr_author = pull_request["user"]["login"].decode('utf-8').lower()
@@ -368,7 +371,7 @@ def has_contractor_comment(pull_request):
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
         num=pull_request["number"],
     )
-    for comment in paginated_get(comment_url, session=github):
+    for comment in paginated_get(comment_url, session=github_bp.session):
         # I only care about comments I made
         if comment["user"]["login"] != my_username:
             continue
@@ -380,6 +383,6 @@ def has_contractor_comment(pull_request):
 
 @memoize
 def github_whoami():
-    self_resp = github.get("/user")
+    self_resp = github_bp.session.get("/user")
     self_resp.raise_for_status()
     return self_resp.json()
