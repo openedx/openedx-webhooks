@@ -147,6 +147,12 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
 @celery.task
 def pull_request_closed(pull_request):
+    """
+    A GitHub pull request has been merged or closed. Synchronize the JIRA issue
+    to also be in the "merged" or "closed" state. Returns a boolean: True
+    if the JIRA issue was correctly synchronized, False otherwise. (However,
+    these booleans are ignored.)
+    """
     jira = jira_bp.session
     pr = pull_request
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
@@ -168,6 +174,9 @@ def pull_request_closed(pull_request):
         "?expand=transitions.fields".format(key=issue_key)
     )
     transitions_resp = jira.get(transition_url)
+    if transition_resp.status_code == 404:
+        # JIRA issue has been deleted
+        return False
     transitions_resp.raise_for_status()
 
     transitions = transitions_resp.json()["transitions"]
