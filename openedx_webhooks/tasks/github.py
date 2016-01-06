@@ -174,7 +174,7 @@ def pull_request_closed(pull_request):
         "?expand=transitions.fields".format(key=issue_key)
     )
     transitions_resp = jira.get(transition_url)
-    if transition_resp.status_code == 404:
+    if transitions_resp.status_code == 404:
         # JIRA issue has been deleted
         return False
     transitions_resp.raise_for_status()
