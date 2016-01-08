@@ -1,6 +1,7 @@
 import json
 import pytest
 import requests
+import requests_mock
 from datetime import datetime
 import openedx_webhooks
 from openedx_webhooks.tasks.github import (
@@ -66,12 +67,11 @@ def test_contractor_pr_comment(app, reqctx):
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-def test_has_contractor_comment(app, reqctx, responses):
-    responses.add(
-        responses.GET,
+def test_has_contractor_comment(app, reqctx, requests_mocker):
+    requests_mocker.get(
         "https://api.github.com/user",
         body='{"login": "testuser"}',
-        content_type="application/json",
+        headers={"Content-Type": "application/json"},
     )
     pr = make_pull_request(
         user="testuser", number=1, base_repo_name="edx/edx-platform",
@@ -84,11 +84,10 @@ def test_has_contractor_comment(app, reqctx, responses):
         },
         "body": comment
     }
-    responses.add(
-        responses.GET,
+    requests_mocker.get(
         "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
         body=json.dumps([comment_json]),
-        content_type="application/json",
+        headers={"Content-Type": "application/json"},
     )
 
     with reqctx:
@@ -97,12 +96,11 @@ def test_has_contractor_comment(app, reqctx, responses):
     assert result is True
 
 
-def test_has_contractor_comment_unrelated_comments(app, reqctx, responses):
-    responses.add(
-        responses.GET,
+def test_has_contractor_comment_unrelated_comments(app, reqctx, requests_mocker):
+    requests_mocker.get(
         "https://api.github.com/user",
         body='{"login": "testuser"}',
-        content_type="application/json",
+        headers={"Content-Type": "application/json"},
     )
     pr = make_pull_request(
         user="testuser", number=1, base_repo_name="edx/edx-platform",
@@ -125,11 +123,10 @@ def test_has_contractor_comment_unrelated_comments(app, reqctx, responses):
             "body": "It looks like you're a member of a company that does contract work for edX.",
         }
     ]
-    responses.add(
-        responses.GET,
+    requests_mocker.get(
         "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
         body=json.dumps(comments_json),
-        content_type="application/json",
+        headers={"Content-Type": "application/json"},
     )
 
     with reqctx:
@@ -138,21 +135,19 @@ def test_has_contractor_comment_unrelated_comments(app, reqctx, responses):
     assert result is False
 
 
-def test_has_contractor_comment_no_comments(app, reqctx, responses):
-    responses.add(
-        responses.GET,
+def test_has_contractor_comment_no_comments(app, reqctx, requests_mocker):
+    requests_mocker.get(
         "https://api.github.com/user",
         body='{"login": "testuser"}',
-        content_type="application/json",
+        headers={"Content-Type": "application/json"},
     )
     pr = make_pull_request(
         user="testuser", number=1, base_repo_name="edx/edx-platform",
     )
-    responses.add(
-        responses.GET,
+    requests_mocker.get(
         "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
         body='[]',
-        content_type="application/json",
+        headers={"Content-Type": "application/json"},
     )
 
     with reqctx:
@@ -172,21 +167,19 @@ def test_internal_pr_cover_letter(reqctx):
     assert "# DevOps assistance" in comment
 
 
-def test_has_internal_pr_cover_letter(reqctx, responses):
+def test_has_internal_pr_cover_letter(reqctx, requests_mocker):
     pr = make_pull_request(
         user="different_user", body="omg this code is teh awesomezors",
         head_repo_name="different_user/edx-platform", head_ref="patch-1",
     )
-    responses.add(
-        responses.GET,
+    requests_mocker.get(
         "https://api.github.com/user",
         body='{"login": "testuser"}',
-        content_type="application/json",
+        headers={"Content-Type": "application/json"},
     )
-    responses.add(
-        responses.GET,
+    requests_mocker.get(
         "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.coverletter.md.j2",
-        status=404,
+        status_code=404,
     )
 
     with reqctx:
@@ -199,11 +192,10 @@ def test_has_internal_pr_cover_letter(reqctx, responses):
             "body": comment_body,
         },
     ]
-    responses.add(
-        responses.GET,
+    requests_mocker.get(
         "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
         body=json.dumps(comments_json),
-        content_type="application/json",
+        headers={"Content-Type": "application/json"},
     )
 
     with reqctx:
@@ -220,19 +212,17 @@ def test_has_internal_pr_cover_letter_false(reqctx):
     assert result is False
 
 
-def test_custom_internal_pr_cover(reqctx, responses):
+def test_custom_internal_pr_cover(reqctx, requests_mocker):
     pr = make_pull_request(
         user="different_user", body="omg this code is teh awesomezors",
         head_repo_name="different_user/edx-platform", head_ref="patch-1",
     )
-    responses.add(
-        responses.GET,
+    requests_mocker.get(
         "https://api.github.com/user",
         body='{"login": "testuser"}',
-        content_type="application/json",
+        headers={"Content-Type": "application/json"},
     )
-    responses.add(
-        responses.GET,
+    requests_mocker.get(
         "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.coverletter.md.j2",
         body='custom cover letter for PR from @{{ user }}',
     )

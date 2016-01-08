@@ -3,7 +3,7 @@ pytest
 pytest-cover
 pytest-mock
 betamax
-responses
+requests-mock
 
 # docs
 sphinx
