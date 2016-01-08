@@ -206,15 +206,17 @@ def test_has_internal_pr_cover_letter(reqctx, responses):
         content_type="application/json",
     )
 
-    result = has_internal_cover_letter(pr)
+    with reqctx:
+        result = has_internal_cover_letter(pr)
     assert result is True
 
 
-def test_has_internal_pr_cover_letter_false():
+def test_has_internal_pr_cover_letter_false(reqctx):
     pr = make_pull_request(
         user="testuser", body="omg this code is teh awesomezors",
     )
-    result = has_internal_cover_letter(pr)
+    with reqctx:
+        result = has_internal_cover_letter(pr)
     assert result is False
 
 

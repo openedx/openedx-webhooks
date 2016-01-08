@@ -420,7 +420,7 @@ def github_internal_cover_letter(pull_request):
         repo=pull_request["head"]["repo"]["full_name"].decode('utf-8'),
         branch=pull_request["head"]["ref"].decode('utf-8'),
     )
-    coverletter_resp = github.get(coverletter_url)
+    coverletter_resp = github_bp.session.get(coverletter_url)
     ctx = {
         "user": pull_request["user"]["login"].decode('utf-8'),
     }
@@ -443,7 +443,7 @@ def has_internal_cover_letter(pull_request):
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
         num=pull_request["number"],
     )
-    for comment in paginated_get(comment_url, session=github):
+    for comment in paginated_get(comment_url, session=github_bp.session):
         # I only care about comments I made
         if comment["user"]["login"] != my_username:
             continue
