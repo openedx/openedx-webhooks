@@ -3,7 +3,6 @@ import logging
 from celery.utils.log import get_task_logger
 from flask import Blueprint, jsonify
 from openedx_webhooks import celery
-from openedx_webhooks.oauth import github_bp, jira_bp
 
 # set up logging
 logger = get_task_logger(__name__)
