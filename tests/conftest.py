@@ -8,6 +8,7 @@ from flask_dance.consumer.requests import OAuth2Session
 import openedx_webhooks
 from raven.contrib.flask import make_client as make_sentry_client
 from raven.base import DummyClient
+from requests.packages.urllib3.response import is_fp_closed
 
 if not os.path.exists('tests/cassettes'):
     os.makedirs('tests/cassettes')
@@ -76,7 +77,7 @@ def mock_github(mocker, betamax_github_session):
 
 
 @pytest.yield_fixture
-def requests_mocker(request):
+def requests_mocker():
     mocker = requests_mock.Mocker()
     mocker.start()
     yield mocker
