@@ -71,6 +71,7 @@ def mock_github(mocker, betamax_github_session):
     mock_bp = mock.Mock()
     mock_bp.session = betamax_github_session
     mocker.patch("openedx_webhooks.info.github_bp", mock_bp)
+    mocker.patch("openedx_webhooks.tasks.github.github_bp", mock_bp)
     return betamax_github_session
 
 
