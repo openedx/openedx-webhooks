@@ -20,6 +20,7 @@ from flask_sqlalchemy import SQLAlchemy
 from celery import Celery
 import iron_celery
 
+__version__ = "0.1.0"
 
 sentry = Sentry()
 db = SQLAlchemy()
