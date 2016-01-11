@@ -56,7 +56,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
             ),
         )
         comment = {
-            "body": github_internal_cover_letter(pr, session=github),
+            "body": github_internal_cover_letter(pr),
         }
         url = "/repos/{repo}/issues/{num}/comments".format(
             repo=repo, num=num,
