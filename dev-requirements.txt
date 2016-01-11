@@ -3,8 +3,10 @@ pytest
 pytest-cover
 pytest-mock
 betamax
-responses
+requests-mock
 
 # docs
 sphinx
 sphinxcontrib-httpdomain
+
+-r requirements.txt

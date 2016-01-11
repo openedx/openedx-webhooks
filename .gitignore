@@ -6,6 +6,7 @@ jira.uuid
 docs/_build
 .coverage
 .env
+.cache
 build/
 dist/
 openedx_webhooks.egg-info/

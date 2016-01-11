@@ -27,14 +27,3 @@ the bot would automatically close the pull request.
 Note that this auto-close functionality should operate on *all* open pull
 requests, regardless of the author! Developers at edX are definitely guilty
 of forgetting about open pull requests and leaving them to go stale indefinitely.
-
-Add a review checklist to pull requests
----------------------------------------
-
-Pull request reviews must go through many steps. It would be nice if pull
-requests had a checklist of those steps, perhaps in the description of the
-pull request. Then, as each step is completed, that step could be checked off.
-This bot could create a checklist like this automatically for each pull request
--- or perhaps link to a checklist created on another site, which has different
-edit permissions than the edit permissions on pull request comments and
-descriptions on GitHub.

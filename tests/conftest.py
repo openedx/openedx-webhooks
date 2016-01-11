@@ -3,11 +3,12 @@ import base64
 import mock
 import pytest
 import betamax
-import responses as responses_module
+import requests_mock
 from flask_dance.consumer.requests import OAuth2Session
 import openedx_webhooks
 from raven.contrib.flask import make_client as make_sentry_client
 from raven.base import DummyClient
+from requests.packages.urllib3.response import is_fp_closed
 
 if not os.path.exists('tests/cassettes'):
     os.makedirs('tests/cassettes')
@@ -76,15 +77,15 @@ def mock_github(mocker, betamax_github_session):
 
 
 @pytest.yield_fixture
-def responses():
-    responses_module.mock.start()
-    yield responses_module.mock
-    responses_module.mock.stop()
-    responses_module.mock.reset()
+def requests_mocker():
+    mocker = requests_mock.Mocker()
+    mocker.start()
+    yield mocker
+    mocker.stop()
 
 
 @pytest.fixture
-def app(request):
+def app():
     _app = openedx_webhooks.create_app(config="testing")
     # use a dummy Sentry session, so that we don't actually
     # contact getsentry.com when running tests

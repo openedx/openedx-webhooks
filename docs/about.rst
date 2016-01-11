@@ -37,6 +37,15 @@ any time an issue is transitioned from one state to another, the bot checks
 to see if the issue is an OSPR issue. If so, it modifies the labels on GitHub
 to reflect the state of the OSPR issue on JIRA.
 
+Add a review checklist to pull requests
+---------------------------------------
+
+Pull request reviews must go through many steps. This bot adds a comment to
+internal pull requests with a checklist of steps for that pull request.
+As each step in the review process is completed, reviewers can check the
+checkbox for that step.
+
+
 Push JIRA issues out of "Needs Triage"
 --------------------------------------
 
