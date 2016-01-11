@@ -9,4 +9,7 @@ requests-mock
 sphinx
 sphinxcontrib-httpdomain
 
+# lint
+git+https://github.com/edx/edx-lint.git@v0.4.1#egg=edx_lint==0.4.1
+
 -r requirements.txt
