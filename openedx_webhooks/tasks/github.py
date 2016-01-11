@@ -13,7 +13,8 @@ from openedx_webhooks import sentry, celery
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.oauth import github_bp, jira_bp
 from openedx_webhooks.info import (
-    get_people_file, is_internal_pull_request, is_contractor_pull_request
+    get_people_file, is_internal_pull_request, is_contractor_pull_request,
+    is_beta_tester_pull_request,
 )
 from openedx_webhooks.utils import memoize, paginated_get
 from openedx_webhooks.jira_views import get_jira_custom_fields
