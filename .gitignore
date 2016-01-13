@@ -5,6 +5,7 @@ jira.pub
 jira.uuid
 docs/_build
 .coverage
+htmlcov
 .env
 .cache
 build/
