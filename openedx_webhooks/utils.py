@@ -182,6 +182,11 @@ def memoize(func):
 
     memoized.uncache = uncache
 
+    def flush_cache():
+        cache = {}
+
+    memoized.flush_cache = flush_cache
+
     return memoized
 
 
@@ -222,6 +227,11 @@ def memoize_except(values):
                 return False
 
         memoized.uncache = uncache
+
+        def flush_cache():
+            cache = {}
+
+        memoized.flush_cache = flush_cache
 
         return memoized
 

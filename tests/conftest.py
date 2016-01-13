@@ -6,6 +6,7 @@ import betamax
 import requests_mock
 from flask_dance.consumer.requests import OAuth2Session
 import openedx_webhooks
+from openedx_webhooks import utils
 from raven.contrib.flask import make_client as make_sentry_client
 from raven.base import DummyClient
 from requests.packages.urllib3.response import is_fp_closed
@@ -74,6 +75,16 @@ def mock_github(mocker, betamax_github_session):
     mocker.patch("openedx_webhooks.info.github_bp", mock_bp)
     mocker.patch("openedx_webhooks.tasks.github.github_bp", mock_bp)
     return betamax_github_session
+
+
+@pytest.fixture
+def unmemoize():
+    """
+    Flush the memoize caches before the test.
+    """
+    utils.memoize.flush_cache()
+    utils.memoize_except.flush_cache()
+    return None
 
 
 @pytest.yield_fixture
