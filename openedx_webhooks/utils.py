@@ -1,12 +1,13 @@
 # coding=utf-8
 from __future__ import print_function, unicode_literals
 
-import sys
 import os
-import functools
+import sys
+
+from flask import request
+import functools32
 import requests
 from urlobject import URLObject
-from flask import request
 
 
 def pop_dict_id(d):
@@ -156,76 +157,7 @@ def jira_users(filter=None, session=None, debug=False):
 
 
 def memoize(func):
-    cache = {}
-
-    def mk_key(*args, **kwargs):
-        return (tuple(args), tuple(sorted(kwargs.items())))
-
-    @functools.wraps(func)
-    def memoized(*args, **kwargs):
-        key = memoized.mk_key(*args, **kwargs)
-        try:
-            return cache[key]
-        except KeyError:
-            cache[key] = func(*args, **kwargs)
-            return cache[key]
-
-    memoized.mk_key = mk_key
-
-    def uncache(*args, **kwargs):
-        key = memoized.mk_key(*args, **kwargs)
-        if key in cache:
-            del cache[key]
-            return True
-        else:
-            return False
-
-    memoized.uncache = uncache
-
-    return memoized
-
-
-def memoize_except(values):
-    """
-    Just like normal `memoize`, but don't cache when the function returns
-    certain values. For example, you could use this to make a function not
-    cache `None`.
-    """
-    if not isinstance(values, (list, tuple)):
-        values = (values,)
-
-    def decorator(func):
-        cache = {}
-
-        def mk_key(*args, **kwargs):
-            return (tuple(args), tuple(sorted(kwargs.items())))
-
-        @functools.wraps(func)
-        def memoized(*args, **kwargs):
-            key = memoized.mk_key(*args, **kwargs)
-            try:
-                return cache[key]
-            except KeyError:
-                value = func(*args, **kwargs)
-                if value not in values:
-                    cache[key] = value
-                return value
-
-        memoized.mk_key = mk_key
-
-        def uncache(*args, **kwargs):
-            key = memoized.mk_key(*args, **kwargs)
-            if key in cache:
-                del cache[key]
-                return True
-            else:
-                return False
-
-        memoized.uncache = uncache
-
-        return memoized
-
-    return decorator
+    return functools32.lru_cache()(func)
 
 
 def to_unicode(s):
