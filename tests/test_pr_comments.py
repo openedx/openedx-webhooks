@@ -203,9 +203,14 @@ def test_has_internal_pr_cover_letter(reqctx, requests_mocker):
     assert result is True
 
 
-def test_has_internal_pr_cover_letter_false(reqctx):
+def test_has_internal_pr_cover_letter_false(reqctx, requests_mocker):
     pr = make_pull_request(
         user="testuser", body="omg this code is teh awesomezors",
+    )
+    requests_mocker.get(
+        "https://api.github.com/user",
+        json={"login": "testuser"},
+        headers={"Content-Type": "application/json"},
     )
     with reqctx:
         result = has_internal_cover_letter(pr)

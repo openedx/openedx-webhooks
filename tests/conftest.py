@@ -13,6 +13,7 @@ from raven.base import DummyClient
 from requests.packages.urllib3.response import is_fp_closed
 
 import openedx_webhooks
+import openedx_webhooks.utils
 
 
 if not os.path.exists('tests/cassettes'):
@@ -125,3 +126,8 @@ def reqctx(app):
     return app.test_request_context(
         '/', base_url="https://openedx-webhooks.herokuapp.com"
     )
+
+@pytest.fixture(autouse=True)
+def reset_all_memoized_functions():
+    """Clears the values cached by @memoize before each test. Applied automatically."""
+    openedx_webhooks.utils.clear_memoized_values()

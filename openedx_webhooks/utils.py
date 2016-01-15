@@ -156,8 +156,20 @@ def jira_users(filter=None, session=None, debug=False):
         yield user
 
 
+# A list of all the memoized functions, so that `clear_memoized_values` can
+# clear them all.
+_memoized_functions = []
+
 def memoize(func):
-    return functools32.lru_cache()(func)
+    """Cache the value returned by a function call."""
+    func = functools32.lru_cache()(func)
+    _memoized_functions.append(func)
+    return func
+
+def clear_memoized_values():
+    """Clear all the values saved by @memoize, to ensure isolated tests."""
+    for func in _memoized_functions:
+        func.cache_clear()
 
 
 def to_unicode(s):
