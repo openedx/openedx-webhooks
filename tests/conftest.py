@@ -1,14 +1,19 @@
-import os
 import base64
+import os
+import os.path
+import re
+
+import betamax
 import mock
 import pytest
-import betamax
 import requests_mock
 from flask_dance.consumer.requests import OAuth2Session
-import openedx_webhooks
 from raven.contrib.flask import make_client as make_sentry_client
 from raven.base import DummyClient
 from requests.packages.urllib3.response import is_fp_closed
+
+import openedx_webhooks
+
 
 if not os.path.exists('tests/cassettes'):
     os.makedirs('tests/cassettes')
@@ -78,10 +83,28 @@ def mock_github(mocker, betamax_github_session):
 
 @pytest.yield_fixture
 def requests_mocker():
-    mocker = requests_mock.Mocker()
+    mocker = requests_mock.Mocker(real_http=True)
     mocker.start()
     yield mocker
     mocker.stop()
+
+
+@pytest.fixture(scope='session', autouse=True)
+def fake_repo_data():
+    """Read repo_data data from local data.  Applied automatically."""
+    repo_data_dir = os.path.join(os.path.dirname(__file__), "repo_data")
+    def repo_data_callback(request, context):
+        context.status_code = 200
+        filename = request.path.split("/")[-1]
+        with open(os.path.join(repo_data_dir, filename)) as data:
+            return data.read()
+
+    mocker = requests_mock.Mocker(real_http=True)
+    mocker.start()
+    mocker.get(
+        re.compile("https://raw.githubusercontent.com/edx/repo-tools-data/master/"),
+        text=repo_data_callback,
+    )
 
 
 @pytest.fixture

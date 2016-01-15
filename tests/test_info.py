@@ -11,7 +11,7 @@ pytestmark = pytest.mark.usefixtures('mock_github')
 
 
 def make_pull_request(user, created_at=None):
-    "this should really use a framework like factory_boy"
+    # This should really use a framework like factory_boy.
     created_at = created_at or datetime.now().replace(microsecond=0)
     return {
         "user": {
@@ -55,7 +55,7 @@ def test_hourly_worker():
 def test_left_but_still_a_fan():
     pr = make_pull_request("jarv")
     assert not is_internal_pull_request(pr)
-    # Note: openedx_webhooks doesn't understand the "before" keys.
+    # TODO: openedx_webhooks doesn't understand the "before" keys.
 
 def test_committers():
     pr = make_pull_request("antoviaque")
