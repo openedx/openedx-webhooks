@@ -50,13 +50,47 @@ def make_jira_issue(key="ABC-123"):
     }
 
 
-def test_community_pr_comment(app):
+def test_community_pr_comment(app, requests_mocker):
+    # A pull request from a member in good standing.
+    pr = make_pull_request(user="tusbar", head_ref="tusbar/cool-feature")
+    jira = make_jira_issue(key="TNL-12345")
+    # An AUTHORS file that contains the author.
+    requests_mocker.get(
+        "https://raw.githubusercontent.com/tusbar/edx-platform/tusbar/cool-feature/AUTHORS",
+        text="Bertrand Marron <tusbar@tusbar.com>\n",
+    )
+    with app.test_request_context('/'):
+        comment = github_community_pr_comment(pr, jira)
+    assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
+    assert "can't start reviewing your pull request" not in comment
+    assert "You haven't added yourself to the [AUTHORS]" not in comment
+    assert not comment.startswith((" ", "\n", "\t"))
+
+
+def test_community_pr_comment_not_in_authors_file(app, requests_mocker):
+    pr = make_pull_request(user="tusbar", head_ref="tusbar/fix-bug-1234")
+    jira = make_jira_issue(key="TNL-12345")
+    # An AUTHORS file that doesn't contain the author.
+    requests_mocker.get(
+        "https://raw.githubusercontent.com/tusbar/edx-platform/tusbar/fix-bug-1234/AUTHORS",
+        text="Ned Batchelder <ned@edx.org>\n",
+    )
+    with app.test_request_context('/'):
+        comment = github_community_pr_comment(pr, jira)
+    assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
+    assert "can't start reviewing your pull request" not in comment
+    assert "You haven't added yourself to the [AUTHORS]" in comment
+    assert not comment.startswith((" ", "\n", "\t"))
+
+
+def test_community_pr_comment_no_author(app):
     pr = make_pull_request(user="FakeUser")
     jira = make_jira_issue(key="FOO-1")
     with app.test_request_context('/'):
         comment = github_community_pr_comment(pr, jira)
     assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
     assert "can't start reviewing your pull request" in comment
+    assert "You haven't added yourself to the [AUTHORS]" in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
 

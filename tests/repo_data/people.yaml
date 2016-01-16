@@ -73,3 +73,8 @@ antoviaque:
     institution: OpenCraft
     committer: true
     jira: XavierAntoviaque
+tusbar:
+    email: tusbar@tusbar.com
+    name: Bertrand Marron
+    agreement: individual
+    institution: IONISx
