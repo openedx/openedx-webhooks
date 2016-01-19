@@ -1,0 +1,11 @@
+# Sample Open edX organizations database
+#
+# These are details about organizations helping edX with Open edX, so that we
+# can automate some of our contribution processes.
+
+edX:
+    internal: true
+    committer: true
+OpenCraft:
+    internal: true
+    contractor: true

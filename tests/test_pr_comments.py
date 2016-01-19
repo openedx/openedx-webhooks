@@ -14,12 +14,14 @@ pytestmark = pytest.mark.usefixtures('mock_github')
 
 def make_pull_request(
         user, title="generic title", body="generic body", number=1,
-        base_repo_name="edx/edx-platform", head_repo_name="testuser/edx-platform",
+        base_repo_name="edx/edx-platform", head_repo_name=None,
         base_ref="master", head_ref="patch-1",
         created_at=None
     ):
-    "this should really use a framework like factory_boy"
+    # This should really use a framework like factory_boy.
     created_at = created_at or datetime.now().replace(microsecond=0)
+    if head_repo_name is None:
+        head_repo_name = "{}/edx-platform".format(user)
     return {
         "user": {
             "login": user,
@@ -48,13 +50,47 @@ def make_jira_issue(key="ABC-123"):
     }
 
 
-def test_community_pr_comment(app):
+def test_community_pr_comment(app, requests_mocker):
+    # A pull request from a member in good standing.
+    pr = make_pull_request(user="tusbar", head_ref="tusbar/cool-feature")
+    jira = make_jira_issue(key="TNL-12345")
+    # An AUTHORS file that contains the author.
+    requests_mocker.get(
+        "https://raw.githubusercontent.com/tusbar/edx-platform/tusbar/cool-feature/AUTHORS",
+        text="Bertrand Marron <tusbar@tusbar.com>\n",
+    )
+    with app.test_request_context('/'):
+        comment = github_community_pr_comment(pr, jira)
+    assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
+    assert "can't start reviewing your pull request" not in comment
+    assert "You haven't added yourself to the [AUTHORS]" not in comment
+    assert not comment.startswith((" ", "\n", "\t"))
+
+
+def test_community_pr_comment_not_in_authors_file(app, requests_mocker):
+    pr = make_pull_request(user="tusbar", head_ref="tusbar/fix-bug-1234")
+    jira = make_jira_issue(key="TNL-12345")
+    # An AUTHORS file that doesn't contain the author.
+    requests_mocker.get(
+        "https://raw.githubusercontent.com/tusbar/edx-platform/tusbar/fix-bug-1234/AUTHORS",
+        text="Ned Batchelder <ned@edx.org>\n",
+    )
+    with app.test_request_context('/'):
+        comment = github_community_pr_comment(pr, jira)
+    assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
+    assert "can't start reviewing your pull request" not in comment
+    assert "You haven't added yourself to the [AUTHORS]" in comment
+    assert not comment.startswith((" ", "\n", "\t"))
+
+
+def test_community_pr_comment_no_author(app):
     pr = make_pull_request(user="FakeUser")
     jira = make_jira_issue(key="FOO-1")
     with app.test_request_context('/'):
         comment = github_community_pr_comment(pr, jira)
     assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
     assert "can't start reviewing your pull request" in comment
+    assert "You haven't added yourself to the [AUTHORS]" in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
 
@@ -73,9 +109,7 @@ def test_has_contractor_comment(app, reqctx, requests_mocker):
         json={"login": "testuser"},
         headers={"Content-Type": "application/json"},
     )
-    pr = make_pull_request(
-        user="testuser", number=1, base_repo_name="edx/edx-platform",
-    )
+    pr = make_pull_request(user="testuser", number=1)
     with reqctx:
         comment = github_contractor_pr_comment(pr)
     comment_json = {
@@ -102,9 +136,7 @@ def test_has_contractor_comment_unrelated_comments(app, reqctx, requests_mocker)
         json={"login": "testuser"},
         headers={"Content-Type": "application/json"},
     )
-    pr = make_pull_request(
-        user="testuser", number=1, base_repo_name="edx/edx-platform",
-    )
+    pr = make_pull_request(user="testuser", number=1)
     with reqctx:
         comment = github_contractor_pr_comment(pr)
     comments_json = [
@@ -141,9 +173,7 @@ def test_has_contractor_comment_no_comments(app, reqctx, requests_mocker):
         json={"login": "testuser"},
         headers={"Content-Type": "application/json"},
     )
-    pr = make_pull_request(
-        user="testuser", number=1, base_repo_name="edx/edx-platform",
-    )
+    pr = make_pull_request(user="testuser", number=1)
     requests_mocker.get(
         "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
         json=[],
@@ -157,7 +187,10 @@ def test_has_contractor_comment_no_comments(app, reqctx, requests_mocker):
 
 
 def test_internal_pr_cover_letter(reqctx):
-    pr = make_pull_request(user="FakeUser", body="this is my first pull request")
+    pr = make_pull_request(
+        user="FakeUser", body="this is my first pull request",
+        head_repo_name="testuser/edx-platform",
+    )
     with reqctx:
         comment = github_internal_cover_letter(pr)
     assert "this is my first pull request" not in comment
@@ -170,7 +203,7 @@ def test_internal_pr_cover_letter(reqctx):
 def test_has_internal_pr_cover_letter(reqctx, requests_mocker):
     pr = make_pull_request(
         user="different_user", body="omg this code is teh awesomezors",
-        head_repo_name="different_user/edx-platform", head_ref="patch-1",
+        head_ref="patch-1",
     )
     requests_mocker.get(
         "https://api.github.com/user",
@@ -203,9 +236,14 @@ def test_has_internal_pr_cover_letter(reqctx, requests_mocker):
     assert result is True
 
 
-def test_has_internal_pr_cover_letter_false(reqctx):
+def test_has_internal_pr_cover_letter_false(reqctx, requests_mocker):
     pr = make_pull_request(
         user="testuser", body="omg this code is teh awesomezors",
+    )
+    requests_mocker.get(
+        "https://api.github.com/user",
+        json={"login": "testuser"},
+        headers={"Content-Type": "application/json"},
     )
     with reqctx:
         result = has_internal_cover_letter(pr)
@@ -215,7 +253,7 @@ def test_has_internal_pr_cover_letter_false(reqctx):
 def test_custom_internal_pr_cover(reqctx, requests_mocker):
     pr = make_pull_request(
         user="different_user", body="omg this code is teh awesomezors",
-        head_repo_name="different_user/edx-platform", head_ref="patch-1",
+        head_ref="patch-1",
     )
     requests_mocker.get(
         "https://api.github.com/user",

@@ -1,12 +1,13 @@
 # coding=utf-8
 from __future__ import print_function, unicode_literals
 
-import sys
 import os
-import functools
+import sys
+
+from flask import request
+import functools32
 import requests
 from urlobject import URLObject
-from flask import request
 
 
 def pop_dict_id(d):
@@ -155,77 +156,20 @@ def jira_users(filter=None, session=None, debug=False):
         yield user
 
 
+# A list of all the memoized functions, so that `clear_memoized_values` can
+# clear them all.
+_memoized_functions = []
+
 def memoize(func):
-    cache = {}
+    """Cache the value returned by a function call."""
+    func = functools32.lru_cache()(func)
+    _memoized_functions.append(func)
+    return func
 
-    def mk_key(*args, **kwargs):
-        return (tuple(args), tuple(sorted(kwargs.items())))
-
-    @functools.wraps(func)
-    def memoized(*args, **kwargs):
-        key = memoized.mk_key(*args, **kwargs)
-        try:
-            return cache[key]
-        except KeyError:
-            cache[key] = func(*args, **kwargs)
-            return cache[key]
-
-    memoized.mk_key = mk_key
-
-    def uncache(*args, **kwargs):
-        key = memoized.mk_key(*args, **kwargs)
-        if key in cache:
-            del cache[key]
-            return True
-        else:
-            return False
-
-    memoized.uncache = uncache
-
-    return memoized
-
-
-def memoize_except(values):
-    """
-    Just like normal `memoize`, but don't cache when the function returns
-    certain values. For example, you could use this to make a function not
-    cache `None`.
-    """
-    if not isinstance(values, (list, tuple)):
-        values = (values,)
-
-    def decorator(func):
-        cache = {}
-
-        def mk_key(*args, **kwargs):
-            return (tuple(args), tuple(sorted(kwargs.items())))
-
-        @functools.wraps(func)
-        def memoized(*args, **kwargs):
-            key = memoized.mk_key(*args, **kwargs)
-            try:
-                return cache[key]
-            except KeyError:
-                value = func(*args, **kwargs)
-                if value not in values:
-                    cache[key] = value
-                return value
-
-        memoized.mk_key = mk_key
-
-        def uncache(*args, **kwargs):
-            key = memoized.mk_key(*args, **kwargs)
-            if key in cache:
-                del cache[key]
-                return True
-            else:
-                return False
-
-        memoized.uncache = uncache
-
-        return memoized
-
-    return decorator
+def clear_memoized_values():
+    """Clear all the values saved by @memoize, to ensure isolated tests."""
+    for func in _memoized_functions:
+        func.cache_clear()
 
 
 def to_unicode(s):
