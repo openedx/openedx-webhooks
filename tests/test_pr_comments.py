@@ -83,6 +83,22 @@ def test_community_pr_comment_not_in_authors_file(app, requests_mocker):
     assert not comment.startswith((" ", "\n", "\t"))
 
 
+def test_community_pr_comment_no_authors_file_at_all(app, requests_mocker):
+    pr = make_pull_request(user="tusbar", head_ref="tusbar/fix-bug-1234")
+    jira = make_jira_issue(key="TNL-12345")
+    # There is no AUTHORS file?!
+    requests_mocker.get(
+        "https://raw.githubusercontent.com/tusbar/edx-platform/tusbar/fix-bug-1234/AUTHORS",
+        status_code=404,
+    )
+    with app.test_request_context('/'):
+        comment = github_community_pr_comment(pr, jira)
+    assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
+    assert "can't start reviewing your pull request" not in comment
+    assert "You haven't added yourself to the [AUTHORS]" in comment
+    assert not comment.startswith((" ", "\n", "\t"))
+
+
 def test_community_pr_comment_no_author(app):
     pr = make_pull_request(user="FakeUser")
     jira = make_jira_issue(key="FOO-1")
