@@ -196,7 +196,7 @@ def install():
     """
     repo = request.form.get("repo", "")
     if repo:
-        repos = (repo,)
+        repos = [repo]
     else:
         repos = get_repos_file().keys()
 
