@@ -1,3 +1,5 @@
+# The few things we need to do in the openedx-webhooks working tree.
+
 .DEFAULT: test
 
 test:
