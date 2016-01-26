@@ -1,12 +1,13 @@
 # coding=utf-8
 from __future__ import unicode_literals, print_function
 
+from datetime import date
 import json
 import re
-from datetime import date
 
-from iso8601 import parse_date
 from flask import render_template, render_template_string
+from iso8601 import parse_date
+from uritemplate import expand
 from urlobject import URLObject
 
 from openedx_webhooks import sentry, celery
@@ -58,9 +59,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         comment = {
             "body": github_internal_cover_letter(pr),
         }
-        url = "/repos/{repo}/issues/{num}/comments".format(
-            repo=repo, num=num,
-        )
+        url = expand("/repos/{+repo}/issues/{num}/comments", repo=repo, num=str(num))
 
         comment_resp = github.post(url, json=comment)
         comment_resp.raise_for_status()
@@ -83,9 +82,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         comment = {
             "body": github_contractor_pr_comment(pr),
         }
-        url = "/repos/{repo}/issues/{num}/comments".format(
-            repo=repo, num=num,
-        )
+        url = expand("/repos/{+repo}/issues/{num}/comments", repo=repo, num=str(num))
         comment_resp = github.post(url, json=comment)
         comment_resp.raise_for_status()
         return None, True
@@ -146,14 +143,12 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     comment = {
         "body": github_community_pr_comment(pr, new_issue_body, people),
     }
-    url = "/repos/{repo}/issues/{num}/comments".format(
-        repo=repo, num=pr["number"],
-    )
+    url = expand("/repos/{+repo}/issues/{num}/comments", repo=repo, num=str(pr["number"]))
     comment_resp = github.post(url, json=comment)
     comment_resp.raise_for_status()
 
     # Add the "Needs Triage" label to the PR
-    issue_url = "/repos/{repo}/issues/{num}".format(repo=repo, num=pr["number"])
+    issue_url = expand("/repos/{+repo}/issues/{num}", repo=repo, num=str(pr["number"]))
     label_resp = github.patch(issue_url, data=json.dumps({"labels": ["needs triage", "open-source-contribution"]}))
     label_resp.raise_for_status()
 
@@ -190,10 +185,7 @@ def pull_request_closed(pull_request):
     sentry.client.extra_context({"jira_key": issue_key})
 
     # close the issue on JIRA
-    transition_url = (
-        "/rest/api/2/issue/{key}/transitions"
-        "?expand=transitions.fields".format(key=issue_key)
-    )
+    transition_url = expand("/rest/api/2/issue/{key}/transitions?expand=transitions.fields", key=issue_key)
     transitions_resp = jira.get(transition_url)
     if transitions_resp.status_code == 404:
         # JIRA issue has been deleted
@@ -213,7 +205,7 @@ def pull_request_closed(pull_request):
 
     if not transition_id:
         # maybe the issue is *already* in the right status?
-        issue_url = "/rest/api/2/issue/{key}".format(key=issue_key)
+        issue_url = expand("/rest/api/2/issue/{key}", key=issue_key)
         issue_resp = jira.get(issue_url)
         issue_resp.raise_for_status()
         issue = issue_resp.json()
@@ -263,7 +255,7 @@ def rescan_repository(self, repo):
     """
     github = github_bp.session
     sentry.client.extra_context({"repo": repo})
-    url = "/repos/{repo}/pulls".format(repo=repo)
+    url = expand("/repos/{+repo}/pulls", repo=repo)
     created = {}
     if not self.request.called_directly:
         self.update_state(state='STARTED', meta={'repo': repo})
@@ -315,9 +307,10 @@ def rescan_repository(self, repo):
 def get_jira_issue_key(pull_request):
     me = github_whoami()
     my_username = me["login"]
-    comment_url = "/repos/{repo}/issues/{num}/comments".format(
+    comment_url = expand(
+        "/repos/{+repo}/issues/{num}/comments",
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
-        num=pull_request["number"],
+        num=str(pull_request["number"]),
     )
     for comment in paginated_get(comment_url, session=github_bp.session):
         # I only care about comments I made
@@ -354,9 +347,10 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
     in_authors_file = False
     name = people.get(pr_author, {}).get("name", "")
     if name:
-        authors_url = "https://raw.githubusercontent.com/{repo}/{branch}/AUTHORS".format(
+        authors_url = expand(
+            "https://raw.githubusercontent.com/{+repo}{/branch*}/AUTHORS",
             repo=pull_request["head"]["repo"]["full_name"].decode('utf-8'),
-            branch=pull_request["head"]["ref"].decode('utf-8'),
+            branch=pull_request["head"]["ref"].decode('utf-8').split("/"),
         )
         authors_resp = github.get(authors_url)
         if authors_resp.ok:
@@ -397,9 +391,10 @@ def has_contractor_comment(pull_request):
     """
     me = github_whoami()
     my_username = me["login"]
-    comment_url = "/repos/{repo}/issues/{num}/comments".format(
+    comment_url = expand(
+        "/repos/{+repo}/issues/{num}/comments",
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
-        num=pull_request["number"],
+        num=str(pull_request["number"]),
     )
     for comment in paginated_get(comment_url, session=github_bp.session):
         # I only care about comments I made
@@ -417,9 +412,10 @@ def github_internal_cover_letter(pull_request):
     return a comment for the pull request that contains the cover letter.
     """
     # check for a `.coverletter.md.j2` in repo, use that if it exists
-    coverletter_url = "https://raw.githubusercontent.com/{repo}/{branch}/.coverletter.md.j2".format(
+    coverletter_url = expand(
+        "https://raw.githubusercontent.com/{+repo}{/branch*}/.coverletter.md.j2",
         repo=pull_request["head"]["repo"]["full_name"].decode('utf-8'),
-        branch=pull_request["head"]["ref"].decode('utf-8'),
+        branch=pull_request["head"]["ref"].decode('utf-8').split("/"),
     )
     coverletter_resp = github_bp.session.get(coverletter_url)
     ctx = {
@@ -440,9 +436,10 @@ def has_internal_cover_letter(pull_request):
 
     me = github_whoami()
     my_username = me["login"]
-    comment_url = "/repos/{repo}/issues/{num}/comments".format(
+    comment_url = expand(
+        "/repos/{+repo}/issues/{num}/comments",
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
-        num=pull_request["number"],
+        num=str(pull_request["number"]),
     )
     for comment in paginated_get(comment_url, session=github_bp.session):
         # I only care about comments I made
