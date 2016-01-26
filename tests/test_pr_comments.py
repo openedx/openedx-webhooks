@@ -52,11 +52,11 @@ def make_jira_issue(key="ABC-123"):
 
 def test_community_pr_comment(app, requests_mocker):
     # A pull request from a member in good standing.
-    pr = make_pull_request(user="tusbar", head_ref="tusbar/cool-feature")
+    pr = make_pull_request(user="tusbar", head_ref="tusbar/cool-feature-#1234")
     jira = make_jira_issue(key="TNL-12345")
     # An AUTHORS file that contains the author.
     requests_mocker.get(
-        "https://raw.githubusercontent.com/tusbar/edx-platform/tusbar/cool-feature/AUTHORS",
+        "https://raw.githubusercontent.com/tusbar/edx-platform/tusbar/cool-feature-%231234/AUTHORS",
         text="Bertrand Marron <tusbar@tusbar.com>\n",
     )
     with app.test_request_context('/'):

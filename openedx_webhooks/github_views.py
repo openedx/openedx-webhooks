@@ -5,13 +5,14 @@ These are the views that process webhook events coming from Github.
 
 from __future__ import unicode_literals, print_function
 
-import sys
-import json
 from collections import defaultdict
+import json
+import sys
 
 from flask import Blueprint, request, render_template, make_response, url_for, jsonify
 from flask_dance.contrib.github import github
 from celery import group
+from uritemplate import expand
 
 from openedx_webhooks import sentry
 from openedx_webhooks.info import (
@@ -153,13 +154,13 @@ def process_pr():
         resp.status_code = 400
         return resp
     num = int(num)
-    pr_resp = github.get("/repos/{repo}/pulls/{num}".format(repo=repo, num=num))
+    pr_resp = github.get(expand("/repos/{+repo}/pulls/{num}", repo=repo, num=num))
     if not pr_resp.ok:
         resp = jsonify({"error": pr_resp.text})
         resp.status_code = 400
         return resp
 
-    repo_resp = github.get("/repos/{repo}".format(repo=repo))
+    repo_resp = github.get(expand("/repos/{+repo}", repo=repo))
     repo_json = repo_resp.json()
     if not repo_json["permissions"]["admin"]:
         resp = jsonify({
@@ -204,7 +205,7 @@ def install():
     success = []
     failed = []
     for repo in repos:
-        url = "/repos/{repo}/hooks".format(repo=repo)
+        url = expand("/repos/{+repo}/hooks", repo=repo)
         body = {
             "name": "web",
             "events": ["pull_request"],
@@ -256,7 +257,7 @@ def check_contributors():
     missing_contributors = defaultdict(set)
     for repo in repos:
         sentry.client.extra_context({"repo": repo})
-        contributors_url = "/repos/{repo}/contributors".format(repo=repo)
+        contributors_url = expand("/repos/{+repo}/contributors", repo=repo)
         contributors = paginated_get(contributors_url, session=github)
         for contributor in contributors:
             if contributor["login"].lower() not in people_lower:
