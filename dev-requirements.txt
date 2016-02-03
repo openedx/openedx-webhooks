@@ -1,5 +1,5 @@
 # tests
-pytest
+pytest==2.8.7
 pytest-cover
 pytest-mock
 betamax
