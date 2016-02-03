@@ -416,8 +416,8 @@ def github_internal_cover_letter(pull_request):
     For a newly-created pull request an edX internal developer,
     return a comment for the pull request that contains the cover letter.
     """
-    # check for a `.coverletter.md.j2` in repo, use that if it exists
-    coverletter_url = "https://raw.githubusercontent.com/{repo}/{branch}/.coverletter.md.j2".format(
+    # check for a `.pr_cover_letter.md.j2` in repo, use that if it exists
+    coverletter_url = "https://raw.githubusercontent.com/{repo}/{branch}/.pr_cover_letter.md.j2".format(
         repo=pull_request["head"]["repo"]["full_name"].decode('utf-8'),
         branch=pull_request["head"]["ref"].decode('utf-8'),
     )

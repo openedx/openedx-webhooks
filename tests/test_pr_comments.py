@@ -227,7 +227,7 @@ def test_has_internal_pr_cover_letter(reqctx, requests_mocker):
         headers={"Content-Type": "application/json"},
     )
     requests_mocker.get(
-        "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.coverletter.md.j2",
+        "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.pr_cover_letter.md.j2",
         status_code=404,
     )
 
@@ -277,7 +277,7 @@ def test_custom_internal_pr_cover(reqctx, requests_mocker):
         headers={"Content-Type": "application/json"},
     )
     requests_mocker.get(
-        "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.coverletter.md.j2",
+        "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.pr_cover_letter.md.j2",
         text='custom cover letter for PR from @{{ user }}',
     )
 
