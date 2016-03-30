@@ -7,7 +7,8 @@ import openedx_webhooks
 from openedx_webhooks.tasks.github import (
     github_community_pr_comment, github_contractor_pr_comment,
     github_internal_cover_letter,
-    has_contractor_comment, has_internal_cover_letter
+    has_contractor_comment, has_internal_cover_letter,
+    COVERLETTER_MARKER
 )
 
 pytestmark = pytest.mark.usefixtures('mock_github')
@@ -209,11 +210,7 @@ def test_internal_pr_cover_letter(reqctx):
     )
     with reqctx:
         comment = github_internal_cover_letter(pr)
-    assert "this is my first pull request" not in comment
-    assert "# Sandbox" in comment
-    assert "# Testing" in comment
-    assert "# Reviewers" in comment
-    assert "# DevOps assistance" in comment
+    assert comment is None
 
 
 def test_has_internal_pr_cover_letter(reqctx, requests_mocker):
@@ -228,7 +225,7 @@ def test_has_internal_pr_cover_letter(reqctx, requests_mocker):
     )
     requests_mocker.get(
         "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.pr_cover_letter.md.j2",
-        status_code=404,
+        text="Fancy cover letter!",
     )
 
     with reqctx:
@@ -283,4 +280,5 @@ def test_custom_internal_pr_cover(reqctx, requests_mocker):
 
     with reqctx:
         comment_body = github_internal_cover_letter(pr)
-    assert comment_body == 'custom cover letter for PR from @different_user'
+    assert comment_body.startswith('custom cover letter for PR from @different_user')
+    assert comment_body.endswith(COVERLETTER_MARKER)

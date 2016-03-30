@@ -20,14 +20,17 @@ from openedx_webhooks.utils import memoize, paginated_get
 from openedx_webhooks.jira_views import get_jira_custom_fields
 
 
+COVERLETTER_MARKER = "<!-- open edx coverletter -->"
+
+
 @celery.task
 def pull_request_opened(pull_request, ignore_internal=True, check_contractor=True):
     """
     Process a pull request. This is called when a pull request is opened, or
     when the pull requests of a repo are re-scanned. By default, this function
-    will ignore internal pull requests, and will add a comment to pull requests
-    made by contractors (if if has not yet added a comment). However,
-    this function can be called in such a way that it processes those pull
+    will ignore internal pull requests (unless a repo has supplied .pr_cover_letter.md.j2),
+    and will add a comment to pull requests made by contractors (if if has not yet added
+    a comment). However, this function can be called in such a way that it processes those pull
     requests anyway.
 
     This function must be idempotent. Every time the repositories are re-scanned,
@@ -55,15 +58,18 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
                 repo=repo, num=num,
             ),
         )
-        comment = {
-            "body": github_internal_cover_letter(pr),
-        }
-        url = "/repos/{repo}/issues/{num}/comments".format(
-            repo=repo, num=num,
-        )
+        coverletter = github_internal_cover_letter(pr),
 
-        comment_resp = github.post(url, json=comment)
-        comment_resp.raise_for_status()
+        if coverletter is not None:
+            comment = {
+                "body": coverletter
+            }
+            url = "/repos/{repo}/issues/{num}/comments".format(
+                repo=repo, num=num,
+            )
+
+            comment_resp = github.post(url, json=comment)
+            comment_resp.raise_for_status()
 
     if ignore_internal and is_internal_pr:
         # not an open source pull request, don't create an issue for it
@@ -427,9 +433,9 @@ def github_internal_cover_letter(pull_request):
     }
     if coverletter_resp.ok:
         template_string = coverletter_resp.text
-        return render_template_string(template_string, **ctx)
+        return "\n\n".join([render_template_string(template_string, **ctx), COVERLETTER_MARKER])
     else:
-        return render_template("github_pr_cover_letter.md.j2", **ctx)
+        return None
 
 
 def has_internal_cover_letter(pull_request):
@@ -450,13 +456,7 @@ def has_internal_cover_letter(pull_request):
             continue
 
         body = comment["body"].decode('utf-8')
-        magic_phrases = [
-            "# Sandbox",
-            "# Testing",
-            "# Reviewers",
-            "# DevOps assistance",
-        ]
-        if all(magic_phrase in body for magic_phrase in magic_phrases):
+        if COVERLETTER_MARKER in body:
             return True
     return False
 
