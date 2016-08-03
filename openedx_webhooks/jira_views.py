@@ -527,10 +527,8 @@ def jira_issue_comment_added(issue, comment):
 
 # a mapping of group name to email domain
 domain_groups = {
-    "edx-employees": "@edx.org",
-    "qualcomm": ".qualcomm.com",
-    "ubc": "@cs.ubc.ca",
-    "ubc": "@ubc.ca",
+    "partner-ubc": "@cs.ubc.ca",
+    "partner-ubc": "@ubc.ca",
 }
 
 
