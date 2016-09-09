@@ -1,4 +1,3 @@
-# The few things we need to do in the openedx-webhooks working tree.
 .DEFAULT_GOAL := test
 
 PRIVATE_IN = requirements/private.in
@@ -9,8 +8,6 @@ ifneq (, $(wildcard $(PRIVATE_TXT)))
 requirement-files += $(PRIVATE_TXT)
 endif
 
-test:
-	py.test --cov=openedx_webhooks
 
 clean:
 	-rm -rf .cache build dist *.egg-info .coverage htmlcov docs/_build
@@ -30,3 +27,7 @@ pip-compile: ## update the requirements/*.txt files with the latest packages sat
 ifneq (, $(wildcard $(PRIVATE_IN)))
 	pip-compile --upgrade $(PRIVATE_IN)
 endif
+
+
+test:
+	py.test --cov=openedx_webhooks
