@@ -11,3 +11,5 @@ htmlcov
 build/
 dist/
 openedx_webhooks.egg-info/
+requirements/private.in
+requirements/private.txt
