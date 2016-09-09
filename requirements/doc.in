@@ -1,0 +1,6 @@
+# Requirements for documentation validation
+
+Sphinx                    # Documentation builder
+readme_renderer           # Validates README.rst for usage on PyPI
+sphinx_rtd_theme          # ReadTheDocs theme for Sphinx output
+sphinxcontrib-httpdomain

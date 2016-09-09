@@ -1,0 +1,24 @@
+# Core requirements for using this application
+
+Flask-Dance[sqla]==0.8.2
+Flask-SQLAlchemy==2.0
+Flask-SSLify
+Flask-Script
+Flask==0.10.1
+PyYAML==3.11
+URLObject==2.4.0
+blinker
+celery==3.1.18
+cryptography
+functools32==3.2.3-2
+gunicorn==19.4.1
+iso8601
+oauthlib[signedtoken]==1.0.3
+psycopg2==2.5.3
+raven
+redis==2.10.3
+requests-oauthlib==0.6.0
+requests==2.9.1
+sqlalchemy_utils
+# rabbitmq is giving us problems, so lets try ironmq
+iron_celery
