@@ -6,7 +6,7 @@ designed to be deployed onto `Heroku`_.
 Tests::
 
     $ pip install -r dev-requirements.txt
-    $ py.test --cov=openedx_webhooks
+    $ make test
 
 
 .. _Open edX: http://openedx.org
