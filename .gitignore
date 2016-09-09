@@ -12,3 +12,5 @@ jira.pub
 jira.uuid
 openedx_webhooks.db
 openedx_webhooks.egg-info/
+requirements/private.in
+requirements/private.txt

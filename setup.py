@@ -14,7 +14,7 @@ class PyTest(TestCommand):
         self.test_suite = True
 
     def run_tests(self):
-        #import here, because outside the eggs aren't loaded
+        # import here, because outside the eggs aren't loaded
         import pytest
         errno = pytest.main(self.test_args)
         sys.exit(errno)
@@ -58,8 +58,8 @@ setup(
     url="https://github.com/edx/openedx_webhooks",
     packages=find_packages(),
     install_requires=get_requirements("requirements.txt"),
-    tests_require=get_requirements("dev-requirements.txt"),
-    cmdclass = {'test': PyTest},
+    tests_require=get_requirements("requirements/test.txt"),
+    cmdclass={'test': PyTest},
     license='Apache 2.0',
     classifiers=(
         'License :: OSI Approved :: Apache Software License',

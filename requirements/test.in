@@ -1,0 +1,8 @@
+# Requirements for test runs.
+
+betamax
+codecov
+pytest-cov
+pytest-mock
+pytest==2.8.7
+requests-mock
