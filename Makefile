@@ -1,6 +1,6 @@
 # The few things we need to do in the openedx-webhooks working tree.
+.DEFAULT_GOAL := test
 
-.DEFAULT: test
 
 test:
 	py.test --cov=openedx_webhooks
