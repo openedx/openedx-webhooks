@@ -19,6 +19,5 @@ raven
 redis==2.10.3
 requests-oauthlib==0.6.0
 requests==2.9.1
-sqlalchemy_utils
 # rabbitmq is giving us problems, so lets try ironmq
 iron_celery

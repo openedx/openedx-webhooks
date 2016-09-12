@@ -58,7 +58,6 @@ requests-oauthlib==0.6.0
 requests==2.9.1
 six==1.10.0               # via cryptography, flask-dance, mock, python-dateutil, requests-mock, sqlalchemy-utils
 sqlalchemy-utils==0.32.9  # via flask-dance
-sqlalchemy-utils==0.32.9  # via flask-dance
 SQLAlchemy==1.0.15        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
 URLObject==2.4.0          # via flask-dance
 Werkzeug==0.11.11         # via flask
