@@ -1,22 +1,27 @@
-Webhooks for `Open edX`_, integrating `JIRA`_ and `Github`_,
-designed to be deployed onto `Heroku`_.
+Open edX Webhooks
+=================
 
-|build-status| |coverage-status| |docs|
+Webhooks for `Open edX`_ integrating `JIRA`_ and `Github`_. Designed to
+be deployed onto `Heroku`_.
 
-Tests::
+|Build Status| |Coverage Status| |Documentation badge|
 
-    $ pip install -r dev-requirements.txt
-    $ make test
+How to Run Tests
+----------------
 
+.. code:: sh
+
+    pip install -r dev-requirements.txt
+    make test
 
 .. _Open edX: http://openedx.org
 .. _JIRA: https://openedx.atlassian.net
 .. _Github: https://github.com/edx
 .. _Heroku: http://heroku.com
-.. |build-status| image:: https://travis-ci.org/edx/openedx-webhooks.svg?branch=master
+
+.. |Build Status| image:: https://travis-ci.org/edx/openedx-webhooks.svg?branch=master
    :target: https://travis-ci.org/edx/openedx-webhooks
-.. |coverage-status| image:: http://codecov.io/github/edx/openedx-webhooks/coverage.svg?branch=master
+.. |Coverage Status| image:: http://codecov.io/github/edx/openedx-webhooks/coverage.svg?branch=master
    :target: http://codecov.io/github/edx/openedx-webhooks?branch=master
-.. |docs| image:: https://readthedocs.org/projects/openedx-webhooks/badge/?version=latest
+.. |Documentation badge| image:: https://readthedocs.org/projects/openedx-webhooks/badge/?version=latest
    :target: http://openedx-webhooks.readthedocs.org/en/latest/
-   :alt: Documentation badge
