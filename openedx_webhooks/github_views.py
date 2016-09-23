@@ -33,7 +33,7 @@ def pull_request():
 
     .. _PullRequestEvent: https://developer.github.com/v3/activity/events/types/#pullrequestevent
     """
-    # TODO: We need to untangle this, there are **four** `returns` in this function!
+    # TODO: We need to untangle this, there are **four** `return`s in this function!
     try:
         event = request.get_json()
     except ValueError:
@@ -59,18 +59,18 @@ def pull_request():
         print(msg, file=sys.stderr)
         return msg, 200
 
-    msg = "{}/pull/{} {}".format(repo, PR_NUMBER, action)
+    _msg = "{}/pull/{} {}".format(repo, PR_NUMBER, action)
     if action == "opened":
-        _msg = "{}, processing…".format(msg)
+        msg = "{}, processing…".format(_msg)
         print(msg, file=sys.stderr)
         result = pull_request_opened.delay(pr, wsgi_environ=minimal_wsgi_environ())
     elif action == "closed":
-        _msg = "{}, processing…".format(msg)
+        msg = "{}, processing…".format(_msg)
         print(msg, file=sys.stderr)
         result = pull_request_closed.delay(pr)
     else:
-        _msg = "{}, rejecting with `400 Bad request`".format(msg)
-        print(_msg, file=sys.stderr)
+        msg = "{}, rejecting with `400 Bad request`".format(_msg)
+        print(msg, file=sys.stderr)
         # TODO: Is this really kosher? We should do no-op, not reject the request!
         return "Don't know how to handle this.", 400
 
