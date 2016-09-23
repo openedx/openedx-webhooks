@@ -126,6 +126,24 @@ When you're ready to promote from staging to production:
 
     heroku pipelines:promote -r heroku
 
+Ensure the same versions are deployed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Make sure the same git commit is deployed to both environments. First
+see what's deployed on staging:
+
+.. code:: sh
+
+    heroku releases -n 1
+
+Then see what's deployed on production:
+
+.. code:: sh
+
+    heroku releases -a openedx-webhooks -n 1
+
+Make sure the abbreviated git SHAs match.
+
 Smoke test the deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
