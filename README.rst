@@ -20,6 +20,9 @@ Make sure you've installed:
    *Hint*: See `runtime.txt`_ for the exact version
 -  `Heroku Command Line`_
 
+   All ``heroku`` commands can be performed through the Heroku web-based
+   dashboard as well, if you don't want to use the CLI.
+
 Set up
 ~~~~~~
 
@@ -70,7 +73,7 @@ difficult to ensure consistent experience for each developer. Instead,
 we utilize the `pipeline`_ facility offered by Heroku to handle our
 development needs.
 
-The general development cycle will be:
+The general development cycle is:
 
 Code → Deploy branch to staging → Test → Iterate
 
@@ -96,6 +99,17 @@ Deploy
 
 In most cases, you'll want to deploy by promoting from staging to
 production.
+
+**Prior to the promotion**, make sure all the changes have been merged
+to ``master``, and you've deployed the ``master`` branch successfully to
+staging.
+
+The general workflow is:
+
+Merge to ``master`` → Deploy ``master`` to staging → Test → Promote to
+production
+
+When you're ready to promote from staging to production:
 
 .. code:: sh
 
