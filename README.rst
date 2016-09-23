@@ -162,6 +162,7 @@ TODO
 ----
 
 -  Describe the different processes that are run on Heroku
+-  Describe how to access logs
 -  Make sure ``docs/`` is up to date
 
 .. _Open edX: http://openedx.org
