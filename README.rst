@@ -86,6 +86,17 @@ To deploy a local branch to staging:
 Once you're satisfied with your changes, go ahead and open a pull
 request per normal development procedures.
 
+Smoke test the deployment
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Navigate to https://openedx-webhooks-staging.herokuapp.com to make sure
+the app has started. If the URL is too hard to remember, you can also
+use:
+
+.. code:: sh
+
+    heroku open
+
 Run Tests
 ---------
 
@@ -114,6 +125,16 @@ When you're ready to promote from staging to production:
 .. code:: sh
 
     heroku pipelines:promote -r heroku
+
+Smoke test the deployment
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Navigate to https://openedx-webhooks.herokuapp.com to make sure the app
+has started. If the URL is too hard to remember, you can also use:
+
+.. code:: sh
+
+    heroku open -a openedx-webhooks
 
 --------------
 
