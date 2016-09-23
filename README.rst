@@ -17,7 +17,7 @@ Make sure you've installed:
 -  Python 2.7.x development environment (virtualenv strongly
    recommended)
 
-   \*Hint: See `runtime.txt`_ for the exact version
+   *Hint*: See `runtime.txt`_ for the exact version
 -  `Heroku Command Line`_
 
 Set up
