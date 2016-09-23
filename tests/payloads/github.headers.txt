@@ -1,0 +1,7 @@
+Request URL: https://openedx-webhooks.herokuapp.com/github/pr
+Request method: POST
+content-type: application/json
+Expect: 
+User-Agent: GitHub-Hookshot/a5ffa81
+X-GitHub-Delivery: 9aac4b00-81c2-11e6-8006-8683d43dce36
+X-GitHub-Event: pull_request
