@@ -18,8 +18,6 @@ Make sure you've installed:
 
 -  Python 2.7.x development environment (virtualenv strongly
    recommended)
-
-   *Hint*: See `runtime.txt`_ for the exact version
 -  `Heroku Command Line`_
 
    All ``heroku`` commands can be performed through the Heroku web-based
@@ -170,7 +168,6 @@ TODO
 .. _Github: https://github.com/edx
 .. _Heroku: http://heroku.com
 .. _Access the app: https://openedx-webhooks.herokuapp.com
-.. _runtime.txt: runtime.txt
 .. _Heroku Command Line: https://devcenter.heroku.com/articles/heroku-command-line
 .. _pipeline: https://devcenter.heroku.com/articles/pipelines
 
