@@ -2,11 +2,6 @@
 
 PRIVATE_IN = requirements/private.in
 PRIVATE_TXT = requirements/private.txt
-requirement-files = requirements/base.txt requirements/dev.txt requirements/test.txt
-
-ifneq (, $(wildcard $(PRIVATE_TXT)))
-requirement-files += $(PRIVATE_TXT)
-endif
 
 
 check-setup.py:
@@ -19,7 +14,7 @@ clean:
 
 install-requirements: ## install development environment requirements
 	pip install -q pip-tools
-	pip-sync $(requirement-files)
+	pip-sync requirements/*.txt
 
 
 pip-compile: ## update the requirements/*.txt files with the latest packages satisfying requirements/*.in
