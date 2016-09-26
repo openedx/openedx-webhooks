@@ -75,10 +75,11 @@ def pull_request():
         return "Don't know how to handle this.", 400
 
     status_url = url_for("tasks.status", task_id=result.id, _external=True)
+    print("Job status URL: {}".format(status_url), file=sys.stderr)
+
     resp = jsonify({"message": "queued", "status_url": status_url})
     resp.status_code = 202
     resp.headers["Location"] = status_url
-    print("Job status URL: {}".format(status_url), file=sys.stderr)
     return resp
 
 
