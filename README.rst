@@ -1,3 +1,5 @@
+.. highlight: sh
+
 Open edX Webhooks Handlers (and Other JIRA/GitHub Utilities)
 ============================================================
 
@@ -27,30 +29,22 @@ Set up
 ~~~~~~
 
 1. Log in using the email address and password you used when creating
-   your Heroku account:
-
-   .. code:: sh
+   your Heroku account::
 
        heroku login
 
    Authenticating is required to allow both the ``heroku`` and ``git``
    commands to operate.
 
-2. Add the Heroku app repo as a git remote:
-
-   .. code:: sh
+2. Add the Heroku app repo as a git remote::
 
        heroku git:remote -a openedx-webhooks-staging
 
-3. Verify that the remote is added properly:
-
-   .. code:: sh
+3. Verify that the remote is added properly::
 
        git remote -v
 
-   You should see output similar to:
-
-   .. code:: sh
+   You should see output similar to::
 
        heroku  https://git.heroku.com/openedx-webhooks-staging.git (push)
        heroku  https://git.heroku.com/openedx-webhooks-staging.git (fetch)
@@ -77,9 +71,7 @@ The general development cycle is:
 
 Code → Deploy branch to staging → Test → Iterate
 
-To deploy a local branch to staging:
-
-.. code:: sh
+To deploy a local branch to staging::
 
     git push heroku [branch_or_tag_or_hash:]master
 
@@ -91,16 +83,14 @@ Smoke test the deployment
 
 Navigate to https://openedx-webhooks-staging.herokuapp.com to make sure
 the app has started. If the URL is too hard to remember, you can also
-use:
-
-.. code:: sh
+use::
 
     heroku open
 
 Run Tests
 ---------
 
-.. code:: sh
+::
 
     make install-requirements
     make test
@@ -120,9 +110,7 @@ The general workflow is:
 Merge to ``master`` → Deploy ``master`` to staging → Test → Promote to
 production
 
-When you're ready to promote from staging to production:
-
-.. code:: sh
+When you're ready to promote from staging to production::
 
     heroku pipelines:promote -r heroku
 
@@ -130,15 +118,11 @@ Ensure the same versions are deployed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Make sure the same git commit is deployed to both environments. First
-see what's deployed on staging:
-
-.. code:: sh
+see what's deployed on staging::
 
     heroku releases -n 1
 
-Then see what's deployed on production:
-
-.. code:: sh
+Then see what's deployed on production::
 
     heroku releases -a openedx-webhooks -n 1
 
@@ -148,9 +132,7 @@ Smoke test the deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Navigate to https://openedx-webhooks.herokuapp.com to make sure the app
-has started. If the URL is too hard to remember, you can also use:
-
-.. code:: sh
+has started. If the URL is too hard to remember, you can also use::
 
     heroku open -a openedx-webhooks
 
