@@ -75,6 +75,10 @@ To deploy a local branch to staging::
 
     git push heroku [branch_or_tag_or_hash:]master
 
+In most cases, to push your current working branch, use::
+
+    git push heroku @:master
+
 Once you're satisfied with your changes, go ahead and open a pull
 request per normal development procedures.
 
