@@ -1,31 +1,35 @@
 # coding=utf-8
-from __future__ import unicode_literals, print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
+from datetime import date
 import json
 import re
-from datetime import date
 
-from iso8601 import parse_date
 from flask import render_template, render_template_string
+from iso8601 import parse_date
 from urlobject import URLObject
+import requests
 
 # TODO: Why aren't these relative imports?
 from openedx_webhooks import sentry, celery
-from openedx_webhooks.tasks import logger
-from openedx_webhooks.oauth import github_bp, jira_bp
 from openedx_webhooks.info import (
-    get_people_file, is_internal_pull_request, is_contractor_pull_request,
+    get_people_file,
     is_beta_tester_pull_request,
+    is_contractor_pull_request,
+    is_internal_pull_request,
 )
-from openedx_webhooks.utils import memoize, paginated_get
 from openedx_webhooks.jira_views import get_jira_custom_fields
+from openedx_webhooks.oauth import github_bp, jira_bp
+from openedx_webhooks.tasks import logger
+from openedx_webhooks.tasks.utils import log_error, log_info, log_request_response
+from openedx_webhooks.utils import memoize, paginated_get
 
 
 COVERLETTER_MARKER = "<!-- open edx coverletter -->"
 
 
-@celery.task
-def pull_request_opened(pull_request, ignore_internal=True, check_contractor=True):
+@celery.task(bind=True)
+def pull_request_opened(self, pull_request, ignore_internal=True, check_contractor=True):
     """
     Process a pull request. This is called when a pull request is opened, or
     when the pull requests of a repo are re-scanned. By default, this function
@@ -44,6 +48,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     element in the tuple is a boolean indicating if this function did any
     work, such as making a JIRA issue or commenting on the pull request.
     """
+    # TODO: Refactor alert, there are *5* `return`s in this function!
     github = github_bp.session
     pr = pull_request
     user = pr["user"]["login"].decode('utf-8')
@@ -53,47 +58,47 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     has_cl = has_internal_cover_letter(pr)
     is_beta = is_beta_tester_pull_request(pr)
 
+    msg = "Processing {} PR #{} by {}...".format(repo, num, user)
+    log_info(self.request, msg)
+
     if is_internal_pr and not has_cl and is_beta:
-        logger.info(
-            "Adding cover letter template to PR #{num} against {repo}".format(
-                repo=repo, num=num,
-            ),
-        )
-        coverletter = github_internal_cover_letter(pr),
+        msg = "Adding cover letter template to PR #{num} against {repo}".format(repo=repo, num=num)
+        log_info(self.request, msg)
+        coverletter = github_internal_cover_letter(pr)
 
         if coverletter is not None:
             comment = {
                 "body": coverletter
             }
-            url = "/repos/{repo}/issues/{num}/comments".format(
-                repo=repo, num=num,
-            )
+            url = "/repos/{repo}/issues/{num}/comments".format(repo=repo, num=num)
 
             comment_resp = github.post(url, json=comment)
+            log_request_response(self.request, comment_resp)
             comment_resp.raise_for_status()
 
     if ignore_internal and is_internal_pr:
         # not an open source pull request, don't create an issue for it
-        logger.info(
-            "@{user} opened PR #{num} against {repo} (internal PR)".format(
-                user=user, repo=repo, num=num,
-            ),
-        )
+        msg = "@{user} opened PR #{num} against {repo} (internal PR)".format(user=user, repo=repo, num=num)
+        log_info(self.request, msg)
         return None, False
 
     if check_contractor and is_contractor_pull_request(pr):
         # have we already left a contractor comment?
         if has_contractor_comment(pr):
+            msg = "Already left contractor comment for PR #{}".format(num)
+            log_info(self.request, msg)
             return None, False
 
         # don't create a JIRA issue, but leave a comment
         comment = {
             "body": github_contractor_pr_comment(pr),
         }
-        url = "/repos/{repo}/issues/{num}/comments".format(
-            repo=repo, num=num,
-        )
+        url = "/repos/{repo}/issues/{num}/comments".format(repo=repo, num=num)
+        msg = "Posting contractor comment to PR #{}".format(num)
+        log_info(self.request, msg)
+
         comment_resp = github.post(url, json=comment)
+        log_request_response(self.request, comment_resp)
         comment_resp.raise_for_status()
         return None, True
 
@@ -104,7 +109,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
             num=pr["number"],
             repo=pr["base"]["repo"]["full_name"],
         )
-        logger.info(msg)
+        log_info(self.request, msg)
         return issue_key, False
 
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
@@ -143,8 +148,11 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         new_issue["fields"][custom_fields["Customer"]] = [institution]
     sentry.client.extra_context({"new_issue": new_issue})
 
+    log_info(self.request, 'Creating new JIRA issue...')
     resp = jira_bp.session.post("/rest/api/2/issue", json=new_issue)
+    log_request_response(self.request, resp)
     resp.raise_for_status()
+
     new_issue_body = resp.json()
     issue_key = new_issue_body["key"].decode('utf-8')
     new_issue["key"] = issue_key
@@ -153,28 +161,32 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     comment = {
         "body": github_community_pr_comment(pr, new_issue_body, people),
     }
-    url = "/repos/{repo}/issues/{num}/comments".format(
-        repo=repo, num=pr["number"],
-    )
+    url = "/repos/{repo}/issues/{num}/comments".format(repo=repo, num=pr["number"])
+    log_info(self.request, 'Creating new GitHub comment with JIRA issue...')
     comment_resp = github.post(url, json=comment)
+    log_request_response(self.request, comment_resp)
     comment_resp.raise_for_status()
 
     # Add the "Needs Triage" label to the PR
     issue_url = "/repos/{repo}/issues/{num}".format(repo=repo, num=pr["number"])
-    label_resp = github.patch(issue_url, data=json.dumps({"labels": ["needs triage", "open-source-contribution"]}))
+    labels = {'labels': ['needs triage', 'open-source-contribution']}
+    log_info(self.request, 'Updating GitHub labels...')
+    label_resp = github.patch(issue_url, data=json.dumps(labels))
+    log_request_response(self.request, label_resp)
     label_resp.raise_for_status()
 
-    logger.info(
-        "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
-            user=user, repo=repo,
-            num=pr["number"], issue=issue_key,
-        ),
+    msg = "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
+        user=user,
+        repo=repo,
+        num=pr["number"],
+        issue=issue_key,
     )
+    log_info(self.request, msg)
     return issue_key, True
 
 
-@celery.task
-def pull_request_closed(pull_request):
+@celery.task(bind=True)
+def pull_request_closed(self, pull_request):
     """
     A GitHub pull request has been merged or closed. Synchronize the JIRA issue
     to also be in the "merged" or "closed" state. Returns a boolean: True
@@ -188,11 +200,10 @@ def pull_request_closed(pull_request):
     merged = pr["merged"]
     issue_key = get_jira_issue_key(pr)
     if not issue_key:
-        logger.info(
-            "Couldn't find JIRA issue for PR #{num} against {repo}".format(
-                num=pr["number"], repo=repo,
-            ),
+        msg = "Couldn't find JIRA issue for PR #{num} against {repo}".format(
+            num=pr["number"], repo=repo,
         )
+        log_info(self.request, msg)
         return "no JIRA issue :("
     sentry.client.extra_context({"jira_key": issue_key})
 
@@ -201,8 +212,10 @@ def pull_request_closed(pull_request):
         "/rest/api/2/issue/{key}/transitions"
         "?expand=transitions.fields".format(key=issue_key)
     )
+    log_info(self.request, 'Closing the issue on JIRA...')
     transitions_resp = jira.get(transition_url)
-    if transitions_resp.status_code == 404:
+    log_request_response(self.request, transitions_resp)
+    if transitions_resp.status_code == requests.codes.not_found:
         # JIRA issue has been deleted
         return False
     transitions_resp.raise_for_status()
@@ -230,7 +243,7 @@ def pull_request_closed(pull_request):
             msg = "{key} is already in status {status}".format(
                 key=issue_key, status=transition_name
             )
-            logger.info(msg)
+            log_info(self.request, msg)
             return False
 
         # nope, raise an error message
@@ -243,23 +256,25 @@ def pull_request_closed(pull_request):
                 valid=", ".join(t["to"]["name"].decode('utf-8') for t in transitions),
             )
         )
+        log_error(self.request, fail_msg)
         raise Exception(fail_msg)
 
+    log_info(self.request, 'Changing JIRA issue status...')
     transition_resp = jira.post(transition_url, json={
         "transition": {
             "id": transition_id,
         }
     })
+    log_request_response(self.request, transition_resp)
     transition_resp.raise_for_status()
-    logger.info(
-        "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
-            num=pr["number"],
-            repo=repo,
-            action="merged" if merged else "closed",
-            issue=issue_key,
-            status="Merged" if merged else "Rejected",
-        ),
+    msg = "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
+        num=pr["number"],
+        repo=repo,
+        action="merged" if merged else "closed",
+        issue=issue_key,
+        status="Merged" if merged else "Rejected",
     )
+    log_info(self.request, msg)
     return True
 
 
