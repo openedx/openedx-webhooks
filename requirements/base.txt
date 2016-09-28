@@ -8,18 +8,18 @@ amqp==1.4.9               # via kombu
 anyjson==0.3.3            # via kombu
 billiard==3.3.0.23        # via celery
 blinker==1.4
-celery==3.1.18
+celery==3.1.23
 cffi==1.8.3               # via cryptography
 contextlib2==0.5.4        # via raven
-cryptography==1.5
+cryptography==1.5.2
 enum34==1.1.6             # via cryptography
 Flask-Dance[sqla]==0.8.2
 Flask-Script==2.0.5
 Flask-SQLAlchemy==2.0
 Flask-SSLify==0.1.5
 Flask==0.10.1             # via flask-dance, flask-script, flask-sqlalchemy, flask-sslify
-functools32==3.2.3-2
-gunicorn==19.4.1
+functools32==3.2.3.post2
+gunicorn==19.6.0
 idna==2.1                 # via cryptography
 ipaddress==1.0.17         # via cryptography
 iron-cache==0.3.2         # via iron-celery
@@ -32,22 +32,22 @@ Jinja2==2.8               # via flask
 kombu==3.0.35             # via celery
 lazy==1.2                 # via flask-dance
 MarkupSafe==0.23          # via jinja2
-oauthlib[signedtoken]==1.0.3
-psycopg2==2.5.3
+oauthlib[signedtoken]==2.0.0
+psycopg2==2.6.2
 pyasn1==0.1.9             # via cryptography
 pycparser==2.14           # via cffi
 pyjwt==1.4.2              # via oauthlib
 python-dateutil==2.5.3    # via iron-core
 pytz==2016.6.1            # via celery
-PyYAML==3.11
+PyYAML==3.12
 raven==5.27.1
-redis==2.10.3
-requests-oauthlib==0.6.0
-requests==2.9.1
+redis==2.10.5
+requests-oauthlib==0.7.0
+requests==2.11.1
 six==1.10.0               # via cryptography, flask-dance, python-dateutil, sqlalchemy-utils
 sqlalchemy-utils==0.32.9  # via flask-dance
-sqlalchemy==1.0.15        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
-URLObject==2.4.0          # via flask-dance
+SQLAlchemy==1.0.15        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
+URLObject==2.4.2          # via flask-dance
 Werkzeug==0.11.11         # via flask
 
 # The following packages are commented out because they are
