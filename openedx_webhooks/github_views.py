@@ -61,7 +61,7 @@ def pull_request():
 
     _msg = "{}/pull/{} {}".format(repo, PR_NUMBER, action)
     if action == "opened":
-        msg = "{}, processing…".format(_msg)
+        msg = "{}, processing...".format(_msg)
         print(msg, file=sys.stderr)
         result = pull_request_opened.delay(pr, wsgi_environ=minimal_wsgi_environ())
     elif action == "closed":
