@@ -59,17 +59,17 @@ def pull_request():
         print(msg, file=sys.stderr)
         return msg, 200
 
-    _msg = "{}/pull/{} {}".format(repo, PR_NUMBER, action)
+    pr_activity = "{}/pull/{} {}".format(repo, PR_NUMBER, action)
     if action == "opened":
-        msg = "{}, processing...".format(_msg)
+        msg = "{}, processing...".format(pr_activity)
         print(msg, file=sys.stderr)
         result = pull_request_opened.delay(pr, wsgi_environ=minimal_wsgi_environ())
     elif action == "closed":
-        msg = "{}, processing…".format(_msg)
+        msg = "{}, processing…".format(pr_activity)
         print(msg, file=sys.stderr)
         result = pull_request_closed.delay(pr)
     else:
-        msg = "{}, rejecting with `400 Bad request`".format(_msg)
+        msg = "{}, rejecting with `400 Bad request`".format(pr_activity)
         print(msg, file=sys.stderr)
         # TODO: Is this really kosher? We should do no-op, not reject the request!
         return "Don't know how to handle this.", 400
