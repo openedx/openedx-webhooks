@@ -52,7 +52,7 @@ def pull_request():
         return "PONG"
 
     pr = event["pull_request"]
-    PR_NUMBER = pr['number']
+    pr_number = pr['number']
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
     action = event["action"]
     # `synchronize` action is when a new commit is made for the PR
@@ -62,7 +62,7 @@ def pull_request():
         print(msg, file=sys.stderr)
         return msg, 200
 
-    pr_activity = "{}/pull/{} {}".format(repo, PR_NUMBER, action)
+    pr_activity = "{}/pull/{} {}".format(repo, pr_number, action)
     if action == "opened":
         msg = "{}, processing...".format(pr_activity)
         print(msg, file=sys.stderr)
