@@ -68,7 +68,7 @@ def pull_request():
         print(msg, file=sys.stderr)
         result = pull_request_opened.delay(pr, wsgi_environ=minimal_wsgi_environ())
     elif action == "closed":
-        msg = "{}, processing…".format(pr_activity)
+        msg = "{}, processing...".format(pr_activity)
         print(msg, file=sys.stderr)
         result = pull_request_closed.delay(pr)
     else:
