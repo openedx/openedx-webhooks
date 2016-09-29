@@ -34,6 +34,9 @@ def pull_request():
     .. _PullRequestEvent: https://developer.github.com/v3/activity/events/types/#pullrequestevent
     """
     # TODO: We need to untangle this, there are **four** `return`s in this function!
+    msg = "Incoming GitHub PR request: {}".format(request.data)
+    print(msg, file=sys.stderr)
+
     try:
         event = request.get_json()
     except ValueError:
