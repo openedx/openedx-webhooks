@@ -24,7 +24,11 @@ class DefaultConfig(object):
 
 class WorkerConfig(DefaultConfig):
     # CELERY_BROKER_URL = os.environ.get("RABBITMQ_BIGWIG_RX_URL", "amqp://")
-    pass
+    CELERY_IMPORTS = (
+        'openedx_webhooks.tasks.github',
+        'openedx_webhooks.tasks.jira',
+        'openedx_webhooks.tasks.example',
+    )
 
 
 class DevelopmentConfig(DefaultConfig):
