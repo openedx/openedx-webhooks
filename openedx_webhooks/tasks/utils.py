@@ -76,7 +76,7 @@ def log_response(task_request, response):
             call this function
         response (requests.Response): the HTTP response
     """
-    msg = "{status_code} {reason} for {url}: {content}".format(**response)
+    msg = "{0.status_code} {0.reason} for {0.url}: {0.content}".format(response)
     log_info(task_request, msg)
 
 
