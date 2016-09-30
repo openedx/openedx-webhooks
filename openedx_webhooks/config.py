@@ -15,7 +15,9 @@ class DefaultConfig(object):
     CELERY_RESULT_SERIALIZER = "json"
     CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
     # CELERY_BROKER_URL = os.environ.get("RABBITMQ_BIGWIG_TX_URL", "amqp://")
+    # TODO: If we *are* going to have Redis, why do we need MQ?
     CELERY_BROKER_URL = "ironmq://"  # project ID and token are automatically read from env vars
+    # TODO: Why do we need to use Redis for results?
     CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://")
     SENTRY_PROCESSORS = ["openedx_webhooks.raven_processors.RequestsURLProcessor"]
 

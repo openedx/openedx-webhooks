@@ -33,10 +33,16 @@ def pull_request():
 
     .. _PullRequestEvent: https://developer.github.com/v3/activity/events/types/#pullrequestevent
     """
+    # TODO: We need to untangle this, there are **four** `return`s in this function!
+    msg = "Incoming GitHub PR request: {}".format(request.data)
+    print(msg, file=sys.stderr)
+
     try:
         event = request.get_json()
     except ValueError:
-        raise ValueError("Invalid JSON from Github: {data}".format(data=request.data))
+        msg = "Invalid JSON from Github: {data}".format(data=request.data)
+        print(msg, file=sys.stderr)
+        raise ValueError(msg)
     sentry.client.extra_context({"event": event})
 
     if "pull_request" not in event and "hook" in event and "zen" in event:
@@ -46,29 +52,34 @@ def pull_request():
         return "PONG"
 
     pr = event["pull_request"]
+    pr_number = pr['number']
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
     action = event["action"]
+    # `synchronize` action is when a new commit is made for the PR
     ignored_actions = set(("labeled", "synchronize"))
     if action in ignored_actions:
         msg = "Ignoring {action} events from github".format(action=action)
+        print(msg, file=sys.stderr)
         return msg, 200
 
+    pr_activity = "{}/pull/{} {}".format(repo, pr_number, action)
     if action == "opened":
+        msg = "{}, processing...".format(pr_activity)
+        print(msg, file=sys.stderr)
         result = pull_request_opened.delay(pr, wsgi_environ=minimal_wsgi_environ())
     elif action == "closed":
+        msg = "{}, processing...".format(pr_activity)
+        print(msg, file=sys.stderr)
         result = pull_request_closed.delay(pr)
     else:
-        print(
-            "Received {action} event on PR #{num} against {repo}, don't know how to handle it".format(
-                action=event["action"],
-                repo=pr["base"]["repo"]["full_name"].decode('utf-8'),
-                num=pr["number"],
-            ),
-            file=sys.stderr
-        )
+        msg = "{}, rejecting with `400 Bad request`".format(pr_activity)
+        print(msg, file=sys.stderr)
+        # TODO: Is this really kosher? We should do no-op, not reject the request!
         return "Don't know how to handle this.", 400
 
     status_url = url_for("tasks.status", task_id=result.id, _external=True)
+    print("Job status URL: {}".format(status_url), file=sys.stderr)
+
     resp = jsonify({"message": "queued", "status_url": status_url})
     resp.status_code = 202
     resp.headers["Location"] = status_url
