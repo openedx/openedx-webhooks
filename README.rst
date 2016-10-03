@@ -103,16 +103,16 @@ Deploy
 ------
 
 In most cases, you'll want to deploy by promoting from staging to
-production.
-
-**Prior to the promotion**, make sure all the changes have been merged
-to ``master``, and you've deployed the ``master`` branch successfully to
-staging.
-
-The general workflow is:
+production. The general workflow is:
 
 Merge to ``master`` → Deploy ``master`` to staging → Test → Promote to
 production
+
+**Prior to the promotion**, make sure all the changes have been merged
+to ``master``, and you've deployed the ``master`` branch successfully to
+staging::
+
+    git push heroku master
 
 When you're ready to promote from staging to production::
 
