@@ -45,6 +45,11 @@ cannot start without knowledge of the other. Also the task runner's
 authentication to GitHub and JIRA is dependent on authentication through the
 Flask app.
 
+See:
+
+* <https://github.com/edx/openedx-webhooks/blob/master/openedx_webhooks/__init__.py#L46>
+* <https://github.com/edx/openedx-webhooks/blob/master/openedx_webhooks/__init__.py#L74>
+
 ### Duplicate Knowledge
 
 There are many functions that contain the business logic to handle the
@@ -55,6 +60,11 @@ Flask views and Celery tasks. This leads to:
 * Everyone must have intimate knowledge of business logic, and how to parse
   event paylods, for example.
 * Makes unit testing very difficult.
+
+See:
+
+* <https://github.com/edx/openedx-webhooks/blob/master/openedx_webhooks/github_views.py#L29>
+* <https://github.com/edx/openedx-webhooks/blob/master/openedx_webhooks/tasks/github.py#L32>
 
 ### Not Invented Here
 
