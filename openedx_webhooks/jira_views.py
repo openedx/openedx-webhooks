@@ -526,6 +526,7 @@ def jira_issue_comment_added(issue, comment):
 
 
 # a mapping of group name to email domain
+# TODO: ??? re duplicate dict keys
 domain_groups = {
     "partner-ubc": "@cs.ubc.ca",
     "partner-ubc": "@ubc.ca",
