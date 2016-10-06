@@ -72,5 +72,15 @@ We're not taking advantage of third party GitHub API client, JIRA API client,
 and OAuth flow (if it's even needed!).
 
 
+## Symptoms We've Observed:
+
+* Duplicate OSPRs opened for merged PRs
+* OSPRs not created for PRs
+* OSPR status not synced to PR
+* OSPR label applied, but not in PR
+* Merged PR not reflected in OSPR status
+* Multiple, conflicting status labels applied in PR
+
+
 [docs]: http://openedx-webhooks.readthedocs.io/en/latest/
 [responsibilities]: http://openedx-webhooks.readthedocs.io/en/latest/about.html
