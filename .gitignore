@@ -2,6 +2,7 @@
 .cache
 .coverage
 .env
+Procfile.local
 README.md
 build/
 dist/
