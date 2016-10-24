@@ -1,13 +1,40 @@
 # coding=utf-8
+"""
+Generic utilities.
+"""
+
 from __future__ import print_function, unicode_literals
 
+from hashlib import sha1
+import hmac
 import os
 import sys
 
 from flask import request
+from urlobject import URLObject
 import functools32
 import requests
-from urlobject import URLObject
+
+
+def is_valid_payload(secret, signature, payload):
+    """
+    Ensure payload is valid according to signature.
+
+    Make sure the payload hashes to the signature as calculated using
+    the shared secret.
+
+    Arguments:
+        secret (str): The shared secret
+        signature (str): Signature as calculated by the server, sent in
+            the request
+        payload (str): The request payload
+
+    Returns:
+        bool: Is the payload legit?
+    """
+    mac = hmac.new(str(secret), msg=payload, digestmod=sha1)
+    digest = 'sha1=' + mac.hexdigest()
+    return hmac.compare_digest(str(digest), str(signature))
 
 
 def pop_dict_id(d):

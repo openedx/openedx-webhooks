@@ -5,25 +5,62 @@ These are the views that process webhook events coming from Github.
 
 from __future__ import unicode_literals, print_function
 
-import sys
-import json
 from collections import defaultdict
+import json
+import sys
 
-from flask import Blueprint, request, render_template, make_response, url_for, jsonify
-from flask_dance.contrib.github import github
 from celery import group
+from flask import (
+    Blueprint, jsonify, make_response, render_template, request, url_for
+)
+from flask import current_app as app
+from flask_dance.contrib.github import github
 
 from openedx_webhooks import sentry
-from openedx_webhooks.info import (
-    get_people_file, get_repos_file,
-    is_internal_pull_request, is_contractor_pull_request,
-    )
-from openedx_webhooks.utils import paginated_get, minimal_wsgi_environ
+from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
+from openedx_webhooks.info import get_people_file, get_repos_file
+from openedx_webhooks.lib.rq import q
 from openedx_webhooks.tasks.github import (
-    pull_request_opened, pull_request_closed, rescan_repository
+    pull_request_closed, pull_request_opened, rescan_repository
+)
+from openedx_webhooks.utils import (
+    is_valid_payload, minimal_wsgi_environ, paginated_get
 )
 
+
 github_bp = Blueprint('github_views', __name__)
+
+
+@github_bp.route('/hook-receiver', methods=('POST',))
+def hook_receiver():
+    """
+    Process incoming GitHub webhook events.
+
+    1.  Make sure the payload hashes to the proper signature. If not,
+        reject the request with http status of 403.
+    2.  Send a job to the queue with details of the event.
+    3.  Respond with http status 202.
+
+    Returns:
+        Tuple[str, int]: Message payload and HTTP status code
+    """
+    headers = GithubWebHookRequestHeader(request.headers)
+
+    # TODO: Once we adopt payload signature validation for all web hooks,
+    #       add as decorator, or somehow into Blueprint
+    secret = app.config.get('GITHUB_WEBHOOKS_SECRET')
+    if not is_valid_payload(secret, headers.signature, request.data):
+        msg = "Rejecting because signature doesn't match!"
+        print(msg, file=sys.stderr)
+        return msg, 403
+
+    q.enqueue(
+        'openedx_webhooks.github.dispatcher.dispatch',
+        dict(request.headers),
+        request.get_json()
+    )
+
+    return 'Thank you', 202
 
 
 @github_bp.route("/pr", methods=("POST",))
