@@ -6,10 +6,12 @@
 #
 amqp==1.4.9               # via kombu
 anyjson==0.3.3            # via kombu
+arrow==0.8.0
 billiard==3.3.0.23        # via celery
 blinker==1.4
-celery==3.1.23
+celery==3.1.24
 cffi==1.8.3               # via cryptography
+click==6.6
 contextlib2==0.5.4        # via raven
 cryptography==1.5.2
 enum34==1.1.6             # via cryptography
@@ -19,6 +21,7 @@ Flask-SQLAlchemy==2.0
 Flask-SSLify==0.1.5
 Flask==0.10.1             # via flask-dance, flask-script, flask-sqlalchemy, flask-sslify
 functools32==3.2.3.post2
+github3.py==0.9.6
 gunicorn==19.6.0
 idna==2.1                 # via cryptography
 ipaddress==1.0.17         # via cryptography
@@ -29,24 +32,30 @@ iron-mq==0.9              # via iron-celery
 iso8601==0.1.11
 itsdangerous==0.24        # via flask
 Jinja2==2.8               # via flask
-kombu==3.0.35             # via celery
+jira==1.0.7
+kombu==3.0.37             # via celery
 lazy==1.2                 # via flask-dance
 MarkupSafe==0.23          # via jinja2
 oauthlib[signedtoken]==2.0.0
 psycopg2==2.6.2
 pyasn1==0.1.9             # via cryptography
-pycparser==2.14           # via cffi
+pycparser==2.16           # via cffi
 pyjwt==1.4.2              # via oauthlib
-python-dateutil==2.5.3    # via iron-core
-pytz==2016.6.1            # via celery
+python-dateutil==2.5.3    # via arrow, iron-core
+pytz==2016.7              # via celery
 PyYAML==3.12
-raven==5.27.1
+raven==5.31.0
 redis==2.10.5
 requests-oauthlib==0.7.0
+requests-toolbelt==0.7.0  # via jira
 requests==2.11.1
-six==1.10.0               # via cryptography, flask-dance, python-dateutil, sqlalchemy-utils
+rq==0.6.0
+six==1.10.0               # via cryptography, flask-dance, jira, python-dateutil, sqlalchemy-utils
 sqlalchemy-utils==0.32.9  # via flask-dance
-SQLAlchemy==1.0.15        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
+SQLAlchemy==1.1.2         # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
+tlslite==0.4.9            # via jira
+uritemplate.py==3.0.2     # via github3.py
+uritemplate==3.0.0        # via uritemplate.py
 URLObject==2.4.2          # via flask-dance
 Werkzeug==0.11.11         # via flask
 

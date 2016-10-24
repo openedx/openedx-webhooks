@@ -7,17 +7,23 @@ Flask-Script
 Flask==0.10.1
 PyYAML
 URLObject
+arrow
 blinker
 celery
+click
 cryptography
 functools32
+github3.py>=0.9,<1.0
 gunicorn
 iso8601
+jira
 oauthlib[signedtoken]
 psycopg2
 raven
 redis
 requests
 requests-oauthlib
+rq
+
 # rabbitmq is giving us problems, so lets try ironmq
 iron_celery

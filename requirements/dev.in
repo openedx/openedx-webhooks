@@ -2,3 +2,4 @@
 
 edx-lint                  # For updating pylintrc
 pip-tools                 # Requirements file management
+python-dotenv
