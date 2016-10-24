@@ -18,6 +18,7 @@ from flask_dance.contrib.github import github
 
 from openedx_webhooks import sentry
 from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
+from openedx_webhooks.lib.github.utils import update_or_create_webhook
 from openedx_webhooks.info import get_people_file, get_repos_file
 from openedx_webhooks.lib.rq import q
 from openedx_webhooks.tasks.github import (
@@ -70,7 +71,8 @@ def pull_request():
 
     .. _PullRequestEvent: https://developer.github.com/v3/activity/events/types/#pullrequestevent
     """
-    # TODO: We need to untangle this, there are **four** `return`s in this function!
+    # TODO: We need to untangle this, there are **four** `return`s in
+    #       this function!
     msg = "Incoming GitHub PR request: {}".format(request.data)
     print(msg, file=sys.stderr)
 
@@ -111,7 +113,8 @@ def pull_request():
     else:
         msg = "{}, rejecting with `400 Bad request`".format(pr_activity)
         print(msg, file=sys.stderr)
-        # TODO: Is this really kosher? We should do no-op, not reject the request!
+        # TODO: Is this really kosher? We should do no-op, not reject
+        #       the request!
         return "Don't know how to handle this.", 400
 
     status_url = url_for("tasks.status", task_id=result.id, _external=True)
@@ -242,32 +245,28 @@ def install():
     """
     Install GitHub webhooks for a repo.
     """
+    # Import here because reverse URL lookup (which is used in `webhook_confs`)
+    # relies on Flask app environment being bootstrapped already.
+    from openedx_webhooks.webhook_confs import WEBHOOK_CONFS
+
     repo = request.form.get("repo", "")
     if repo:
         repos = [repo]
     else:
         repos = get_repos_file().keys()
 
-    api_url = url_for("github_views.pull_request", _external=True)
     success = []
     failed = []
-    for repo in repos:
-        url = "/repos/{repo}/hooks".format(repo=repo)
-        body = {
-            "name": "web",
-            "events": ["pull_request"],
-            "config": {
-                "url": api_url,
-                "content_type": "json",
-            }
-        }
-        sentry.client.extra_context({"repo": repo, "body": body})
+    for repo, conf in ((r, c) for r in repos for c in WEBHOOK_CONFS):
+        sentry.client.extra_context({'repo': repo, 'config': conf})
 
-        hook_resp = github.post(url, json=body)
-        if hook_resp.ok:
-            success.append(repo)
-        else:
-            failed.append((repo, hook_resp.text))
+        payload_url = conf['config']['url']
+
+        try:
+            update_or_create_webhook(repo, conf['config'], conf['events'])
+            success.append((repo, payload_url))
+        except Exception as e:
+            failed.append((repo, payload_url, str(e)))
 
     if failed:
         resp = make_response(json.dumps(failed), 502)
