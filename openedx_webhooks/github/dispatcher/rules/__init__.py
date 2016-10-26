@@ -21,9 +21,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from . import github_activity
 
+# List[Module, ...]: A list of rules to process, in order
 RULES = [
     github_activity,
 ]
-"""
-List[Module, ...]: A list of rules to process, in order
-"""

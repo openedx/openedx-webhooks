@@ -12,12 +12,8 @@ import redis
 
 _redis_url = os.getenv('REDIS_URL', 'redis://')
 
+# redis.Redis: Instance of a connected Redis store
 store = redis.from_url(_redis_url)
-"""
-redis.Redis: Instance of a connected Redis store
-"""
 
+# rq.Queue: Instance of RQ queue
 q = Queue(connection=store)
-"""
-rq.Queue: Instance of RQ queue
-"""

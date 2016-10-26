@@ -5,17 +5,19 @@ Utilities for working with `edx/repo-tools-data`.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from base64 import b64decode
-
 import yaml
 
-from ..github import gh
+from ..github.decorators import inject_gh
 from .models import People
 
 
-def get_people():
+@inject_gh
+def get_people(gh):
     """
     Fetch `people.yaml` from GitHub repo.
+
+    Arguments:
+        gh (github3.GitHub): An authenticated GitHub API client session
 
     Returns:
         openedx_webhooks.lib.edx_repo_tools_data.models.People

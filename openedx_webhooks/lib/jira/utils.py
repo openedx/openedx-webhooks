@@ -7,13 +7,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import arrow
 
-from . import jira
 from .models import JiraFields
+from .decorators import inject_jira
 
 
 def convert_to_jira_datetime_string(dt):
     """
     Convert a datetime to format expected by JIRA's API.
+
+    If the input datetime doesn't contain `tzinfo`, it is assumed to be UTC.
 
     For example: ``'2016-10-23T08:22:54.706-0700'``
 
@@ -23,11 +25,11 @@ def convert_to_jira_datetime_string(dt):
     Returns:
         str
     """
-    # TODO: Test
     return arrow.get(dt).format('YYYY-MM-DDTHH:mm:ss.SSSZ')
 
 
-def find_allowed_values(project_key, issue_type_name, field_name, jira=jira):
+@inject_jira
+def find_allowed_values(jira, project_key, issue_type_name, field_name):
     """
     Find allowed values for a given JIRA field.
 
@@ -37,10 +39,10 @@ def find_allowed_values(project_key, issue_type_name, field_name, jira=jira):
     editing an issue.
 
     Arguments:
+        jira (jira.JIRA): An authenticated JIRA API client session
         project_key (str): The JIRA project key
         issue_type_name (str): Name of the issue type within the project
         field_name (str): Name of the field within the issue type
-        jira (jira.JIRA): An authenticated JIRA API client session
 
     Returns:
         List[Dict[str, str]]: List of allowed values in JIRA spec format
@@ -55,18 +57,18 @@ def find_allowed_values(project_key, issue_type_name, field_name, jira=jira):
     return fields[field_id]['allowedValues']
 
 
-def make_fields_lookup(names=[], jira=jira):
+@inject_jira
+def make_fields_lookup(jira, names=[]):
     """
     Make a map of JIRA field names to IDs.
 
     Arguments:
-        names (List[str]): List of field names we want to look up
         jira (jira.JIRA): An authenticated JIRA API client session
+        names (List[str]): List of field names we want to look up
 
     Returns:
         Dict[str, str]: {field_name: field_id, ...}
     """
-    # TODO: Test
     fields = JiraFields(jira.fields())
     lookup = {}
     for name in names:

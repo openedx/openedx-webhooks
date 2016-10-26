@@ -30,3 +30,8 @@ endif
 
 test:
 	py.test --cov=openedx_webhooks
+
+
+test-html-coverage-report:
+	py.test --cov=openedx_webhooks --cov-report=html
+	open htmlcov/index.html
