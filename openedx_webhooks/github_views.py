@@ -5,25 +5,63 @@ These are the views that process webhook events coming from Github.
 
 from __future__ import unicode_literals, print_function
 
-import sys
-import json
 from collections import defaultdict
+import json
+import sys
 
-from flask import Blueprint, request, render_template, make_response, url_for, jsonify
-from flask_dance.contrib.github import github
 from celery import group
+from flask import (
+    Blueprint, jsonify, make_response, render_template, request, url_for
+)
+from flask import current_app as app
+from flask_dance.contrib.github import github
 
 from openedx_webhooks import sentry
-from openedx_webhooks.info import (
-    get_people_file, get_repos_file,
-    is_internal_pull_request, is_contractor_pull_request,
-    )
-from openedx_webhooks.utils import paginated_get, minimal_wsgi_environ
+from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
+from openedx_webhooks.lib.github.utils import update_or_create_webhook
+from openedx_webhooks.info import get_people_file, get_repos_file
+from openedx_webhooks.lib.rq import q
 from openedx_webhooks.tasks.github import (
-    pull_request_opened, pull_request_closed, rescan_repository
+    pull_request_closed, pull_request_opened, rescan_repository
+)
+from openedx_webhooks.utils import (
+    is_valid_payload, minimal_wsgi_environ, paginated_get
 )
 
+
 github_bp = Blueprint('github_views', __name__)
+
+
+@github_bp.route('/hook-receiver', methods=('POST',))
+def hook_receiver():
+    """
+    Process incoming GitHub webhook events.
+
+    1.  Make sure the payload hashes to the proper signature. If not,
+        reject the request with http status of 403.
+    2.  Send a job to the queue with details of the event.
+    3.  Respond with http status 202.
+
+    Returns:
+        Tuple[str, int]: Message payload and HTTP status code
+    """
+    headers = GithubWebHookRequestHeader(request.headers)
+
+    # TODO: Once we adopt payload signature validation for all web hooks,
+    #       add as decorator, or somehow into Blueprint
+    secret = app.config.get('GITHUB_WEBHOOKS_SECRET')
+    if not is_valid_payload(secret, headers.signature, request.data):
+        msg = "Rejecting because signature doesn't match!"
+        print(msg, file=sys.stderr)
+        return msg, 403
+
+    q.enqueue(
+        'openedx_webhooks.github.dispatcher.dispatch',
+        dict(request.headers),
+        request.get_json()
+    )
+
+    return 'Thank you', 202
 
 
 @github_bp.route("/pr", methods=("POST",))
@@ -33,7 +71,8 @@ def pull_request():
 
     .. _PullRequestEvent: https://developer.github.com/v3/activity/events/types/#pullrequestevent
     """
-    # TODO: We need to untangle this, there are **four** `return`s in this function!
+    # TODO: We need to untangle this, there are **four** `return`s in
+    #       this function!
     msg = "Incoming GitHub PR request: {}".format(request.data)
     print(msg, file=sys.stderr)
 
@@ -74,7 +113,8 @@ def pull_request():
     else:
         msg = "{}, rejecting with `400 Bad request`".format(pr_activity)
         print(msg, file=sys.stderr)
-        # TODO: Is this really kosher? We should do no-op, not reject the request!
+        # TODO: Is this really kosher? We should do no-op, not reject
+        #       the request!
         return "Don't know how to handle this.", 400
 
     status_url = url_for("tasks.status", task_id=result.id, _external=True)
@@ -205,32 +245,28 @@ def install():
     """
     Install GitHub webhooks for a repo.
     """
+    # Import here because reverse URL lookup (which is used in `webhook_confs`)
+    # relies on Flask app environment being bootstrapped already.
+    from openedx_webhooks.webhook_confs import WEBHOOK_CONFS
+
     repo = request.form.get("repo", "")
     if repo:
         repos = [repo]
     else:
         repos = get_repos_file().keys()
 
-    api_url = url_for("github_views.pull_request", _external=True)
     success = []
     failed = []
-    for repo in repos:
-        url = "/repos/{repo}/hooks".format(repo=repo)
-        body = {
-            "name": "web",
-            "events": ["pull_request"],
-            "config": {
-                "url": api_url,
-                "content_type": "json",
-            }
-        }
-        sentry.client.extra_context({"repo": repo, "body": body})
+    for repo, conf in ((r, c) for r in repos for c in WEBHOOK_CONFS):
+        sentry.client.extra_context({'repo': repo, 'config': conf})
 
-        hook_resp = github.post(url, json=body)
-        if hook_resp.ok:
-            success.append(repo)
-        else:
-            failed.append((repo, hook_resp.text))
+        payload_url = conf['config']['url']
+
+        try:
+            update_or_create_webhook(repo, conf['config'], conf['events'])
+            success.append((repo, payload_url))
+        except Exception as e:
+            failed.append((repo, payload_url, str(e)))
 
     if failed:
         resp = make_response(json.dumps(failed), 502)
