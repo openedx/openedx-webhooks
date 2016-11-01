@@ -49,7 +49,6 @@ class GithubWebHookEvent(object):
         event (Dict[str, Any]): The parsed event payload
     """
 
-    # TODO: Test
     def __init__(self, event_type, event):
         """
         Init.

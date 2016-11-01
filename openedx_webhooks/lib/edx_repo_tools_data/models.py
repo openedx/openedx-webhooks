@@ -29,7 +29,7 @@ class People(object):
             data (Dict[str, Any]): The raw dictionary as parsed from
                 the yaml file
         """
-        self.data = data
+        self._data = data
 
     def get(self, key):
         """
@@ -45,7 +45,7 @@ class People(object):
             openedx_webhooks.lib.exceptions.NotFoundError: If key cannot
                 be found
         """
-        person = self.data.get(key)
+        person = self._data.get(key)
 
         if not person:
             raise NotFoundError("{} could not be found".format(key))
@@ -63,7 +63,6 @@ class Person(object):
             yaml file
     """
 
-    # TODO: Test
     def __init__(self, login, data):
         """
         Init.
@@ -74,14 +73,21 @@ class Person(object):
                 the yaml file
         """
         self.login = login
-        self.data = data
+        self._data = data
+
+    @property
+    def _before(self):
+        """
+        Optional[Dict[str, Dict]]: User's `before` data.
+        """
+        return self._data.get('before')
 
     @property
     def agreement(self):
         """
         Optional[str]: User's agreement.
         """
-        data = self.data.get('agreement')
+        data = self._data.get('agreement')
         if data == 'none':
             data = None
         return data
@@ -97,18 +103,11 @@ class Person(object):
         return expired
 
     @property
-    def before(self):
-        """
-        Optional[Dict[str, Dict]]: User's `before` data.
-        """
-        return self.data.get('before')
-
-    @property
     def agreement_expires_on(self):
         """
-        Optional[datetime.date]: User's `before` data.
+        Optional[datetime.date]: When did the user's agreement expire?
         """
-        expires_on = self.data.get('expires_on')
+        expires_on = self._data.get('expires_on')
         if expires_on:
             return expires_on
 
@@ -119,8 +118,8 @@ class Person(object):
             yesterday = arrow.now().replace(days=-1).date()
             expires_on = yesterday
 
-        if not self.agreement and self.before:
-            expires_on = max(self.before.keys())
+        if not self.agreement and self._before:
+            expires_on = max(self._before.keys())
 
         return expires_on
 
@@ -129,7 +128,7 @@ class Person(object):
         """
         Optional[str]: User's institution.
         """
-        data = self.data.get('institution')
+        data = self._data.get('institution')
         return self.agreement and data
 
     @property

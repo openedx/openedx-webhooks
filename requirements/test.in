@@ -2,7 +2,8 @@
 
 betamax
 codecov
+pytest
 pytest-cov
 pytest-mock
-pytest
+pytz
 requests-mock

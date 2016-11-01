@@ -13,7 +13,6 @@ class JiraFields(object):
     Represent a collection of JIRA fields.
     """
 
-    # TODO: Test
     def __init__(self, data):
         """
         Init.

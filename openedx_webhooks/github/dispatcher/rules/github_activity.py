@@ -6,17 +6,17 @@ Update JIRA issue with latest GitHub activity.
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from ....jira.tasks import update_latest_github_activity
-from ....lib.jira import jira
+from ....lib.jira.decorators import inject_jira
 from ...models import GithubEvent
 
 
-def _find_issues_for_pull_request(pull_request_url, jira=jira):
+def _find_issues_for_pull_request(jira, pull_request_url):
     """
     Find corresponding JIRA issues for a given GitHub pull request.
 
     Arguments:
+        jira (jira.JIRA): An authenticated JIRA API client session
         pull_request_url (str)
-        jira (jira.JIRA)
 
     Returns:
         jira.client.ResultList[jira.Issue]
@@ -25,18 +25,20 @@ def _find_issues_for_pull_request(pull_request_url, jira=jira):
     return jira.search_issues(jql)
 
 
-def _process(event_type, raw_event):
+def _process(jira, event_type, raw_event):
     """
     Update each corresponding JIRA issue with GitHub activity.
 
     Arguments:
+        jira (jira.JIRA): An authenticated JIRA API client session
         event_type (str): GitHub event type
         raw_event (Dict[str, Any]): The parsed event payload
     """
     event = GithubEvent(event_type, raw_event)
-    issues = _find_issues_for_pull_request(event.html_url)
+    issues = _find_issues_for_pull_request(jira, event.html_url)
     for issue in issues:
         update_latest_github_activity(
+            jira,
             issue.id,
             event.description,
             event.user.login,
@@ -45,11 +47,13 @@ def _process(event_type, raw_event):
         )
 
 
-def run(event_type, raw_event):
+@inject_jira
+def run(jira, event_type, raw_event):
     """
     Process the incoming event.
 
     Arguments:
+        jira (jira.JIRA): An authenticated JIRA API client session
         event_type (str): `GitHub event type`_
         raw_event (Dict[str, Any]): The parsed event payload
 
@@ -63,4 +67,4 @@ def run(event_type, raw_event):
         'pull_request_review_comment',
     )
     if event_type in event_types:
-        _process(event_type, raw_event)
+        _process(jira, event_type, raw_event)

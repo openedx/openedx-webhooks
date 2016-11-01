@@ -5,7 +5,7 @@ Utilities for working with GitHub.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from openedx_webhooks.lib.github import gh
+from .decorators import inject_gh
 
 
 def _get_most_recent_hook(hooks):
@@ -22,7 +22,6 @@ def _get_most_recent_hook(hooks):
     Returns:
         Optional(github3.repos.hook.Hook)
     """
-    # TODO: Test
     try:
         return max(hooks, key=lambda h: (h.active, h.updated_at))
     except ValueError:
@@ -147,7 +146,6 @@ def get_webhooks(repo, payload_url):
     Returns:
         Iterator[github3.repos.hook.Hook]
     """
-    # TODO: Test
     hooks = (
         h for h in repo.iter_hooks()
         if h.name == 'web' and h.config['url'] == payload_url
@@ -168,7 +166,6 @@ def repo_contains_webhook(repo, payload_url, exclude_inactive=False):
     Returns:
         bool
     """
-    # TODO: Test
     hooks = get_webhooks(repo, payload_url)
     is_active_list = [h.active for h in hooks]
     is_active = any(is_active_list)
@@ -177,11 +174,13 @@ def repo_contains_webhook(repo, payload_url, exclude_inactive=False):
     return False
 
 
-def get_repos_with_webhook(payload_url, exclude_inactive=False):
+@inject_gh
+def get_repos_with_webhook(gh, payload_url, exclude_inactive=False):
     """
     Find repos that contain webhooks with the specified payload_url.
 
     Arguments:
+        gh (github3.GitHub): An authenticated GitHub API client session
         payload_url (str): The webhook payload URL, this acts as the key
             of the webhooks
         exclude_inactive (bool): Exclude inactive webhooks from the result
@@ -194,13 +193,15 @@ def get_repos_with_webhook(payload_url, exclude_inactive=False):
             yield repo
 
 
+@inject_gh
 def update_or_create_webhook(
-        repo_name, config, events, active=True, dry_run=False
+        gh, repo_name, config, events, active=True, dry_run=False
 ):
     """
     Update or create webhook in repo.
 
     Arguments:
+        gh (github3.GitHub): An authenticated GitHub API client session
         repo_name (str)
         config (Dict[str, str]): key-value pairs which act as settings
             for this hook
@@ -219,6 +220,7 @@ def update_or_create_webhook(
             a list of hooks deleted (if any)
         )
     """
+    # TODO: Test
     repo = gh.repository(*repo_name.split('/'))
     payload_url = config['url']
 
