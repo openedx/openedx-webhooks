@@ -5,6 +5,8 @@ Configuration for webhooks we want to install.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import os
+
 from flask import url_for
 
 
@@ -25,4 +27,17 @@ WEBHOOK_CONFS = [{
         'insecure_ssl': False,
     },
     'events': ['pull_request']
+}, {
+    'config': {
+        'url': url_for("github_views.hook_receiver", _external=True),
+        'content_type': 'json',
+        'insecure_ssl': False,
+        'secret': os.environ.get('GITHUB_WEBHOOKS_SECRET'),
+    },
+    'events': [
+        'issue_comment',
+        'pull_request',
+        'pull_request_review',
+        'pull_request_review_comment',
+    ]
 }]
