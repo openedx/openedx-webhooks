@@ -10,6 +10,11 @@ from ..lib.jira.utils import (
     convert_to_jira_datetime_string, find_allowed_values, make_fields_lookup
 )
 
+LAST_UPDATED_AT = 'Github PR Last Updated At'
+LAST_UPDATED_BY = 'Github PR Last Updated By'
+LATEST_ACTION = 'Github Latest Action'
+LATEST_BY_EDX = 'Github Latest Action by edX'
+
 
 def _make_edx_action_choices(jira):
     """
@@ -28,7 +33,7 @@ def _make_edx_action_choices(jira):
         jira,
         'OSPR',
         'Pull Request Review',
-        'GitHub Latest Action By edX'
+        LATEST_BY_EDX
     )
     choices = {
         True: next(v for v in values if v['value'] == 'Yes'),
@@ -57,10 +62,10 @@ def update_latest_github_activity(
     latest_by_edx = latest_action_by_edx_choices[is_edx_user]
 
     field_map = {
-        'GitHub PR Last Updated At': update_dt,
-        'GitHub PR Last Updated By': login,
-        'GitHub Latest Action': description,
-        'GitHub Latest Action By edX': latest_by_edx
+        LAST_UPDATED_AT: update_dt,
+        LAST_UPDATED_BY: login,
+        LATEST_ACTION: description,
+        LATEST_BY_EDX: latest_by_edx,
     }
 
     field_ids = make_fields_lookup(jira, field_map.keys())
