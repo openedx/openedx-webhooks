@@ -27,7 +27,7 @@ def failed(result):
 @click.argument('output-csv')
 def cli(redis_url, output_csv):
     """
-    Get all failed task status from Celery Redis backend
+    Get all failed task status from Celery Redis backend.
     """
     log = redis.from_url(redis_url)
     outfile = os.path.abspath(os.path.expanduser(output_csv))
