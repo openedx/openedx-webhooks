@@ -6,7 +6,7 @@
 #
 alabaster==0.7.9          # via sphinx
 babel==2.3.4              # via sphinx
-bleach==1.4.3             # via readme-renderer
+bleach==1.5.0             # via readme-renderer
 docutils==0.12            # via readme-renderer, sphinx
 html5lib==0.9999999       # via bleach
 imagesize==0.7.1          # via sphinx

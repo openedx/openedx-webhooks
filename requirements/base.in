@@ -9,7 +9,7 @@ PyYAML
 URLObject
 arrow
 blinker
-celery
+celery>=3,<4
 click
 cryptography
 functools32
