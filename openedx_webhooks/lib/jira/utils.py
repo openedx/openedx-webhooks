@@ -53,7 +53,7 @@ def find_allowed_values(jira, project_key, issue_type_name, field_name):
         expand='projects.issuetypes.fields',
     )
     fields = meta['projects'][0]['issuetypes'][0]['fields']
-    field_id = make_fields_lookup([field_name])[field_name]
+    field_id = make_fields_lookup(jira, [field_name])[field_name]
     return fields[field_id]['allowedValues']
 
 
