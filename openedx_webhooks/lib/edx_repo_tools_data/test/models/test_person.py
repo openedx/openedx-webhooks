@@ -76,3 +76,14 @@ class TestIsEdxUser:
 
     def test_another_institution(self, active_non_edx_person):
         assert active_non_edx_person.is_edx_user is False
+
+
+class TestIsRobot:
+    def test_true(self):
+        person = Person('robot', {
+            'is_robot': True
+        })
+        assert person.is_robot is True
+
+    def test_false(self, active_person):
+        assert active_person.is_robot is False

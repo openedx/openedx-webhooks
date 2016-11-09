@@ -144,3 +144,10 @@ class Person(object):
             return False
         is_edx = self.institution.lower() == 'edx'
         return is_edx
+
+    @property
+    def is_robot(self):
+        """
+        bool: Is the user a robot?
+        """
+        return self._data.get('is_robot', False)
