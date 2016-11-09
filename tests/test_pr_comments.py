@@ -1,9 +1,7 @@
-import json
-import pytest
-import requests
-import requests_mock
 from datetime import datetime
-import openedx_webhooks
+
+import pytest
+
 from openedx_webhooks.tasks.github import (
     github_community_pr_comment, github_contractor_pr_comment,
     github_internal_cover_letter,
@@ -116,7 +114,12 @@ def test_contractor_pr_comment(app, reqctx):
     with reqctx:
         comment = github_contractor_pr_comment(pr)
     assert "you're a member of a company that does contract work for edX" in comment
-    assert "visit this link: https://" in comment
+    href = (
+        'href="https://openedx-webhooks.herokuapp.com/github/process_pr'
+        '?repo=edx%2Fedx-platform&number=1"'
+    )
+    assert href in comment
+    assert 'Create an OSPR issue for this pull request' in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
 

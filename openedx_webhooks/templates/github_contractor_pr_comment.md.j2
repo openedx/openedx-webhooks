@@ -9,6 +9,8 @@ pull request.
 {% endfilter %}
 
 {% filter replace("\n", " ")|trim %}
-To automatically create an OSPR issue for this pull request, just visit this link:
-{{ url_for("github_views.process_pr", repo=repo, number=number, _external=True) }}
+<a
+  href="{{ url_for("github_views.process_pr", repo=repo, number=number, _external=True) }}"
+  rel="nofollow"
+>Create an OSPR issue for this pull request</a>.
 {% endfilter %}
