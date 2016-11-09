@@ -17,7 +17,7 @@ class People(object):
     Logical representation of `people.yaml`.
 
     Attributes:
-        data (Dict[str, Any]): The raw dictionary as parsed from the
+        _data (Dict[str, Any]): The raw dictionary as parsed from the
             yaml file
     """
 
@@ -58,9 +58,9 @@ class Person(object):
     Logical representation of an entry in `people.yaml`.
 
     Attributes:
-        login (str): GitHub login
-        data (Dict[str, Any]): The raw dictionary as parsed from the
+        _data (Dict[str, Any]): The raw dictionary as parsed from the
             yaml file
+        login (str): GitHub login
     """
 
     def __init__(self, login, data):
