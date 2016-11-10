@@ -14,36 +14,27 @@ class GithubEvent(GithubWebHookEvent):
     A GitHub webhook event.
 
     Attributes:
+        gh (github3.GitHub): An authenticated GitHub API client session
         event_type (str): GitHub event type
         event (Dict[str, Any]): The parsed event payload
-        get_people (Callable[[], ..lib.edx_repo_tools_data.models.People]):
-            Function used to get `people.yaml` folks
     """
 
-    def __init__(self, event_type, event, get_people=get_people):
+    def __init__(self, gh, event_type, event):
         """
         Init.
 
         Arguments:
+            gh (github3.GitHub): An authenticated GitHub API client session
             event_type (str): GitHub event type
             event (Dict[str, Any]): The parsed event payload
-            get_people (Callable[[], ..lib.edx_repo_tools_data.models.People]):
-                Function used to get `people.yaml` folks
         """
         super(GithubEvent, self).__init__(event_type, event)
-        self.get_people = get_people
+        self.gh = gh
 
     @property
-    def is_edx_user(self):
-        """
-        bool: Is the user who sent the event part of edX.
-        """
-        return self.user.is_edx_user
-
-    @property
-    def user(self):
+    def sender(self):
         """
         openedx_webhooks.lib.edx_repo_tools_data.models.Person: Activity user.
         """
-        people = self.get_people()
+        people = get_people(self.gh)
         return people.get(self.sender_login)

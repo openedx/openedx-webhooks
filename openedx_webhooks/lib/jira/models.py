@@ -18,7 +18,7 @@ class JiraFields(object):
         Init.
 
         Arguments:
-            data (List[Dict[str, Any]]): Raw data of the fields
+            _data (List[Dict[str, Any]]): Raw data of the fields
         """
         self._data = data
 

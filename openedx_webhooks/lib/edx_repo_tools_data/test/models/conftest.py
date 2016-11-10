@@ -7,28 +7,20 @@ import pytest
 
 from openedx_webhooks.lib.edx_repo_tools_data.models import People, Person
 
+ACTIVE_DATA = {'active-person': {
+    'agreement': 'individual',
+}}
 
-@pytest.fixture
-def active_data():
-    data = {'active-person': {
-        'agreement': 'individual',
-    }}
-    return data
-
-
-@pytest.fixture
-def expired_data():
-    data = {'expired-person': {
-        'agreement': 'institution',
-        'expires_on': datetime.date(2012, 10, 1),
-        'institution': 'edX',
-    }}
-    return data
+EXPIRED_DATA = {'expired-person': {
+    'agreement': 'institution',
+    'expires_on': datetime.date(2012, 10, 1),
+    'institution': 'edX',
+}}
 
 
 @pytest.fixture
-def active_person(active_data):
-    k, v = list(active_data.items())[0]
+def active_person():
+    k, v = list(ACTIVE_DATA.items())[0]
     return Person(k, v)
 
 
@@ -51,8 +43,8 @@ def active_non_edx_person():
 
 
 @pytest.fixture
-def expired_person(expired_data):
-    k, v = list(expired_data.items())[0]
+def expired_person():
+    k, v = list(EXPIRED_DATA.items())[0]
     return Person(k, v)
 
 
@@ -76,7 +68,7 @@ def before_expired_person(before):
 
 
 @pytest.fixture
-def people(active_data, expired_data):
-    data = active_data.copy()
-    data.update(expired_data)
+def people():
+    data = ACTIVE_DATA.copy()
+    data.update(EXPIRED_DATA)
     return People(data)
