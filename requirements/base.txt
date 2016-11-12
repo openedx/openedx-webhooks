@@ -52,7 +52,7 @@ requests==2.12.0
 rq==0.6.0
 six==1.10.0               # via cryptography, flask-dance, jira, python-dateutil, sqlalchemy-utils
 sqlalchemy-utils==0.32.9  # via flask-dance
-SQLAlchemy==1.1.3         # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
+sqlalchemy==1.1.3         # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
 tlslite==0.4.9            # via jira
 uritemplate.py==3.0.2     # via github3.py
 uritemplate==3.0.0        # via uritemplate.py
