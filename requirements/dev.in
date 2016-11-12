@@ -1,5 +1,7 @@
 # Additional requirements for development of this application
+-r base.in
 
 edx-lint                  # For updating pylintrc
 pip-tools                 # Requirements file management
 python-dotenv
+rq-dashboard
