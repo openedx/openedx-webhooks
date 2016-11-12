@@ -22,7 +22,7 @@ pip-compile: ## update the requirements/*.txt files with the latest packages sat
 	pip-compile --upgrade requirements/base.in
 	pip-compile --upgrade requirements/dev.in
 	pip-compile --upgrade requirements/doc.in
-	pip-compile --upgrade -o requirements/test.txt requirements/base.in requirements/doc.in requirements/test.in
+	pip-compile --upgrade requirements/test.in
 ifneq (, $(wildcard $(PRIVATE_IN)))
 	pip-compile --upgrade $(PRIVATE_IN)
 endif

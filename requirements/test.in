@@ -1,4 +1,6 @@
 # Requirements for test runs.
+-r base.in
+-r doc.in
 
 betamax
 codecov
