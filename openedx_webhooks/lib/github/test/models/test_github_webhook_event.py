@@ -10,18 +10,8 @@ from openedx_webhooks.lib.github.models import GithubWebHookEvent
 
 
 @pytest.fixture
-def issue_comment():
-    payload = {
-        'action': 'edited',
-        'issue': {
-            'html_url': 'https://example.com/issue/1',
-            'updated_at': '2016-10-24T18:53:10Z',
-        },
-        'sender': {
-            'login': 'issue-sender',
-        },
-    }
-    return GithubWebHookEvent('issue_comment', payload)
+def issue_comment(issue_comment_payload):
+    return GithubWebHookEvent('issue_comment', issue_comment_payload)
 
 
 @pytest.fixture

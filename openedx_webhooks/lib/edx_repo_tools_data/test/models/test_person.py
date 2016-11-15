@@ -79,11 +79,8 @@ class TestIsEdxUser:
 
 
 class TestIsRobot:
-    def test_true(self):
-        person = Person('robot', {
-            'is_robot': True
-        })
-        assert person.is_robot is True
+    def test_true(self, robot):
+        assert robot.is_robot is True
 
     def test_false(self, active_person):
         assert active_person.is_robot is False

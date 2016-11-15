@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from datetime import datetime
 
-from jira import JIRA
 from pytz import timezone
 import pytest
 
@@ -14,10 +13,9 @@ from openedx_webhooks.lib.jira.utils import (
 
 
 @pytest.fixture
-def jira(fields_data, mocker):
-    jira = mocker.Mock(spec_set=JIRA)
-    jira.fields = lambda: fields_data
-    return jira
+def jira_client(jira_client, fields_data):
+    jira_client.fields = lambda: fields_data
+    return jira_client
 
 
 class TestCnvertToJiraDatetimeString():
@@ -36,14 +34,14 @@ class TestCnvertToJiraDatetimeString():
 
 
 class TestMakeFieldsLookup:
-    def test_make_lookup(self, jira):
+    def test_make_lookup(self, jira_client):
         expected = {
             'test01': 'id_test01',
             'test02': 'id_test02',
         }
-        result = make_fields_lookup(jira, ['test01', 'test02'])
+        result = make_fields_lookup(jira_client, ['test01', 'test02'])
         assert result == expected
 
-    def test_no_lookup(self, jira):
+    def test_no_lookup(self, jira_client):
         with pytest.raises(NotFoundError):
-            make_fields_lookup(jira, ['foo', 'bar'])
+            make_fields_lookup(jira_client, ['foo', 'bar'])
