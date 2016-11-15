@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-
 from openedx_webhooks.github.dispatcher import dispatch
 
 
@@ -10,15 +9,11 @@ class DummyRule:
         pass
 
 
-class DummyHeader:
-    def __init__(self, headers):
-        self.event_type = 'event_type'
-
-
 def test_dispatch(mocker):
-    mocker.patch(
-        'openedx_webhooks.github.dispatcher.GithubWebHookRequestHeader',
-        DummyHeader
+    mocker.patch((
+        'openedx_webhooks.github.dispatcher.GithubWebHookRequestHeader'
+        '.event_type'
+    ), new_callable=mocker.PropertyMock, return_value='event_type'
     )
 
     rules = [DummyRule(), DummyRule()]
