@@ -27,22 +27,6 @@ def _find_issues_for_pull_request(jira, pull_request_url):
     return jira.search_issues(jql)
 
 
-def _is_sender_edx_user(event):
-    """
-    Determine if event sender is an edX user.
-
-    Arguments:
-        event (openedx_webhooks.github.models.GithubEvent)
-
-    Returns:
-        bool
-    """
-    try:
-        return event.sender.is_edx_user
-    except NotFoundError:
-        return False
-
-
 @inject_gh
 def _process(gh, jira, event_type, raw_event):
     """
@@ -55,19 +39,27 @@ def _process(gh, jira, event_type, raw_event):
         raw_event (Dict[str, Any]): The parsed event payload
     """
     event = GithubEvent(gh, event_type, raw_event)
-    if not event.sender.is_robot:
-        issues = _find_issues_for_pull_request(jira, event.html_url)
-        is_edx_user = _is_sender_edx_user(event)
+    is_known_user = bool(event.openedx_user)
 
-        for issue in issues:
-            update_latest_github_activity(
-                jira,
-                issue.id,
-                event.description,
-                event.sender_login,
-                event.updated_at,
-                is_edx_user,
-            )
+    if is_known_user and event.openedx_user.is_robot:
+        return
+
+    if not is_known_user:
+        is_edx_user = False
+    else:
+        is_edx_user = event.openedx_user.is_edx_user
+
+    issues = _find_issues_for_pull_request(jira, event.html_url)
+
+    for issue in issues:
+        update_latest_github_activity(
+            jira,
+            issue.id,
+            event.description,
+            event.sender_login,
+            event.updated_at,
+            is_edx_user,
+        )
 
 
 @inject_jira
