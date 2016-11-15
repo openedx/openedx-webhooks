@@ -22,10 +22,10 @@ def fields_data(field_datum):
 
 
 @pytest.fixture
-def fields(fields_data):
-    return JiraFields(fields_data)
+def field(field_datum):
+    return JiraField(field_datum)
 
 
 @pytest.fixture
-def field(field_datum):
-    return JiraField(field_datum)
+def fields(fields_data):
+    return JiraFields(fields_data)

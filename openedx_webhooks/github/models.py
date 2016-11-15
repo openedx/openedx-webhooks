@@ -5,8 +5,13 @@ GitHub related domain models.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from ..lib.edx_repo_tools_data.utils import get_people
+from functools32 import lru_cache
+
+from ..lib.edx_repo_tools_data.utils import get_people as _get_people
+from ..lib.exceptions import NotFoundError
 from ..lib.github.models import GithubWebHookEvent
+
+get_people = lru_cache()(_get_people)
 
 
 class GithubEvent(GithubWebHookEvent):
@@ -32,9 +37,13 @@ class GithubEvent(GithubWebHookEvent):
         self.gh = gh
 
     @property
-    def sender(self):
+    def openedx_user(self):
         """
-        openedx_webhooks.lib.edx_repo_tools_data.models.Person: Activity user.
+        Optional(openedx_webhooks.lib.edx_repo_tools_data.models.Person):
+            Activity user.
         """
         people = get_people(self.gh)
-        return people.get(self.sender_login)
+        try:
+            return people.get(self.sender_login)
+        except NotFoundError:
+            return None
