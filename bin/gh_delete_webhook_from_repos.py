@@ -1,0 +1,1 @@
+../openedx_webhooks/lib/github/bin/delete_webhook_from_repos.py
