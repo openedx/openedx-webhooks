@@ -1,4 +1,6 @@
 # Additional requirements for development of this application
+-r base.in
+-r test.in
 
 edx-lint                  # For updating pylintrc
 pip-tools                 # Requirements file management
