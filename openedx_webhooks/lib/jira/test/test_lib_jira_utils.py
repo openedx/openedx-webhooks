@@ -27,7 +27,7 @@ class TestCnvertToJiraDatetimeString():
         assert result == expected
 
     def test_without_tzinfo(self):
-        expected = '2016-10-23T08:22:54.000-0000'
+        expected = '2016-10-23T08:22:54.000+0000'
         dt = datetime(2016, 10, 23, 8, 22, 54)
         result = convert_to_jira_datetime_string(dt)
         assert result == expected
