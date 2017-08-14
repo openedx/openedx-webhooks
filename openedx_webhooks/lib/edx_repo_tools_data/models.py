@@ -91,7 +91,7 @@ class Person(object):
         """
         if (
                 not self.agreement
-                or self.agreement_expired
+                or self.has_agreement_expired
                 or not self.institution
         ):
             return False
@@ -116,7 +116,7 @@ class Person(object):
         return data
 
     @property
-    def agreement_expired(self):
+    def has_agreement_expired(self):
         """
         bool: Has user's agreement expired.
         """
