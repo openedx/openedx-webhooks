@@ -3,6 +3,7 @@
 -r test.in
 
 edx-lint                  # For updating pylintrc
+isort
 pip-tools                 # Requirements file management
 python-dotenv
 rq-dashboard

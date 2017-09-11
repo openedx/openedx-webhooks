@@ -11,6 +11,7 @@ Flask-Script
 PyYAML
 URLObject
 arrow
+backports.functools_lru_cache
 blinker
 click
 cryptography
