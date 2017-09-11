@@ -1,0 +1,21 @@
+version: '3.3'
+
+services:
+  # Primary services
+  app:
+    build:
+      context: .
+      args:
+        TINI_VERSION:
+    image: openedx-webhooks/app
+    container_name: openedx_webhooks_app
+    env_file: .env
+    networks:
+      - services
+    volumes:
+      - ./.data/services/app/bash_history:/root/.bash_history
+      - ./.data/services/app/ipython/:/root/.ipython
+      - .:/app
+
+networks:
+  services:
