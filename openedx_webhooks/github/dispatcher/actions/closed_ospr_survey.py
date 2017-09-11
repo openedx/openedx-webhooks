@@ -12,6 +12,7 @@ import arrow
 from ....lib.github.decorators import inject_gh
 from ....lib.jira.decorators import inject_jira
 from ...models import GithubEvent
+from .beta_test import is_tester
 from .utils import find_issues_for_pull_request
 
 EVENT_TYPES = (
@@ -80,6 +81,10 @@ def run(gh, jira, event_type, raw_event):
     has_jira_issue = bool(find_issues_for_pull_request(jira, event.html_url))
 
     if event.action != 'closed' or not has_jira_issue:
+        return
+
+    # TODO: Remove once beta testing is over
+    if not is_tester(event.event_resource['user']['login']):
         return
 
     msg = _create_pr_comment(event)
