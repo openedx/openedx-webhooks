@@ -3,7 +3,9 @@
 Update JIRA issue with latest GitHub activity.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
 from ....jira.tasks import update_latest_github_activity
 from ....lib.github.decorators import inject_gh

@@ -3,10 +3,9 @@ from datetime import datetime
 import pytest
 
 from openedx_webhooks.tasks.github import (
-    github_community_pr_comment, github_contractor_pr_comment,
-    github_internal_cover_letter,
-    has_contractor_comment, has_internal_cover_letter,
-    COVERLETTER_MARKER
+    COVERLETTER_MARKER, github_community_pr_comment,
+    github_contractor_pr_comment, github_internal_cover_letter,
+    has_contractor_comment, has_internal_cover_letter
 )
 
 pytestmark = pytest.mark.usefixtures('mock_github')

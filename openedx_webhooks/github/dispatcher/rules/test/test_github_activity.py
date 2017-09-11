@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
 from datetime import datetime
 
-from jira import Issue
 import pytest
 import pytz
+from jira import Issue
 
 import openedx_webhooks
-from openedx_webhooks.github.dispatcher.rules.github_activity import _process
+from openedx_webhooks.github.dispatcher.rules.github_activity import run
 
 
 @pytest.fixture(autouse=True)

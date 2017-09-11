@@ -3,23 +3,23 @@
 These are the views that process webhook events coming from Github.
 """
 
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
 
-from collections import defaultdict
 import json
 import sys
+from collections import defaultdict
 
 from celery import group
+from flask import current_app as app
 from flask import (
     Blueprint, jsonify, make_response, render_template, request, url_for
 )
-from flask import current_app as app
 from flask_dance.contrib.github import github
 
 from openedx_webhooks import sentry
+from openedx_webhooks.info import get_people_file, get_repos_file
 from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
 from openedx_webhooks.lib.github.utils import update_or_create_webhook
-from openedx_webhooks.info import get_people_file, get_repos_file
 from openedx_webhooks.lib.rq import q
 from openedx_webhooks.tasks.github import (
     pull_request_closed, pull_request_opened, rescan_repository
@@ -27,7 +27,6 @@ from openedx_webhooks.tasks.github import (
 from openedx_webhooks.utils import (
     is_valid_payload, minimal_wsgi_environ, paginated_get
 )
-
 
 github_bp = Blueprint('github_views', __name__)
 

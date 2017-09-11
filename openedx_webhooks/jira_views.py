@@ -3,25 +3,26 @@
 These are the views that process webhook events coming from JIRA.
 """
 
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
 
-import sys
 import json
 import re
+import sys
 
-from urlobject import URLObject
 from flask import (
-    Blueprint, request, render_template, make_response, jsonify, current_app,
+    Blueprint, current_app, jsonify, make_response, render_template, request,
     url_for
 )
-from flask_dance.contrib.jira import jira
 from flask_dance.contrib.github import github
+from flask_dance.contrib.jira import jira
+from urlobject import URLObject
+
 from openedx_webhooks import sentry
 from openedx_webhooks.oauth import jira_get
-from openedx_webhooks.utils import (
-    pop_dict_id, memoize, jira_paginated_get, to_unicode
-)
 from openedx_webhooks.tasks.jira import rescan_users as rescan_user_task
+from openedx_webhooks.utils import (
+    jira_paginated_get, memoize, pop_dict_id, to_unicode
+)
 
 jira_bp = Blueprint('jira_views', __name__)
 

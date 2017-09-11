@@ -1,4 +1,5 @@
 import sys
+
 from raven.processors import Processor
 from requests.exceptions import HTTPError
 

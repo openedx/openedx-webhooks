@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+
 import pytest
 
 
@@ -21,4 +22,3 @@ def test_requests_processor(app, mocker, betamax_session):
     serialized_url = sentry.client.transform("http://httpbin.org/status/404")
     bin_serialized_url = sentry.client.transform(b"http://httpbin.org/status/404")
     assert sentry_args['extra']['request_url'] in (serialized_url, bin_serialized_url)
-

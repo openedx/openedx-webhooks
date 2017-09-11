@@ -1,11 +1,12 @@
 """
 Tests of the functions in info.py
 """
-import pytest
 from datetime import datetime
 
-from openedx_webhooks.info import get_orgs, is_internal_pull_request
+import pytest
+
 import openedx_webhooks.info
+from openedx_webhooks.info import get_orgs, is_internal_pull_request
 
 pytestmark = pytest.mark.usefixtures('mock_github')
 

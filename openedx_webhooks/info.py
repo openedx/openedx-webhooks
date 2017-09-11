@@ -2,14 +2,15 @@
 Get information about people, repos, orgs, pull requests, etc.
 """
 
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
 
 from datetime import date
-from iso8601 import parse_date
+
 import requests
 import yaml
-from openedx_webhooks.oauth import github_bp
+from iso8601 import parse_date
 
+from openedx_webhooks.oauth import github_bp
 from openedx_webhooks.utils import memoize
 
 

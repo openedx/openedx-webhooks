@@ -1,29 +1,30 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
-from datetime import date
 import json
 import re
+from datetime import date
 
+import requests
 from flask import render_template, render_template_string
 from iso8601 import parse_date
 from urlobject import URLObject
-import requests
 
 # TODO: Why aren't these relative imports?
-from openedx_webhooks import sentry, celery
+from openedx_webhooks import celery, sentry
 from openedx_webhooks.info import (
-    get_people_file,
-    is_beta_tester_pull_request,
-    is_contractor_pull_request,
-    is_internal_pull_request,
+    get_people_file, is_beta_tester_pull_request, is_contractor_pull_request,
+    is_internal_pull_request
 )
 from openedx_webhooks.jira_views import get_jira_custom_fields
 from openedx_webhooks.oauth import github_bp, jira_bp
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.tasks.utils import log_error, log_info, log_request_response
+from openedx_webhooks.tasks.utils import (
+    log_error, log_info, log_request_response
+)
 from openedx_webhooks.utils import memoize, paginated_get
-
 
 COVERLETTER_MARKER = "<!-- open edx coverletter -->"
 

@@ -5,15 +5,15 @@ Generic utilities.
 
 from __future__ import print_function, unicode_literals
 
-from hashlib import sha1
 import hmac
 import os
 import sys
+from hashlib import sha1
 
-from flask import request
-from urlobject import URLObject
 import functools32
 import requests
+from flask import request
+from urlobject import URLObject
 
 
 def is_valid_payload(secret, signature, payload):

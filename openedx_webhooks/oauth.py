@@ -1,12 +1,14 @@
 # coding=utf-8
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
 
 import os
-from flask import request, flash
-from flask_dance.contrib.github import make_github_blueprint
-from flask_dance.contrib.jira import make_jira_blueprint
+
+from flask import flash, request
 from flask_dance.consumer import oauth_authorized, oauth_error
 from flask_dance.consumer.backend.sqla import SQLAlchemyBackend
+from flask_dance.contrib.github import make_github_blueprint
+from flask_dance.contrib.jira import make_jira_blueprint
+
 from openedx_webhooks import db
 from openedx_webhooks.models import OAuth
 

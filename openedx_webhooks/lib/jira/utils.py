@@ -3,12 +3,14 @@
 Utilities for working with JIRA.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
 import arrow
 
-from .models import JiraFields
 from .decorators import inject_jira
+from .models import JiraFields
 
 
 def convert_to_jira_datetime_string(dt):

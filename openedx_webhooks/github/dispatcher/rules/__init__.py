@@ -17,7 +17,9 @@ Inputs
 .. _event\_type: https://developer.github.com/v3/activity/events/types/
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
 from . import github_activity
 

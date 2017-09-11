@@ -1,9 +1,10 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-import sys
 import re
-from setuptools import setup, find_packages
+import sys
+
+from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
 
 

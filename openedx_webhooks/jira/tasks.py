@@ -3,7 +3,9 @@
 Tasks that update JIRA in some way.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
 from ..lib.jira.decorators import inject_jira
 from ..lib.jira.utils import (
