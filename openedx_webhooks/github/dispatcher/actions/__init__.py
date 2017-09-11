@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 r"""
-Rules evaluted by the dispatcher.
+Actions evaluted by the dispatcher.
 
-Each dispatcher rule determines whether an event requires additional
-processing. Each rule implements the ``run(event_type, event)``
+Each dispatcher action determines whether an event requires additional
+processing. Each action implements the ``run(event_type, event)``
 interface.
 
 Inputs
@@ -21,9 +21,10 @@ from __future__ import (
     absolute_import, division, print_function, unicode_literals
 )
 
-from . import github_activity
+from . import closed_ospr_survey, github_activity
 
-# List[Module, ...]: A list of rules to process, in order
-RULES = [
+# List[Module, ...]: A list of actions to process, in order
+ACTIONS = [
+    closed_ospr_survey,
     github_activity,
 ]

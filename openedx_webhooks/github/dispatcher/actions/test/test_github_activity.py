@@ -10,7 +10,7 @@ import pytz
 from jira import Issue
 
 import openedx_webhooks
-from openedx_webhooks.github.dispatcher.rules.github_activity import run
+from openedx_webhooks.github.dispatcher.actions.github_activity import run
 
 
 @pytest.fixture(autouse=True)
@@ -18,15 +18,15 @@ def patch_find_issues(mocker):
     issue = mocker.Mock(spec=Issue)
     issue.id = '123'
     mocker.patch((
-        'openedx_webhooks.github.dispatcher.rules.github_activity'
-        '._find_issues_for_pull_request'
+        'openedx_webhooks.github.dispatcher.actions.github_activity'
+        '.find_issues_for_pull_request'
     ), return_value=[issue])
 
 
 @pytest.fixture(autouse=True)
 def patch_update_latest_github_activity(mocker):
     mocker.patch(
-        'openedx_webhooks.github.dispatcher.rules.github_activity'
+        'openedx_webhooks.github.dispatcher.actions.github_activity'
         '.update_latest_github_activity'
     )
 
@@ -37,18 +37,18 @@ class TestProcess:
     ):
         payload = _payload.copy()
         payload['sender']['login'] = login
-        _process(github_client, jira_client, 'issue_comment', payload)
+        run(github_client, jira_client, 'issue_comment', payload)
 
         func = (
-            openedx_webhooks.github.dispatcher.rules.github_activity
-            ._find_issues_for_pull_request
+            openedx_webhooks.github.dispatcher.actions.github_activity
+            .find_issues_for_pull_request
         )
         func.assert_called_once_with(
             jira_client, 'https://example.com/issue/1'
         )
 
         func = (
-            openedx_webhooks.github.dispatcher.rules.github_activity
+            openedx_webhooks.github.dispatcher.actions.github_activity
             .update_latest_github_activity
         )
         dt = pytz.UTC.localize(datetime(2016, 10, 24, 18, 53, 10))
@@ -62,15 +62,15 @@ class TestProcess:
                 'login': 'robot',
             },
         }
-        _process(github_client, jira_client, 'type', payload)
+        run(github_client, jira_client, 'type', payload)
         func = (
-            openedx_webhooks.github.dispatcher.rules.github_activity
-            ._find_issues_for_pull_request
+            openedx_webhooks.github.dispatcher.actions.github_activity
+            .find_issues_for_pull_request
         )
         func.assert_not_called()
 
         func = (
-            openedx_webhooks.github.dispatcher.rules.github_activity
+            openedx_webhooks.github.dispatcher.actions.github_activity
             .update_latest_github_activity)
         func.assert_not_called()
 

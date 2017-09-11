@@ -63,7 +63,7 @@ class GithubWebHookEvent(object):
         self.event = event
 
     @property
-    def _event_resource(self):
+    def _event_resource_key(self):
         """
         str: GitHub reource type, such as 'pull_request' or 'issue'.
         """
@@ -72,6 +72,10 @@ class GithubWebHookEvent(object):
             return next((k for k in keys if self.event_type.startswith(k)))
         except StopIteration:
             return self.event_type
+
+    @property
+    def event_resource(self):
+        return self.event[self._event_resource_key]
 
     @property
     def action(self):
@@ -92,7 +96,28 @@ class GithubWebHookEvent(object):
         """
         str: URL of the GitHub resource that the event is about.
         """
-        return self.event[self._event_resource]['html_url']
+        return self.event_resource['html_url']
+
+    @property
+    def repo_full_name(self):
+        """
+        str: Full name of repo.
+        """
+        return self.event['repository']['full_name']
+
+    @property
+    def repo_name(self):
+        """
+        str: Name of repo.
+        """
+        return self.event['repository']['name']
+
+    @property
+    def repo_owner_login(self):
+        """
+        str: Login of repo owner.
+        """
+        return self.event['repository']['owner']['login']
 
     @property
     def sender_login(self):
@@ -106,5 +131,5 @@ class GithubWebHookEvent(object):
         """
         datetime.datetime: Datetime of the event.
         """
-        dt = self.event[self._event_resource]['updated_at']
+        dt = self.event_resource['updated_at']
         return arrow.get(dt).datetime

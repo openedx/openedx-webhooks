@@ -17,7 +17,7 @@ def issue_comment(issue_comment_payload):
 
 
 @pytest.fixture
-def pull_request_review():
+def pull_request_review_payload():
     payload = {
         'action': 'submitted',
         'pull_request': {
@@ -28,19 +28,37 @@ def pull_request_review():
             'login': 'pr-sender',
         },
     }
-    return GithubWebHookEvent('pull_request_review', payload)
+    return payload
 
 
-class TestGithubWebHookEventResource:
+@pytest.fixture
+def pull_request_review(pull_request_review_payload):
+    return GithubWebHookEvent(
+        'pull_request_review', pull_request_review_payload
+    )
+
+
+class TestGithubWebHookEventResourceKey:
     def test_issue(self, issue_comment):
-        assert issue_comment._event_resource == 'issue'
+        assert issue_comment._event_resource_key == 'issue'
 
     def test_pr(self, pull_request_review):
-        assert pull_request_review._event_resource == 'pull_request'
+        assert pull_request_review._event_resource_key == 'pull_request'
 
     def test_other(self):
         event = GithubWebHookEvent('something_else', None)
-        assert event._event_resource == 'something_else'
+        assert event._event_resource_key == 'something_else'
+
+
+class TestGithubWebHookEventResource:
+    def test_issue(self, issue_comment, issue_comment_payload):
+        assert issue_comment.event_resource == issue_comment_payload['issue']
+
+    def test_pr(self, pull_request_review, pull_request_review_payload):
+        assert (
+            pull_request_review.event_resource
+            == pull_request_review_payload['pull_request']
+        )
 
 
 def test_githubwebhookevent_action(pull_request_review):
