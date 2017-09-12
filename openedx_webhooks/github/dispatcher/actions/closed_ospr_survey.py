@@ -21,7 +21,7 @@ EVENT_TYPES = (
 SURVEY_URL = (
     'https://docs.google.com/forms/d/e'
     '/1FAIpQLSceJOyGJ6JOzfy6lyR3T7EW_71OWUnNQXp68Fymsk3MkNoSDg/viewform'
-    '?usp=pp_url&entry.1813723273'
+    '?usp=pp_url'
     '&entry.1671973413={repo_full_name}'
     '&entry.867055334={pull_request_url}'
     '&entry.1484655318={contributor_url}'
