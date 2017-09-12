@@ -3,22 +3,24 @@ from __future__ import print_function, unicode_literals
 
 # UTF-8 stderr: http://stackoverflow.com/a/2001767/141395
 import codecs
+import os
 import sys
+
+import iron_celery
+from celery import Celery
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_sslify import SSLify
+from raven.contrib.celery import register_logger_signal, register_signal
+from raven.contrib.flask import Sentry
+from werkzeug.contrib.fixers import ProxyFix
+
 reload(sys)
 sys.setdefaultencoding('utf-8')
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
 
-import os
 
-from flask import Flask
-from werkzeug.contrib.fixers import ProxyFix
-from flask_sslify import SSLify
-from raven.contrib.flask import Sentry
-from raven.contrib.celery import register_signal, register_logger_signal
-from flask_sqlalchemy import SQLAlchemy
-from celery import Celery
-import iron_celery
 
 __version__ = "0.1.0"
 

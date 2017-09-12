@@ -3,12 +3,13 @@
 Configuration for webhooks we want to install.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
 import os
 
 from flask import url_for
-
 
 # List[Dict[str, Any]]: A list of GitHub webhook configurations. Currently
 #     we use these configurations to create webhooks in the specified GitHub

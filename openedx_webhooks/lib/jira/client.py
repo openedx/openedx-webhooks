@@ -3,10 +3,12 @@
 JIRA client instance.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
-from base64 import b64decode
 import os
+from base64 import b64decode
 
 from jira import JIRA
 

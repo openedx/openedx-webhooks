@@ -1,12 +1,12 @@
 # coding=utf-8
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
 
 from collections import defaultdict
 
-from openedx_webhooks import sentry, celery
-from openedx_webhooks.tasks import logger
+from openedx_webhooks import celery, sentry
 from openedx_webhooks.oauth import jira_bp
-from openedx_webhooks.utils import jira_users, jira_group_members
+from openedx_webhooks.tasks import logger
+from openedx_webhooks.utils import jira_group_members, jira_users
 
 
 @celery.task

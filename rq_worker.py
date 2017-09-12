@@ -6,14 +6,15 @@ Start an instance of the RQ worker.
 ``python rq_worker.py``
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
 import os
 
 from rq import Connection, Queue, Worker
 
 from openedx_webhooks.lib.rq import store
-
 
 LISTEN = ('default',)
 

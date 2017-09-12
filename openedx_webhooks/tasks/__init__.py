@@ -1,7 +1,9 @@
-import sys
 import logging
+import sys
+
 from celery.utils.log import get_task_logger
 from flask import Blueprint, jsonify
+
 from openedx_webhooks import celery
 
 # set up logging

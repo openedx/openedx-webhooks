@@ -1,5 +1,5 @@
 # coding=utf-8
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
 
 from flask import Blueprint, render_template
 from flask_dance.contrib.github import github as github_session

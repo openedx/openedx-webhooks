@@ -8,13 +8,12 @@ import mock
 import pytest
 import requests_mock
 from flask_dance.consumer.requests import OAuth2Session
-from raven.contrib.flask import make_client as make_sentry_client
 from raven.base import DummyClient
+from raven.contrib.flask import make_client as make_sentry_client
 from requests.packages.urllib3.response import is_fp_closed
 
 import openedx_webhooks
 import openedx_webhooks.utils
-
 
 if not os.path.exists('tests/cassettes'):
     os.makedirs('tests/cassettes')

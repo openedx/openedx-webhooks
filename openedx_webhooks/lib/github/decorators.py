@@ -3,11 +3,15 @@
 Decorators for working with GitHub.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
 from functools import wraps
 
 from github3 import GitHub
+
+from ..utils import dependency_exists
 
 
 def inject_gh(f):
@@ -22,32 +26,29 @@ def inject_gh(f):
             ...
 
     The decorator expects an authenticated ``github3.GitHub`` instance to
-    be passed in, either as the first parameter::
+    be passed in, either as one of the parameters::
 
         my_func(my_client_instance, param1, param2)
 
-    Or as a ``gh`` keyword parameter::
+    Or as a keyword parameter::
 
-        my_func(param1, param2, gh=my_client_instance)
+        my_func(param1=param1, param2=param2, gh=my_client_instance)
 
-    If you don't pass an authenticated client instance, it will default to
-    using ``openedx_webhooks.lib.github.client.github_client``::
+    If you don't pass an authenticated client instance, it will inject
+    ``openedx_webhooks.lib.github.client.github_client`` as the first
+    parameter::
 
         my_func(param1, param2)
 
-    The decorated function **must** accept a ``github3.GitHub`` client as
-    its first parameter.
+    becomes:
+
+        my_func(my_client_instance, param1, param2)
     """
     @wraps(f)
     def wrapper(*args, **kwargs):
-        tmp_args = list(args)
-        if args and isinstance(args[0], GitHub):
-            gh = tmp_args.pop(0)
-        else:
-            gh = kwargs.pop('gh', None)
+        if dependency_exists(GitHub, *args, **kwargs):
+            return f(*args, **kwargs)
 
-        if not gh:
-            from .client import github_client as gh
-
-        return f(gh, *tmp_args, **kwargs)
+        from .client import github_client as gh
+        return f(gh, *args, **kwargs)
     return wrapper

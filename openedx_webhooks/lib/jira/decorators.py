@@ -3,11 +3,15 @@
 Decorators for working with JIRA.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
 from functools import wraps
 
 from jira import JIRA
+
+from ..utils import dependency_exists
 
 
 def inject_jira(f):
@@ -22,32 +26,28 @@ def inject_jira(f):
             ...
 
     The decorator expects an authenticated ``jira.JIRA`` instance to
-    be passed in, either as the first parameter::
+    be passed in, either as one of the parameters::
 
         my_func(my_client_instance, param1, param2)
 
-    Or as a ``jira`` keyword parameter::
+    Or as a keyword parameter::
 
-        my_func(param1, param2, jira=my_client_instance)
+        my_func(param1=param1, param2=param2, jira=my_client_instance)
 
-    If you don't pass an authenticated client instance, it will default to
-    using ``openedx_webhooks.lib.jira.client.jira_client``::
+    If you don't pass an authenticated client instance, it will inject
+    ``openedx_webhooks.lib.jira.client.jira_client`` as the first parameter::
 
         my_func(param1, param2)
 
-    The decorated function **must** accept a ``jira.JIRA`` client as
-    its first parameter.
+    becomes:
+
+        my_func(my_client_instance, param1, param2)
     """
     @wraps(f)
     def wrapper(*args, **kwargs):
-        tmp_args = list(args)
-        if args and isinstance(args[0], JIRA):
-            jira = tmp_args.pop(0)
-        else:
-            jira = kwargs.pop('jira', None)
+        if dependency_exists(JIRA, *args, **kwargs):
+            return f(*args, **kwargs)
 
-        if not jira:
-            from .client import jira_client as jira
-
-        return f(jira, *tmp_args, **kwargs)
+        from .client import jira_client as jira
+        return f(jira, *args, **kwargs)
     return wrapper

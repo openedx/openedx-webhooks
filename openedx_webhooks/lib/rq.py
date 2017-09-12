@@ -3,12 +3,14 @@
 RQ tools.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (
+    absolute_import, division, print_function, unicode_literals
+)
 
 import os
 
-from rq import Queue
 import redis
+from rq import Queue
 
 _redis_url = os.getenv('REDIS_URL', 'redis://')
 
