@@ -31,6 +31,10 @@ class People(object):
         """
         self._data = data
 
+    def __iter__(self):
+        for k, v in self._data.items():
+            yield Person(k, v)
+
     def get(self, key):
         """
         Get a specific person by `people.yaml` key.
@@ -75,6 +79,25 @@ class Person(object):
         self.login = login
         self._data = data
 
+    def is_associated_with_institution(self, institution):
+        """
+        Check whether person is associated with institution.
+
+        Arguments:
+            institution (str)
+
+        Returns:
+            bool
+        """
+        if (
+                not self.agreement
+                or self.has_agreement_expired
+                or not self.institution
+        ):
+            return False
+        result = self.institution.lower() == institution.lower()
+        return result
+
     @property
     def _before(self):
         """
@@ -93,7 +116,7 @@ class Person(object):
         return data
 
     @property
-    def agreement_expired(self):
+    def has_agreement_expired(self):
         """
         bool: Has user's agreement expired.
         """
@@ -136,14 +159,7 @@ class Person(object):
         """
         bool: Is user associated with edX.
         """
-        if (
-                not self.agreement
-                or self.agreement_expired
-                or not self.institution
-        ):
-            return False
-        is_edx = self.institution.lower() == 'edx'
-        return is_edx
+        return self.is_associated_with_institution('edx')
 
     @property
     def is_robot(self):

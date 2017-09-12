@@ -1,37 +1,21 @@
-.DEFAULT_GOAL := test
+.DEFAULT_GOAL := help
 
-PRIVATE_IN = requirements/private.in
-PRIVATE_TXT = requirements/private.txt
+include Makefiles/*.mk
 
+# Generates a help message. Borrowed from https://github.com/pydanny/cookiecutter-djangopackage.
+help: ## Display this help message
+	@echo "Please use \`make <target>' where <target> is one of the following:"
+	@perl -nle'print $& if m{^[\.a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-25s\033[0m %s\n", $$1, $$2}'
 
-check-setup.py:
+check-setup.py: ## Check setup
 	python setup.py check -r -s
 
-
-clean:
+clean: ## Clean cache, test, and build directories
 	-rm -rf .cache build dist *.egg-info .coverage htmlcov docs/_build
 
-
-install-requirements: ## install development environment requirements
-	pip install -q pip-tools
-	pip-sync requirements/*.txt
-
-
-pip-compile: ## update the requirements/*.txt files with the latest packages satisfying requirements/*.in
-	pip install -q pip-tools
-	pip-compile --upgrade requirements/base.in
-	pip-compile --upgrade requirements/dev.in
-	pip-compile --upgrade requirements/doc.in
-	pip-compile --upgrade -o requirements/test.txt requirements/base.in requirements/doc.in requirements/test.in
-ifneq (, $(wildcard $(PRIVATE_IN)))
-	pip-compile --upgrade $(PRIVATE_IN)
-endif
-
-
-test:
+test: ## Run tests
 	py.test --cov=openedx_webhooks
 
-
-test-html-coverage-report:
+test-html-coverage-report: ## Run tests and show coverage report in browser
 	py.test --cov=openedx_webhooks --cov-report=html
 	open htmlcov/index.html

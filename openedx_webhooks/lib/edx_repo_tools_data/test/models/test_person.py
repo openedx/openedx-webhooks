@@ -16,13 +16,13 @@ class TestAgreement:
 
 class TestAgreementExpired:
     def test_not_expired(self, active_person):
-        assert active_person.agreement_expired is False
+        assert active_person.has_agreement_expired is False
 
     def test_expired(self, expired_person):
-        assert expired_person.agreement_expired is True
+        assert expired_person.has_agreement_expired is True
 
     def test_before_expired(self, before_expired_person):
-        assert before_expired_person.agreement_expired is True
+        assert before_expired_person.has_agreement_expired is True
 
 
 class TestAgreementExpiresOn:

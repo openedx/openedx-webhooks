@@ -54,7 +54,7 @@ def create_hook(repo, config, events, active, dry_run=False):
         dry_run (bool): Don't really create the hook
 
     Returns:
-        (Optional[github3.repos.hook.Hook])
+        (github3.repos.hook.Hook)
 
     Raises:
         Exception: If the hook can't be created for some reason
@@ -211,7 +211,7 @@ def update_or_create_webhook(
 
     Returns:
         Tuple[
-            Optional[github3.repos.hook.Hook],
+            github3.repos.hook.Hook,
             bool,
             List[github3.repos.hook.Hook]
         ]: Returns (

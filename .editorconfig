@@ -13,3 +13,9 @@ trim_trailing_whitespace = true
 
 [*.py]
 max_line_length = 120
+
+[Makefile]
+indent_style = tab
+
+[*.mk]
+indent_style = tab
