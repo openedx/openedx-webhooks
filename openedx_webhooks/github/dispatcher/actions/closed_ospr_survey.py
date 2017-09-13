@@ -41,29 +41,6 @@ NOT_MERGED_MSG = """\
 """.format(SURVEY_URL)  # noqa
 
 
-def _format_datetime(datetime_string):
-    date_string = arrow.get(datetime_string).format('YYYY-MM-DD+HH:mm')
-    return date_string
-
-
-def _create_pr_comment(event):
-    is_merged = event.event_resource['merged']
-
-    context = dict(
-        repo_full_name=event.repo_full_name,
-        pull_request_url=event.event_resource['html_url'],
-        contributor=event.event_resource['user']['login'],
-        contributor_url=event.event_resource['user']['html_url'],
-        created_at=_format_datetime(event.event_resource['created_at']),
-        closed_at=_format_datetime(event.event_resource['closed_at']),
-        is_merged='Yes' if is_merged else 'No'
-    )
-
-    comment = MERGED_MSG if is_merged else NOT_MERGED_MSG
-
-    return comment.format(**context)
-
-
 @inject_jira
 @inject_gh
 def run(gh, jira, event_type, raw_event):
@@ -85,4 +62,26 @@ def run(gh, jira, event_type, raw_event):
     msg = _create_pr_comment(event)
     pr_number = event.event_resource['number']
     issue = gh.issue(event.repo_owner_login, event.repo_name, pr_number)
+
     issue.create_comment(msg)
+
+
+def _format_datetime(datetime_string):
+    date_string = arrow.get(datetime_string).format('YYYY-MM-DD+HH:mm')
+    return date_string
+
+
+def _create_pr_comment(event):
+    is_merged = event.event_resource['merged']
+    comment = MERGED_MSG if is_merged else NOT_MERGED_MSG
+    context = dict(
+        repo_full_name=event.repo_full_name,
+        pull_request_url=event.event_resource['html_url'],
+        contributor=event.event_resource['user']['login'],
+        contributor_url=event.event_resource['user']['html_url'],
+        created_at=_format_datetime(event.event_resource['created_at']),
+        closed_at=_format_datetime(event.event_resource['closed_at']),
+        is_merged='Yes' if is_merged else 'No'
+    )
+
+    return comment.format(**context)
