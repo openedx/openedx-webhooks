@@ -29,7 +29,9 @@ def cli(payload_url, exclude_inactive):
     Note that you must set the environment variable $GITHUB_PERSONAL_TOKEN
     to a valid token that you create in GitHub.
     """
-    repos = get_repos_with_webhook(payload_url, exclude_inactive)
+    repos = get_repos_with_webhook(
+        payload_url, exclude_inactive=exclude_inactive
+    )
 
     for repo in repos:
         click.echo(repo_name(repo))
