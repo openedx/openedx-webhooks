@@ -1,8 +1,10 @@
 FROM python:2.7
 ENV PYTHONUNBUFFERED 1
+ENV PYTHONPATH /app
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
   bash-completion \
+  exuberant-ctags \
   && rm -rf /var/lib/apt/lists/*
 RUN echo 'source /usr/share/bash-completion/bash_completion' >> /etc/bash.bashrc
 
