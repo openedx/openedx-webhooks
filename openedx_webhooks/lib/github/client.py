@@ -17,7 +17,7 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
-_token = os.getenv('GITHUB_PERSONAL_TOKEN')
+_token = os.environ.get('GITHUB_PERSONAL_TOKEN')
 
 # (github3.GitHub): An authenticated GitHub API client session
 github_client = GitHub(token=_token)
