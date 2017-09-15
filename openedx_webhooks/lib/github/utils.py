@@ -10,37 +10,109 @@ from __future__ import (
 from .decorators import inject_gh
 
 
-def _get_most_recent_hook(hooks):
+@inject_gh
+def get_repos_with_webhook(
+        gh, payload_url, repo_type='public', exclude_inactive=False
+):
     """
-    Return the most recent hook.
-
-    Most recent is defined by active status, then updated datetime.
-    This means active hooks will be prioritized over inactive ones,
-    no matter what the updated datetimes are.
+    Find repos that contain webhooks with the specified payload_url.
 
     Arguments:
-        hooks (Iterable[github3.repos.hook.Hook])
+        gh (github3.GitHub): An authenticated GitHub API client session
+        payload_url (str): The webhook payload URL, this acts as the key
+            of the webhooks
+        repo_type (str): 'all', 'owner', 'public', 'private', 'member'
+        exclude_inactive (bool): Exclude inactive webhooks from the result
 
     Returns:
-        Optional(github3.repos.hook.Hook)
+        Iterator[github3.repos.repo.Repository]
     """
-    try:
-        return max(hooks, key=lambda h: (h.active, h.updated_at))
-    except ValueError:
-        return None
+    for repo in gh.iter_repos(type=repo_type):
+        if repo_contains_webhook(repo, payload_url, exclude_inactive):
+            yield repo
 
 
-def repo_name(repo):
+@inject_gh
+def create_or_update_webhook(
+        gh, repo_name, config, events, active=True, dry_run=False
+):
     """
-    Construct the repo name.
+    Update or create webhook in repo.
+
+    Arguments:
+        gh (github3.GitHub): An authenticated GitHub API client session
+        repo_name (str)
+        config (Dict[str, str]): key-value pairs which act as settings
+            for this hook
+        events (List[str]): events the hook is triggered for
+        active (bool): whether the hook is actually triggered
+        dry_run (bool): Don't really create the hook
+
+    Returns:
+        Tuple[
+            github3.repos.hook.Hook,
+            bool,
+            List[github3.repos.hook.Hook]
+        ]: Returns (
+            the created or updated hook,
+            ``True`` if created, ``False`` if edited,
+            a list of hooks deleted (if any)
+        )
+    """
+    repo = get_repo(gh, repo_name)
+    return create_or_update_webhooks_for_repo(
+        repo, config, events, active, dry_run
+    )
+
+
+@inject_gh
+def get_repo(gh, repo_name):
+    return gh.repository(*repo_name.split('/'))
+
+
+def create_or_update_webhooks_for_repo(
+        repo, config, events, active=True, dry_run=False
+):
+    """
+    Update or create webhook in repo.
 
     Arguments:
         repo (github3.repos.repo.Repository)
+        config (Dict[str, str]): key-value pairs which act as settings
+            for this hook
+        events (List[str]): events the hook is triggered for
+        active (bool): whether the hook is actually triggered
+        dry_run (bool): Don't really create the hook
 
     Returns:
-        str
+        Tuple[
+            github3.repos.hook.Hook,
+            bool,
+            List[github3.repos.hook.Hook]
+        ]: Returns (
+            the created or updated hook,
+            ``True`` if created, ``False`` if edited,
+            a list of hooks deleted (if any)
+        )
     """
-    return "{0.owner.login}/{0.name}".format(repo)
+    payload_url = config['url']
+
+    existing_hooks = list(get_webhooks(repo, payload_url))
+
+    if existing_hooks:
+        hook_to_edit = _get_most_recent_hook(existing_hooks)
+        hooks_to_delete = list(existing_hooks)
+        hooks_to_delete.remove(hook_to_edit)
+
+        hook = edit_hook(repo, hook_to_edit, config, events, active, dry_run)
+        delete_hooks(repo, hooks_to_delete, dry_run)
+        created = False
+    else:
+        hooks_to_delete = []
+        hook = create_hook(repo, config, events, active, dry_run)
+        created = True
+
+    return hook, created, hooks_to_delete
 
 
 def create_hook(repo, config, events, active, dry_run=False):
@@ -176,69 +248,34 @@ def repo_contains_webhook(repo, payload_url, exclude_inactive=False):
     return False
 
 
-@inject_gh
-def get_repos_with_webhook(gh, payload_url, exclude_inactive=False):
+def repo_name(repo):
     """
-    Find repos that contain webhooks with the specified payload_url.
+    Construct the repo name.
 
     Arguments:
-        gh (github3.GitHub): An authenticated GitHub API client session
-        payload_url (str): The webhook payload URL, this acts as the key
-            of the webhooks
-        exclude_inactive (bool): Exclude inactive webhooks from the result
+        repo (github3.repos.repo.Repository)
 
     Returns:
-        Iterator[github3.repos.repo.Repository]
+        str
     """
-    for repo in gh.iter_repos():
-        if repo_contains_webhook(repo, payload_url, exclude_inactive):
-            yield repo
+    return "{0.owner.login}/{0.name}".format(repo)
 
 
-@inject_gh
-def update_or_create_webhook(
-        gh, repo_name, config, events, active=True, dry_run=False
-):
+def _get_most_recent_hook(hooks):
     """
-    Update or create webhook in repo.
+    Return the most recent hook.
+
+    Most recent is defined by active status, then updated datetime.
+    This means active hooks will be prioritized over inactive ones,
+    no matter what the updated datetimes are.
 
     Arguments:
-        gh (github3.GitHub): An authenticated GitHub API client session
-        repo_name (str)
-        config (Dict[str, str]): key-value pairs which act as settings
-            for this hook
-        events (List[str]): events the hook is triggered for
-        active (bool): whether the hook is actually triggered
-        dry_run (bool): Don't really create the hook
+        hooks (Iterable[github3.repos.hook.Hook])
 
     Returns:
-        Tuple[
-            github3.repos.hook.Hook,
-            bool,
-            List[github3.repos.hook.Hook]
-        ]: Returns (
-            the created or updated hook,
-            ``True`` if created, ``False`` if edited,
-            a list of hooks deleted (if any)
-        )
+        Optional(github3.repos.hook.Hook)
     """
-    # TODO: Test
-    repo = gh.repository(*repo_name.split('/'))
-    payload_url = config['url']
-
-    existing_hooks = list(get_webhooks(repo, payload_url))
-
-    if existing_hooks:
-        hook_to_edit = _get_most_recent_hook(existing_hooks)
-        hooks_to_delete = list(existing_hooks)
-        hooks_to_delete.remove(hook_to_edit)
-
-        hook = edit_hook(repo, hook_to_edit, config, events, active, dry_run)
-        delete_hooks(repo, hooks_to_delete, dry_run)
-        created = False
-    else:
-        hooks_to_delete = []
-        hook = create_hook(repo, config, events, active, dry_run)
-        created = True
-
-    return hook, created, hooks_to_delete
+    try:
+        return max(hooks, key=lambda h: (h.active, h.updated_at))
+    except ValueError:
+        return None

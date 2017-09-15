@@ -19,7 +19,7 @@ from flask_dance.contrib.github import github
 from openedx_webhooks import sentry
 from openedx_webhooks.info import get_people_file, get_repos_file
 from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
-from openedx_webhooks.lib.github.utils import update_or_create_webhook
+from openedx_webhooks.lib.github.utils import create_or_update_webhook
 from openedx_webhooks.lib.rq import q
 from openedx_webhooks.tasks.github import (
     pull_request_closed, pull_request_opened, rescan_repository
@@ -262,7 +262,7 @@ def install():
         payload_url = conf['config']['url']
 
         try:
-            update_or_create_webhook(repo, conf['config'], conf['events'])
+            create_or_update_webhook(repo, conf['config'], conf['events'])
             success.append((repo, payload_url))
         except Exception as e:
             failed.append((repo, payload_url, str(e)))
