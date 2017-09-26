@@ -22,7 +22,7 @@ requests==2.18.4          # via sphinx
 six==1.10.0               # via bleach, html5lib, readme-renderer, sphinx, sphinxcontrib-httpdomain
 snowballstemmer==1.2.1    # via sphinx
 sphinx-rtd-theme==0.2.4
-sphinx==1.6.3             # via sphinxcontrib-httpdomain
+sphinx==1.6.3
 sphinxcontrib-httpdomain==1.5.0
 sphinxcontrib-websupport==1.0.1  # via sphinx
 typing==3.6.2             # via sphinx
