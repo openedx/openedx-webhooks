@@ -94,12 +94,10 @@ singledispatch==3.4.0.3   # via astroid, pylint
 six==1.10.0               # via astroid, bleach, cryptography, edx-lint, flask-dance, html5lib, jira, mock, pip-tools, pylint, python-dateutil, readme-renderer, requests-mock, singledispatch, sphinx, sphinxcontrib-httpdomain, sqlalchemy-utils
 snowballstemmer==1.2.1    # via sphinx
 sphinx-rtd-theme==0.2.4
-sphinx==1.6.4             # via sphinxcontrib-httpdomain
+sphinx==1.5.6             # via sphinxcontrib-httpdomain
 sphinxcontrib-httpdomain==1.5.0
-sphinxcontrib-websupport==1.0.1  # via sphinx
 sqlalchemy-utils==0.32.16  # via flask-dance
 sqlalchemy==1.1.14        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
-typing==3.6.2             # via sphinx
 uritemplate.py==3.0.2     # via github3.py
 uritemplate==3.0.0        # via uritemplate.py
 urllib3==1.22             # via requests
