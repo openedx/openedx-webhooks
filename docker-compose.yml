@@ -7,7 +7,7 @@ services:
       context: .
       args:
         REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-dev.txt}
-        TINI_VERSION:
+        TINI_VERSION: ${TINI_VERSION:-v0.16.1}
     image: openedx-webhooks/app
     container_name: openedx_webhooks_app
     env_file: .env
