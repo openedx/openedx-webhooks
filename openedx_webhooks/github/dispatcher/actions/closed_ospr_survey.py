@@ -12,7 +12,7 @@ import arrow
 from ....lib.github.decorators import inject_gh
 from ....lib.jira.decorators import inject_jira
 from ...models import GithubEvent
-from .utils import find_issues_for_pull_request
+from .utils import create_pull_request_comment, find_issues_for_pull_request
 
 EVENT_TYPES = (
     'pull_request',
@@ -59,11 +59,8 @@ def run(gh, jira, event_type, raw_event):
     if event.action != 'closed' or not has_jira_issue:
         return
 
-    msg = _create_pr_comment(event)
-    pr_number = event.event_resource['number']
-    issue = gh.issue(event.repo_owner_login, event.repo_name, pr_number)
-
-    issue.create_comment(msg)
+    comment = _create_pr_comment(event)
+    create_pull_request_comment(gh, event, comment)
 
 
 def _format_datetime(datetime_string):
