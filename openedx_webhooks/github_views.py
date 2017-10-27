@@ -94,18 +94,14 @@ def pull_request():
     repo = pr["base"]["repo"]["full_name"].decode('utf-8')
     action = event["action"]
     # `synchronize` action is when a new commit is made for the PR
-    ignored_actions = set(("labeled", "synchronize"))
+    ignored_actions = set(("labeled", "opened", "synchronize"))
     if action in ignored_actions:
         msg = "Ignoring {action} events from github".format(action=action)
         print(msg, file=sys.stderr)
         return msg, 200
 
     pr_activity = "{}/pull/{} {}".format(repo, pr_number, action)
-    if action == "opened":
-        msg = "{}, processing...".format(pr_activity)
-        print(msg, file=sys.stderr)
-        result = pull_request_opened.delay(pr, wsgi_environ=minimal_wsgi_environ())
-    elif action == "closed":
+    if action == "closed":
         msg = "{}, processing...".format(pr_activity)
         print(msg, file=sys.stderr)
         result = pull_request_closed.delay(pr)
