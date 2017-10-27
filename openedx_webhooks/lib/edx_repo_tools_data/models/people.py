@@ -11,7 +11,8 @@ from datetime import date
 
 import arrow
 
-from ..exceptions import NotFoundError
+from ...exceptions import NotFoundError
+from ..utils import get_orgs
 
 
 class People(object):
@@ -157,6 +158,29 @@ class Person(object):
         return self.agreement and data
 
     @property
+    def org(self):
+        orgs = get_orgs()
+        try:
+            org = orgs.get(self.institution)
+            return org
+        except NotFoundError:
+            return None
+
+    @property
+    def is_committer(self):
+        """
+        bool: Is user a committer?
+        """
+        return self._has_role('committer')
+
+    @property
+    def is_contractor(self):
+        """
+        bool: Is user a contractor?
+        """
+        return self._has_role('contractor')
+
+    @property
     def is_edx_user(self):
         """
         bool: Is user associated with edX.
@@ -169,3 +193,17 @@ class Person(object):
         bool: Is the user a robot?
         """
         return self._data.get('is_robot', False)
+
+    def _has_role(self, role):
+        """
+        bool: Does user have specified role?
+        """
+        if self.has_agreement_expired:
+            return False
+
+        user_role = self._data.get(role, False)
+        org_role = False
+        if self.org:
+            org_role = getattr(self.org, 'is_' + role)
+
+        return user_role or org_role

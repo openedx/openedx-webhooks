@@ -10,7 +10,28 @@ from __future__ import (
 import yaml
 
 from ..github.decorators import inject_gh
-from .models import People
+
+
+def _get_entity(gh, yaml_file, return_type):
+    repo = gh.repository('edx', 'repo-tools-data')
+    raw = repo.contents(yaml_file).decoded
+    return return_type(yaml.safe_load(raw))
+
+
+@inject_gh
+def get_orgs(gh):
+    """
+    Fetch `orgs.yaml` from GitHub repo.
+
+    Arguments:
+        gh (github3.GitHub): An authenticated GitHub API client session
+
+    Returns:
+        openedx_webhooks.lib.edx_repo_tools_data.models.Orgs
+    """
+    from .models import Orgs
+    orgs = _get_entity(gh, 'orgs.yaml', Orgs)
+    return orgs
 
 
 @inject_gh
@@ -24,6 +45,6 @@ def get_people(gh):
     Returns:
         openedx_webhooks.lib.edx_repo_tools_data.models.People
     """
-    repo = gh.repository('edx', 'repo-tools-data')
-    raw = repo.contents('people.yaml').decoded
-    return People(yaml.safe_load(raw))
+    from .models import People
+    people = _get_entity(gh, 'people.yaml', People)
+    return people
