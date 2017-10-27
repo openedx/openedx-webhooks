@@ -1,0 +1,5 @@
+CLA_URL = 'http://open.edx.org/sites/default/files/wysiwyg/individual-contributor-agreement.pdf'
+CONTRIBUTING_URL = 'https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst'
+CREATE_OSPR_URL = 'https://openedx-webhooks.herokuapp.com/github/process_pr'
+JIRA_URL = 'https://openedx.atlassian.net/'
+PROCESS_URL = 'http://edx-developer-guide.readthedocs.org/en/latest/process/overview.html'
