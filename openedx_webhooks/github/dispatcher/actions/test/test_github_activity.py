@@ -31,7 +31,7 @@ def patch_update_latest_github_activity(mocker):
     )
 
 
-class TestProcess:
+class TestRun:
     def _test_user(
             self, github_client, jira_client, _payload, login, is_edx_user
     ):
