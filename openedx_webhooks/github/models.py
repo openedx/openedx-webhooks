@@ -49,3 +49,30 @@ class GithubEvent(GithubWebHookEvent):
             return people.get(self.sender_login)
         except NotFoundError:
             return None
+
+    @property
+    def is_by_known_user(self):
+        return bool(self.openedx_user)
+
+    @property
+    def is_by_current_user(self):
+        return (
+            self.is_by_known_user
+            and not self.openedx_user.has_agreement_expired
+        )
+
+    @property
+    def is_by_edx_user(self):
+        return self.is_by_known_user and self.openedx_user.is_edx_user
+
+    @property
+    def is_by_contractor(self):
+        return self.is_by_known_user and self.openedx_user.is_contractor
+
+    @property
+    def is_by_committer(self):
+        return self.is_by_known_user and self.openedx_user.is_committer
+
+    @property
+    def is_by_robot(self):
+        return self.is_by_known_user and self.openedx_user.is_robot

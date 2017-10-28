@@ -34,12 +34,9 @@ def run(gh, jira, event_type, raw_event):
         raw_event (Dict[str, Any]): The parsed event payload
     """
     event = GithubEvent(gh, event_type, raw_event)
-    is_known_user = bool(event.openedx_user)
 
-    if is_known_user and event.openedx_user.is_robot:
+    if event.is_by_robot:
         return
-
-    is_edx_user = is_known_user and event.openedx_user.is_edx_user
 
     issues = find_issues_for_pull_request(jira, event.html_url)
     for issue in issues:
@@ -49,5 +46,5 @@ def run(gh, jira, event_type, raw_event):
             event.description,
             event.sender_login,
             event.updated_at,
-            is_edx_user,
+            event.is_by_edx_user,
         )

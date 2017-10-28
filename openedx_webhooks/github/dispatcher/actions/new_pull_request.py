@@ -26,14 +26,9 @@ def run(gh, jira, event_type, raw_event):
     if should_not_process_event(event):
         return
 
-    user = event.openedx_user
-    is_known_user = bool(user)
-    is_current_user = is_known_user and not user.has_agreement_expired
-    is_contractor = is_current_user and user.is_contractor
-
-    if is_contractor:
+    if event.is_by_contractor:
         create_contractor_comment(gh, event)
-    elif is_current_user:
+    elif event.is_by_current_user:
         ospr_info = create_ospr(jira, event)
         create_ospr_comment(gh, event, ospr_info)
     else:
@@ -45,7 +40,4 @@ def should_not_process_event(event):
     if event.action != 'opened':
         return True
 
-    user = event.openedx_user
-    is_known_user = bool(user)
-    condition = is_known_user and (user.is_robot or user.is_committer)
-    return condition
+    return event.is_by_committer or event.is_by_robot
