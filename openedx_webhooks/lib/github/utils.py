@@ -70,6 +70,18 @@ def get_repo(gh, repo_name):
     return gh.repository(*repo_name.split('/'))
 
 
+@inject_gh
+def get_repo_contents(gh, repo_name, path, ref=None):
+    repo = get_repo(gh, repo_name)
+    contents = repo.contents(path, ref)
+
+    if contents is None:
+        return contents
+    if type(contents) != 'dict':
+        return contents.decoded
+    return {k: v.decoded for k, v in contents.items()}
+
+
 def create_or_update_webhooks_for_repo(
         repo, config, events, active=True, dry_run=False
 ):

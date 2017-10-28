@@ -10,12 +10,12 @@ from __future__ import (
 import yaml
 
 from ..github.decorators import inject_gh
+from ..github.utils import get_repo_contents
 
 
 def _get_entity(gh, yaml_file, return_type):
-    repo = gh.repository('edx', 'repo-tools-data')
-    raw = repo.contents(yaml_file).decoded
-    return return_type(yaml.safe_load(raw))
+    contents = get_repo_contents(gh, 'edx/repo-tools-data', yaml_file)
+    return return_type(yaml.safe_load(contents))
 
 
 @inject_gh
