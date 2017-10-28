@@ -109,6 +109,19 @@ class Person(object):
         return self._data.get('before')
 
     @property
+    def name(self):
+        return self._data.get('name')
+
+    @property
+    def email(self):
+        return self._data.get('email')
+
+    @property
+    def all_emails(self):
+        other_emails = self._data.get('other_emails', [])
+        return [self.email] + other_emails
+
+    @property
     def agreement(self):
         """
         Optional[str]: User's agreement.
