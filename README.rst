@@ -96,7 +96,7 @@ Run Tests
 
 ::
 
-    make install-requirements
+    make install-dev-requirements
     make test
 
 Deploy
