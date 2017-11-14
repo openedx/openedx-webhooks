@@ -91,6 +91,12 @@ use::
 
     heroku open
 
+If the application isn't running, visit the `openedx-webhooks-staging
+Resources`_ page to make sure there are dynos running.
+
+.. _openedx-webhooks-staging Resources: https://dashboard.heroku.com/apps/openedx-webhooks-staging/resources
+
+
 Run Tests
 ---------
 
