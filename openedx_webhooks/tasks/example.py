@@ -16,7 +16,7 @@ from openedx_webhooks import celery
 from openedx_webhooks.tasks.utils import log_info
 
 celery.conf.update({
-    'BROKER_URL': 'ironmq://',
+    'BROKER_URL': 'redis://',
     'CELERY_TASK_SERIALIZER': 'json',
     'CELERY_RESULT_SERIALIZER': 'json',
 })

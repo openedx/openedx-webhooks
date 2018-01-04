@@ -6,7 +6,6 @@ import codecs
 import os
 import sys
 
-import iron_celery
 from celery import Celery
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy

@@ -26,6 +26,3 @@ redis
 requests
 requests-oauthlib
 rq
-
-# rabbitmq is giving us problems, so lets try ironmq
-iron_celery

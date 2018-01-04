@@ -58,7 +58,6 @@ This app relies on the following addons from Heroku:
 
 -  PostgreSQL
 -  Redis
--  IronMQ
 -  Papertrail
 -  Scheduler
 

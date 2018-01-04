@@ -14,7 +14,6 @@ This project uses:
 * `Heroku Postgres <https://elements.heroku.com/addons/heroku-postgresql>`_
 * `Heroku Redis <https://elements.heroku.com/addons/heroku-redis>`_
 * `Heroku Scheduler <https://elements.heroku.com/addons/scheduler>`_
-* `IronMQ Add-On <https://elements.heroku.com/addons/iron_mq>`_
 
 This project also uses `Sentry <https://getsentry.com>`_ as a monitoring system,
 but doesn't use the official Sentry add-on for Heroku. Sentry offers a free
@@ -25,7 +24,7 @@ settings, and log in on the Sentry website to view the tracebacks.
 This project uses `Celery`_ for managing asynchronous tasks.
 Celery needs a "`message broker`_" and a "`result backend`_" to run.
 Celery recommends using `RabbitMQ`_ as a message broker, but we had problems
-with a few RabbitMQ providers on Heroku. Instead, we switched to `IronMQ`_,
+with a few RabbitMQ providers on Heroku. Instead, we switched to `Redis`_,
 which seems to work better. We can always switch back to RabbitMQ in the future,
 or switch to a different message broker if necessary. Celery recommends using
 `Redis`_ as a result backend, which is why we're using the Heroku Redis add-on.
@@ -34,7 +33,6 @@ or switch to a different message broker if necessary. Celery recommends using
 .. _message broker: http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html#choosing-a-broker
 .. _result backend: http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-result-backends
 .. _RabbitMQ: https://www.rabbitmq.com/
-.. _IronMQ: http://www.iron.io/mq/
 .. _Redis: http://redis.io/
 
 Flask Secret Key
