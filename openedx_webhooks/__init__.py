@@ -23,9 +23,11 @@ print("This is printing from openedx_webhooks/__init__.py")
 
 __version__ = "0.1.0"
 
+from openedx_webhooks.config import DefaultConfig
+
 sentry = Sentry()
 db = SQLAlchemy()
-celery = Celery()
+celery = Celery(broker=DefaultConfig.CELERY_BROKER_URL)
 
 
 def expand_config(name=None):
