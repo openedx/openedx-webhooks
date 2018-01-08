@@ -19,10 +19,6 @@ sys.setdefaultencoding('utf-8')
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
 
-import logging
-logger = logging.getLogger()
-
-logger.info("This is openedx_webhooks/__init__.py")
 print("This is printing from openedx_webhooks/__init__.py")
 
 __version__ = "0.1.0"
@@ -80,8 +76,8 @@ def create_celery_app(app=None, config="worker"):
     celery.main = app.import_name
     celery.conf["BROKER_URL"] = app.config["CELERY_BROKER_URL"]
     celery.conf.update(app.config)
-    logger.debug("celery.conf: %r", celery.conf)
-    logger.debug("celery.conf.__dict__: %r", celery.conf.__dict__)
+    print("celery.conf: %r" % (celery.conf,))
+    print("celery.conf.__dict__: %r" % (celery.conf.__dict__,))
     TaskBase = celery.Task
     class ContextTask(TaskBase):
         abstract = True
