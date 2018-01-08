@@ -23,6 +23,7 @@ import logging
 logger = logging.getLogger()
 
 logger.info("This is openedx_webhooks/__init__.py")
+print("This is printing from openedx_webhooks/__init__.py")
 
 __version__ = "0.1.0"
 
