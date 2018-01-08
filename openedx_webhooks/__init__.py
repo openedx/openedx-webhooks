@@ -22,6 +22,8 @@ sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
 import logging
 logger = logging.getLogger()
 
+logger.info("This is openedx_webhooks/__init__.py")
+
 __version__ = "0.1.0"
 
 sentry = Sentry()
