@@ -77,6 +77,7 @@ def create_celery_app(app=None, config="worker"):
     app = app or create_app(config=config)
     celery.main = app.import_name
     celery.conf["BROKER_URL"] = app.config["CELERY_BROKER_URL"]
+    print("celery.conf before update: %r" % (celery.conf,))
     celery.conf.update(app.config)
     print("celery.conf: %r" % (celery.conf,))
     TaskBase = celery.Task
