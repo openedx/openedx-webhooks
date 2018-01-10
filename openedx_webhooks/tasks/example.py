@@ -15,12 +15,6 @@ from __future__ import (
 from openedx_webhooks import celery
 from openedx_webhooks.tasks.utils import log_info
 
-celery.conf.update({
-    'BROKER_URL': 'redis://',
-    'CELERY_TASK_SERIALIZER': 'json',
-    'CELERY_RESULT_SERIALIZER': 'json',
-})
-
 
 @celery.task(name='example.add', bind=True)
 def add(self, num1, num2):
