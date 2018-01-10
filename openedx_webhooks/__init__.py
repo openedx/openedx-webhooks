@@ -19,15 +19,13 @@ sys.setdefaultencoding('utf-8')
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
 
-print("This is printing from openedx_webhooks/__init__.py")
+
 
 __version__ = "0.1.0"
 
-from openedx_webhooks.config import DefaultConfig
-
 sentry = Sentry()
 db = SQLAlchemy()
-celery = Celery(broker=DefaultConfig.CELERY_BROKER_URL)
+celery = Celery()
 
 
 def expand_config(name=None):
@@ -77,9 +75,7 @@ def create_celery_app(app=None, config="worker"):
     app = app or create_app(config=config)
     celery.main = app.import_name
     celery.conf["BROKER_URL"] = app.config["CELERY_BROKER_URL"]
-    print("celery.conf before update: %r" % (celery.conf,))
     celery.conf.update(app.config)
-    print("celery.conf: %r" % (celery.conf,))
     TaskBase = celery.Task
     class ContextTask(TaskBase):
         abstract = True
