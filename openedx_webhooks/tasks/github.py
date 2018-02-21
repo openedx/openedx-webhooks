@@ -16,7 +16,7 @@ from urlobject import URLObject
 from openedx_webhooks import celery, sentry
 from openedx_webhooks.info import (
     get_people_file, is_beta_tester_pull_request, is_contractor_pull_request,
-    is_internal_pull_request
+    is_internal_pull_request, is_bot_pull_request
 )
 from openedx_webhooks.jira_views import get_jira_custom_fields
 from openedx_webhooks.oauth import github_bp, jira_bp
@@ -49,7 +49,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     element in the tuple is a boolean indicating if this function did any
     work, such as making a JIRA issue or commenting on the pull request.
     """
-    # TODO: Refactor alert, there are *5* `return`s in this function!
+    # TODO: Refactor alert, there are *6* `return`s in this function!
     github = github_bp.session
     pr = pull_request
     user = pr["user"]["login"].decode('utf-8')
@@ -61,6 +61,10 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
 
     msg = "Processing {} PR #{} by {}...".format(repo, num, user)
     log_info(self.request, msg)
+
+    if is_bot_pull_request(pr):
+        # Bots never need OSPR attention.
+        return None, False
 
     if is_internal_pr and not has_cl and is_beta:
         msg = "Adding cover letter template to PR #{num} against {repo}".format(repo=repo, num=num)

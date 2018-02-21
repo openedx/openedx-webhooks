@@ -71,6 +71,13 @@ def is_beta_tester_pull_request(pull_request):
     """
     return _is_pull_request(pull_request, "beta")
 
+def is_bot_pull_request(pull_request):
+    """
+    Was this pull request created by a bot?
+    """
+    return pull_request["user"]["type"] == "Bot"
+
+
 def _is_pull_request(pull_request, kind):
     """
     Is this pull request of a certain kind?
