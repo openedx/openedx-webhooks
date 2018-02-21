@@ -145,6 +145,19 @@ has started. If the URL is too hard to remember, you can also use::
 
     heroku open -a openedx-webhooks
 
+
+Other things to know
+--------------------
+
+If you re-process pull requests, an unfortunate thing can happen: it will find
+stale pull requests that were written by edX employees who have now left.  The
+bot will see that the author has no contributor agreement, and will make a new
+JIRA issue for the pull request.  This is needless noise.
+
+The bot looks for comments it wrote that have a JIRA issue id in them.  You can
+leave the bot comment on the stale pull request so that at least it won't happen
+again in the future.
+
 --------------
 
 TODO
