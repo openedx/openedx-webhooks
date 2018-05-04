@@ -314,3 +314,10 @@ def check_contributors():
         for repo, contributors in missing_contributors.items()
     }
     return jsonify(output)
+
+@github_bp.route("/generate_error", methods=("GET",))
+def generate_error():
+    """
+    Used to generate an error message to test error handling
+    """
+    raise Exception("Error from generate_error")
