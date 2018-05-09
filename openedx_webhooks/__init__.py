@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals
 
 # UTF-8 stderr: http://stackoverflow.com/a/2001767/141395
 import codecs
+import logging
 import os
 import sys
 
@@ -22,6 +23,10 @@ sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
 
 
 __version__ = "0.1.0"
+
+rootLogger = logging.getLogger()
+rootLogger.addHandler(logging.StreamHandler(sys.stderr))
+rootLogger.setLevel(logging.INFO)
 
 sentry = Sentry()
 db = SQLAlchemy()
