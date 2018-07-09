@@ -158,6 +158,8 @@ The bot looks for comments it wrote that have a JIRA issue id in them.  You can
 leave the bot comment on the stale pull request so that at least it won't happen
 again in the future.
 
+***This should no longer be an issue as of July 9th, 2018.
+
 --------------
 
 TODO
