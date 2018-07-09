@@ -1,35 +1,3 @@
-# Sample Open edX contributors database for testing.
-#
-# The key is the GitHub login.  Fields in the data:
-#
-#   name:       The person's name in real life.
-#   email:      The person's email address.
-#   email_ok:   This will be "no" if we should not send them email.
-#   other_emails:   A list of other emails the user uses. This is used to help
-#               identify the user.
-#   agreement:  One of:
-#                   "institution": this person's work is covered by an
-#                       institutional agreement with edX.
-#                   "individual": this person has an signed individual
-#                       contributor's agreement.
-#                   "none": this person currently has no agreement with edX,
-#                       and so cannot contribute.
-#   institution: The institution this person is associated with.  If they are
-#                   covered by an institutional agreement, this should be that
-#                   institution.  If they have an individual agreement, this
-#                   can still be provided, for other bookkeeping.
-#   committer:  True if this person is a committer, only needed if the person
-#                   is not a member of a committer institution.
-#   jira:       The person's JIRA login.
-#   comment:    Arbitrary comment text (though why not use YAML comments?)
-#   expires_on: Date when the agreement ended, meaning they have no agreement
-#                   and cannot contribute.  These should be converted to
-#                   "before"-style entries.
-#   before:     A dictionary keyed by dates, of previous values of the
-#                   information for a user, so that people can transition
-#                   between agreements, but we can still examine the past
-#                   accurately.
-
 pmitros:
     email: pmitros@edx.org
     name: Piotr Mitros
@@ -78,3 +46,18 @@ tusbar:
     name: Bertrand Marron
     agreement: individual
     institution: IONISx
+raisingarizona:
+    email: hi.mcdunnough@noemail.com
+    name: H.I. Mcdunnough
+    agreement: none
+    committer: false
+    before:
+        2017-01-02:
+            agreement: institution
+            institution: edX
+        2015-01-02:
+            agreement: individual
+            committer: true
+        2016-01-02:
+            agreement: none
+

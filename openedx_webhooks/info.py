@@ -48,6 +48,23 @@ def get_orgs(key):
     orgs = get_orgs_file()
     return set(o for o, info in orgs.items() if info.get(key, False))
 
+def get_person_certain_time(person, certain_time):
+    """
+    Return person data structure for a particular time
+
+    Arguments:
+        person: dict of a Github user info from people.yaml in repo-tools-data
+        certain_time: datetime.datetime object used to determine the state of the person
+
+    """
+    for before_date in sorted(person.get("before", {})):
+        if certain_time.date() <= before_date:
+            before_person = person["before"][before_date]
+            update_person = person.copy()
+            update_person.update(before_person)
+            return update_person
+    return person
+
 
 def is_internal_pull_request(pull_request):
     """
@@ -77,7 +94,6 @@ def is_bot_pull_request(pull_request):
     """
     return pull_request["user"]["type"] == "Bot"
 
-
 def _is_pull_request(pull_request, kind):
     """
     Is this pull request of a certain kind?
@@ -101,6 +117,8 @@ def _is_pull_request(pull_request, kind):
     if person.get("expires_on", date.max) <= created_at.date():
         # This person's agreement has expired.
         return False
+
+    person = get_person_certain_time(people[author], created_at)
 
     if person.get(kind, False):
         # This person has the flag personally.

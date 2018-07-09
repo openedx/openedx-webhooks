@@ -6,7 +6,7 @@ from datetime import datetime
 import pytest
 
 import openedx_webhooks.info
-from openedx_webhooks.info import get_orgs, is_internal_pull_request
+from openedx_webhooks.info import get_orgs, get_people_file, is_internal_pull_request, get_person_certain_time
 
 pytestmark = pytest.mark.usefixtures('mock_github')
 
@@ -42,7 +42,7 @@ def test_ex_edx_employee():
 
 def test_ex_edx_employee_old_pr():
     created_at = datetime(2014, 1, 1)
-    pr = make_pull_request("mmprandom", created_at=created_at)
+    pr = make_pull_request("jarv", created_at=created_at)
     assert is_internal_pull_request(pr)
 
 def test_never_heard_of_you():
@@ -56,8 +56,32 @@ def test_hourly_worker():
 def test_left_but_still_a_fan():
     pr = make_pull_request("jarv")
     assert not is_internal_pull_request(pr)
-    # TODO: openedx_webhooks doesn't understand the "before" keys.
 
 def test_committers():
     pr = make_pull_request("antoviaque")
     assert is_internal_pull_request(pr)
+
+def test_current_person_no_institution():
+    people = get_people_file()
+    created_at = datetime.today()
+    current_person = get_person_certain_time(people["jarv"], created_at)
+    assert "institution" not in current_person
+    assert current_person["agreement"] == "individual"
+
+def test_current_person():
+    people = get_people_file()
+    created_at = datetime.today()
+    current_person = get_person_certain_time(people["raisingarizona"], created_at)
+    assert current_person["agreement"] == "none"
+
+def test_updated_person_has_institution():
+    people = get_people_file()
+    created_at = datetime(2014, 1, 1)
+    updated_person = get_person_certain_time(people["jarv"], created_at)
+    assert updated_person["institution"] == "edX"
+
+def test_updated_person():
+    people = get_people_file()
+    created_at = datetime(2014, 1, 1)
+    updated_person = get_person_certain_time(people["raisingarizona"], created_at)
+    assert updated_person["agreement"] == "individual"
