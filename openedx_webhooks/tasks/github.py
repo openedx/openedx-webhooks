@@ -364,7 +364,6 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
 
     * contain a link to the JIRA issue
     * check for contributor agreement
-    * check for AUTHORS entry
     * contain a link to our process documentation
     """
     github = github_bp.session
@@ -377,27 +376,12 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
         pr_author in people and
         people[pr_author].get("expires_on", date.max) > created_at.date()
     )
-    # is the user in the AUTHORS file?
-    in_authors_file = False
-    name = people.get(pr_author, {}).get("name", "")
-    if name:
-        authors_url = "https://raw.githubusercontent.com/{repo}/{branch}/AUTHORS".format(
-            repo=pull_request["head"]["repo"]["full_name"].decode('utf-8'),
-            branch=pull_request["head"]["ref"].decode('utf-8'),
-        )
-        authors_resp = github.get(authors_url)
-        if authors_resp.ok:
-            authors_content = authors_resp.text
-            if name in authors_content:
-                in_authors_file = True
-
     return render_template("github_community_pr_comment.md.j2",
         user=pull_request["user"]["login"].decode('utf-8'),
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
         number=pull_request["number"],
         issue_key=jira_issue["key"].decode('utf-8'),
         has_signed_agreement=has_signed_agreement,
-        in_authors_file=in_authors_file,
     )
 
 
