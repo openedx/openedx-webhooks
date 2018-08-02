@@ -67,7 +67,6 @@ def test_community_pr_comment(app, requests_mocker):
         comment = github_community_pr_comment(pr, jira)
     assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
     assert "can't start reviewing your pull request" not in comment
-    assert "you can add yourself to the [AUTHORS]" not in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
 
@@ -87,7 +86,6 @@ def test_community_pr_comment_not_in_authors_file(app, requests_mocker):
         comment = github_community_pr_comment(pr, jira)
     assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
     assert "can't start reviewing your pull request" not in comment
-    assert "you can add yourself to the [AUTHORS]" in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
 
@@ -107,7 +105,6 @@ def test_community_pr_comment_no_authors_file_at_all(app, requests_mocker):
         comment = github_community_pr_comment(pr, jira)
     assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
     assert "can't start reviewing your pull request" not in comment
-    assert "you can add yourself to the [AUTHORS]" in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
 
@@ -118,7 +115,6 @@ def test_community_pr_comment_no_author(app):
         comment = github_community_pr_comment(pr, jira)
     assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
     assert "can't start reviewing your pull request" in comment
-    assert "you can add yourself to the [AUTHORS]" in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
 
