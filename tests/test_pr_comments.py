@@ -1,11 +1,16 @@
 from datetime import datetime
 
+import mock
 import pytest
 
+import openedx_webhooks.info
+from openedx_webhooks.info import get_people_file, get_fun_fact_file
+
+import openedx_webhooks.tasks.github
 from openedx_webhooks.tasks.github import (
     COVERLETTER_MARKER, github_community_pr_comment,
-    github_contractor_pr_comment, github_internal_cover_letter,
-    has_contractor_comment, has_internal_cover_letter
+    github_contractor_pr_comment, github_internal_cherrypick_comment,
+    github_internal_cover_letter, has_contractor_comment, has_internal_cover_letter
 )
 
 pytestmark = pytest.mark.usefixtures('mock_github')
@@ -24,6 +29,7 @@ def make_pull_request(
     return {
         "user": {
             "login": user,
+            "type": "User"
         },
         "number": number,
         "title": title,
@@ -214,6 +220,88 @@ def test_has_contractor_comment_no_comments(app, reqctx, requests_mocker):
         result = has_contractor_comment(pr)
     assert result is False
 
+
+def test_internal_cherry_pick_comment(app):
+    pr = make_pull_request(user='nedbat')
+    open_edx_release = "Matt's Open edX Release"
+    question = "This is a question"
+    answer = "This is an answer"
+    with app.test_request_context('/'):
+        comment = github_internal_cherrypick_comment(pr, open_edx_release, question, answer)
+    assert "Matt's Open edX Release" in comment
+    assert "This is a question" in comment
+    assert "This is an answer" in comment
+    assert "perhaps this PR should be cherry picked" in comment
+
+def test_open_edx_dry_run_environment_var_set(app, reqctx, requests_mocker):
+    test_open_edx_release = 'mduboseedx,nedbat,fakeuser'
+    with mock.patch.dict('os.environ', {'GITHUB_USERS_CHERRY_PICK_MESSAGE_TEST': test_open_edx_release}):
+        pr = make_pull_request(user='nedbat')
+        requests_mocker.post(
+            "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
+            headers={"Content-Type": "application/json"},
+        )
+        with reqctx:
+           app.preprocess_request()
+           result = openedx_webhooks.tasks.github.pull_request_opened(pr)
+        assert result[1] is True
+        history = requests_mocker.request_history
+        url_list = []
+        for request_mock in history:
+            url_list.append(request_mock.url)
+            if request_mock.url == 'https://api.github.com/repos/edx/edx-platform/issues/1/comments':
+                assert "Test Release" in request_mock.json()['body']
+        assert "https://api.github.com/repos/edx/edx-platform/issues/1/comments" in url_list
+
+def test_open_edx_dry_run_environment_var_set_user_not_listed(app, reqctx, requests_mocker):
+    test_open_edx_release = 'mduboseedx,fakeuser'
+    with mock.patch.dict('os.environ', {'GITHUB_USERS_CHERRY_PICK_MESSAGE_TEST': test_open_edx_release}):
+        pr = make_pull_request(user='nedbat')
+        requests_mocker.post(
+            "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
+            headers={"Content-Type": "application/json"},
+        )
+        with reqctx:
+            app.preprocess_request()
+            result = openedx_webhooks.tasks.github.pull_request_opened(pr)
+        assert result[1] is False
+        history = requests_mocker.request_history
+        for request_mock in history:
+            assert request_mock.url is not "https://api.github.com/repos/edx/edx-platform/issues/1/comments"
+
+def test_open_edx_environment_var_set(app, reqctx, requests_mocker):
+    open_edx_release = 'Open edX Release'
+    with mock.patch.dict('os.environ', {'OPENEDX_RELEASE_NAME': open_edx_release}):
+        pr = make_pull_request(user='nedbat')
+        requests_mocker.post(
+            "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
+            headers={"Content-Type": "application/json"},
+        )
+        with reqctx:
+            app.preprocess_request()
+            result = openedx_webhooks.tasks.github.pull_request_opened(pr)
+        assert result[1] is True
+        history = requests_mocker.request_history
+        url_list = []
+        for request_mock in history:
+            url_list.append(request_mock.url)
+            if request_mock.url == 'https://api.github.com/repos/edx/edx-platform/issues/1/comments':
+                assert "Open edX Release" in request_mock.json()['body']
+        assert "https://api.github.com/repos/edx/edx-platform/issues/1/comments" in url_list
+
+def test_open_edx_environment_var_not_set(app, reqctx, requests_mocker):
+    pr = make_pull_request(user='nedbat')
+    requests_mocker.post(
+        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
+        headers={"Content-Type": "application/json"},
+    )
+    with reqctx:
+        app.preprocess_request()
+        result = openedx_webhooks.tasks.github.pull_request_opened(pr)
+    assert result[1] is False
+    history = requests_mocker.request_history
+    for request_mock in history:
+        assert request_mock.url is not "https://api.github.com/repos/edx/edx-platform/issues/1/comments"
 
 def test_internal_pr_cover_letter(reqctx):
     pr = make_pull_request(

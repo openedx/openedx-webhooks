@@ -1,5 +1,5 @@
 """
-Get information about people, repos, orgs, pull requests, etc.
+Get information about people, repos, orgs, pull requests, fun facts etc.
 """
 
 from __future__ import print_function, unicode_literals
@@ -42,6 +42,9 @@ def get_repos_file():
 
 def get_orgs_file():
     return _read_repotools_yaml_file("orgs.yaml")
+
+def get_fun_fact_file():
+    return _read_repotools_yaml_file("fun_facts.yaml")
 
 def get_orgs(key):
     """Return the set of orgs with a true `key`."""

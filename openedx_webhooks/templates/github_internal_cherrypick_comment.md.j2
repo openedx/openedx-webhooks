@@ -1,0 +1,13 @@
+{% filter replace("\n", " ")|trim %}
+Well done, @{{ user }}! We have recently created the {{ open_edx_release_name }} master
+branch and perhaps this PR should be cherry picked. While you consider cherry picking,
+please enjoy this fun fact:
+{% endfilter %}
+
+{% filter replace("\n", " ")|trim %}
+{{ fun_fact_question }}
+{% endfilter %}
+
+{% filter replace("\n", " ")|trim %}
+{{ fun_fact_answer }}
+{% endfilter %}
