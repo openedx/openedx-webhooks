@@ -89,8 +89,8 @@ def requests_mocker():
     mocker.stop()
 
 
-@pytest.fixture(scope='session', autouse=True)
-def fake_repo_data():
+@pytest.fixture(autouse=True)
+def fake_repo_data(requests_mocker):
     """Read repo_data data from local data.  Applied automatically."""
     repo_data_dir = os.path.join(os.path.dirname(__file__), "repo_data")
     def repo_data_callback(request, context):
@@ -99,9 +99,7 @@ def fake_repo_data():
         with open(os.path.join(repo_data_dir, filename)) as data:
             return data.read()
 
-    mocker = requests_mock.Mocker(real_http=True)
-    mocker.start()
-    mocker.get(
+    requests_mocker.get(
         re.compile("https://raw.githubusercontent.com/edx/repo-tools-data/master/"),
         text=repo_data_callback,
     )

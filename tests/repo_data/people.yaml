@@ -60,4 +60,9 @@ raisingarizona:
             committer: true
         2016-01-02:
             agreement: none
+mduboseedx:
+    name: Matt DuBose
+    email: mdubose@edx.org
+    agreement: institution
+    institution: edX
 
