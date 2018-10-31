@@ -4,104 +4,103 @@
 #
 #    pip-compile --output-file requirements/dev.txt requirements/dev.in
 #
-alabaster==0.7.10         # via sphinx
+alabaster==0.7.12         # via sphinx
 amqp==1.4.9               # via kombu
 anyjson==0.3.3            # via kombu
-argparse==1.4.0           # via jira
-arrow==0.10.0
-asn1crypto==0.22.0        # via cryptography
-astroid==1.5.2            # via edx-lint, pylint, pylint-celery, pylint-plugin-utils
-babel==2.5.1              # via sphinx
-backports.functools-lru-cache==1.4
-betamax==0.8.0
+arrow==0.12.1
+asn1crypto==0.24.0        # via cryptography
+astroid==1.5.2            # via edx-lint, pylint, pylint-celery
+atomicwrites==1.2.1       # via pytest
+attrs==18.2.0             # via pytest
+babel==2.6.0              # via sphinx
+backports.functools-lru-cache==1.5
+betamax==0.8.1
 billiard==3.3.0.23        # via celery
-bleach==2.0.0             # via readme-renderer
+bleach==3.0.2             # via readme-renderer
 blinker==1.4
-celery==3.1.25
-certifi==2017.7.27.1      # via requests
-cffi==1.10.0              # via cryptography
+celery==3.1.26.post2
+certifi==2018.10.15       # via requests
+cffi==1.11.5              # via cryptography
 chardet==3.0.4            # via requests
 click-log==0.1.8          # via edx-lint
-click==6.7
-codecov==2.0.9
+click==7.0
+codecov==2.0.15
 configparser==3.5.0       # via pylint
 contextlib2==0.5.5        # via raven
-coverage==4.4.1           # via codecov, pytest-cov
-cryptography==2.0.3
+coverage==4.5.1           # via codecov, pytest-cov
+cryptography==2.3.1
 defusedxml==0.5.0         # via jira
 docutils==0.14            # via readme-renderer, sphinx
-edx-lint==0.5.4
+edx-lint==0.5.5
 enum34==1.1.6             # via astroid, cryptography
-first==2.0.1              # via pip-tools
-flask-dance[sqla]==0.9.0
+flask-dance[sqla]==1.1.0
 flask-script==2.0.6
-flask-sqlalchemy==2.0
+flask-sqlalchemy==2.3.2
 flask-sslify==0.1.5
-flask==0.10.1
-funcsigs==1.0.2           # via mock
+flask==1.0.2
+funcsigs==1.0.2           # via mock, pytest
 functools32==3.2.3.post2
+futures==3.2.0            # via isort
 github3.py==0.9.6
-gunicorn==19.7.1
-html5lib==0.999999999     # via bleach
-idna==2.6                 # via cryptography, requests
-imagesize==0.7.1          # via sphinx
-ipaddress==1.0.18         # via cryptography
-iron-cache==0.3.2         # via iron-celery
-iron-celery==0.4.5
-iron-core==1.2.0          # via iron-cache, iron-mq
-iron-mq==0.9              # via iron-celery
+gunicorn==19.9.0
+idna==2.7                 # via cryptography, requests
+imagesize==1.1.0          # via sphinx
+ipaddress==1.0.22         # via cryptography
 iso8601==0.1.12
-isort==4.2.15
-itsdangerous==0.24        # via flask
-jinja2==2.9.6             # via flask, sphinx
-jira==1.0.10
+isort==4.3.4
+itsdangerous==1.1.0       # via flask
+jinja2==2.10              # via flask, sphinx
+jira==2.0.0
 kombu==3.0.37             # via celery
 lazy-object-proxy==1.3.1  # via astroid
 lazy==1.3                 # via flask-dance
 markupsafe==1.0           # via jinja2
 mccabe==0.6.1             # via pylint
 mock==2.0.0               # via pytest-mock
-oauthlib[signedtoken]==2.0.3
-ordereddict==1.1          # via jira
-pbr==3.1.1                # via jira, mock
-pip-tools==1.9.0
-psycopg2==2.7.3.1
-py==1.4.34                # via pytest
-pycparser==2.18           # via cffi
+more-itertools==4.3.0     # via pytest
+oauthlib[signedtoken]==2.1.0
+pathlib2==2.3.2           # via pytest
+pbr==5.1.0                # via jira, mock
+pip-tools==3.1.0
+pluggy==0.8.0             # via pytest
+psycopg2==2.7.5
+py==1.7.0                 # via pytest
+pycparser==2.19           # via cffi
 pygments==2.2.0           # via readme-renderer, sphinx
-pyjwt==1.5.3              # via oauthlib
+pyjwt==1.6.4              # via oauthlib
 pylint-celery==0.3        # via edx-lint
 pylint-django==0.7.2      # via edx-lint
-pylint-plugin-utils==0.2.6  # via pylint-celery, pylint-django
+pylint-plugin-utils==0.4  # via pylint-celery, pylint-django
 pylint==1.7.1             # via edx-lint, pylint-celery, pylint-django, pylint-plugin-utils
-pytest-cov==2.5.1
-pytest-mock==1.6.2
-pytest==3.2.2
-python-dateutil==2.6.1    # via arrow, iron-core
-python-dotenv==0.7.1
-pytz==2017.2
-pyyaml==3.12
-raven==6.1.0
-readme-renderer==17.2
+pytest-cov==2.6.0
+pytest-mock==1.10.0
+pytest==3.9.3
+python-dateutil==2.7.5    # via arrow
+python-dotenv==0.9.1
+pytz==2018.7
+pyyaml==3.13
+raven==6.9.0
+readme-renderer==24.0
 redis==2.10.6
-requests-mock==1.3.0
-requests-oauthlib==0.8.0
+requests-mock==1.5.2
+requests-oauthlib==1.0.0
 requests-toolbelt==0.8.0  # via jira
-requests==2.18.4
-rq-dashboard==0.3.8
-rq==0.8.2
+requests==2.20.0
+rq-dashboard==0.3.12
+rq==0.12.0
+scandir==1.9.0            # via pathlib2
 singledispatch==3.4.0.3   # via astroid, pylint
-six==1.10.0               # via astroid, bleach, cryptography, edx-lint, flask-dance, html5lib, jira, mock, pip-tools, pylint, python-dateutil, readme-renderer, requests-mock, singledispatch, sphinx, sphinxcontrib-httpdomain, sqlalchemy-utils
+six==1.11.0               # via astroid, bleach, cryptography, edx-lint, flask-dance, jira, mock, more-itertools, pathlib2, pip-tools, pylint, pytest, python-dateutil, readme-renderer, requests-mock, singledispatch, sphinx, sphinxcontrib-httpdomain, sqlalchemy-utils
 snowballstemmer==1.2.1    # via sphinx
-sphinx-rtd-theme==0.2.4
-sphinx==1.5.6             # via sphinxcontrib-httpdomain
-sphinxcontrib-httpdomain==1.5.0
-sqlalchemy-utils==0.32.16  # via flask-dance
-sqlalchemy==1.1.14        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
+sphinx-rtd-theme==0.4.2
+sphinx==1.5.6
+sphinxcontrib-httpdomain==1.7.0
+sqlalchemy-utils==0.33.6  # via flask-dance
+sqlalchemy==1.2.12        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
 uritemplate.py==3.0.2     # via github3.py
 uritemplate==3.0.0        # via uritemplate.py
-urllib3==1.22             # via requests
+urllib3==1.24             # via requests
 urlobject==2.4.3
-webencodings==0.5.1       # via html5lib
-werkzeug==0.12.2          # via flask
+webencodings==0.5.1       # via bleach
+werkzeug==0.14.1          # via flask
 wrapt==1.10.11            # via astroid
