@@ -29,9 +29,9 @@ cryptography==2.3.1
 defusedxml==0.5.0         # via jira
 docutils==0.14            # via readme-renderer, sphinx
 enum34==1.1.6             # via cryptography
-flask-dance[sqla]==0.9.0
+flask-dance[sqla]==1.1.0
 flask-script==2.0.6
-flask-sqlalchemy==2.0
+flask-sqlalchemy==2.3.2
 flask-sslify==0.1.5
 flask==1.0.2
 funcsigs==1.0.2           # via mock, pytest
