@@ -51,13 +51,12 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     element in the tuple is a boolean indicating if this function did any
     work, such as making a JIRA issue or commenting on the pull request.
     """
-    # TODO: Refactor alert, there are *6* `return`s in this function!
+    # TODO: Refactor alert, there are *7* `return`s in this function!
 
     # Environment variable containing the Open edX release name
     open_edx_release = os.environ.get('OPENEDX_RELEASE_NAME')
     # Environment variable containing a string of comma separated Github usernames for testing
     test_open_edx_release = os.environ.get('GITHUB_USERS_CHERRY_PICK_MESSAGE_TEST')
-    #test_open_edx_release = 'mduboseedx,nedbat,fakeuser'
 
     github = github_bp.session
     pr = pull_request
@@ -183,9 +182,13 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     issue_key = new_issue_body["key"].decode('utf-8')
     new_issue["key"] = issue_key
     sentry.client.extra_context({"new_issue": new_issue})
+    commit_resp = github.get("/repos/{repo}/pulls/{num}/commits".format(repo=repo, num=num))
+    if not commit_resp.ok:
+        return None, False
+    commits = commit_resp.json()
     # add a comment to the Github pull request with a link to the JIRA issue
     comment = {
-        "body": github_community_pr_comment(pr, new_issue_body, people),
+        "body": github_community_pr_comment(pr, new_issue_body, people, commits),
     }
     url = "/repos/{repo}/issues/{num}/comments".format(repo=repo, num=pr["number"])
     log_info(self.request, 'Creating new GitHub comment with JIRA issue...')
@@ -399,7 +402,7 @@ def github_post_cherry_pick_comment(self, github, pull_request, open_edx_release
     comment_resp.raise_for_status()
 
 
-def github_community_pr_comment(pull_request, jira_issue, people=None):
+def github_community_pr_comment(pull_request, jira_issue, people=None, commits=None):
     """
     For a newly-created pull request from an open source contributor,
     write a welcoming comment on the pull request. The comment should:
@@ -413,10 +416,19 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
     people = {user.lower(): values for user, values in people.items()}
     pr_author = pull_request["user"]["login"].decode('utf-8').lower()
     created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
+    missing_committers = []
+    if commits:
+        for committer in commits:
+            try:
+                if commits[committer]["author"]["login"] not in people:
+                    missing_committers.append(commits[committer]["author"]["login"])
+            except TypeError:
+                pass
     # does the user have a valid, signed contributor agreement?
     has_signed_agreement = (
         pr_author in people and
-        people[pr_author].get("expires_on", date.max) > created_at.date()
+        people[pr_author].get("expires_on", date.max) > created_at.date() and not
+        missing_committers
     )
     return render_template("github_community_pr_comment.md.j2",
         user=pull_request["user"]["login"].decode('utf-8'),
@@ -424,6 +436,7 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
         number=pull_request["number"],
         issue_key=jira_issue["key"].decode('utf-8'),
         has_signed_agreement=has_signed_agreement,
+        missing_committers=missing_committers,
     )
 
 

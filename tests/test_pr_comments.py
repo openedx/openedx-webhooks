@@ -60,6 +60,13 @@ def make_jira_issue(key="ABC-123"):
     'failing due to '
     '`BetamaxError: A request was made that could not be handled.`'
 ))
+
+def make_committers(committers):
+    commit_dict = {}
+    for committer in committers:
+        commit_dict[committer] = {'author': {'login': committer}}
+    return commit_dict
+
 def test_community_pr_comment(app, requests_mocker):
     # A pull request from a member in good standing.
     pr = make_pull_request(user="tusbar", head_ref="tusbar/cool-feature")
@@ -123,6 +130,65 @@ def test_community_pr_comment_no_author(app):
     assert "can't start reviewing your pull request" in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
+def test_community_pr_comment_no_author_cla_has_committers_cla(app):
+    pr = make_pull_request(user="FakeUser")
+    jira = make_jira_issue(key="FOO-1")
+    people = get_people_file()
+    committers = make_committers(["mduboseedx", "nedbat"])
+    with app.test_request_context('/'):
+        comment = github_community_pr_comment(pr, jira, people, committers)
+    assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
+    assert "can't start reviewing your pull request" in comment
+    assert "commit authors will also need to submit a signed contributor" not in comment
+
+def test_community_pr_comment_has_author_cla_no_committers_cla(app):
+    pr = make_pull_request(user="tusbar")
+    jira = make_jira_issue(key="FOO-1")
+    people = get_people_file()
+    committers = make_committers(["FakeUser", "mduboseedx", "phony"])
+    with app.test_request_context('/'):
+        comment = github_community_pr_comment(pr, jira, people, committers)
+    assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
+    assert "can't start reviewing your pull request" in comment
+    assert "commit authors will also need to submit a signed contributor" in comment
+    assert "FakeUser" in comment
+    assert "phony" in comment
+    assert "mduboseedx" not in comment
+
+def test_community_pr_comment_no_author_cla_no_committers_cla(app):
+    pr = make_pull_request(user="FakeUser")
+    jira = make_jira_issue(key="FOO-1")
+    people = get_people_file()
+    committers = make_committers(["phony", "notreal"])
+    with app.test_request_context('/'):
+        comment = github_community_pr_comment(pr, jira, people, committers)
+    assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
+    assert "can't start reviewing your pull request" in comment
+    assert "commit authors will also need to submit a signed contributor" in comment
+    assert "phony" in comment
+    assert "notreal" in comment
+
+def test_community_pr_committers_api_called(app, reqctx, requests_mocker):
+    pr = make_pull_request(user="mduboseedx")
+    jira = make_jira_issue(key="FOO-1")
+    committers = make_committers(["phony", "notreal"])
+    requests_mocker.post(
+        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
+        headers={"Content-Type": "application/json"},
+    )
+    requests_mocker.post(
+        "https://api.github.com/repos/edx/edx-platform/pulls/1/commits",
+        headers={"Content-Type": "application/json"},
+        json=committers,
+    )
+    with reqctx:
+        app.preprocess_request()
+        result = openedx_webhooks.tasks.github.pull_request_opened(pr)
+    history = requests_mocker.request_history
+    url_list = []
+    for request_mock in history:
+        url_list.append(request_mock.url)
+    assert "https://api.github.com/repos/edx/edx-platform/pulls/1/commits" in url_list
 
 def test_contractor_pr_comment(app, reqctx):
     pr = make_pull_request(user="FakeUser")
