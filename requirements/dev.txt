@@ -9,7 +9,7 @@ amqp==1.4.9               # via kombu
 anyjson==0.3.3            # via kombu
 arrow==0.12.1
 asn1crypto==0.24.0        # via cryptography
-astroid==1.5.2            # via edx-lint, pylint, pylint-celery
+astroid==1.5.3            # via edx-lint, pylint, pylint-celery
 atomicwrites==1.2.1       # via pytest
 attrs==18.2.0             # via pytest
 babel==2.6.0              # via sphinx
@@ -27,13 +27,13 @@ click==7.0
 codecov==2.0.15
 configparser==3.5.0       # via pylint
 contextlib2==0.5.5        # via raven
-coverage==4.5.1           # via codecov, pytest-cov
-cryptography==2.3.1
+coverage==4.5.2           # via codecov, pytest-cov
+cryptography==2.4.1
 defusedxml==0.5.0         # via jira
 docutils==0.14            # via readme-renderer, sphinx
-edx-lint==0.5.5
+edx-lint==0.6.0
 enum34==1.1.6             # via astroid, cryptography
-flask-dance[sqla]==1.1.0
+flask-dance[sqla]==0.9.0
 flask-script==2.0.6
 flask-sqlalchemy==2.3.2
 flask-sslify==0.1.5
@@ -54,16 +54,16 @@ jira==2.0.0
 kombu==3.0.37             # via celery
 lazy-object-proxy==1.3.1  # via astroid
 lazy==1.3                 # via flask-dance
-markupsafe==1.0           # via jinja2
+markupsafe==1.1.0         # via jinja2
 mccabe==0.6.1             # via pylint
 mock==2.0.0               # via pytest-mock
 more-itertools==4.3.0     # via pytest
 oauthlib[signedtoken]==2.1.0
 pathlib2==2.3.2           # via pytest
-pbr==5.1.0                # via jira, mock
+pbr==5.1.1                # via jira, mock
 pip-tools==3.1.0
 pluggy==0.8.0             # via pytest
-psycopg2==2.7.5
+psycopg2==2.7.6.1
 py==1.7.0                 # via pytest
 pycparser==2.19           # via cffi
 pygments==2.2.0           # via readme-renderer, sphinx
@@ -71,21 +71,21 @@ pyjwt==1.6.4              # via oauthlib
 pylint-celery==0.3        # via edx-lint
 pylint-django==0.7.2      # via edx-lint
 pylint-plugin-utils==0.4  # via pylint-celery, pylint-django
-pylint==1.7.1             # via edx-lint, pylint-celery, pylint-django, pylint-plugin-utils
+pylint==1.7.6             # via edx-lint, pylint-celery, pylint-django, pylint-plugin-utils
 pytest-cov==2.6.0
 pytest-mock==1.10.0
-pytest==3.9.3
+pytest==4.0.0
 python-dateutil==2.7.5    # via arrow
 python-dotenv==0.9.1
 pytz==2018.7
 pyyaml==3.13
 raven==6.9.0
 readme-renderer==24.0
-redis==2.10.6
+redis==3.0.1
 requests-mock==1.5.2
 requests-oauthlib==1.0.0
 requests-toolbelt==0.8.0  # via jira
-requests==2.20.0
+requests==2.20.1
 rq-dashboard==0.3.12
 rq==0.12.0
 scandir==1.9.0            # via pathlib2
@@ -95,11 +95,11 @@ snowballstemmer==1.2.1    # via sphinx
 sphinx-rtd-theme==0.4.2
 sphinx==1.5.6
 sphinxcontrib-httpdomain==1.7.0
-sqlalchemy-utils==0.33.6  # via flask-dance
-sqlalchemy==1.2.12        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
+sqlalchemy-utils==0.33.8  # via flask-dance
+sqlalchemy==1.2.14        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
 uritemplate.py==3.0.2     # via github3.py
 uritemplate==3.0.0        # via uritemplate.py
-urllib3==1.24             # via requests
+urllib3==1.24.1           # via requests
 urlobject==2.4.3
 webencodings==0.5.1       # via bleach
 werkzeug==0.14.1          # via flask
