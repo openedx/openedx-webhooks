@@ -1,6 +1,6 @@
 # Core requirements for using this application
 
-Flask-Dance[sqla]
+Flask-Dance[sqla]>=0.9,<0.10
 Flask-SQLAlchemy
 Flask
 celery>=3,<4
