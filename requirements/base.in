@@ -22,7 +22,7 @@ jira
 oauthlib[signedtoken]
 psycopg2
 raven
-redis
+redis<3.0       # 3.0 broke something: https://github.com/andymccurdy/redis-py/issues/1068
 requests
 requests-oauthlib
 rq
