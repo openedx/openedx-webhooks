@@ -19,7 +19,7 @@ billiard==3.3.0.23        # via celery
 bleach==3.0.2             # via readme-renderer
 blinker==1.4
 celery==3.1.26.post2
-certifi==2018.10.15       # via requests
+certifi==2018.11.29       # via requests
 cffi==1.11.5              # via cryptography
 chardet==3.0.4            # via requests
 click-log==0.1.8          # via edx-lint
@@ -28,7 +28,7 @@ codecov==2.0.15
 configparser==3.5.0       # via pylint
 contextlib2==0.5.5        # via raven
 coverage==4.5.2           # via codecov, pytest-cov
-cryptography==2.4.1
+cryptography==2.4.2
 defusedxml==0.5.0         # via jira
 docutils==0.14            # via readme-renderer, sphinx
 edx-lint==0.6.0
@@ -59,14 +59,14 @@ mccabe==0.6.1             # via pylint
 mock==2.0.0               # via pytest-mock
 more-itertools==4.3.0     # via pytest
 oauthlib[signedtoken]==2.1.0
-pathlib2==2.3.2           # via pytest
+pathlib2==2.3.3           # via pytest
 pbr==5.1.1                # via jira, mock
 pip-tools==3.1.0
 pluggy==0.8.0             # via pytest
 psycopg2==2.7.6.1
 py==1.7.0                 # via pytest
 pycparser==2.19           # via cffi
-pygments==2.2.0           # via readme-renderer, sphinx
+pygments==2.3.0           # via readme-renderer, sphinx
 pyjwt==1.6.4              # via oauthlib
 pylint-celery==0.3        # via edx-lint
 pylint-django==0.7.2      # via edx-lint
@@ -74,14 +74,14 @@ pylint-plugin-utils==0.4  # via pylint-celery, pylint-django
 pylint==1.7.6             # via edx-lint, pylint-celery, pylint-django, pylint-plugin-utils
 pytest-cov==2.6.0
 pytest-mock==1.10.0
-pytest==4.0.0
+pytest==4.0.1
 python-dateutil==2.7.5    # via arrow
 python-dotenv==0.9.1
 pytz==2018.7
 pyyaml==3.13
 raven==6.9.0
 readme-renderer==24.0
-redis==3.0.1
+redis==2.10.6
 requests-mock==1.5.2
 requests-oauthlib==1.0.0
 requests-toolbelt==0.8.0  # via jira

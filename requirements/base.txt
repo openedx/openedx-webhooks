@@ -12,12 +12,12 @@ backports.functools-lru-cache==1.5
 billiard==3.3.0.23        # via celery
 blinker==1.4
 celery==3.1.26.post2
-certifi==2018.10.15       # via requests
+certifi==2018.11.29       # via requests
 cffi==1.11.5              # via cryptography
 chardet==3.0.4            # via requests
 click==7.0
 contextlib2==0.5.5        # via raven
-cryptography==2.4.1
+cryptography==2.4.2
 defusedxml==0.5.0         # via jira
 enum34==1.1.6             # via cryptography
 flask-dance[sqla]==0.9.0
@@ -46,7 +46,7 @@ python-dateutil==2.7.5    # via arrow
 pytz==2018.7              # via celery
 pyyaml==3.13
 raven==6.9.0
-redis==3.0.1
+redis==2.10.6
 requests-oauthlib==1.0.0
 requests-toolbelt==0.8.0  # via jira
 requests==2.20.1
