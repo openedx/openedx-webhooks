@@ -153,11 +153,13 @@ def rescan():
     if inline:
         return jsonify(rescan_repository(repo))
 
-    if repo == 'all':
-        repos = get_repos_file().keys()
+    if repo.startswith('all:'):
+        org = repo[4:]
+        org_url = "https://api.github.com/orgs/{org}/repos".format(org=org)
+        repo_names = [repo_name['full_name'] for repo_name in paginated_get(org_url)]
         workflow = group(
-            rescan_repository.s(repo, wsgi_environ=minimal_wsgi_environ())
-            for repo in repos
+            rescan_repository.s(repository, wsgi_environ=minimal_wsgi_environ())
+            for repository in repo_names
         )
         group_result = workflow.delay()
         group_result.save()  # this is necessary for groups, for some reason
