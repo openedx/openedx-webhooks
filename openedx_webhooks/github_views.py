@@ -156,10 +156,10 @@ def rescan():
     if repo.startswith('all:'):
         org = repo[4:]
         org_url = "https://api.github.com/orgs/{org}/repos".format(org=org)
-        repo_names = [repo['full_name'] for repo in paginated_get(org_url)]
+        repo_names = [repo_name['full_name'] for repo_name in paginated_get(org_url)]
         workflow = group(
-            rescan_repository.s(repo, wsgi_environ=minimal_wsgi_environ())
-            for repo in repo_names
+            rescan_repository.s(repository, wsgi_environ=minimal_wsgi_environ())
+            for repository in repo_names
         )
         group_result = workflow.delay()
         group_result.save()  # this is necessary for groups, for some reason
