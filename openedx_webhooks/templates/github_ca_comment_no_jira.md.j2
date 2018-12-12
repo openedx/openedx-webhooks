@@ -1,0 +1,6 @@
+{% filter replace("\n", " ")|trim %}
+Thanks for the pull request, @{{ user }}! This cannot be merged until you've submitted a
+[signed contributor agreement](http://open.edx.org/sites/default/files/wysiwyg/individual-contributor-agreement.pdf)
+or indicated your institutional affiliation. Please see the [CONTRIBUTING](https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst)
+file for more information.
+{% endfilter %}

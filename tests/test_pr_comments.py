@@ -10,7 +10,8 @@ import openedx_webhooks.tasks.github
 from openedx_webhooks.tasks.github import (
     COVERLETTER_MARKER, github_community_pr_comment,
     github_contractor_pr_comment, github_internal_cherrypick_comment,
-    github_internal_cover_letter, has_contractor_comment, has_internal_cover_letter
+    github_internal_cover_letter, has_contractor_comment, has_internal_cover_letter,
+    github_ca_comment_no_jira
 )
 
 pytestmark = pytest.mark.usefixtures('mock_github')
@@ -382,3 +383,32 @@ def test_custom_internal_pr_cover(reqctx, requests_mocker):
         comment_body = github_internal_cover_letter(pr)
     assert comment_body.startswith('custom cover letter for PR from @different_user')
     assert comment_body.endswith(COVERLETTER_MARKER)
+
+def test_no_jira_org_ca_comment(app):
+    pr = make_pull_request(
+        user="nedbat", base_repo_name="edx-solutions/some_repo",
+    )
+    with app.test_request_context('/'):
+        comment = github_ca_comment_no_jira(pr)
+    assert "cannot be merged" in comment
+
+def test_has_ca_comment_no_jira_org(app, reqctx, requests_mocker):
+    repo_full_name = "edx-solutions/some_repo"
+    pr = make_pull_request(
+        user="fakeuser", base_repo_name=repo_full_name,
+    )
+    requests_mocker.post(
+        "https://api.github.com/repos/" + repo_full_name + "/issues/1/comments",
+        headers={"Content-Type": "application/json"},
+    )
+    with reqctx:
+        app.preprocess_request()
+        result = openedx_webhooks.tasks.github.pull_request_opened(pr)
+    assert result[1] is True
+    history = requests_mocker.request_history
+    url_list = []
+    for request_mock in history:
+        url_list.append(request_mock.url)
+        if request_mock.url == "https://api.github.com/repos/" + repo_full_name + "/issues/1/comments":
+            assert "cannot be merged" in request_mock.json()['body']
+    assert "https://api.github.com/repos/edx/edx-platform/issues/1/comments" in url_list

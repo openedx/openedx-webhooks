@@ -6,12 +6,12 @@ from datetime import datetime
 import pytest
 
 import openedx_webhooks.info
-from openedx_webhooks.info import get_orgs, get_people_file, is_internal_pull_request, get_person_certain_time
+from openedx_webhooks.info import get_orgs, get_people_file, is_internal_pull_request, get_person_certain_time, is_no_jira_org_pull_request
 
 pytestmark = pytest.mark.usefixtures('mock_github')
 
 
-def make_pull_request(user, created_at=None):
+def make_pull_request(user, created_at=None, org=""):
     # This should really use a framework like factory_boy.
     created_at = created_at or datetime.now().replace(microsecond=0)
     return {
@@ -19,6 +19,11 @@ def make_pull_request(user, created_at=None):
             "login": user,
         },
         "created_at": created_at.isoformat(),
+        "base": {
+            "repo": {
+                "full_name": org + "/some_repo"
+            },
+        },
     }
 
 
@@ -85,3 +90,11 @@ def test_updated_person():
     created_at = datetime(2014, 1, 1)
     updated_person = get_person_certain_time(people["raisingarizona"], created_at)
     assert updated_person["agreement"] == "individual"
+
+def test_is_no_jira_org():
+    pr = make_pull_request("nedbat", None, "edx-solutions")
+    assert is_no_jira_org_pull_request(pr)
+
+def test_not_no_jira_org():
+    pr = make_pull_request("nedbat", None, "edx")
+    assert not is_no_jira_org_pull_request(pr)

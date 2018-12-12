@@ -18,7 +18,8 @@ from urlobject import URLObject
 from openedx_webhooks import celery, sentry
 from openedx_webhooks.info import (
     get_people_file, get_repos_file, get_fun_fact_file, is_beta_tester_pull_request,
-    is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request
+    is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request,
+    is_no_jira_org_pull_request
 )
 from openedx_webhooks.jira_views import get_jira_custom_fields
 from openedx_webhooks.oauth import github_bp, jira_bp
@@ -74,6 +75,15 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     if is_bot_pull_request(pr):
         # Bots never need OSPR attention.
         return None, False
+
+    if is_no_jira_org_pull_request(pr):
+        # If author needs signed CA, send message but never create a Jira ticket
+        people = get_people_file()
+        if user in people:
+            return None, False
+        else:
+            github_no_jira_org_post_pr_comment(self, github, pr)
+            return None, True
 
     if is_internal_pr and not has_cl and is_beta:
         msg = "Adding cover letter template to PR #{num} against {repo}".format(repo=repo, num=num)
@@ -398,6 +408,21 @@ def github_post_cherry_pick_comment(self, github, pull_request, open_edx_release
     log_request_response(self.request, comment_resp)
     comment_resp.raise_for_status()
 
+def github_no_jira_org_post_pr_comment(self, github, pull_request):
+    """
+    Posts only the contributor agreement comment.
+    """
+    comment = {
+        "body": github_ca_comment_no_jira(pull_request)
+    }
+    url = "/repos/{repo}/issues/{num}/comments".format(
+        repo=pull_request["base"]["repo"]["full_name"],
+        num=pull_request["number"],
+    )
+    comment_resp = github.post(url, json=comment)
+    log_request_response(self.request, comment_resp)
+    comment_resp.raise_for_status()
+
 
 def github_community_pr_comment(pull_request, jira_issue, people=None):
     """
@@ -454,6 +479,16 @@ def github_internal_cherrypick_comment(pull_request, release_name, fun_fact_ques
         open_edx_release_name=release_name,
         fun_fact_question=fun_fact_question,
         fun_fact_answer=fun_fact_answer,
+    )
+
+def github_ca_comment_no_jira(pull_request):
+    """
+    Formats a comment for authors in repos that should not have Jira tickets, but still
+    need to sign the Contributor Agreement. Likely needed for edx-solutions and possibly
+    the openedx organizations in Github.
+    """
+    return render_template("github_ca_comment_no_jira.md.j2",
+        user=pull_request["user"]["login"].decode('utf-8'),
     )
 
 
