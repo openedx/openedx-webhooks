@@ -1,2 +1,6 @@
 edx-solutions:
+    Jira: false
 openedx:
+    Jira: false
+edx:
+    Jira: true

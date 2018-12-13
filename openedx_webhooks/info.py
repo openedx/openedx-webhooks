@@ -110,7 +110,8 @@ def is_no_jira_org_pull_request(pull_request):
     for org in orgs:
         match = re.search(org + "/", pull_request["base"]["repo"]["full_name"])
         if match:
-            return True
+            if orgs[org]['Jira'] == False:
+                return True
     return False
 
 def _is_pull_request(pull_request, kind):

@@ -61,6 +61,15 @@ def make_jira_issue(key="ABC-123"):
     'failing due to '
     '`BetamaxError: A request was made that could not be handled.`'
 ))
+
+def make_request_mocker_history(requests_mocker, url, method):
+    needed_request = None
+    history = requests_mocker.request_history
+    for request_mock in history:
+        if request_mock.url == url and request_mock.method == method:
+            needed_request = request_mock
+    return needed_request
+
 def test_community_pr_comment(app, requests_mocker):
     # A pull request from a member in good standing.
     pr = make_pull_request(user="tusbar", head_ref="tusbar/cool-feature")
@@ -394,21 +403,40 @@ def test_no_jira_org_ca_comment(app):
 
 def test_has_ca_comment_no_jira_org(app, reqctx, requests_mocker):
     repo_full_name = "edx-solutions/some_repo"
+    url = "https://api.github.com/repos/" + repo_full_name + "/issues/1/comments"
     pr = make_pull_request(
         user="fakeuser", base_repo_name=repo_full_name,
     )
+    requests_mocker.get(
+        url, json={},
+    )
     requests_mocker.post(
-        "https://api.github.com/repos/" + repo_full_name + "/issues/1/comments",
-        headers={"Content-Type": "application/json"},
+        url, headers={"Content-Type": "application/json"},
     )
     with reqctx:
         app.preprocess_request()
         result = openedx_webhooks.tasks.github.pull_request_opened(pr)
     assert result[1] is True
-    history = requests_mocker.request_history
-    url_list = []
-    for request_mock in history:
-        url_list.append(request_mock.url)
-        if request_mock.url == "https://api.github.com/repos/" + repo_full_name + "/issues/1/comments":
-            assert "cannot be merged" in request_mock.json()['body']
-    assert "https://api.github.com/repos/edx/edx-platform/issues/1/comments" in url_list
+    github_comment_post = make_request_mocker_history(requests_mocker, url, "POST")
+    assert github_comment_post is not None
+    assert "cannot be merged" in github_comment_post.json()['body']
+
+def test_no_ca_comment_no_jira_org(app, reqctx, requests_mocker):
+    repo_full_name = "edx-solutions/some_repo"
+    url = "https://api.github.com/repos/" + repo_full_name + "/issues/1/comments"
+    pr = make_pull_request(
+        user="nedbat", base_repo_name=repo_full_name,
+    )
+    requests_mocker.get(
+        url, json={},
+    )
+    requests_mocker.post(
+        url, headers={"Content-Type": "application/json"},
+    )
+    with reqctx:
+        app.preprocess_request()
+        result = openedx_webhooks.tasks.github.pull_request_opened(pr)
+    assert result[1] is False
+    github_comment_post = make_request_mocker_history(requests_mocker, url, "POST")
+    assert github_comment_post is None
+
