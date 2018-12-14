@@ -45,7 +45,7 @@ def get_orgs_file():
     return _read_repotools_yaml_file("orgs.yaml")
 
 def get_no_jira_orgs_file():
-    return _read_repotools_yaml_file("no_jira_orgs.yaml")
+    return _read_repotools_yaml_file("github_orgs.yaml")
 
 def get_fun_fact_file():
     return _read_repotools_yaml_file("fun_facts.yaml")
