@@ -6,7 +6,7 @@ from datetime import datetime
 import pytest
 
 import openedx_webhooks.info
-from openedx_webhooks.info import get_orgs, get_people_file, is_internal_pull_request, get_person_certain_time, is_no_jira_org_pull_request
+from openedx_webhooks.info import get_orgs, get_people_file, is_internal_pull_request, get_person_certain_time, is_jira_pull_request
 
 pytestmark = pytest.mark.usefixtures('mock_github')
 
@@ -93,8 +93,8 @@ def test_updated_person():
 
 def test_is_no_jira_org():
     pr = make_pull_request("nedbat", None, "edx-solutions")
-    assert is_no_jira_org_pull_request(pr)
+    assert is_jira_pull_request(pr)
 
 def test_not_no_jira_org():
     pr = make_pull_request("nedbat", None, "edx")
-    assert not is_no_jira_org_pull_request(pr)
+    assert not is_jira_pull_request(pr)

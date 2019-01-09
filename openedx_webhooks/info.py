@@ -6,7 +6,6 @@ from __future__ import print_function, unicode_literals
 
 from datetime import date
 
-import re
 import requests
 import yaml
 from iso8601 import parse_date
@@ -101,16 +100,16 @@ def is_bot_pull_request(pull_request):
     """
     return pull_request["user"]["type"] == "Bot"
 
-def is_no_jira_org_pull_request(pull_request):
+def is_jira_pull_request(pull_request):
     """
     Was this pull request created within a GitHub organization that should not have a
     Jira ticket created?
     """
     orgs = get_no_jira_orgs_file()
     for org in orgs:
-        match = re.search(org + "/", pull_request["base"]["repo"]["full_name"])
+        match = pull_request["base"]["repo"]["full_name"].startswith(org + "/")
         if match:
-            if orgs[org]['Jira'] == False:
+            if not orgs[org]['Jira']:
                 return True
     return False
 

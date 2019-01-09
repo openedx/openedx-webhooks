@@ -19,7 +19,7 @@ from openedx_webhooks import celery, sentry
 from openedx_webhooks.info import (
     get_people_file, get_repos_file, get_fun_fact_file, is_beta_tester_pull_request,
     is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request,
-    is_no_jira_org_pull_request
+    is_jira_pull_request
 )
 from openedx_webhooks.jira_views import get_jira_custom_fields
 from openedx_webhooks.oauth import github_bp, jira_bp
@@ -68,6 +68,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     is_internal_pr = is_internal_pull_request(pr)
     has_cl = has_internal_cover_letter(pr)
     is_beta = is_beta_tester_pull_request(pr)
+    is_jira = True
 
     msg = "Processing {} PR #{} by {}...".format(repo, num, user)
     log_info(self.request, msg)
@@ -76,7 +77,11 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
         # Bots never need OSPR attention.
         return None, False
 
-    if is_no_jira_org_pull_request(pr):
+    if is_jira_pull_request(pr):
+        is_jira = False
+
+    """
+    if is_jira_pull_request(pr):
         # If author needs signed CA, send message but never create a Jira ticket
         people = get_people_file()
         if user in people:
@@ -84,6 +89,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
         else:
             github_no_jira_org_post_pr_comment(self, github, pr)
             return None, True
+    """
 
     if is_internal_pr and not has_cl and is_beta:
         msg = "Adding cover letter template to PR #{num} against {repo}".format(repo=repo, num=num)
@@ -162,6 +168,10 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
         else:
             user_name = user
 
+    if is_jira:
+        new_issue_body = create_jira_issue(people)
+
+    """
     # create an issue on JIRA!
     new_issue = {
         "fields": {
@@ -193,9 +203,10 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     issue_key = new_issue_body["key"].decode('utf-8')
     new_issue["key"] = issue_key
     sentry.client.extra_context({"new_issue": new_issue})
+    """
     # add a comment to the Github pull request with a link to the JIRA issue
     comment = {
-        "body": github_community_pr_comment(pr, new_issue_body, people),
+        "body": github_community_pr_comment(pr, people, new_issue_body=None),
     }
     url = "/repos/{repo}/issues/{num}/comments".format(repo=repo, num=pr["number"])
     log_info(self.request, 'Creating new GitHub comment with JIRA issue...')
@@ -369,6 +380,42 @@ def rescan_repository(self, repo):
         info["created"] = created
     return info
 
+def create_jira_issue(people):
+    """
+    Creates a Jira ticket and returns the response
+    """
+    new_issue = {
+        "fields": {
+            "project": {
+                "key": "OSPR",
+            },
+            "issuetype": {
+                "name": "Pull Request Review",
+            },
+            "summary": pr["title"],
+            "description": pr["body"],
+            custom_fields["URL"]: pr["html_url"],
+            custom_fields["PR Number"]: pr["number"],
+            custom_fields["Repo"]: pr["base"]["repo"]["full_name"],
+            custom_fields["Contributor Name"]: user_name,
+        }
+    }
+    institution = people.get(user, {}).get("institution", None)
+    if institution:
+        new_issue["fields"][custom_fields["Customer"]] = [institution]
+    sentry.client.extra_context({"new_issue": new_issue})
+
+    log_info(self.request, 'Creating new JIRA issue...')
+    resp = jira_bp.session.post("/rest/api/2/issue", json=new_issue)
+    log_request_response(self.request, resp)
+    resp.raise_for_status()
+
+    new_issue_body = resp.json()
+    issue_key = new_issue_body["key"].decode('utf-8')
+    new_issue["key"] = issue_key
+    sentry.client.extra_context({"new_issue": new_issue})
+    return new_issue_body
+
 
 def get_jira_issue_key(pull_request):
     me = github_whoami()
@@ -424,7 +471,7 @@ def github_no_jira_org_post_pr_comment(self, github, pull_request):
     comment_resp.raise_for_status()
 
 
-def github_community_pr_comment(pull_request, jira_issue, people=None):
+def github_community_pr_comment(pull_request, people=None, jira_issue=None):
     """
     For a newly-created pull request from an open source contributor,
     write a welcoming comment on the pull request. The comment should:
@@ -438,6 +485,8 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
     people = {user.lower(): values for user, values in people.items()}
     pr_author = pull_request["user"]["login"].decode('utf-8').lower()
     created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
+    if jira_issue:
+        jira_issue = jira_issue["key"].decode('utf-8')
     # does the user have a valid, signed contributor agreement?
     has_signed_agreement = (
         pr_author in people and
@@ -447,7 +496,7 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
         user=pull_request["user"]["login"].decode('utf-8'),
         repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
         number=pull_request["number"],
-        issue_key=jira_issue["key"].decode('utf-8'),
+        issue_key=jira_issue,
         has_signed_agreement=has_signed_agreement,
     )
 
