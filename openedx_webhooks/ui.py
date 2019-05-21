@@ -4,11 +4,14 @@ from __future__ import print_function, unicode_literals
 from flask import Blueprint, render_template
 from flask_dance.contrib.github import github as github_session
 from flask_dance.contrib.jira import jira as jira_session
+from openedx_webhooks.utils import requires_auth
+
 
 ui = Blueprint('ui', __name__)
 
 
 @ui.route("/")
+@requires_auth
 def index():
     """
     Display an HTML overview page, with links to other functions that
