@@ -18,5 +18,5 @@ def find_issues_for_pull_request(jira, pull_request_url):
     Returns:
         jira.client.ResultList[jira.Issue]
     """
-    jql = 'project=OSPR AND url="{}"'.format(pull_request_url)
+    jql = 'project=OSPR AND cf[10904]="{}"'.format(pull_request_url)
     return jira.search_issues(jql)
