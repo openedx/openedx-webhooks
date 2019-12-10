@@ -29,8 +29,8 @@ def single_inactive():
 @pytest.fixture
 def multiple_active():
     hooks = [
-        Hook(active=True, updated_at=now.replace(months=-10).datetime),
-        Hook(active=True, updated_at=now.replace(days=-10).datetime),
+        Hook(active=True, updated_at=now.shift(months=-10).datetime),
+        Hook(active=True, updated_at=now.shift(days=-10).datetime),
         Hook(active=True, updated_at=now.datetime),
     ]
     return hooks
@@ -39,8 +39,8 @@ def multiple_active():
 @pytest.fixture
 def multiple_inactive():
     hooks = [
-        Hook(active=False, updated_at=now.replace(months=-10).datetime),
-        Hook(active=False, updated_at=now.replace(days=-10).datetime),
+        Hook(active=False, updated_at=now.shift(months=-10).datetime),
+        Hook(active=False, updated_at=now.shift(days=-10).datetime),
         Hook(active=False, updated_at=now.datetime),
     ]
     return hooks
@@ -49,8 +49,8 @@ def multiple_inactive():
 @pytest.fixture
 def multiple_mixed():
     hooks = [
-        Hook(active=True, updated_at=now.replace(months=-10).datetime),
-        Hook(active=True, updated_at=now.replace(days=-10).datetime),
+        Hook(active=True, updated_at=now.shift(months=-10).datetime),
+        Hook(active=True, updated_at=now.shift(days=-10).datetime),
         Hook(active=False, updated_at=now.datetime),
     ]
     return hooks

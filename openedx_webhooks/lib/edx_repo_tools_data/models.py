@@ -140,7 +140,7 @@ class Person(object):
             # TODO: Is there a better way to handle this edge case?
             #       Is it even possible to have no agreement and no
             #       expiration data at all?
-            yesterday = arrow.now().replace(days=-1).date()
+            yesterday = arrow.now().shift(days=-1).date()
             expires_on = yesterday
 
         if not self.agreement and self._before:

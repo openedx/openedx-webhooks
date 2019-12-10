@@ -1,10 +1,12 @@
 # Core requirements for using this application
 
-Flask-Dance[sqla]>=0.9,<0.10
+-c constraints.txt
+
+Flask-Dance[sqla]
 Flask-SQLAlchemy
 Flask
-celery>=3,<4
-github3.py>=0.9,<1.0
+celery
+github3.py
 
 Flask-SSLify
 Flask-Script
@@ -22,7 +24,7 @@ jira
 oauthlib[signedtoken]
 psycopg2
 raven
-redis<3.0       # 3.0 broke something: https://github.com/andymccurdy/redis-py/issues/1068
+redis
 requests
 requests-oauthlib
-rq==0.12.0
+rq

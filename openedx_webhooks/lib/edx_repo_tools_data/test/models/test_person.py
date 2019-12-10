@@ -45,7 +45,7 @@ class TestAgreementExpiresOn:
 
     def test_no_agreement(self):
         p = Person('', {'agreement': 'none'})
-        yesterday = arrow.now().replace(days=-1).date()
+        yesterday = arrow.now().shift(days=-1).date()
         assert p.agreement_expires_on == yesterday
 
 

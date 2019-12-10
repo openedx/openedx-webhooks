@@ -1,6 +1,8 @@
 # Requirements for documentation validation
 
-Sphinx>=1.5,<1.6         # Documentation builder
+-c constraints.txt
+
+Sphinx         # Documentation builder
 
 readme_renderer           # Validates README.rst for usage on PyPI
 sphinx_rtd_theme          # ReadTheDocs theme for Sphinx output
