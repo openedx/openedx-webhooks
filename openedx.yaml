@@ -4,5 +4,8 @@ oeps:
     oep-7: false
     oep-18: true
 
+supporting-teams:
+    - edx/teaching-and-learning
+
 tags:
     - backend-service
