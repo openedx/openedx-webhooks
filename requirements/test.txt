@@ -14,7 +14,7 @@ babel==2.7.0              # via sphinx
 backports.functools-lru-cache==1.6.1
 betamax==0.8.1
 billiard==3.3.0.23        # via celery
-bleach==3.1.0             # via readme-renderer
+bleach==3.1.1             # via readme-renderer
 blinker==1.4
 celery==3.1.26.post2
 certifi==2019.11.28       # via requests
