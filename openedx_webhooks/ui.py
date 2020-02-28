@@ -2,7 +2,6 @@
 from __future__ import print_function, unicode_literals
 
 import logging
-import sys
 
 from flask import Blueprint, render_template
 from flask_dance.contrib.github import github as github_session
@@ -38,7 +37,7 @@ def index():
             try:
                 jira_username = jira_user_resp.json()["name"]
             except Exception as e:
-                logger.error("Failed to process response: {}".format(gh_user_resp.text))
+                logger.error("Failed to process response: {}".format(jira_user_resp.text))
                 raise
 
 
