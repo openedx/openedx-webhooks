@@ -28,6 +28,18 @@ def _log(log_fn, task_request, message):
     log_fn("{}: {}".format(task_request.id, message))
 
 
+def log_debug(task_request, message):
+    """
+    Logs a message using Celery's app logger at the DEBUG level.
+
+    Arguments:
+        task_request (celery.Task.request): instance of request used to
+            call this function
+        message (str): Log message
+    """
+    _log(logger.debug, task_request, message)
+
+
 def log_info(task_request, message):
     """
     Logs a message using Celery's app logger at the INFO level.

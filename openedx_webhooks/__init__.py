@@ -14,9 +14,12 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 __version__ = "0.1.0"
 
+log_level = os.environ.get('LOGLEVEL', 'INFO').upper()
 rootLogger = logging.getLogger()
-rootLogger.addHandler(logging.StreamHandler(sys.stderr))
-rootLogger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stderr)
+handler.setLevel(log_level)
+rootLogger.addHandler(handler)
+rootLogger.setLevel(log_level)
 
 db = SQLAlchemy()
 celery = Celery(strict_typing=False)

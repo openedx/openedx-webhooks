@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 
 from celery.utils.log import get_task_logger
@@ -8,11 +9,13 @@ from openedx_webhooks import celery
 
 # set up logging
 logger = get_task_logger(__name__)
+log_level = os.environ.get('LOGLEVEL', 'INFO').upper()
 stderr_handler = logging.StreamHandler(sys.stderr)
-stderr_handler.setLevel(logging.INFO)
+stderr_handler.setLevel(log_level)
 formatter = logging.Formatter('%(levelname)s: %(message)s [%(name)s]')
 stderr_handler.setFormatter(formatter)
 logger.addHandler(stderr_handler)
+logger.setLevel(log_level)
 
 
 # create a Flask blueprint for getting task status info
