@@ -56,10 +56,6 @@ def make_jira_issue(key="ABC-123"):
     }
 
 
-@pytest.mark.skip(reason=(
-    'failing due to '
-    '`BetamaxError: A request was made that could not be handled.`'
-))
 def test_community_pr_comment(app, requests_mocker):
     # A pull request from a member in good standing.
     pr = make_pull_request(user="tusbar", head_ref="tusbar/cool-feature")
@@ -76,10 +72,6 @@ def test_community_pr_comment(app, requests_mocker):
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-@pytest.mark.skip(reason=(
-    'failing due to '
-    '`BetamaxError: A request was made that could not be handled.`'
-))
 def test_community_pr_comment_not_in_authors_file(app, requests_mocker):
     pr = make_pull_request(user="tusbar", head_ref="tusbar/fix-bug-1234")
     jira = make_jira_issue(key="TNL-12345")
@@ -95,10 +87,6 @@ def test_community_pr_comment_not_in_authors_file(app, requests_mocker):
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-@pytest.mark.skip(reason=(
-    'failing due to '
-    '`BetamaxError: A request was made that could not be handled.`'
-))
 def test_community_pr_comment_no_authors_file_at_all(app, requests_mocker):
     pr = make_pull_request(user="tusbar", head_ref="tusbar/fix-bug-1234")
     jira = make_jira_issue(key="TNL-12345")
