@@ -108,7 +108,7 @@ def _is_pull_request(pull_request, kind):
 
     """
     people = get_people_file()
-    author = pull_request["user"]["login"].decode('utf-8')
+    author = pull_request["user"]["login"]
     if author not in people:
         # We don't know this person!
         return False

@@ -56,7 +56,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
 
     github = github_bp.session
     pr = pull_request
-    user = pr["user"]["login"].decode('utf-8')
+    user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
     is_internal_pr = is_internal_pull_request(pr)
@@ -133,7 +133,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
         log_info(self.request, msg)
         return issue_key, False
 
-    repo = pr["base"]["repo"]["full_name"].decode('utf-8')
+    repo = pr["base"]["repo"]["full_name"]
     people = get_people_file()
     custom_fields = get_jira_custom_fields(jira_bp.session)
 
@@ -175,7 +175,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     resp.raise_for_status()
 
     new_issue_body = resp.json()
-    issue_key = new_issue_body["key"].decode('utf-8')
+    issue_key = new_issue_body["key"]
     new_issue["key"] = issue_key
     sentry_extra_context({"new_issue": new_issue})
     # add a comment to the Github pull request with a link to the JIRA issue
@@ -216,7 +216,7 @@ def pull_request_closed(self, pull_request):
     """
     jira = jira_bp.session
     pr = pull_request
-    repo = pr["base"]["repo"]["full_name"].decode('utf-8')
+    repo = pr["base"]["repo"]["full_name"]
 
     merged = pr["merged"]
     issue_key = get_jira_issue_key(pr)
@@ -258,8 +258,8 @@ def pull_request_closed(self, pull_request):
         issue_resp = jira.get(issue_url)
         issue_resp.raise_for_status()
         issue = issue_resp.json()
-        current_status = issue["fields"]["status"]["name"].decode("utf-8")
         sentry_extra_context({"jira_issue": issue})
+        current_status = issue["fields"]["status"]["name"]
         if current_status == transition_name:
             msg = "{key} is already in status {status}".format(
                 key=issue_key, status=transition_name
@@ -274,7 +274,7 @@ def pull_request_closed(self, pull_request):
                 key=issue_key,
                 new_status=transition_name,
                 curr_status=current_status,
-                valid=", ".join(t["to"]["name"].decode('utf-8') for t in transitions),
+                valid=", ".join(t["to"]["name"] for t in transitions),
             )
         )
         log_error(self.request, fail_msg)
@@ -359,7 +359,7 @@ def get_jira_issue_key(pull_request):
     me = github_whoami()
     my_username = me["login"]
     comment_url = "/repos/{repo}/issues/{num}/comments".format(
-        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
+        repo=pull_request["base"]["repo"]["full_name"],
         num=pull_request["number"],
     )
     for comment in paginated_get(comment_url, session=github_bp.session):
@@ -369,7 +369,7 @@ def get_jira_issue_key(pull_request):
         # search for the first occurrance of a JIRA ticket key in the comment body
         match = re.search(r"\b([A-Z]{2,}-\d+)\b", comment["body"])
         if match:
-            return match.group(0).decode('utf-8')
+            return match.group(0)
     return None
 
 
@@ -406,7 +406,7 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
     github = github_bp.session
     people = people or get_people_file()
     people = {user.lower(): values for user, values in people.items()}
-    pr_author = pull_request["user"]["login"].decode('utf-8').lower()
+    pr_author = pull_request["user"]["login"].lower()
     created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
     # does the user have a valid, signed contributor agreement?
     has_signed_agreement = (
@@ -414,10 +414,10 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
         people[pr_author].get("expires_on", date.max) > created_at.date()
     )
     return render_template("github_community_pr_comment.md.j2",
-        user=pull_request["user"]["login"].decode('utf-8'),
-        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
+        user=pull_request["user"]["login"],
+        repo=pull_request["base"]["repo"]["full_name"],
         number=pull_request["number"],
-        issue_key=jira_issue["key"].decode('utf-8'),
+        issue_key=jira_issue["key"],
         has_signed_agreement=has_signed_agreement,
     )
 
@@ -431,8 +431,8 @@ def github_contractor_pr_comment(pull_request):
     * If not, show the author how to trigger the creation of an OSPR issue
     """
     return render_template("github_contractor_pr_comment.md.j2",
-        user=pull_request["user"]["login"].decode('utf-8'),
-        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
+        user=pull_request["user"]["login"],
+        repo=pull_request["base"]["repo"]["full_name"],
         number=pull_request["number"],
     )
 
@@ -445,7 +445,7 @@ def github_internal_cherrypick_comment(pull_request, release_name, fun_fact_ques
     * include the Open edX release name, e.g. Hawthorn, Ironwood, etc
     """
     return render_template("github_internal_cherrypick_comment.md.j2",
-        user=pull_request["user"]["login"].decode('utf-8'),
+        user=pull_request["user"]["login"],
         open_edx_release_name=release_name,
         fun_fact_question=fun_fact_question,
         fun_fact_answer=fun_fact_answer,
@@ -461,7 +461,7 @@ def has_contractor_comment(pull_request):
     me = github_whoami()
     my_username = me["login"]
     comment_url = "/repos/{repo}/issues/{num}/comments".format(
-        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
+        repo=pull_request["base"]["repo"]["full_name"],
         num=pull_request["number"],
     )
     for comment in paginated_get(comment_url, session=github_bp.session):
@@ -481,12 +481,12 @@ def github_internal_cover_letter(pull_request):
     """
     # check for a `.pr_cover_letter.md.j2` in repo, use that if it exists
     coverletter_url = "https://raw.githubusercontent.com/{repo}/{branch}/.pr_cover_letter.md.j2".format(
-        repo=pull_request["head"]["repo"]["full_name"].decode('utf-8'),
-        branch=pull_request["head"]["ref"].decode('utf-8'),
+        repo=pull_request["head"]["repo"]["full_name"],
+        branch=pull_request["head"]["ref"],
     )
     coverletter_resp = github_bp.session.get(coverletter_url)
     ctx = {
-        "user": pull_request["user"]["login"].decode('utf-8'),
+        "user": pull_request["user"]["login"],
     }
     if coverletter_resp.ok:
         template_string = coverletter_resp.text
@@ -504,7 +504,7 @@ def has_internal_cover_letter(pull_request):
     me = github_whoami()
     my_username = me["login"]
     comment_url = "/repos/{repo}/issues/{num}/comments".format(
-        repo=pull_request["base"]["repo"]["full_name"].decode('utf-8'),
+        repo=pull_request["base"]["repo"]["full_name"],
         num=pull_request["number"],
     )
     for comment in paginated_get(comment_url, session=github_bp.session):
@@ -512,7 +512,7 @@ def has_internal_cover_letter(pull_request):
         if comment["user"]["login"] != my_username:
             continue
 
-        body = comment["body"].decode('utf-8')
+        body = comment["body"]
         if COVERLETTER_MARKER in body:
             return True
     return False

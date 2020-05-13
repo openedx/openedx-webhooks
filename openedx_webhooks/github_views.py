@@ -88,7 +88,7 @@ def pull_request():
 
     pr = event["pull_request"]
     pr_number = pr['number']
-    repo = pr["base"]["repo"]["full_name"].decode('utf-8')
+    repo = pr["base"]["repo"]["full_name"]
     action = event["action"]
     # `synchronize` action is when a new commit is made for the PR
     ignored_actions = set(("labeled", "synchronize"))
