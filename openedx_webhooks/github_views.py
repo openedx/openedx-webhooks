@@ -13,7 +13,6 @@ from flask import (
 )
 from flask_dance.contrib.github import github
 
-from openedx_webhooks import sentry
 from openedx_webhooks.info import get_people_file, get_repos_file
 from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
 from openedx_webhooks.lib.github.utils import create_or_update_webhook
@@ -22,7 +21,8 @@ from openedx_webhooks.tasks.github import (
     pull_request_closed, pull_request_opened, rescan_repository
 )
 from openedx_webhooks.utils import (
-    is_valid_payload, minimal_wsgi_environ, paginated_get
+    is_valid_payload, minimal_wsgi_environ, paginated_get,
+    sentry_extra_context
 )
 
 github_bp = Blueprint('github_views', __name__)
@@ -78,7 +78,7 @@ def pull_request():
         msg = "Invalid JSON from Github: {data}".format(data=request.data)
         print(msg, file=sys.stderr)
         raise ValueError(msg)
-    sentry.client.extra_context({"event": event})
+    sentry_extra_context({"event": event})
 
     if "pull_request" not in event and "hook" in event and "zen" in event:
         # this is a ping
@@ -256,7 +256,7 @@ def install():
     success = []
     failed = []
     for repo, conf in ((r, c) for r in repos for c in WEBHOOK_CONFS):
-        sentry.client.extra_context({'repo': repo, 'config': conf})
+        sentry_extra_context({'repo': repo, 'config': conf})
 
         payload_url = conf['config']['url']
 
@@ -300,7 +300,7 @@ def check_contributors():
 
     missing_contributors = defaultdict(set)
     for repo in repos:
-        sentry.client.extra_context({"repo": repo})
+        sentry_extra_context({"repo": repo})
         contributors_url = "/repos/{repo}/contributors".format(repo=repo)
         contributors = paginated_get(contributors_url, session=github)
         for contributor in contributors:

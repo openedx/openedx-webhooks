@@ -10,7 +10,7 @@ from iso8601 import parse_date
 from urlobject import URLObject
 
 # TODO: Why aren't these relative imports?
-from openedx_webhooks import celery, sentry
+from openedx_webhooks import celery
 from openedx_webhooks.info import (
     get_people_file, get_repos_file, get_fun_fact_file, is_beta_tester_pull_request,
     is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request
@@ -21,7 +21,7 @@ from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.utils import (
     log_error, log_info, log_request_response
 )
-from openedx_webhooks.utils import memoize, paginated_get
+from openedx_webhooks.utils import memoize, paginated_get, sentry_extra_context
 
 COVERLETTER_MARKER = "<!-- open edx coverletter -->"
 
@@ -167,7 +167,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     institution = people.get(user, {}).get("institution", None)
     if institution:
         new_issue["fields"][custom_fields["Customer"]] = [institution]
-    sentry.client.extra_context({"new_issue": new_issue})
+    sentry_extra_context({"new_issue": new_issue})
 
     log_info(self.request, 'Creating new JIRA issue...')
     resp = jira_bp.session.post("/rest/api/2/issue", json=new_issue)
@@ -177,7 +177,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     new_issue_body = resp.json()
     issue_key = new_issue_body["key"].decode('utf-8')
     new_issue["key"] = issue_key
-    sentry.client.extra_context({"new_issue": new_issue})
+    sentry_extra_context({"new_issue": new_issue})
     # add a comment to the Github pull request with a link to the JIRA issue
     comment = {
         "body": github_community_pr_comment(pr, new_issue_body, people),
@@ -226,7 +226,7 @@ def pull_request_closed(self, pull_request):
         )
         log_info(self.request, msg)
         return "no JIRA issue :("
-    sentry.client.extra_context({"jira_key": issue_key})
+    sentry_extra_context({"jira_key": issue_key})
 
     # close the issue on JIRA
     transition_url = (
@@ -243,7 +243,7 @@ def pull_request_closed(self, pull_request):
 
     transitions = transitions_resp.json()["transitions"]
 
-    sentry.client.extra_context({"transitions": transitions})
+    sentry_extra_context({"transitions": transitions})
 
     transition_name = "Merged" if merged else "Rejected"
     transition_id = None
@@ -258,8 +258,8 @@ def pull_request_closed(self, pull_request):
         issue_resp = jira.get(issue_url)
         issue_resp.raise_for_status()
         issue = issue_resp.json()
-        sentry.client.extra_context({"jira_issue": issue})
         current_status = issue["fields"]["status"]["name"].decode("utf-8")
+        sentry_extra_context({"jira_issue": issue})
         if current_status == transition_name:
             msg = "{key} is already in status {status}".format(
                 key=issue_key, status=transition_name
@@ -305,7 +305,7 @@ def rescan_repository(self, repo):
     rescans a single repo for new prs
     """
     github = github_bp.session
-    sentry.client.extra_context({"repo": repo})
+    sentry_extra_context({"repo": repo})
     url = "/repos/{repo}/pulls".format(repo=repo)
     created = {}
     if not self.request.called_directly:
@@ -330,7 +330,7 @@ def rescan_repository(self, repo):
         self.update_state(state='STARTED', meta=state_meta)
 
     for pull_request in paginated_get(url, session=github, callback=page_callback):
-        sentry.client.extra_context({"pull_request": pull_request})
+        sentry_extra_context({"pull_request": pull_request})
         issue_key = get_jira_issue_key(pull_request)
         is_internal = is_internal_pull_request(pull_request)
         if not issue_key and not is_internal:

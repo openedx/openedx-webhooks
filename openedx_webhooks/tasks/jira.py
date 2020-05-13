@@ -1,9 +1,9 @@
 from collections import defaultdict
 
-from openedx_webhooks import celery, sentry
+from openedx_webhooks import celery
 from openedx_webhooks.oauth import jira_bp
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.utils import jira_group_members, jira_users
+from openedx_webhooks.utils import jira_group_members, jira_users, sentry_extra_context
 
 
 @celery.task
@@ -13,7 +13,7 @@ def rescan_users(domain_groups):
     for groupname, domain in domain_groups.items():
         users_in_group = jira_group_members(groupname, session=jira, debug=True)
         usernames_in_group = set(u["name"] for u in users_in_group)
-        sentry.client.extra_context({
+        sentry_extra_context({
             "groupname": groupname,
             "usernames_in_group": usernames_in_group,
         })

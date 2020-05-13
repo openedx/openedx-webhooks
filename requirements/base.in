@@ -21,8 +21,8 @@ iso8601
 jira
 oauthlib[signedtoken]
 psycopg2
-raven
 redis
 requests
 requests-oauthlib
 rq
+sentry-sdk[flask]

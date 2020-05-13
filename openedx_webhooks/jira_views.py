@@ -14,11 +14,10 @@ from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
-from openedx_webhooks import sentry
 from openedx_webhooks.oauth import jira_get
 from openedx_webhooks.tasks.jira import rescan_users as rescan_user_task
 from openedx_webhooks.utils import (
-    jira_paginated_get, memoize, pop_dict_id, to_unicode
+    jira_paginated_get, memoize, pop_dict_id, to_unicode, sentry_extra_context
 )
 
 jira_bp = Blueprint('jira_views', __name__)
@@ -66,7 +65,7 @@ def rescan_issues():
     kind of problems.
     """
     jql = request.form.get("jql") or 'status = "Needs Triage" ORDER BY key'
-    sentry.client.extra_context({"jql": jql})
+    sentry_extra_context({"jql": jql})
     issues = jira_paginated_get(
         "/rest/api/2/search", jql=jql, obj_name="issues", session=jira,
     )
@@ -94,7 +93,7 @@ def issue_created():
         raise ValueError("Invalid JSON from JIRA: {data}".format(
             data=request.data.decode('utf-8')
         ))
-    sentry.client.extra_context({"event": event})
+    sentry_extra_context({"event": event})
 
     if current_app.debug:
         print(json.dumps(event), file=sys.stderr)
@@ -170,7 +169,7 @@ def should_transition(issue):
 
 
 def issue_opened(issue):
-    sentry.client.extra_context({"issue": issue})
+    sentry_extra_context({"issue": issue})
 
     issue_key = to_unicode(issue["key"])
     issue_url = URLObject(issue["self"])
@@ -292,7 +291,7 @@ def issue_updated():
         raise ValueError("Invalid JSON from JIRA: {data}".format(
             data=request.data.decode('utf-8')
         ))
-    sentry.client.extra_context({"event": event})
+    sentry_extra_context({"event": event})
 
     if current_app.debug:
         print(json.dumps(event), file=sys.stderr)
@@ -383,7 +382,7 @@ def jira_issue_rejected(issue):
     gh_issue_resp = github.get(issue_url)
     gh_issue_resp.raise_for_status()
     gh_issue = gh_issue_resp.json()
-    sentry.client.extra_context({"github_issue": gh_issue})
+    sentry_extra_context({"github_issue": gh_issue})
     if gh_issue["state"] == "closed":
         # nothing to do
         msg = "{key} was rejected, but PR #{num} was already closed".format(

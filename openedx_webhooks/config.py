@@ -15,7 +15,6 @@ class DefaultConfig(object):
     CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
     CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://")
     CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://")
-    SENTRY_PROCESSORS = ["openedx_webhooks.raven_processors.RequestsURLProcessor"]
 
 
 class WorkerConfig(DefaultConfig):

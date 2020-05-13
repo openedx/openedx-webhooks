@@ -254,3 +254,11 @@ def minimal_wsgi_environ():
     ))
     return {key: value for key, value in request.environ.items()
             if key in values}
+
+
+def sentry_extra_context(data_dict):
+    """Apply the keys and values from data_dict to the Sentry extra context."""
+    from sentry_sdk import configure_scope
+    with configure_scope() as scope:
+        for key, value in data_dict.items():
+            scope.set_extra(key, value)

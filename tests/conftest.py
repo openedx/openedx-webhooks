@@ -8,8 +8,6 @@ import mock
 import pytest
 import requests_mock
 from flask_dance.consumer.requests import OAuth2Session
-from raven.base import DummyClient
-from raven.contrib.flask import make_client as make_sentry_client
 from requests.packages.urllib3.response import is_fp_closed
 
 import openedx_webhooks
@@ -107,12 +105,7 @@ def fake_repo_data(requests_mocker):
 
 @pytest.fixture
 def app():
-    _app = openedx_webhooks.create_app(config="testing")
-    # use a dummy Sentry session, so that we don't actually
-    # contact getsentry.com when running tests
-    _app.extensions['sentry'].client = make_sentry_client(DummyClient, app=_app)
-    # and return!
-    return _app
+    return openedx_webhooks.create_app(config="testing")
 
 
 @pytest.fixture

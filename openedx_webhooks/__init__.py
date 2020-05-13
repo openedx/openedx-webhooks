@@ -6,10 +6,10 @@ from celery import Celery
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_sslify import SSLify
-from raven.contrib.celery import register_logger_signal, register_signal
-from raven.contrib.flask import Sentry
-from werkzeug.contrib.fixers import ProxyFix
-
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.flask import FlaskIntegration
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 __version__ = "0.1.0"
@@ -18,7 +18,6 @@ rootLogger = logging.getLogger()
 rootLogger.addHandler(logging.StreamHandler(sys.stderr))
 rootLogger.setLevel(logging.INFO)
 
-sentry = Sentry()
 db = SQLAlchemy()
 celery = Celery()
 
@@ -37,7 +36,6 @@ def create_app(config=None):
     config = config or os.environ.get("OPENEDX_WEBHOOKS_CONFIG") or "default"
     app.config.from_object(expand_config(config))
 
-    sentry.init_app(app)
     db.init_app(app)
     create_celery_app(app)
     if not app.debug:
@@ -67,6 +65,9 @@ def create_celery_app(app=None, config="worker"):
     adapted from http://flask.pocoo.org/docs/0.10/patterns/celery/
     (added the wsgi_environ stuff)
     """
+    if os.environ.get("SENTRY_DSN", ""):
+        sentry_sdk.init(integrations=[CeleryIntegration(), FlaskIntegration()])
+
     app = app or create_app(config=config)
     celery.main = app.import_name
     celery.conf["BROKER_URL"] = app.config["CELERY_BROKER_URL"]
@@ -87,6 +88,4 @@ def create_celery_app(app=None, config="worker"):
                     return TaskBase.__call__(self, *args, **kwargs)
 
     celery.Task = ContextTask
-    register_logger_signal(sentry.client)
-    register_signal(sentry.client)
     return celery
