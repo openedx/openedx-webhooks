@@ -3,7 +3,7 @@ from collections import namedtuple
 import pytest
 
 Hook = namedtuple('Hook', ['name', 'config', 'active'])
-Repo = namedtuple('Repo', ['iter_hooks'])
+Repo = namedtuple('Repo', ['hooks'])
 
 
 @pytest.fixture
@@ -20,7 +20,7 @@ def hooks():
 
 @pytest.fixture
 def repo(hooks):
-    repo = Repo(iter_hooks=lambda: hooks)
+    repo = Repo(hooks=lambda: hooks)
     return repo
 
 

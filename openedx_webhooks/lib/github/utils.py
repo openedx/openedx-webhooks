@@ -22,7 +22,7 @@ def get_repos_with_webhook(
     Returns:
         Iterator[github3.repos.repo.Repository]
     """
-    for repo in gh.iter_repos(type=repo_type):
+    for repo in gh.repositories(type=repo_type):
         if repo_contains_webhook(repo, payload_url, exclude_inactive):
             yield repo
 
@@ -216,7 +216,7 @@ def get_webhooks(repo, payload_url):
         Iterator[github3.repos.hook.Hook]
     """
     hooks = (
-        h for h in repo.iter_hooks()
+        h for h in repo.hooks()
         if h.name == 'web' and h.config['url'] == payload_url
     )
     return hooks

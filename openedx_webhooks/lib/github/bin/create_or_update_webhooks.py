@@ -126,8 +126,7 @@ def repo(repository_name, config_json, dry_run, verbose):
 @inject_gh
 def _get_repos_for_org(gh, org_name):
     org = gh.organization(org_name)
-    repos = org.iter_repos(type='public')
-
+    repos = org.repositories(type='public')
     return repos
 
 

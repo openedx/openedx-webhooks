@@ -43,7 +43,7 @@ def _get_github_values(jira, issue):
 
 
 def _get_last_pr_commit_info(gh, pull_request):
-    commit = list(pull_request.iter_commits())[-1]
+    commit = list(pull_request.commits())[-1]
     login = commit.committer_as_User().login
 
     info = {
@@ -59,8 +59,8 @@ def _get_last_pr_commit_info(gh, pull_request):
 
 def _get_last_pr_activity_info(gh, pull_request):
     activities = (
-        list(pull_request.iter_comments()) +
-        list(pull_request.iter_issue_comments())
+        list(pull_request.review_comments()) +
+        list(pull_request.issue_comments())
     )
     last_activity = sorted(activities, key=lambda x: x.updated_at)[-1]
     login = last_activity.user.login

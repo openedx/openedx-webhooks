@@ -20,5 +20,5 @@ def get_people(gh):
         openedx_webhooks.lib.edx_repo_tools_data.models.People
     """
     repo = gh.repository('edx', 'repo-tools-data')
-    raw = repo.contents('people.yaml').decoded
+    raw = repo.file_contents('people.yaml').decoded
     return People(yaml.safe_load(raw))
