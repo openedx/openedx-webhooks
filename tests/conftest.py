@@ -2,9 +2,9 @@ import base64
 import os
 import os.path
 import re
+import unittest.mock as mock
 
 import betamax
-import mock
 import pytest
 import requests_mock
 from flask_dance.consumer.requests import OAuth2Session
