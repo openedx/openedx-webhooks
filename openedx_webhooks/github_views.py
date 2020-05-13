@@ -3,6 +3,7 @@ These are the views that process webhook events coming from Github.
 """
 
 import json
+import logging
 import sys
 from collections import defaultdict
 
@@ -26,6 +27,7 @@ from openedx_webhooks.utils import (
 )
 
 github_bp = Blueprint('github_views', __name__)
+logger = logging.getLogger()
 
 
 @github_bp.route('/hook-receiver', methods=('POST',))
@@ -68,7 +70,7 @@ def pull_request():
     .. _PullRequestEvent: https://developer.github.com/v3/activity/events/types/#pullrequestevent
     """
     msg = "Incoming GitHub PR request: {}".format(request.data)
-    print(msg, file=sys.stderr)
+    logger.debug(msg)
 
     try:
         event = request.get_json()

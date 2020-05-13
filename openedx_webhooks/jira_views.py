@@ -3,6 +3,7 @@ These are the views that process webhook events coming from JIRA.
 """
 
 import json
+import logging
 import re
 import sys
 
@@ -21,6 +22,7 @@ from openedx_webhooks.utils import (
 )
 
 jira_bp = Blueprint('jira_views', __name__)
+logger = logging.getLogger()
 
 
 @memoize
@@ -93,6 +95,7 @@ def issue_created():
         raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
     sentry_extra_context({"event": event})
 
+    logger.debug("Jira issue created: {}".format(json.dumps(event)))
     if current_app.debug:
         print(json.dumps(event), file=sys.stderr)
 
