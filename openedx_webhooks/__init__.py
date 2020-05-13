@@ -19,7 +19,7 @@ rootLogger.addHandler(logging.StreamHandler(sys.stderr))
 rootLogger.setLevel(logging.INFO)
 
 db = SQLAlchemy()
-celery = Celery()
+celery = Celery(strict_typing=False)
 
 
 def expand_config(name=None):
