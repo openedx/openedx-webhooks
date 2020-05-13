@@ -2,7 +2,7 @@
 GitHub related domain models.
 """
 
-from functools32 import lru_cache
+from functools import lru_cache
 
 from ..lib.edx_repo_tools_data.utils import get_people as _get_people
 from ..lib.exceptions import NotFoundError

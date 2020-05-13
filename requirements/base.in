@@ -13,11 +13,9 @@ Flask-Script
 PyYAML
 URLObject
 arrow
-backports.functools_lru_cache
 blinker
 click
 cryptography
-functools32
 gunicorn
 iso8601
 jira
