@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Dispatch incoming webhook events to matching actions.
 """
-
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
 
 from ...lib.github.models import GithubWebHookRequestHeader
 from .actions import ACTIONS

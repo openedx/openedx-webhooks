@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Example Celery task, can be used for testing the Celery infrastructure
 at Heroku.
@@ -8,9 +7,6 @@ Example usage::
     from openedx_webhooks.tasks.example import add
     add.delay(1, 2)
 """
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
 
 from openedx_webhooks import celery
 from openedx_webhooks.tasks.utils import log_info

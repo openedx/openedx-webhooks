@@ -1,12 +1,7 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Delete specified webhook from all repos.
 """
-
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
 
 import click
 

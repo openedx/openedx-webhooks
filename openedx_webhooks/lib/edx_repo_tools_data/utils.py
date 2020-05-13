@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Utilities for working with `edx/repo-tools-data`.
 """
-
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
 
 import yaml
 

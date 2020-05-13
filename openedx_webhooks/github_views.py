@@ -1,9 +1,6 @@
-# coding=utf-8
 """
 These are the views that process webhook events coming from Github.
 """
-
-from __future__ import print_function, unicode_literals
 
 import json
 import sys

@@ -1,12 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
 
 import arrow
 import click
-from functools32 import lru_cache
+from functools import lru_cache
 from jira import JIRAError
 
 from openedx_webhooks.jira.tasks import update_latest_github_activity

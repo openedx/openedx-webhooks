@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Open edX Webhooks Bot documentation build configuration file, created by
 # sphinx-quickstart on Tue Dec  9 11:45:12 2014.

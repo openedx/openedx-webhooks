@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
-
 from jira import JIRA
 
 from openedx_webhooks.jira.tasks import _make_edx_action_choices

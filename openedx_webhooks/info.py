@@ -2,8 +2,6 @@
 Get information about people, repos, orgs, pull requests, fun facts etc.
 """
 
-from __future__ import print_function, unicode_literals
-
 from datetime import date
 
 import requests

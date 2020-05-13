@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Generic JIRA domain models.
 """
-
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
 
 from ..exceptions import NotFoundError
 

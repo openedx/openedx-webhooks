@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Utilities for working with GitHub.
 """
-
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
 
 from .decorators import inject_gh
 

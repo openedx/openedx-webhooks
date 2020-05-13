@@ -1,9 +1,6 @@
-# coding=utf-8
 """
 Generic utilities.
 """
-
-from __future__ import print_function, unicode_literals
 
 import hmac
 import os

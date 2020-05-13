@@ -1,5 +1,3 @@
-# coding=utf-8
-from __future__ import print_function, unicode_literals
 
 # UTF-8 stderr: http://stackoverflow.com/a/2001767/141395
 import codecs

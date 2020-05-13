@@ -1,14 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Start an instance of the RQ worker.
 
 ``python rq_worker.py``
 """
-
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
 
 import os
 

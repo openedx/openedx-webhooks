@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Update OSPR with link to survey.
 """
-
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
 
 import arrow
 

@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
-
 import arrow
 
 from openedx_webhooks.lib.edx_repo_tools_data.models import Person

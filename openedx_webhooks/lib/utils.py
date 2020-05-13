@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Shared lib utilities.
 """
-
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
 
 
 def dependency_exists(klass, *args, **kwargs):

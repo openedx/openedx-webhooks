@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Utility functions in support of Celery tasks
 
@@ -12,9 +11,6 @@ More information about referenced class objects below:
 .. _requests.PreparedRequest: http://docs.python-requests.org/en/master/api/#requests.PreparedRequest
 .. _requests.Response: http://docs.python-requests.org/en/master/api/#requests.Response
 """
-from __future__ import (
-    absolute_import, division, print_function, unicode_literals
-)
 
 from openedx_webhooks.tasks import logger
 
