@@ -83,12 +83,6 @@ example, users with an ``@edx.org`` email address will be placed into the
 that as new employees join edX, they are automatically placed into the correct
 group on JIRA.
 
-Check contributors on GitHub
-----------------------------
-
-The bot can identify users that have made commits on a repository, but are
-not listed in the AUTHORS file for that repository.
-
 Install GitHub webhooks
 -----------------------
 

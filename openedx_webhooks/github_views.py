@@ -5,7 +5,6 @@ These are the views that process webhook events coming from Github.
 import json
 import logging
 import sys
-from collections import defaultdict
 
 from celery import group
 from flask import current_app as app
@@ -14,7 +13,7 @@ from flask import (
 )
 from flask_dance.contrib.github import github
 
-from openedx_webhooks.info import get_people_file, get_repos_file
+from openedx_webhooks.info import get_repos_file
 from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
 from openedx_webhooks.lib.github.utils import create_or_update_webhook
 from openedx_webhooks.lib.rq import q
@@ -273,46 +272,6 @@ def install():
     resp.headers["Content-Type"] = "application/json"
     return resp
 
-
-@github_bp.route("/check_contributors", methods=("GET",))
-def check_contributors_get():
-    """
-    Display a friendly HTML form for identifying missing contributors in a
-    repository.
-    """
-    return render_template("github_check_contributors.html")
-
-
-@github_bp.route("/check_contributors", methods=("POST",))
-def check_contributors():
-    """
-    Identify missing contributors: people who have commits in a repository,
-    but who are not listed in the AUTHORS file.
-    """
-    repo = request.form.get("repo", "")
-    if repo:
-        repos = (repo,)
-    else:
-        repos = get_repos_file().keys()
-
-    people = get_people_file()
-    people_lower = {username.lower() for username in people.keys()}
-
-    missing_contributors = defaultdict(set)
-    for repo in repos:
-        sentry_extra_context({"repo": repo})
-        contributors_url = "/repos/{repo}/contributors".format(repo=repo)
-        contributors = paginated_get(contributors_url, session=github)
-        for contributor in contributors:
-            if contributor["login"].lower() not in people_lower:
-                missing_contributors[repo].add(contributor["login"])
-
-    # convert sets to lists, so jsonify can handle them
-    output = {
-        repo: list(contributors)
-        for repo, contributors in missing_contributors.items()
-    }
-    return jsonify(output)
 
 @github_bp.route("/generate_error", methods=("GET",))
 def generate_error():
