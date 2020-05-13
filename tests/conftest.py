@@ -35,6 +35,8 @@ with betamax.Betamax.configure() as config:
 class FakeBlueprint(object):
     def __init__(self, token):
         self.token = token
+        self.client_id = "FooId"
+        self.client_secret = "FooSecret"
 
 @pytest.fixture
 def github_session():

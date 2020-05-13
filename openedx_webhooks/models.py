@@ -1,4 +1,4 @@
-from flask_dance.consumer.backend.sqla import OAuthConsumerMixin
+from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 
 from openedx_webhooks import db
 
