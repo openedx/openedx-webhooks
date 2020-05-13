@@ -224,10 +224,10 @@ def issue_opened(issue):
     else:
         action = "ignored"
     print(
-        "{key} created by {name} ({username}), {action}".format(
+        "{key} created by {name} ({account}), {action}".format(
             key=issue_key,
             name=to_unicode(issue["fields"]["creator"]["displayName"]),
-            username=to_unicode(issue["fields"]["creator"]["name"]),
+            account=to_unicode(issue["fields"]["creator"]["accountId"]),
             action="Transitioned to Open" if transitioned else "ignored",
         ),
         file=sys.stderr,
