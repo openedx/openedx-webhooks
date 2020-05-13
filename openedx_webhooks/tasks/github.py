@@ -69,7 +69,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
         return None, False
 
     if is_internal_pr and not has_cl and is_beta:
-        msg = "Adding cover letter template to PR #{num} against {repo}".format(repo=repo, num=num)
+        msg = "Adding cover letter to PR #{num} against {repo}".format(repo=repo, num=num)
         log_info(self.request, msg)
         coverletter = github_internal_cover_letter(pr)
 
