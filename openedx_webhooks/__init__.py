@@ -1,6 +1,3 @@
-
-# UTF-8 stderr: http://stackoverflow.com/a/2001767/141395
-import codecs
 import logging
 import os
 import sys
@@ -12,11 +9,6 @@ from flask_sslify import SSLify
 from raven.contrib.celery import register_logger_signal, register_signal
 from raven.contrib.flask import Sentry
 from werkzeug.contrib.fixers import ProxyFix
-
-reload(sys)
-sys.setdefaultencoding('utf-8')
-sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
-sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
 
 
 
