@@ -5,7 +5,7 @@ Generic JIRA domain models.
 from ..exceptions import NotFoundError
 
 
-class JiraFields(object):
+class JiraFields:
     """
     Represent a collection of JIRA fields.
     """
@@ -42,7 +42,7 @@ class JiraFields(object):
         return JiraField(results[0])
 
 
-class JiraField(object):
+class JiraField:
     """
     Represent a JIRA field.
 

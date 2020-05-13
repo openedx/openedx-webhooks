@@ -5,7 +5,7 @@ Generic GitHub domain models.
 import arrow
 
 
-class GithubWebHookRequestHeader(object):
+class GithubWebHookRequestHeader:
     """
     Represent a GitHub webhook request header.
 
@@ -37,7 +37,7 @@ class GithubWebHookRequestHeader(object):
         return self.headers.get('X-Hub-Signature')
 
 
-class GithubWebHookEvent(object):
+class GithubWebHookEvent:
     """
     A GitHub webhook event.
 

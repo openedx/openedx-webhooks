@@ -1,7 +1,7 @@
 import os
 
 
-class DefaultConfig(object):
+class DefaultConfig:
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "secrettoeveryone")
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///openedx_webhooks.db")
     GITHUB_OAUTH_CLIENT_ID = os.environ.get("GITHUB_OAUTH_CLIENT_ID")

@@ -208,7 +208,7 @@ def _print_results(results_dict, header):
             click.echo("* " + repo.full_name)
 
 
-class Results(object):
+class Results:
     def __init__(self):
         self.created = defaultdict(list)
         self.edited = defaultdict(list)

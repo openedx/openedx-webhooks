@@ -32,7 +32,7 @@ with betamax.Betamax.configure() as config:
             github_token.encode('utf-8')
         )
 
-class FakeBlueprint(object):
+class FakeBlueprint:
     def __init__(self, token):
         self.token = token
         self.client_id = "FooId"

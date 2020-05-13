@@ -9,7 +9,7 @@ import arrow
 from ..exceptions import NotFoundError
 
 
-class People(object):
+class People:
     """
     Logical representation of `people.yaml`.
 
@@ -54,7 +54,7 @@ class People(object):
         return Person(key, person)
 
 
-class Person(object):
+class Person:
     """
     Logical representation of an entry in `people.yaml`.
 
