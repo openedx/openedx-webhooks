@@ -9,7 +9,6 @@ from flask import render_template, render_template_string
 from iso8601 import parse_date
 from urlobject import URLObject
 
-# TODO: Why aren't these relative imports?
 from openedx_webhooks import celery
 from openedx_webhooks.info import (
     get_people_file, get_repos_file, get_fun_fact_file, is_beta_tester_pull_request,
@@ -46,7 +45,6 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     element in the tuple is a boolean indicating if this function did any
     work, such as making a JIRA issue or commenting on the pull request.
     """
-    # TODO: Refactor alert, there are *6* `return`s in this function!
 
     # Environment variable containing the Open edX release name
     open_edx_release = os.environ.get('OPENEDX_RELEASE_NAME')
