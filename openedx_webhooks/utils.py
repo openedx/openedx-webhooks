@@ -118,7 +118,7 @@ def jira_paginated_get(url, session=None,
             url.set_query_param(start_param, str(start))
                .set_query_params(**fields)
         )
-        for _ in xrange(retries):
+        for _ in range(retries):
             try:
                 if debug:
                     print(result_url, file=sys.stderr)
@@ -162,7 +162,7 @@ def jira_group_members(groupname, session=None, start=0, retries=3, debug=False)
         end = start + 49  # max 50 users per page
         expand = "users[{start}:{end}]".format(start=start, end=end)
         result_url = url.set_query_param("expand", expand)
-        for _ in xrange(retries):
+        for _ in range(retries):
             try:
                 if debug:
                     print(result_url, file=sys.stderr)
