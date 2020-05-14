@@ -261,7 +261,7 @@ def github_pr_num(issue):
         pr_num = parent["fields"].get(custom_fields["PR Number"])
     try:
         return int(pr_num)
-    except:
+    except Exception:       # pylint: disable=broad-except
         return None
 
 
@@ -349,7 +349,6 @@ def issue_updated():
     # map of label name lowercased to label name in the case that it is on Github
     repo_labels_lower = {name.lower(): name for name in repo_labels}
 
-    old_status = status_changelog_items[0]["fromString"]
     new_status = status_changelog_items[0]["toString"]
 
     changes = []
@@ -494,9 +493,9 @@ def jira_issue_comment_added(issue, comment):
         if len(values) == len(headings):
             # we got it!
             break
-        else:
-            # aww, we were so close...
-            values = None
+
+        # aww, we were so close...
+        values = None
 
     if not values:
         return "Didn't find header/content pair"

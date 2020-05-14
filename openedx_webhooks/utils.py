@@ -18,7 +18,10 @@ def _check_auth(username, password):
     """
     Checks if a username / password combination is valid.
     """
-    return username == os.environ.get('HTTP_BASIC_AUTH_USERNAME') and password == os.environ.get('HTTP_BASIC_AUTH_PASSWORD')
+    return (
+        username == os.environ.get('HTTP_BASIC_AUTH_USERNAME') and
+        password == os.environ.get('HTTP_BASIC_AUTH_PASSWORD')
+    )
 
 def _authenticate():
     """

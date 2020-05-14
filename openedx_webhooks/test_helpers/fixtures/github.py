@@ -8,20 +8,18 @@ Repo = namedtuple('Repo', ['hooks'])
 
 @pytest.fixture
 def hooks():
-    hooks = [
+    return [
         Hook(name='web', config={'url': 'http://test.me'}, active=True),
         Hook(name='travis', config={'url': 'http://travis'}, active=True),
         Hook(name='web', config={'url': 'http://test.me'}, active=False),
         Hook(name='trello', config={'url': 'http://test.me'}, active=True),
         Hook(name='web', config={'url': 'http://test.inactive'}, active=False),
     ]
-    return hooks
 
 
 @pytest.fixture
-def repo(hooks):
-    repo = Repo(hooks=lambda: hooks)
-    return repo
+def repo(hooks):                        # pylint: disable=redefined-outer-name
+    return Repo(hooks=lambda: hooks)
 
 
 @pytest.fixture

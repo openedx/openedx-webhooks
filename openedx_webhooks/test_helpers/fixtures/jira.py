@@ -9,7 +9,7 @@ def field_datum():
 
 
 @pytest.fixture
-def fields_data(field_datum):
+def fields_data(field_datum):           # pylint: disable=redefined-outer-name
     data = [
         field_datum,
         {'name': 'test02', 'id': 'id_test02'},
@@ -19,10 +19,10 @@ def fields_data(field_datum):
 
 
 @pytest.fixture
-def field(field_datum):
+def field(field_datum):                 # pylint: disable=redefined-outer-name
     return JiraField(field_datum)
 
 
 @pytest.fixture
-def fields(fields_data):
+def fields(fields_data):                # pylint: disable=redefined-outer-name
     return JiraFields(fields_data)

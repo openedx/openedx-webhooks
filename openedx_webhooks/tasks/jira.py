@@ -38,9 +38,8 @@ def rescan_users(domain_groups):
                     error = resp.json()
                     if error.get("errorMessages", []) == [nothing_to_do_msg]:
                         continue
-                    else:
-                        # it's some other kind of failure, so log it
-                        failures[groupname][username] = resp.text
+                    # it's some other kind of failure, so log it
+                    failures[groupname][username] = resp.text
 
     if failures:
         logger.error("Failures in trying to rescan JIRA users: {}".format(failures))

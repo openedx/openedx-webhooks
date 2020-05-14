@@ -54,13 +54,13 @@ def before():
 
 # Person
 @pytest.fixture
-def active_person(active_data):
+def active_person(active_data):         # pylint: disable=redefined-outer-name
     k, v = list(active_data.items())[0]
     return Person(k, v)
 
 
 @pytest.fixture
-def active_edx_person(active_edx_data):
+def active_edx_person(active_edx_data): # pylint: disable=redefined-outer-name
     k, v = list(active_edx_data.items())[0]
     return Person(k, v)
 
@@ -75,13 +75,13 @@ def active_non_edx_person():
 
 
 @pytest.fixture
-def expired_person(expired_data):
+def expired_person(expired_data):       # pylint: disable=redefined-outer-name
     k, v = list(expired_data.items())[0]
     return Person(k, v)
 
 
 @pytest.fixture
-def before_expired_person(before):
+def before_expired_person(before):      # pylint: disable=redefined-outer-name
     person = Person('expired-before-person', {
         'agreement': 'none',
         'before': before,
@@ -90,14 +90,14 @@ def before_expired_person(before):
 
 
 @pytest.fixture
-def robot(robot_data):
+def robot(robot_data):                  # pylint: disable=redefined-outer-name
     k, v = list(robot_data.items())[0]
     return Person(k, v)
 
 
 # People
 @pytest.fixture
-def people(active_data, active_edx_data, expired_data, robot_data):
+def people(active_data, active_edx_data, expired_data, robot_data):     # pylint: disable=redefined-outer-name
     data = {}
     for d in (active_data, active_edx_data, expired_data, robot_data):
         data.update(d)

@@ -55,7 +55,7 @@ def find_allowed_values(jira, project_key, issue_type_name, field_name):
 
 
 @inject_jira
-def make_fields_lookup(jira, names=[]):
+def make_fields_lookup(jira, names=()):
     """
     Make a map of JIRA field names to IDs.
 

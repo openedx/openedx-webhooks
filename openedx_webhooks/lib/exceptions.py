@@ -7,5 +7,3 @@ class NotFoundError(Exception):
     """
     Something is not found.
     """
-
-    pass

@@ -147,7 +147,8 @@ def rescan():
         return "Don't be silly."
 
     if inline:
-        return jsonify(rescan_repository(repo))
+        # Calling a celery task directly: the args don't match the def.
+        return jsonify(rescan_repository(repo))     # pylint: disable=no-value-for-parameter
 
     if repo.startswith('all:'):
         org = repo[4:]
@@ -211,7 +212,10 @@ def process_pr():
     repo_json = repo_resp.json()
     if not repo_json["permissions"]["admin"]:
         resp = jsonify({
-            "error": "This bot does not have permissions for repo '{}'.\n\nPlease manually make an OSPR ticket on JIRA.".format(repo)
+            "error": (
+                "This bot does not have permissions for repo {!r}.\n\n".format(repo) +
+                "Please manually make an OSPR ticket on JIRA."
+            )
         })
         resp.status_code = 400
         return resp
@@ -260,9 +264,9 @@ def install():
         payload_url = conf['config']['url']
 
         try:
-            create_or_update_webhook(repo, conf['config'], conf['events'])
+            create_or_update_webhook(repo, conf['config'], conf['events'])  # pylint: disable=no-value-for-parameter
             success.append((repo, payload_url))
-        except Exception as e:
+        except Exception as e:      # pylint: disable=broad-except
             failed.append((repo, payload_url, str(e)))
 
     if failed:

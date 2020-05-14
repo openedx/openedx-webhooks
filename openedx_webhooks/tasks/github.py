@@ -11,7 +11,7 @@ from urlobject import URLObject
 
 from openedx_webhooks import celery
 from openedx_webhooks.info import (
-    get_people_file, get_repos_file, get_fun_fact_file, is_beta_tester_pull_request,
+    get_people_file, get_fun_fact_file, is_beta_tester_pull_request,
     is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request
 )
 from openedx_webhooks.jira_views import get_jira_custom_fields
@@ -338,7 +338,7 @@ def rescan_repository(self, repo):
             # so it is executed later. As a result, this will return the values
             # that the `pull_request_opened()` function returns, rather than
             # return an AsyncResult object.
-            issue_key, issue_created = pull_request_opened(pull_request)
+            issue_key, issue_created = pull_request_opened(pull_request)    # pylint: disable=no-value-for-parameter
             if issue_created:
                 created[pull_request["number"]] = issue_key
 
@@ -401,7 +401,6 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
     * check for contributor agreement
     * contain a link to our process documentation
     """
-    github = github_bp.session
     people = people or get_people_file()
     people = {user.lower(): values for user, values in people.items()}
     pr_author = pull_request["user"]["login"].lower()

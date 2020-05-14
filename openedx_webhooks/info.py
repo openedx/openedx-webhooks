@@ -4,7 +4,6 @@ Get information about people, repos, orgs, pull requests, fun facts etc.
 
 from datetime import date
 
-import requests
 import yaml
 from iso8601 import parse_date
 

@@ -22,7 +22,7 @@ def index():
         if gh_user_resp.ok:
             try:
                 github_username = gh_user_resp.json()["login"]
-            except Exception as e:
+            except Exception:
                 logger.error("Failed to process response: {}".format(gh_user_resp.text))
                 raise
 
@@ -33,7 +33,7 @@ def index():
         if jira_user_resp.ok:
             try:
                 jira_username = jira_user_resp.json()["displayName"]
-            except Exception as e:
+            except Exception:
                 logger.error("Failed to process response: {}".format(jira_user_resp.text))
                 raise
 
