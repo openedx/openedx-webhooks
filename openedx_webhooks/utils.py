@@ -251,10 +251,10 @@ def studio_crowd_tokenkey(base_url="https://openedx.atlassian.net"):
 
 
 def minimal_wsgi_environ():
-    values = set((
+    values = {
         "HTTP_HOST", "SERVER_NAME", "SERVER_PORT", "REQUEST_METHOD",
         "SCRIPT_NAME", "PATH_INFO", "QUERY_STRING", "wsgi.url_scheme",
-    ))
+    }
     return {key: value for key, value in request.environ.items()
             if key in values}
 

@@ -46,7 +46,7 @@ def get_fun_fact_file():
 def get_orgs(key):
     """Return the set of orgs with a true `key`."""
     orgs = get_orgs_file()
-    return set(o for o, info in orgs.items() if info.get(key, False))
+    return {o for o, info in orgs.items() if info.get(key, False)}
 
 def get_person_certain_time(person, certain_time):
     """
