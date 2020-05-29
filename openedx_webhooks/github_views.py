@@ -90,7 +90,7 @@ def pull_request():
     repo = pr["base"]["repo"]["full_name"]
     action = event["action"]
     # `synchronize` action is when a new commit is made for the PR
-    ignored_actions = set(("labeled", "synchronize"))
+    ignored_actions = {"labeled", "synchronize"}
     if action in ignored_actions:
         msg = "Ignoring {action} events from github".format(action=action)
         print(msg, file=sys.stderr)
