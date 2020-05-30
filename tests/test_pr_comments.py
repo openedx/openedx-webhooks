@@ -91,7 +91,6 @@ def test_has_contractor_comment(app, reqctx, requests_mocker):
     requests_mocker.get(
         "https://api.github.com/user",
         json={"login": "testuser"},
-        headers={"Content-Type": "application/json"},
     )
     pr = make_pull_request(user="testuser", number=1)
     with reqctx:
@@ -105,7 +104,6 @@ def test_has_contractor_comment(app, reqctx, requests_mocker):
     requests_mocker.get(
         "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
         json=[comment_json],
-        headers={"Content-Type": "application/json"},
     )
 
     with reqctx:
@@ -118,7 +116,6 @@ def test_has_contractor_comment_unrelated_comments(app, reqctx, requests_mocker)
     requests_mocker.get(
         "https://api.github.com/user",
         json={"login": "testuser"},
-        headers={"Content-Type": "application/json"},
     )
     pr = make_pull_request(user="testuser", number=1)
     with reqctx:
@@ -142,7 +139,6 @@ def test_has_contractor_comment_unrelated_comments(app, reqctx, requests_mocker)
     requests_mocker.get(
         "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
         json=comments_json,
-        headers={"Content-Type": "application/json"},
     )
 
     with reqctx:
@@ -155,13 +151,11 @@ def test_has_contractor_comment_no_comments(app, reqctx, requests_mocker):
     requests_mocker.get(
         "https://api.github.com/user",
         json={"login": "testuser"},
-        headers={"Content-Type": "application/json"},
     )
     pr = make_pull_request(user="testuser", number=1)
     requests_mocker.get(
         "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
         json=[],
-        headers={"Content-Type": "application/json"},
     )
 
     with reqctx:
@@ -188,7 +182,6 @@ def test_has_internal_pr_cover_letter(reqctx, requests_mocker):
     requests_mocker.get(
         "https://api.github.com/user",
         json={"login": "testuser"},
-        headers={"Content-Type": "application/json"},
     )
     requests_mocker.get(
         "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.pr_cover_letter.md.j2",
@@ -208,7 +201,6 @@ def test_has_internal_pr_cover_letter(reqctx, requests_mocker):
     requests_mocker.get(
         "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
         json=comments_json,
-        headers={"Content-Type": "application/json"},
     )
 
     with reqctx:
@@ -223,7 +215,6 @@ def test_has_internal_pr_cover_letter_false(reqctx, requests_mocker):
     requests_mocker.get(
         "https://api.github.com/user",
         json={"login": "testuser"},
-        headers={"Content-Type": "application/json"},
     )
     with reqctx:
         result = has_internal_cover_letter(pr)
@@ -238,7 +229,6 @@ def test_custom_internal_pr_cover(reqctx, requests_mocker):
     requests_mocker.get(
         "https://api.github.com/user",
         json={"login": "testuser"},
-        headers={"Content-Type": "application/json"},
     )
     requests_mocker.get(
         "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.pr_cover_letter.md.j2",
