@@ -13,10 +13,10 @@ clean: ## Clean cache, test, and build directories
 	-rm -rf .cache build dist *.egg-info .coverage htmlcov docs/_build
 
 test: ## Run tests
-	py.test -rxs --cov=openedx_webhooks
+	py.test -rxefs --cov=openedx_webhooks --cov-context=test --cov-report=
+	coverage html --show-contexts
 
-test-html-coverage-report: ## Run tests and show coverage report in browser
-	py.test -rxs --cov=openedx_webhooks --cov-report=html
+test-html-coverage-report: test ## Run tests and show coverage report in browser
 	open htmlcov/index.html
 
 lint: ## Run pylint
