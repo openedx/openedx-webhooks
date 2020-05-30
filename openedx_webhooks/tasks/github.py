@@ -1,6 +1,4 @@
 import json
-import os
-import random
 import re
 from datetime import date
 
@@ -11,7 +9,7 @@ from urlobject import URLObject
 
 from openedx_webhooks import celery
 from openedx_webhooks.info import (
-    get_people_file, get_fun_fact_file, is_beta_tester_pull_request,
+    get_people_file, is_beta_tester_pull_request,
     is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request
 )
 from openedx_webhooks.jira_views import get_jira_custom_fields
@@ -45,12 +43,6 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     element in the tuple is a boolean indicating if this function did any
     work, such as making a JIRA issue or commenting on the pull request.
     """
-
-    # Environment variable containing the Open edX release name
-    open_edx_release = os.environ.get('OPENEDX_RELEASE_NAME')
-    # Environment variable containing a string of comma separated Github usernames for testing
-    test_open_edx_release = os.environ.get('GITHUB_USERS_CHERRY_PICK_MESSAGE_TEST')
-    #test_open_edx_release = 'mduboseedx,nedbat,fakeuser'
 
     github = github_bp.session
     pr = pull_request
@@ -87,18 +79,6 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
         # not an open source pull request, don't create an issue for it
         msg = "@{user} opened PR #{num} against {repo} (internal PR)".format(user=user, repo=repo, num=num)
         log_info(self.request, msg)
-        # new release candidate for Open edX is available, ask internal PR if should be cherry picked
-        do_cherry_pick_comment = False
-        if open_edx_release:
-            do_cherry_pick_comment = True
-            release_message = open_edx_release
-        elif test_open_edx_release:
-            if user in test_open_edx_release.split(','):
-                do_cherry_pick_comment = True
-                release_message = "Test Release"
-        if do_cherry_pick_comment:
-            github_post_cherry_pick_comment(self, github, pr, release_message)
-            return None, True
         return None, False
 
     if check_contractor and is_contractor_pull_request(pr):
@@ -371,27 +351,6 @@ def get_jira_issue_key(pull_request):
     return None
 
 
-def github_post_cherry_pick_comment(self, github, pull_request, open_edx_release):
-    """
-    Posts a cherry pick comment used for internal engineers during the window between
-    an Open edX release candidate and the official release.
-
-    """
-    # fun_facts is a dictionary of trivia questions and answers
-    fun_facts = get_fun_fact_file()
-    question, answer = random.choice(list(fun_facts.items()))
-    comment = {
-        "body": github_internal_cherrypick_comment(pull_request, open_edx_release, question, answer),
-    }
-    url = "/repos/{repo}/issues/{num}/comments".format(
-        repo=pull_request["base"]["repo"]["full_name"],
-        num=pull_request["number"],
-    )
-    comment_resp = github.post(url, json=comment)
-    log_request_response(self.request, comment_resp)
-    comment_resp.raise_for_status()
-
-
 def github_community_pr_comment(pull_request, jira_issue, people=None):
     """
     For a newly-created pull request from an open source contributor,
@@ -431,21 +390,6 @@ def github_contractor_pr_comment(pull_request):
         user=pull_request["user"]["login"],
         repo=pull_request["base"]["repo"]["full_name"],
         number=pull_request["number"],
-    )
-
-def github_internal_cherrypick_comment(pull_request, release_name, fun_fact_question, fun_fact_answer):
-    """
-    Formats a comment for internal authors during the window between a release candidate
-    and the official release of Open edX. This asks if their PRs should be cherry picked
-    onto the release candidate.
-
-    * include the Open edX release name, e.g. Hawthorn, Ironwood, etc
-    """
-    return render_template("github_internal_cherrypick_comment.md.j2",
-        user=pull_request["user"]["login"],
-        open_edx_release_name=release_name,
-        fun_fact_question=fun_fact_question,
-        fun_fact_answer=fun_fact_answer,
     )
 
 
