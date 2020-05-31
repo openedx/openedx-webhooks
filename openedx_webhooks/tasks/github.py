@@ -3,13 +3,13 @@ import re
 from datetime import date
 
 import requests
-from flask import render_template, render_template_string
+from flask import render_template
 from iso8601 import parse_date
 from urlobject import URLObject
 
 from openedx_webhooks import celery
 from openedx_webhooks.info import (
-    get_people_file, is_beta_tester_pull_request,
+    get_people_file,
     is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request
 )
 from openedx_webhooks.jira_views import get_jira_custom_fields
@@ -20,15 +20,13 @@ from openedx_webhooks.tasks.utils import (
 )
 from openedx_webhooks.utils import memoize, paginated_get, sentry_extra_context
 
-COVERLETTER_MARKER = "<!-- open edx coverletter -->"
-
 
 @celery.task(bind=True)
 def pull_request_opened(self, pull_request, ignore_internal=True, check_contractor=True):
     """
     Process a pull request. This is called when a pull request is opened, or
     when the pull requests of a repo are re-scanned. By default, this function
-    will ignore internal pull requests (unless a repo has supplied .pr_cover_letter.md.j2),
+    will ignore internal pull requests,
     and will add a comment to pull requests made by contractors (if if has not yet added
     a comment). However, this function can be called in such a way that it processes those pull
     requests anyway.
@@ -50,8 +48,6 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
     is_internal_pr = is_internal_pull_request(pr)
-    has_cl = has_internal_cover_letter(pr)
-    is_beta = is_beta_tester_pull_request(pr)
 
     msg = "Processing {} PR #{} by {}...".format(repo, num, user)
     log_info(self.request, msg)
@@ -59,21 +55,6 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     if is_bot_pull_request(pr):
         # Bots never need OSPR attention.
         return None, False
-
-    if is_internal_pr and not has_cl and is_beta:
-        msg = "Adding cover letter to PR #{num} against {repo}".format(repo=repo, num=num)
-        log_info(self.request, msg)
-        coverletter = github_internal_cover_letter(pr)
-
-        if coverletter is not None:
-            comment = {
-                "body": coverletter
-            }
-            url = "/repos/{repo}/issues/{num}/comments".format(repo=repo, num=num)
-
-            comment_resp = github.post(url, json=comment)
-            log_request_response(self.request, comment_resp)
-            comment_resp.raise_for_status()
 
     if ignore_internal and is_internal_pr:
         # not an open source pull request, don't create an issue for it
@@ -411,50 +392,6 @@ def has_contractor_comment(pull_request):
             continue
         magic_phrase = "It looks like you're a member of a company that does contract work for edX."
         if magic_phrase in comment["body"]:
-            return True
-    return False
-
-
-def github_internal_cover_letter(pull_request):
-    """
-    For a newly-created pull request an edX internal developer,
-    return a comment for the pull request that contains the cover letter.
-    """
-    # check for a `.pr_cover_letter.md.j2` in repo, use that if it exists
-    coverletter_url = "https://raw.githubusercontent.com/{repo}/{branch}/.pr_cover_letter.md.j2".format(
-        repo=pull_request["head"]["repo"]["full_name"],
-        branch=pull_request["head"]["ref"],
-    )
-    coverletter_resp = github_bp.session.get(coverletter_url)
-    ctx = {
-        "user": pull_request["user"]["login"],
-    }
-    if coverletter_resp.ok:
-        template_string = coverletter_resp.text
-        return "\n\n".join([render_template_string(template_string, **ctx), COVERLETTER_MARKER])
-    else:
-        return None
-
-
-def has_internal_cover_letter(pull_request):
-    """
-    Given a pull request, this function returns a boolean indicating whether
-    the body has already been replaced with the cover letter template.
-    """
-
-    me = github_whoami()
-    my_username = me["login"]
-    comment_url = "/repos/{repo}/issues/{num}/comments".format(
-        repo=pull_request["base"]["repo"]["full_name"],
-        num=pull_request["number"],
-    )
-    for comment in paginated_get(comment_url, session=github_bp.session):
-        # I only care about comments I made
-        if comment["user"]["login"] != my_username:
-            continue
-
-        body = comment["body"]
-        if COVERLETTER_MARKER in body:
             return True
     return False
 

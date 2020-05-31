@@ -4,9 +4,9 @@ import unittest.mock as mock
 import pytest
 
 from openedx_webhooks.tasks.github import (
-    COVERLETTER_MARKER, github_community_pr_comment,
+    github_community_pr_comment,
     github_contractor_pr_comment,
-    github_internal_cover_letter, has_contractor_comment, has_internal_cover_letter
+    has_contractor_comment,
 )
 
 pytestmark = pytest.mark.usefixtures('mock_github')
@@ -162,80 +162,3 @@ def test_has_contractor_comment_no_comments(app, reqctx, requests_mocker):
         app.preprocess_request()
         result = has_contractor_comment(pr)
     assert result is False
-
-
-def test_internal_pr_cover_letter(reqctx):
-    pr = make_pull_request(
-        user="FakeUser", body="this is my first pull request",
-        head_repo_name="testuser/edx-platform",
-    )
-    with reqctx:
-        comment = github_internal_cover_letter(pr)
-    assert comment is None
-
-
-def test_has_internal_pr_cover_letter(reqctx, requests_mocker):
-    pr = make_pull_request(
-        user="different_user", body="omg this code is teh awesomezors",
-        head_ref="patch-1",
-    )
-    requests_mocker.get(
-        "https://api.github.com/user",
-        json={"login": "testuser"},
-    )
-    requests_mocker.get(
-        "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.pr_cover_letter.md.j2",
-        text="Fancy cover letter!",
-    )
-
-    with reqctx:
-        comment_body = github_internal_cover_letter(pr)
-    comments_json = [
-        {
-            "user": {
-                "login": "testuser",
-            },
-            "body": comment_body,
-        },
-    ]
-    requests_mocker.get(
-        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
-        json=comments_json,
-    )
-
-    with reqctx:
-        result = has_internal_cover_letter(pr)
-    assert result is True
-
-
-def test_has_internal_pr_cover_letter_false(reqctx, requests_mocker):
-    pr = make_pull_request(
-        user="testuser", body="omg this code is teh awesomezors",
-    )
-    requests_mocker.get(
-        "https://api.github.com/user",
-        json={"login": "testuser"},
-    )
-    with reqctx:
-        result = has_internal_cover_letter(pr)
-    assert result is False
-
-
-def test_custom_internal_pr_cover(reqctx, requests_mocker):
-    pr = make_pull_request(
-        user="different_user", body="omg this code is teh awesomezors",
-        head_ref="patch-1",
-    )
-    requests_mocker.get(
-        "https://api.github.com/user",
-        json={"login": "testuser"},
-    )
-    requests_mocker.get(
-        "https://raw.githubusercontent.com/different_user/edx-platform/patch-1/.pr_cover_letter.md.j2",
-        text='custom cover letter for PR from @{{ user }}',
-    )
-
-    with reqctx:
-        comment_body = github_internal_cover_letter(pr)
-    assert comment_body.startswith('custom cover letter for PR from @different_user')
-    assert comment_body.endswith(COVERLETTER_MARKER)
