@@ -1,21 +1,24 @@
 from datetime import datetime
 
-import unittest.mock as mock
 import pytest
 
 from openedx_webhooks.tasks.github import (
     github_community_pr_comment,
     github_contractor_pr_comment,
     has_contractor_comment,
+    pull_request_opened,
 )
 
-pytestmark = pytest.mark.usefixtures('mock_github')
+pytestmark = [
+    pytest.mark.usefixtures('mock_github'),
+    pytest.mark.usefixtures('mock_jira'),
+]
 
 
 def make_pull_request(
         user, title="generic title", body="generic body", number=1,
         base_repo_name="edx/edx-platform", head_repo_name=None,
-        base_ref="master", head_ref="patch-1",
+        base_ref="master", head_ref="patch-1", user_type="User",
         created_at=None
 ):
     # This should really use a framework like factory_boy.
@@ -25,7 +28,8 @@ def make_pull_request(
     return {
         "user": {
             "login": user,
-            "type": "User"
+            "type": user_type,
+            "url": "https://api.github.com/users/{}".format(user),
         },
         "number": number,
         "title": title,
@@ -42,9 +46,21 @@ def make_pull_request(
                 "full_name": base_repo_name,
             },
             "ref": base_ref,
-        }
+        },
+        "html_url": "https://github.com/{}/pull/{}".format(base_repo_name, number),
     }
 
+
+def mock_comments(requests_mocker, pr, comments):
+    """Mock the requests to get comments on a PR."""
+    comment_data = [{"oops": "wut?"} for c in comments]
+    requests_mocker.get(
+        "https://api.github.com/repos/{repo}/issues/{num}/comments".format(
+            repo=pr["base"]["repo"]["full_name"],
+            num=pr["number"],
+        ),
+        json=comment_data,
+    )
 
 def make_jira_issue(key="ABC-123"):
     return {
@@ -162,3 +178,76 @@ def test_has_contractor_comment_no_comments(app, reqctx, requests_mocker):
         app.preprocess_request()
         result = has_contractor_comment(pr)
     assert result is False
+
+
+def test_internal_pr_opened(requests_mocker):
+    pr = make_pull_request(user='nedbat')
+    result = pull_request_opened(pr)
+    assert result[1] is False
+    history = requests_mocker.request_history
+    for request_mock in history:
+        assert request_mock.url is not "https://api.github.com/repos/edx/edx-platform/issues/1/comments"
+
+
+def test_pr_opened_by_bot(reqctx):
+    pr = make_pull_request(user="some_bot", user_type="Bot")
+    with reqctx:
+        key, anything_happened = pull_request_opened(pr)
+    assert key is None
+    assert not anything_happened
+
+
+def test_external_pr_opened(reqctx, requests_mocker, mock_jira):
+    pr = make_pull_request(user='new_contributor')
+    mock_comments(requests_mocker, pr, [])
+    comment_post = requests_mocker.post(
+        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
+    )
+    requests_mocker.get(
+        "https://api.github.com/users/new_contributor",
+        json={
+            "login": "new_contributor",
+            "name": "Newb Contributor",
+            "type": "User",
+        }
+    )
+    adjust_labels_patch = requests_mocker.patch(
+        "https://api.github.com/repos/edx/edx-platform/issues/1",
+    )
+
+    with reqctx:
+        issue_id, anything_happened = pull_request_opened(pr)
+
+    assert issue_id is not None
+    assert issue_id.startswith("OSPR-")
+    assert issue_id == mock_jira.created_issues[0]
+    assert anything_happened
+
+    # Check the Jira issue that was created.
+    assert len(mock_jira.new_issue_post.request_history) == 1
+    assert mock_jira.new_issue_post.request_history[0].json() == {
+        "fields": {
+            mock_jira.CONTRIBUTOR_NAME: "Newb Contributor",
+            mock_jira.PR_NUMBER: 1,
+            mock_jira.REPO: "edx/edx-platform",
+            mock_jira.URL: "https://github.com/edx/edx-platform/pull/1",
+            "description": "generic body",
+            "issuetype": {"name": "Pull Request Review"},
+            "project": {"key": "OSPR"},
+            "summary": "generic title",
+        }
+    }
+
+    # Check the GitHub comment that was created.
+    assert len(comment_post.request_history) == 1
+    body = comment_post.request_history[0].json()["body"]
+    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
+    assert jira_link in body
+    assert "Thanks for the pull request, @new_contributor!" in body
+    assert "We can't start reviewing your pull request until you've submitted" in body
+
+    # Check the GitHub labels that got applied.
+    assert len(adjust_labels_patch.request_history) == 1
+    assert adjust_labels_patch.request_history[0].json() == {
+        "labels": ["needs triage", "open-source-contribution"],
+    }

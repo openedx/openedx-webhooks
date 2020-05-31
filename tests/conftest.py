@@ -1,6 +1,7 @@
 import base64
 import os
 import os.path
+import random
 import re
 import unittest.mock as mock
 
@@ -48,6 +49,15 @@ def github_session():
     )
     return session
 
+@pytest.fixture
+def jira_session():
+    token = {"access_token": "faketoken", "token_type": "bearer"}
+    session = OAuth2Session(
+        base_url="https://openedx.atlassian.net/",
+        blueprint=FakeBlueprint(token),
+    )
+    return session
+
 
 @pytest.fixture
 def betamax_github_session(request, github_session):
@@ -81,12 +91,57 @@ def mock_github(mocker, betamax_github_session):
     return betamax_github_session
 
 
+class MockJira:
+    """A mock implementation of the Jira API."""
+    CONTRIBUTOR_NAME = "custom_101"
+    CUSTOMER = "custom_102"
+    PR_NUMBER = "custom_103"
+    REPO = "custom_104"
+    URL = "customfield_10904"   # This one is hard-coded
+
+    def __init__(self, requests_mocker):
+        requests_mocker.get(
+            "https://openedx.atlassian.net/rest/api/2/field",
+            json=[
+                {"id": self.CONTRIBUTOR_NAME, "name": "Contributor Name", "custom": True},
+                {"id": self.CUSTOMER, "name": "Customer", "custom": True},
+                {"id": self.PR_NUMBER, "name": "PR Number", "custom": True},
+                {"id": self.REPO, "name": "Repo", "custom": True},
+                {"id": self.URL, "name": "URL", "custom": True},
+            ]
+        )
+        self.new_issue_post = requests_mocker.post(
+            "https://openedx.atlassian.net/rest/api/2/issue",
+            json=self.new_issue_callback,
+        )
+        self.created_issues = []
+
+    def new_issue_callback(self, request, _):
+        """Responds to the API endpoint for creating new issues."""
+        project = request.json()["fields"]["project"]["key"]
+        key = "{}-{}".format(project, random.randint(111, 999))
+        self.created_issues.append(key)
+        return {"key": key}
+
+
+@pytest.fixture
+def mock_jira(mocker, jira_session, requests_mocker):
+    mocker.patch("flask_dance.contrib.jira.jira", jira_session)
+    mock_bp = mock.Mock()
+    mock_bp.session = jira_session
+    mocker.patch("openedx_webhooks.tasks.github.jira_bp", mock_bp)
+    mock_jira = MockJira(requests_mocker)
+    return mock_jira
+
+
 @pytest.yield_fixture
 def requests_mocker():
-    mocker = requests_mock.Mocker(real_http=True)
+    mocker = requests_mock.Mocker(real_http=False)
     mocker.start()
-    yield mocker
-    mocker.stop()
+    try:
+        yield mocker
+    finally:
+        mocker.stop()
 
 
 @pytest.fixture(autouse=True)
@@ -102,6 +157,16 @@ def fake_repo_data(requests_mocker):
     requests_mocker.get(
         re.compile("https://raw.githubusercontent.com/edx/repo-tools-data/master/"),
         text=repo_data_callback,
+    )
+
+@pytest.fixture(autouse=True)
+def fake_bot_whoami(requests_mocker):
+    """If we ask who we are, we are the bot."""
+    requests_mocker.get(
+        "https://api.github.com/user",
+        json={
+            "login": "the-bot",
+        }
     )
 
 
