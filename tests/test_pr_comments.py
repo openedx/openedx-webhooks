@@ -52,28 +52,28 @@ def make_jira_issue(key="ABC-123"):
     }
 
 
-def test_community_pr_comment(app, requests_mocker):
+def test_community_pr_comment(reqctx):
     # A pull request from a member in good standing.
     pr = make_pull_request(user="tusbar", head_ref="tusbar/cool-feature")
     jira = make_jira_issue(key="TNL-12345")
-    with app.test_request_context('/'):
+    with reqctx:
         comment = github_community_pr_comment(pr, jira)
     assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
     assert "can't start reviewing your pull request" not in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-def test_community_pr_comment_no_author(app):
+def test_community_pr_comment_no_author(reqctx):
     pr = make_pull_request(user="FakeUser")
     jira = make_jira_issue(key="FOO-1")
-    with app.test_request_context('/'):
+    with reqctx:
         comment = github_community_pr_comment(pr, jira)
     assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
     assert "can't start reviewing your pull request" in comment
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-def test_contractor_pr_comment(app, reqctx):
+def test_contractor_pr_comment(reqctx):
     pr = make_pull_request(user="FakeUser")
     with reqctx:
         comment = github_contractor_pr_comment(pr)
