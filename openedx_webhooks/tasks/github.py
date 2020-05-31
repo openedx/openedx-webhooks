@@ -314,7 +314,8 @@ def rescan_repository(self, repo):
     return info
 
 
-def get_jira_issue_key(pull_request):
+def get_bot_comments(pull_request):
+    """Find all the comments the bot has made on a pull request."""
     me = github_whoami()
     my_username = me["login"]
     comment_url = "/repos/{repo}/issues/{num}/comments".format(
@@ -323,8 +324,13 @@ def get_jira_issue_key(pull_request):
     )
     for comment in paginated_get(comment_url, session=github_bp.session):
         # I only care about comments I made
-        if comment["user"]["login"] != my_username:
-            continue
+        if comment["user"]["login"] == my_username:
+            yield comment
+
+
+def get_jira_issue_key(pull_request):
+    """Find mention of a Jira issue number in bot-authored comments."""
+    for comment in get_bot_comments(pull_request):
         # search for the first occurrance of a JIRA ticket key in the comment body
         match = re.search(r"\b([A-Z]{2,}-\d+)\b", comment["body"])
         if match:
@@ -380,16 +386,7 @@ def has_contractor_comment(pull_request):
     we have already left a comment on that pull request that suggests
     making an OSPR issue for the pull request.
     """
-    me = github_whoami()
-    my_username = me["login"]
-    comment_url = "/repos/{repo}/issues/{num}/comments".format(
-        repo=pull_request["base"]["repo"]["full_name"],
-        num=pull_request["number"],
-    )
-    for comment in paginated_get(comment_url, session=github_bp.session):
-        # I only care about comments I made
-        if comment["user"]["login"] != my_username:
-            continue
+    for comment in get_bot_comments(pull_request):
         magic_phrase = "It looks like you're a member of a company that does contract work for edX."
         if magic_phrase in comment["body"]:
             return True
