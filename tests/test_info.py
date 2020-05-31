@@ -5,7 +5,6 @@ from datetime import datetime
 
 import pytest
 
-import openedx_webhooks.info
 from openedx_webhooks.info import get_orgs, get_people_file, is_internal_pull_request, get_person_certain_time
 
 pytestmark = pytest.mark.usefixtures('mock_github')
