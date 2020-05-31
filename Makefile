@@ -20,7 +20,7 @@ test-html-coverage-report: test ## Run tests and show coverage report in browser
 	open htmlcov/index.html
 
 lint: ## Run pylint
-	pylint --rcfile=pylintrc  openedx_webhooks
+	pylint --rcfile=pylintrc  openedx_webhooks tests
 
 upgrade: export CUSTOM_COMPILE_COMMAND = make upgrade
 upgrade: ## update the requirements/*.txt files with the latest packages satisfying requirements/*.in
