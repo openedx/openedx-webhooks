@@ -1,4 +1,3 @@
-import base64
 import os
 import os.path
 import random
@@ -8,7 +7,6 @@ import unittest.mock as mock
 import pytest
 import requests_mock
 from flask_dance.consumer.requests import OAuth2Session
-from requests.packages.urllib3.response import is_fp_closed
 
 import openedx_webhooks
 import openedx_webhooks.utils
@@ -71,11 +69,11 @@ class MockJira:
         )
         self.new_issue_post = requests_mocker.post(
             "https://openedx.atlassian.net/rest/api/2/issue",
-            json=self.new_issue_callback,
+            json=self._new_issue_callback,
         )
         self.created_issues = []
 
-    def new_issue_callback(self, request, _):
+    def _new_issue_callback(self, request, _):
         """Responds to the API endpoint for creating new issues."""
         project = request.json()["fields"]["project"]["key"]
         key = "{}-{}".format(project, random.randint(111, 999))

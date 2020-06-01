@@ -135,7 +135,7 @@ def test_has_contractor_comment_unrelated_comments(app, reqctx, requests_mocker)
     )
     pr = make_pull_request(user="testuser", number=1)
     with reqctx:
-        comment = github_contractor_pr_comment(pr)
+        github_contractor_pr_comment(pr)
     comments_json = [
         {
             "user": {
@@ -186,7 +186,7 @@ def test_internal_pr_opened(requests_mocker):
     assert result[1] is False
     history = requests_mocker.request_history
     for request_mock in history:
-        assert request_mock.url is not "https://api.github.com/repos/edx/edx-platform/issues/1/comments"
+        assert request_mock.url != "https://api.github.com/repos/edx/edx-platform/issues/1/comments"
 
 
 def test_pr_opened_by_bot(reqctx):
