@@ -5,7 +5,6 @@ import random
 import re
 import unittest.mock as mock
 
-import betamax
 import pytest
 import requests_mock
 from flask_dance.consumer.requests import OAuth2Session
@@ -14,24 +13,6 @@ from requests.packages.urllib3.response import is_fp_closed
 import openedx_webhooks
 import openedx_webhooks.utils
 
-if not os.path.exists('tests/cassettes'):
-    os.makedirs('tests/cassettes')
-
-record_mode = 'none' if os.environ.get('CI') else 'once'
-
-with betamax.Betamax.configure() as config:
-    config.cassette_library_dir = 'tests/cassettes/'
-    config.default_cassette_options['record_mode'] = record_mode
-    github_token = os.environ.get("GITHUB_TOKEN")
-    if github_token:
-        config.define_cassette_placeholder(
-            '<GITHUB-TOKEN>',
-            base64.b64encode(github_token.encode('utf-8'))
-        )
-        config.define_cassette_placeholder(
-            '<GITHUB-TOKEN>',
-            github_token.encode('utf-8')
-        )
 
 class FakeBlueprint:
     def __init__(self, token):
@@ -60,35 +41,13 @@ def jira_session():
 
 
 @pytest.fixture
-def betamax_github_session(request, github_session):
-    """
-    Like Betamax's built-in `betamax_session`, but with GitHub auth set up.
-    """
-    cassette_name = ''
-
-    if request.module is not None:
-        cassette_name += request.module.__name__ + '.'
-
-    if request.cls is not None:
-        cassette_name += request.cls.__name__ + '.'
-
-    cassette_name += request.function.__name__
-
-    recorder = betamax.Betamax(github_session)
-    recorder.use_cassette(cassette_name)
-    recorder.start()
-    request.addfinalizer(recorder.stop)
-    return github_session
-
-
-@pytest.fixture
-def mock_github(mocker, betamax_github_session):
-    mocker.patch("flask_dance.contrib.github.github", betamax_github_session)
+def mock_github(mocker, github_session):
+    mocker.patch("flask_dance.contrib.github.github", github_session)
     mock_bp = mock.Mock()
-    mock_bp.session = betamax_github_session
+    mock_bp.session = github_session
     mocker.patch("openedx_webhooks.info.github_bp", mock_bp)
     mocker.patch("openedx_webhooks.tasks.github.github_bp", mock_bp)
-    return betamax_github_session
+    return github_session
 
 
 class MockJira:
