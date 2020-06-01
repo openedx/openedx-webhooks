@@ -98,13 +98,14 @@ def test_has_contractor_comment_no_comments(app, reqctx, mock_github):
     assert result is False
 
 
-def test_internal_pr_opened(requests_mocker, mock_github):
+def test_internal_pr_opened(reqctx, mock_github):
     pr = mock_github.make_pull_request(user='nedbat')
-    result = pull_request_opened(pr)
-    assert result[1] is False
-    history = requests_mocker.request_history
-    for request_mock in history:
-        assert request_mock.url != "https://api.github.com/repos/edx/edx-platform/issues/1/comments"
+    comments_post = mock_github.comments_post(pr)
+    with reqctx:
+        key, anything_happened = pull_request_opened(pr)
+    assert key is None
+    assert anything_happened is False
+    assert len(comments_post.request_history) == 0
 
 
 def test_pr_opened_by_bot(reqctx, mock_github):
@@ -115,23 +116,12 @@ def test_pr_opened_by_bot(reqctx, mock_github):
     assert anything_happened is False
 
 
-def test_external_pr_opened(reqctx, requests_mocker, mock_github, mock_jira):
+def test_external_pr_opened(reqctx, mock_github, mock_jira):
+    mock_github.mock_user({"login": "new_contributor", "name": "Newb Contributor"})
     pr = mock_github.make_pull_request(user='new_contributor')
     mock_github.mock_comments(pr, [])
-    comment_post = requests_mocker.post(
-        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
-    )
-    requests_mocker.get(
-        "https://api.github.com/users/new_contributor",
-        json={
-            "login": "new_contributor",
-            "name": "Newb Contributor",
-            "type": "User",
-        }
-    )
-    adjust_labels_patch = requests_mocker.patch(
-        "https://api.github.com/repos/edx/edx-platform/issues/1",
-    )
+    comments_post = mock_github.comments_post(pr)
+    adjust_labels_patch = mock_github.pr_patch(pr)
 
     with reqctx:
         issue_id, anything_happened = pull_request_opened(pr)
@@ -146,19 +136,19 @@ def test_external_pr_opened(reqctx, requests_mocker, mock_github, mock_jira):
     assert mock_jira.new_issue_post.request_history[0].json() == {
         "fields": {
             mock_jira.CONTRIBUTOR_NAME: "Newb Contributor",
-            mock_jira.PR_NUMBER: 1,
-            mock_jira.REPO: "edx/edx-platform",
-            mock_jira.URL: "https://github.com/edx/edx-platform/pull/1",
-            "description": "generic body",
+            mock_jira.PR_NUMBER: pr["number"],
+            mock_jira.REPO: pr["base"]["repo"]["full_name"],
+            mock_jira.URL: pr["html_url"],
+            "description": pr["body"],
             "issuetype": {"name": "Pull Request Review"},
             "project": {"key": "OSPR"},
-            "summary": "generic title",
+            "summary": pr["title"],
         }
     }
 
     # Check the GitHub comment that was created.
-    assert len(comment_post.request_history) == 1
-    body = comment_post.request_history[0].json()["body"]
+    assert len(comments_post.request_history) == 1
+    body = comments_post.request_history[0].json()["body"]
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @new_contributor!" in body
