@@ -1,7 +1,3 @@
-from datetime import datetime
-
-import pytest
-
 from openedx_webhooks.tasks.github import (
     github_community_pr_comment,
     github_contractor_pr_comment,
@@ -9,68 +5,15 @@ from openedx_webhooks.tasks.github import (
     pull_request_opened,
 )
 
-pytestmark = [
-    pytest.mark.usefixtures('mock_github'),
-    pytest.mark.usefixtures('mock_jira'),
-]
-
-
-def make_pull_request(
-        user, title="generic title", body="generic body", number=1,
-        base_repo_name="edx/edx-platform", head_repo_name=None,
-        base_ref="master", head_ref="patch-1", user_type="User",
-        created_at=None
-):
-    # This should really use a framework like factory_boy.
-    created_at = created_at or datetime.now().replace(microsecond=0)
-    if head_repo_name is None:
-        head_repo_name = "{}/edx-platform".format(user)
-    return {
-        "user": {
-            "login": user,
-            "type": user_type,
-            "url": "https://api.github.com/users/{}".format(user),
-        },
-        "number": number,
-        "title": title,
-        "body": body,
-        "created_at": created_at.isoformat(),
-        "head": {
-            "repo": {
-                "full_name": head_repo_name,
-            },
-            "ref": head_ref,
-        },
-        "base": {
-            "repo": {
-                "full_name": base_repo_name,
-            },
-            "ref": base_ref,
-        },
-        "html_url": "https://github.com/{}/pull/{}".format(base_repo_name, number),
-    }
-
-
-def mock_comments(requests_mocker, pr, comments):
-    """Mock the requests to get comments on a PR."""
-    comment_data = [{"oops": "wut?"} for c in comments]
-    requests_mocker.get(
-        "https://api.github.com/repos/{repo}/issues/{num}/comments".format(
-            repo=pr["base"]["repo"]["full_name"],
-            num=pr["number"],
-        ),
-        json=comment_data,
-    )
-
 def make_jira_issue(key="ABC-123"):
     return {
         "key": key,
     }
 
 
-def test_community_pr_comment(reqctx):
+def test_community_pr_comment(reqctx, mock_github):
     # A pull request from a member in good standing.
-    pr = make_pull_request(user="tusbar", head_ref="tusbar/cool-feature")
+    pr = mock_github.make_pull_request(user="tusbar", head_ref="tusbar/cool-feature")
     jira = make_jira_issue(key="TNL-12345")
     with reqctx:
         comment = github_community_pr_comment(pr, jira)
@@ -79,8 +22,8 @@ def test_community_pr_comment(reqctx):
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-def test_community_pr_comment_no_author(reqctx):
-    pr = make_pull_request(user="FakeUser")
+def test_community_pr_comment_no_author(reqctx, mock_github):
+    pr = mock_github.make_pull_request(user="FakeUser")
     jira = make_jira_issue(key="FOO-1")
     with reqctx:
         comment = github_community_pr_comment(pr, jira)
@@ -89,8 +32,8 @@ def test_community_pr_comment_no_author(reqctx):
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-def test_contractor_pr_comment(reqctx):
-    pr = make_pull_request(user="FakeUser")
+def test_contractor_pr_comment(reqctx, mock_github):
+    pr = mock_github.make_pull_request(user="FakeUser")
     with reqctx:
         comment = github_contractor_pr_comment(pr)
     assert "you're a member of a company that does contract work for edX" in comment
@@ -103,24 +46,17 @@ def test_contractor_pr_comment(reqctx):
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-def test_has_contractor_comment(app, reqctx, requests_mocker):
-    requests_mocker.get(
-        "https://api.github.com/user",
-        json={"login": "testuser"},
-    )
-    pr = make_pull_request(user="testuser", number=1)
+def test_has_contractor_comment(app, reqctx, mock_github):
+    pr = mock_github.make_pull_request(user="testuser")
     with reqctx:
         comment = github_contractor_pr_comment(pr)
     comment_json = {
         "user": {
-            "login": "testuser",
+            "login": mock_github.WEBHOOK_BOT_NAME,
         },
         "body": comment
     }
-    requests_mocker.get(
-        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
-        json=[comment_json],
-    )
+    mock_github.mock_comments(pr, [comment_json])
 
     with reqctx:
         app.preprocess_request()
@@ -128,34 +64,25 @@ def test_has_contractor_comment(app, reqctx, requests_mocker):
     assert result is True
 
 
-def test_has_contractor_comment_unrelated_comments(app, reqctx, requests_mocker):
-    requests_mocker.get(
-        "https://api.github.com/user",
-        json={"login": "testuser"},
-    )
-    pr = make_pull_request(user="testuser", number=1)
-    with reqctx:
-        github_contractor_pr_comment(pr)
-    comments_json = [
+def test_has_contractor_comment_unrelated_comments(app, reqctx, mock_github):
+    pr = mock_github.make_pull_request(user="testuser")
+    comments = [
         {
+            # A bot comment, but not about contracting.
             "user": {
-                "login": "testuser",
+                "login": mock_github.WEBHOOK_BOT_NAME,
             },
             "body": "this comment is unrelated",
         },
         {
-            # this comment will be ignored
-            # because it's not made by our bot user
+            # This comment will be ignored because it's not made by our bot user
             "user": {
                 "login": "different_user",
             },
             "body": "It looks like you're a member of a company that does contract work for edX.",
         }
     ]
-    requests_mocker.get(
-        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
-        json=comments_json,
-    )
+    mock_github.mock_comments(pr, comments)
 
     with reqctx:
         app.preprocess_request()
@@ -163,16 +90,9 @@ def test_has_contractor_comment_unrelated_comments(app, reqctx, requests_mocker)
     assert result is False
 
 
-def test_has_contractor_comment_no_comments(app, reqctx, requests_mocker):
-    requests_mocker.get(
-        "https://api.github.com/user",
-        json={"login": "testuser"},
-    )
-    pr = make_pull_request(user="testuser", number=1)
-    requests_mocker.get(
-        "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
-        json=[],
-    )
+def test_has_contractor_comment_no_comments(app, reqctx, mock_github):
+    pr = mock_github.make_pull_request(user="testuser")
+    mock_github.mock_comments(pr, [])
 
     with reqctx:
         app.preprocess_request()
@@ -180,8 +100,8 @@ def test_has_contractor_comment_no_comments(app, reqctx, requests_mocker):
     assert result is False
 
 
-def test_internal_pr_opened(requests_mocker):
-    pr = make_pull_request(user='nedbat')
+def test_internal_pr_opened(requests_mocker, mock_github):
+    pr = mock_github.make_pull_request(user='nedbat')
     result = pull_request_opened(pr)
     assert result[1] is False
     history = requests_mocker.request_history
@@ -189,17 +109,17 @@ def test_internal_pr_opened(requests_mocker):
         assert request_mock.url != "https://api.github.com/repos/edx/edx-platform/issues/1/comments"
 
 
-def test_pr_opened_by_bot(reqctx):
-    pr = make_pull_request(user="some_bot", user_type="Bot")
+def test_pr_opened_by_bot(reqctx, mock_github):
+    pr = mock_github.make_pull_request(user="some_bot", user_type="Bot")
     with reqctx:
         key, anything_happened = pull_request_opened(pr)
     assert key is None
-    assert not anything_happened
+    assert anything_happened is False
 
 
-def test_external_pr_opened(reqctx, requests_mocker, mock_jira):
-    pr = make_pull_request(user='new_contributor')
-    mock_comments(requests_mocker, pr, [])
+def test_external_pr_opened(reqctx, requests_mocker, mock_github, mock_jira):
+    pr = mock_github.make_pull_request(user='new_contributor')
+    mock_github.mock_comments(pr, [])
     comment_post = requests_mocker.post(
         "https://api.github.com/repos/edx/edx-platform/issues/1/comments",
     )
@@ -221,7 +141,7 @@ def test_external_pr_opened(reqctx, requests_mocker, mock_jira):
     assert issue_id is not None
     assert issue_id.startswith("OSPR-")
     assert issue_id == mock_jira.created_issues[0]
-    assert anything_happened
+    assert anything_happened is True
 
     # Check the Jira issue that was created.
     assert len(mock_jira.new_issue_post.request_history) == 1
