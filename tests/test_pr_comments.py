@@ -59,7 +59,6 @@ def test_has_contractor_comment(app, reqctx, mock_github):
     mock_github.mock_comments(pr, [comment_json])
 
     with reqctx:
-        app.preprocess_request()
         result = has_contractor_comment(pr)
     assert result is True
 
@@ -85,7 +84,6 @@ def test_has_contractor_comment_unrelated_comments(app, reqctx, mock_github):
     mock_github.mock_comments(pr, comments)
 
     with reqctx:
-        app.preprocess_request()
         result = has_contractor_comment(pr)
     assert result is False
 
@@ -95,7 +93,6 @@ def test_has_contractor_comment_no_comments(app, reqctx, mock_github):
     mock_github.mock_comments(pr, [])
 
     with reqctx:
-        app.preprocess_request()
         result = has_contractor_comment(pr)
     assert result is False
 
