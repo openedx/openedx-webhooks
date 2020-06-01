@@ -11,7 +11,7 @@ clean: ## Clean cache, test, and build directories
 	-rm -rf .cache build dist *.egg-info .coverage htmlcov docs/_build
 
 test: ## Run tests
-	py.test -rxefs --cov=openedx_webhooks --cov-context=test --cov-report=
+	py.test -rxefs --cov=openedx_webhooks --cov=tests --cov-context=test --cov-report=
 	coverage html --show-contexts
 
 test-html-coverage-report: test ## Run tests and show coverage report in browser
