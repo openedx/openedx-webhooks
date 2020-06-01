@@ -38,8 +38,9 @@ def test_contractor_pr_comment(reqctx, mock_github):
         comment = github_contractor_pr_comment(pr)
     assert "you're a member of a company that does contract work for edX" in comment
     href = (
-        'href="https://openedx-webhooks.herokuapp.com/github/process_pr'
-        '?repo=edx%2Fedx-platform&number=1"'
+        'href="https://openedx-webhooks.herokuapp.com/github/process_pr' +
+        '?repo={}'.format(pr["base"]["repo"]["full_name"].replace("/", "%2F")) +
+        '&number={}"'.format(pr["number"])
     )
     assert href in comment
     assert 'Create an OSPR issue for this pull request' in comment
