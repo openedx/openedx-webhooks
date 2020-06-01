@@ -6,23 +6,22 @@
 #
 alabaster==0.7.10         # via sphinx
 babel==2.5.0              # via sphinx
-bleach==2.0.0             # via readme-renderer
+bleach==3.1.4             # via readme-renderer
 certifi==2017.7.27.1      # via requests
 chardet==3.0.4            # via requests
 docutils==0.14            # via readme-renderer, sphinx
-html5lib==0.999999999     # via bleach
 idna==2.6                 # via requests
 imagesize==0.7.1          # via sphinx
 jinja2==2.9.6             # via sphinx
 markupsafe==1.0           # via jinja2
 pygments==2.2.0           # via readme-renderer, sphinx
 pytz==2017.2              # via babel
-readme-renderer==17.2
+readme-renderer==17.2     # via -r doc.in
 requests==2.18.4          # via sphinx
-six==1.10.0               # via bleach, html5lib, readme-renderer, sphinx, sphinxcontrib-httpdomain
+six==1.10.0               # via bleach, readme-renderer, sphinx, sphinxcontrib-httpdomain
 snowballstemmer==1.2.1    # via sphinx
-sphinx-rtd-theme==0.2.4
-sphinx==1.5.6             # via sphinxcontrib-httpdomain
-sphinxcontrib-httpdomain==1.5.0
+sphinx-rtd-theme==0.2.4   # via -r doc.in
+sphinx==1.5.6             # via -r doc.in, sphinxcontrib-httpdomain
+sphinxcontrib-httpdomain==1.5.0  # via -r doc.in
 urllib3==1.22             # via requests
-webencodings==0.5.1       # via html5lib
+webencodings==0.5.1       # via bleach
