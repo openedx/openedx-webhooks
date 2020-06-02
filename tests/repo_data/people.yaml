@@ -65,3 +65,8 @@ mduboseedx:
     email: mdubose@edx.org
     agreement: institution
     institution: edX
+joecontractor:
+    name: Joe Contractor
+    email: joe@contractor.com
+    agreement: individual
+    contractor: true

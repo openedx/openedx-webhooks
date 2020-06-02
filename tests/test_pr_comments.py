@@ -116,6 +116,9 @@ def test_pr_opened_by_bot(reqctx, mock_github):
     assert anything_happened is False
 
 
+CLA_TEXT = "We can't start reviewing your pull request until you've submitted"
+CLA_LINK = "[signed contributor agreement](https://open.edx.org/wp-content/uploads/2019/01/individual-contributor-agreement.pdf)"
+
 def test_external_pr_opened(reqctx, mock_github, mock_jira):
     mock_github.mock_user({"login": "new_contributor", "name": "Newb Contributor"})
     pr = mock_github.make_pull_request(user='new_contributor')
@@ -152,10 +155,133 @@ def test_external_pr_opened(reqctx, mock_github, mock_jira):
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @new_contributor!" in body
-    assert "We can't start reviewing your pull request until you've submitted" in body
+    assert CLA_TEXT in body
+    assert CLA_LINK in body
 
     # Check the GitHub labels that got applied.
     assert len(adjust_labels_patch.request_history) == 1
     assert adjust_labels_patch.request_history[0].json() == {
         "labels": ["needs triage", "open-source-contribution"],
     }
+
+
+def test_external_pr_opened_with_cla(reqctx, mock_github, mock_jira):
+    pr = mock_github.make_pull_request(user='tusbar')
+    mock_github.mock_comments(pr, [])
+    comments_post = mock_github.comments_post(pr)
+    adjust_labels_patch = mock_github.pr_patch(pr)
+
+    with reqctx:
+        issue_id, anything_happened = pull_request_opened(pr)
+
+    assert issue_id is not None
+    assert issue_id.startswith("OSPR-")
+    assert issue_id == mock_jira.created_issues[0]
+    assert anything_happened is True
+
+    # Check the Jira issue that was created.
+    assert len(mock_jira.new_issue_post.request_history) == 1
+    assert mock_jira.new_issue_post.request_history[0].json() == {
+        "fields": {
+            mock_jira.CONTRIBUTOR_NAME: "Bertrand Marron",
+            mock_jira.CUSTOMER: ["IONISx"],
+            mock_jira.PR_NUMBER: pr["number"],
+            mock_jira.REPO: pr["base"]["repo"]["full_name"],
+            mock_jira.URL: pr["html_url"],
+            "description": pr["body"],
+            "issuetype": {"name": "Pull Request Review"},
+            "project": {"key": "OSPR"},
+            "summary": pr["title"],
+        }
+    }
+
+    # Check the GitHub comment that was created.
+    assert len(comments_post.request_history) == 1
+    body = comments_post.request_history[0].json()["body"]
+    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
+    assert jira_link in body
+    assert "Thanks for the pull request, @tusbar!" in body
+    assert CLA_TEXT not in body
+    assert CLA_LINK not in body
+
+    # Check the GitHub labels that got applied.
+    assert len(adjust_labels_patch.request_history) == 1
+    assert adjust_labels_patch.request_history[0].json() == {
+        "labels": ["needs triage", "open-source-contribution"],
+    }
+
+
+def test_external_pr_rescanned(reqctx, mock_github, mock_jira):
+    mock_github.mock_user({"login": "new_contributor", "name": "Newb Contributor"})
+    pr = mock_github.make_pull_request(user='new_contributor')
+    with reqctx:
+        comment = github_community_pr_comment(pr, jira_issue=make_jira_issue(key="OSPR-12345"))
+    comment_data = {
+        "user": {"login": mock_github.WEBHOOK_BOT_NAME},
+        "body": comment,
+    }
+    mock_github.mock_comments(pr, [comment_data])
+    comments_post = mock_github.comments_post(pr)
+
+    with reqctx:
+        issue_id, anything_happened = pull_request_opened(pr)
+
+    assert issue_id == "OSPR-12345"
+    assert anything_happened is False
+
+    # No Jira issue was created.
+    assert len(mock_jira.new_issue_post.request_history) == 0
+
+    # No new GitHub comment was created.
+    assert len(comments_post.request_history) == 0
+
+
+def test_contractor_pr_opened(reqctx, mock_github, mock_jira):
+    pr = mock_github.make_pull_request(user="joecontractor")
+    mock_github.mock_comments(pr, [])
+    comments_post = mock_github.comments_post(pr)
+
+    with reqctx:
+        issue_id, anything_happened = pull_request_opened(pr)
+
+    assert issue_id is None
+    assert anything_happened is True
+
+    # No Jira issue was created.
+    assert len(mock_jira.new_issue_post.request_history) == 0
+
+    # Check the GitHub comment that was created.
+    assert len(comments_post.request_history) == 1
+    body = comments_post.request_history[0].json()["body"]
+    assert "you're a member of a company that does contract work for edX" in body
+    href = (
+        'href="https://openedx-webhooks.herokuapp.com/github/process_pr' +
+        '?repo={}'.format(pr["base"]["repo"]["full_name"].replace("/", "%2F")) +
+        '&number={}"'.format(pr["number"])
+    )
+    assert href in body
+    assert 'Create an OSPR issue for this pull request' in body
+
+
+def test_contractor_pr_rescanned(reqctx, mock_github, mock_jira):
+    pr = mock_github.make_pull_request(user="joecontractor")
+    with reqctx:
+        comment = github_contractor_pr_comment(pr)
+    comment_data = {
+        "user": {"login": mock_github.WEBHOOK_BOT_NAME},
+        "body": comment,
+    }
+    mock_github.mock_comments(pr, [comment_data])
+    comments_post = mock_github.comments_post(pr)
+
+    with reqctx:
+        issue_id, anything_happened = pull_request_opened(pr)
+
+    assert issue_id is None
+    assert anything_happened is False
+
+    # No Jira issue was created.
+    assert len(mock_jira.new_issue_post.request_history) == 0
+
+    # No new GitHub comment was created.
+    assert len(comments_post.request_history) == 0
