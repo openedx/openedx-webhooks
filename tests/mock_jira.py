@@ -89,30 +89,38 @@ class MockJira:
         self.issues[key] = issue
         return issue
 
+    def delete_issue(self, issue):
+        """Delete a fake issue."""
+        del self.issues[issue["key"]]
+
     def _new_issue_callback(self, request, _):
         """Responds to the API endpoint for creating new issues."""
         project = request.json()["fields"]["project"]["key"]
         key = "{}-{}".format(project, random.randint(111, 999))
         return self.make_issue(key)
 
-    def _issue_transitions_callback(self, request, _):
+    def _issue_transitions_callback(self, request, context):
         """Responds to the API endpoint for listing transitions between issue states."""
         # Get the issue key from the request.
         match_key = re.search(r"/rest/api/2/issue/(OSPR-\d+)/transitions", request.path)
         assert match_key is not None
         key = match_key.group(1)
 
-        # The transitions don't include the transitions to the current state.
-        assert key in self.issues
-        issue = self.issues[key]
+        if key in self.issues:
+            # The transitions don't include the transitions to the current state.
+            issue = self.issues[key]
 
-        return {
-            "transitions": [
-                {"id": id, "to": {"name": name}}
-                for name, id in self.TRANSITIONS.items()
-                if name != issue["fields"]["status"]["name"]
-            ],
-        }
+            return {
+                "transitions": [
+                    {"id": id, "to": {"name": name}}
+                    for name, id in self.TRANSITIONS.items()
+                    if name != issue["fields"]["status"]["name"]
+                ],
+            }
+        else:
+            # No such issue.
+            context.status_code = 404
+            return {}
 
     def transitions_post(self, issue):
         """Return a mocker for the POST to transition an issue."""
