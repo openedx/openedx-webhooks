@@ -1,13 +1,16 @@
 """Tests of task/github.py:pull_request_closed."""
 
+import pytest
+
 from openedx_webhooks.tasks.github import (
     github_community_pr_comment,
     pull_request_closed,
 )
 
 
-def test_internal_pr_merged(reqctx, mock_github, mock_jira):
-    pr = mock_github.make_closed_pull_request(user="nedbat", merged=True)
+@pytest.mark.parametrize("merged", [False, True])
+def test_internal_pr_merged(merged, reqctx, mock_github, mock_jira):
+    pr = mock_github.make_closed_pull_request(user="nedbat", merged=merged)
     mock_github.mock_comments(pr, [
         {"user": {"login": "nedbat"}, "body": "This is great"},
         {"user": {"login": "feanil"}, "body": "Eh, it's ok"},
@@ -19,8 +22,9 @@ def test_internal_pr_merged(reqctx, mock_github, mock_jira):
     assert len(mock_jira.request_history()) == 0
 
 
-def test_external_pr_merged(reqctx, mock_github, mock_jira):
-    pr = mock_github.make_closed_pull_request(user="tusbar", merged=True)
+@pytest.mark.parametrize("merged", [False, True])
+def test_external_pr_merged(merged, reqctx, mock_github, mock_jira):
+    pr = mock_github.make_closed_pull_request(user="tusbar", merged=merged)
     issue = mock_jira.make_issue()
     with reqctx:
         comment = github_community_pr_comment(pr, jira_issue=issue)
@@ -34,7 +38,8 @@ def test_external_pr_merged(reqctx, mock_github, mock_jira):
     with reqctx:
         pull_request_closed(pr)
 
-    # We moved the Jira issue to Merged.
+    # We moved the Jira issue to Merged or Rejected.
+    transition_id = mock_jira.TRANSITIONS["Merged" if merged else "Rejected"]
     assert transitions_post.request_history[0].json() == {
-        "transition": {"id": mock_jira.TRANSITIONS["Merged"]}
+        "transition": {"id": transition_id}
     }
