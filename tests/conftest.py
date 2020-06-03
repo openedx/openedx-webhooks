@@ -16,7 +16,7 @@ from .mock_jira import MockJira
 @pytest.yield_fixture
 def requests_mocker():
     """Make requests_mock available as a fixture."""
-    mocker = requests_mock.Mocker(real_http=False)
+    mocker = requests_mock.Mocker(real_http=False, case_sensitive=True)
     mocker.start()
     try:
         yield mocker

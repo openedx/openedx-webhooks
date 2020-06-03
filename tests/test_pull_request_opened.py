@@ -39,7 +39,6 @@ def test_external_pr_opened(reqctx, mock_github, mock_jira):
 
     assert issue_id is not None
     assert issue_id.startswith("OSPR-")
-    assert issue_id == mock_jira.created_issues[0]
     assert anything_happened is True
 
     # Check the Jira issue that was created.
@@ -56,6 +55,8 @@ def test_external_pr_opened(reqctx, mock_github, mock_jira):
             "summary": pr["title"],
         }
     }
+    assert len(mock_jira.issues) == 1
+    assert issue_id in mock_jira.issues
 
     # Check the GitHub comment that was created.
     assert len(comments_post.request_history) == 1
@@ -84,7 +85,7 @@ def test_external_pr_opened_with_cla(reqctx, mock_github, mock_jira):
 
     assert issue_id is not None
     assert issue_id.startswith("OSPR-")
-    assert issue_id == mock_jira.created_issues[0]
+    assert issue_id in mock_jira.issues
     assert anything_happened is True
 
     # Check the Jira issue that was created.
@@ -120,8 +121,7 @@ def test_external_pr_opened_with_cla(reqctx, mock_github, mock_jira):
 
 
 def test_external_pr_rescanned(reqctx, mock_github, mock_jira):
-    mock_github.mock_user({"login": "new_contributor", "name": "Newb Contributor"})
-    pr = mock_github.make_pull_request(user='new_contributor')
+    pr = mock_github.make_pull_request(user="tusbar")
     with reqctx:
         comment = github_community_pr_comment(pr, jira_issue=mock_jira.make_issue(key="OSPR-12345"))
     comment_data = {

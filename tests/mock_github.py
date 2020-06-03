@@ -77,6 +77,12 @@ class MockGitHub:
             "html_url": f"https://github.com/{base_repo_name}/pull/{number}",
         }
 
+    def make_closed_pull_request(self, merged, **kwargs):
+        """Create fake data for a closed pull request."""
+        pr = self.make_pull_request(**kwargs)
+        pr["merged"] = merged
+        return pr
+
     def _pr_api_url(self, pr, suffix=""):
         """Construct the API url for a pull request."""
         url = "https://api.github.com/repos/{repo}/issues/{num}".format(
