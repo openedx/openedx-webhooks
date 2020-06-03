@@ -71,3 +71,15 @@ def test_external_pr_merged_but_issue_deleted(merged, reqctx, mock_jira, closed_
 
     # Issue was deleted, so nothing was transitioned.
     assert len(transitions_post.request_history) == 0
+
+
+def test_external_pr_merged_but_issue_in_status(merged, reqctx, mock_jira, closed_pull_request):
+    pr, issue = closed_pull_request
+    transitions_post = mock_jira.transitions_post(issue)
+    mock_jira.set_issue_status(issue, "Merged" if merged else "Rejected")
+
+    with reqctx:
+        pull_request_closed(pr)
+
+    # Issue is already correct, so nothing was transitioned.
+    assert len(transitions_post.request_history) == 0

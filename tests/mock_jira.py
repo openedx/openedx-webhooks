@@ -54,6 +54,12 @@ class MockJira:
             ]
         )
 
+        # Get an issue.
+        self.requests_mocker.get(
+            re.compile(fr"https://{self.HOST}/rest/api/2/issue/OSPR-\d+"),
+            json=self._get_issue_callback,
+        )
+
         # Make a new issue.
         self.new_issue_post = self.requests_mocker.post(
             f"https://{self.HOST}/rest/api/2/issue",
@@ -93,11 +99,23 @@ class MockJira:
         """Delete a fake issue."""
         del self.issues[issue["key"]]
 
+    def set_issue_status(self, issue, status):
+        """Set the status of a fake issue."""
+        self.issues[issue["key"]]["fields"]["status"]["name"] = status
+
     def _new_issue_callback(self, request, _):
         """Responds to the API endpoint for creating new issues."""
         project = request.json()["fields"]["project"]["key"]
         key = "{}-{}".format(project, random.randint(111, 999))
         return self.make_issue(key)
+
+    def _get_issue_callback(self, request, context):
+        # Get the issue key from the request.
+        match_key = re.search(r"/rest/api/2/issue/(OSPR-\d+)", request.path)
+        assert match_key is not None
+        key = match_key.group(1)
+        assert key in self.issues
+        return self.issues[key]
 
     def _issue_transitions_callback(self, request, context):
         """Responds to the API endpoint for listing transitions between issue states."""
