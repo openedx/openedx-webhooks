@@ -61,7 +61,8 @@ def test_external_pr_merged(merged, reqctx, mock_jira, closed_pull_request):
     }
 
 
-def test_external_pr_merged_but_issue_deleted(merged, reqctx, mock_jira, closed_pull_request):
+def test_external_pr_merged_but_issue_deleted(reqctx, mock_jira, closed_pull_request):
+    # A closing pull request, but its Jira issue has been deleted.
     pr, issue = closed_pull_request
     transitions_post = mock_jira.transitions_post(issue)
     mock_jira.delete_issue(issue)
@@ -74,12 +75,32 @@ def test_external_pr_merged_but_issue_deleted(merged, reqctx, mock_jira, closed_
 
 
 def test_external_pr_merged_but_issue_in_status(merged, reqctx, mock_jira, closed_pull_request):
+    # The Jira issue associated with a closing pull request is already in the
+    # status we want to move it to.
     pr, issue = closed_pull_request
     transitions_post = mock_jira.transitions_post(issue)
     mock_jira.set_issue_status(issue, "Merged" if merged else "Rejected")
 
     with reqctx:
         pull_request_closed(pr)
+
+    # Issue is already correct, so nothing was transitioned.
+    assert len(transitions_post.request_history) == 0
+
+
+def test_external_pr_merged_but_issue_cant_transition(reqctx, mock_jira, closed_pull_request):
+    # The Jira issue associated with a closing pull request can't transition
+    # to the status we want to move it to.
+    pr, issue = closed_pull_request
+    transitions_post = mock_jira.transitions_post(issue)
+    # Make a new set of transitions, but leave out the two we might need.
+    mock_jira.TRANSITIONS = dict(mock_jira.TRANSITIONS)
+    del mock_jira.TRANSITIONS["Merged"]
+    del mock_jira.TRANSITIONS["Rejected"]
+
+    with reqctx:
+        with pytest.raises(Exception, match="cannot be transitioned directly from status Needs Triage to status"):
+            pull_request_closed(pr)
 
     # Issue is already correct, so nothing was transitioned.
     assert len(transitions_post.request_history) == 0
