@@ -18,7 +18,7 @@ def hooks():
 
 
 @pytest.fixture
-def repo(hooks):                        # pylint: disable=redefined-outer-name
+def repo(hooks):
     return Repo(hooks=lambda: hooks)
 
 

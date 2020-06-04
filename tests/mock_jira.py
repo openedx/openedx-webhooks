@@ -109,7 +109,8 @@ class MockJira:
         key = "{}-{}".format(project, random.randint(111, 999))
         return self.make_issue(key)
 
-    def _get_issue_callback(self, request, context):
+    def _get_issue_callback(self, request, _):
+        """Implement the GET issue endpoint."""
         # Get the issue key from the request.
         match_key = re.search(r"/rest/api/2/issue/(OSPR-\d+)", request.path)
         assert match_key is not None

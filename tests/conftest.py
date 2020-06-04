@@ -44,8 +44,8 @@ def mock_github(mocker, requests_mocker):
     mock_bp.session = github_session
     mocker.patch("openedx_webhooks.info.github_bp", mock_bp)
     mocker.patch("openedx_webhooks.tasks.github.github_bp", mock_bp)
-    mock_github = MockGitHub(requests_mocker)
-    return mock_github
+    the_mock_github = MockGitHub(requests_mocker)
+    return the_mock_github
 
 
 @pytest.fixture
@@ -59,8 +59,8 @@ def mock_jira(mocker, requests_mocker):
     mock_bp = mock.Mock()
     mock_bp.session = jira_session
     mocker.patch("openedx_webhooks.tasks.github.jira_bp", mock_bp)
-    mock_jira = MockJira(requests_mocker)
-    return mock_jira
+    the_mock_jira = MockJira(requests_mocker)
+    return the_mock_jira
 
 
 @pytest.fixture
