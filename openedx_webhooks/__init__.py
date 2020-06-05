@@ -21,6 +21,9 @@ handler.setLevel(log_level)
 rootLogger.addHandler(handler)
 rootLogger.setLevel(log_level)
 
+# Github3 is chatty on info-level, quiet it.
+logging.getLogger("github3").setLevel("WARN")
+
 db = SQLAlchemy()
 celery = Celery(strict_typing=False)
 
