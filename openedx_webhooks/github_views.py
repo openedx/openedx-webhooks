@@ -18,7 +18,7 @@ from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
 from openedx_webhooks.lib.github.utils import create_or_update_webhook
 from openedx_webhooks.lib.rq import q
 from openedx_webhooks.tasks.github import (
-    pull_request_closed, pull_request_opened, rescan_repository
+    pull_request_closed_task, pull_request_opened_task, rescan_repository
 )
 from openedx_webhooks.utils import (
     is_valid_payload, minimal_wsgi_environ, paginated_get,
@@ -100,11 +100,11 @@ def pull_request():
     if action == "opened":
         msg = "{}, processing...".format(pr_activity)
         print(msg, file=sys.stderr)
-        result = pull_request_opened.delay(pr, wsgi_environ=minimal_wsgi_environ())
+        result = pull_request_opened_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
     elif action == "closed":
         msg = "{}, processing...".format(pr_activity)
         print(msg, file=sys.stderr)
-        result = pull_request_closed.delay(pr)
+        result = pull_request_closed_task.delay(pr)
     else:
         msg = "{}, rejecting with `400 Bad request`".format(pr_activity)
         print(msg, file=sys.stderr)
@@ -221,7 +221,7 @@ def process_pr():
         return resp
 
     pr = pr_resp.json()
-    result = pull_request_opened.delay(
+    result = pull_request_opened_task.delay(
         pr, ignore_internal=False, check_contractor=False,
         wsgi_environ=minimal_wsgi_environ(),
     )

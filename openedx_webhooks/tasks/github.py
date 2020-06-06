@@ -32,7 +32,15 @@ def log_request_response(response):
 
 
 @celery.task(bind=True)
-def pull_request_opened(self, pull_request, ignore_internal=True, check_contractor=True):
+def pull_request_opened_task(_, pull_request, ignore_internal=True, check_contractor=True):
+    """A bound Celery task to call pull_request_opened."""
+    return pull_request_opened(
+        pull_request,
+        ignore_internal=ignore_internal,
+        check_contractor=check_contractor,
+    )
+
+def pull_request_opened(pull_request, ignore_internal=True, check_contractor=True):
     """
     Process a pull request. This is called when a pull request is opened, or
     when the pull requests of a repo are re-scanned. By default, this function
@@ -176,7 +184,12 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
 
 
 @celery.task(bind=True)
-def pull_request_closed(self, pull_request):
+def pull_request_closed_task(_, pull_request):
+    """A bound Celery task to call pull_request_closed."""
+    return pull_request_closed(pull_request)
+
+
+def pull_request_closed(pull_request):
     """
     A GitHub pull request has been merged or closed. Synchronize the JIRA issue
     to also be in the "merged" or "closed" state. Returns a boolean: True
@@ -303,13 +316,7 @@ def rescan_repository(self, repo):
         issue_key = get_jira_issue_key(pull_request)
         is_internal = is_internal_pull_request(pull_request)
         if not issue_key and not is_internal:
-            # `pull_request_opened()` is a celery task, but by calling it as
-            # a function instead of calling `.delay()` on it, we're eagerly
-            # executing the task now, instead of adding it to the task queue
-            # so it is executed later. As a result, this will return the values
-            # that the `pull_request_opened()` function returns, rather than
-            # return an AsyncResult object.
-            issue_key, issue_created = pull_request_opened(pull_request)    # pylint: disable=no-value-for-parameter
+            issue_key, issue_created = pull_request_opened(pull_request)
             if issue_created:
                 created[pull_request["number"]] = issue_key
 
