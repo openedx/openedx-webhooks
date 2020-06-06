@@ -196,7 +196,6 @@ def pull_request_closed(pull_request):
     if the JIRA issue was correctly synchronized, False otherwise. (However,
     these booleans are ignored.)
     """
-    jira = jira_bp.session
     pr = pull_request
     repo = pr["base"]["repo"]["full_name"]
 
@@ -212,6 +211,30 @@ def pull_request_closed(pull_request):
 
     # close the issue on JIRA
     logger.info('Closing the issue on JIRA...')
+    new_staus = "Merged" if merged else "Rejected"
+    if not transition_jira_issue(issue_key, new_staus):
+        return False
+
+    msg = "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
+        num=pr["number"],
+        repo=repo,
+        action="merged" if merged else "closed",
+        issue=issue_key,
+        status="Merged" if merged else "Rejected",
+    )
+    logger.info(msg)
+    return True
+
+
+def transition_jira_issue(issue_key, status_name):
+    """
+    Transition a Jira issue to a new status.
+
+    Returns:
+        True if the issue was changed.
+
+    """
+    jira = jira_bp.session
     transition_url = (
         "/rest/api/2/issue/{key}/transitions"
         "?expand=transitions.fields".format(key=issue_key)
@@ -227,10 +250,9 @@ def pull_request_closed(pull_request):
 
     sentry_extra_context({"transitions": transitions})
 
-    transition_name = "Merged" if merged else "Rejected"
     transition_id = None
     for t in transitions:
-        if t["to"]["name"] == transition_name:
+        if t["to"]["name"] == status_name:
             transition_id = t["id"]
             break
 
@@ -242,9 +264,9 @@ def pull_request_closed(pull_request):
         issue = issue_resp.json()
         sentry_extra_context({"jira_issue": issue})
         current_status = issue["fields"]["status"]["name"]
-        if current_status == transition_name:
+        if current_status == status_name:
             msg = "{key} is already in status {status}".format(
-                key=issue_key, status=transition_name
+                key=issue_key, status=status_name
             )
             logger.info(msg)
             return False
@@ -254,7 +276,7 @@ def pull_request_closed(pull_request):
             "{key} cannot be transitioned directly from status {curr_status} "
             "to status {new_status}. Valid status transitions are: {valid}".format(
                 key=issue_key,
-                new_status=transition_name,
+                new_status=status_name,
                 curr_status=current_status,
                 valid=", ".join(t["to"]["name"] for t in transitions),
             )
@@ -270,15 +292,6 @@ def pull_request_closed(pull_request):
     })
     log_request_response(transition_resp)
     transition_resp.raise_for_status()
-    msg = "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
-        num=pr["number"],
-        repo=repo,
-        action="merged" if merged else "closed",
-        issue=issue_key,
-        status="Merged" if merged else "Rejected",
-    )
-    logger.info(msg)
-    return True
 
 
 @celery.task(bind=True)
