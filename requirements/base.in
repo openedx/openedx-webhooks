@@ -19,6 +19,7 @@ cryptography
 gunicorn
 iso8601
 jira
+logging_tree
 oauthlib[signedtoken]
 psycopg2
 redis

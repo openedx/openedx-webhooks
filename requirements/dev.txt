@@ -43,6 +43,7 @@ jira==2.0.0               # via -r requirements/base.in
 jwcrypto==0.7             # via github3.py
 kombu==4.6.8              # via celery
 lazy-object-proxy==1.4.3  # via astroid
+logging_tree
 markupsafe==1.1.1         # via jinja2
 mccabe==0.6.1             # via pylint
 more-itertools==8.2.0     # via pytest

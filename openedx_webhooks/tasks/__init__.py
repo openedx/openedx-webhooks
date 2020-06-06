@@ -17,6 +17,12 @@ stderr_handler.setFormatter(formatter)
 logger.addHandler(stderr_handler)
 logger.setLevel(log_level)
 
+if 1:
+    import gzip, binascii
+    import logging_tree
+    data = binascii.b2a_base64(gzip.compress(logging_tree.format.build_description().encode("utf8"))).decode("utf8")
+    print(f"logging_tree output: import binascii,gzip;print(gzip.decompress(binascii.a2b_base64({data!r})).decode('utf8'))")
+
 
 # create a Flask blueprint for getting task status info
 tasks = Blueprint('tasks', __name__)
