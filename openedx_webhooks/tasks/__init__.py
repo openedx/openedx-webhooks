@@ -8,12 +8,21 @@ from openedx_webhooks import celery
 # Set up Celery logging.
 logger = get_task_logger(__name__)
 
-if 1:
-    import gzip, binascii
+def dump_logging_tree():
+    """Output a debug tree of the logging system."""
+    # pylint: disable=import-outside-toplevel
+    import binascii
+    import gzip
     import logging_tree
-    data = binascii.b2a_base64(gzip.compress(logging_tree.format.build_description().encode("utf8"))).decode("utf8")
-    print(f"logging_tree output: import binascii,gzip;print(gzip.decompress(binascii.a2b_base64({data!r})).decode('utf8'))")
+    logging_debug = logging_tree.format.build_description()
+    data = binascii.b2a_base64(gzip.compress(logging_debug.encode("utf8"))).decode("utf8")
+    print(
+        "logging_tree output: " +
+        "import binascii,gzip;" +
+        f"print(gzip.decompress(binascii.a2b_base64({data!r})).decode('utf8'))"
+    )
 
+# dump_logging_tree()
 
 # create a Flask blueprint for getting task status info
 tasks = Blueprint('tasks', __name__)
