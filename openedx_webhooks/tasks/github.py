@@ -15,10 +15,20 @@ from openedx_webhooks.info import (
 from openedx_webhooks.jira_views import get_jira_custom_fields
 from openedx_webhooks.oauth import github_bp, jira_bp
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.tasks.utils import (
-    log_error, log_info, log_request_response
-)
 from openedx_webhooks.utils import memoize, paginated_get, sentry_extra_context
+
+
+def log_request_response(response):
+    """
+    Logs HTTP request and response at debug level.
+
+    Arguments:
+        response (requests.Response)
+    """
+    msg = "{0.method} {0.url}: {0.body}".format(response.request)
+    logger.debug(msg)
+    msg = "{0.status_code} {0.reason} for {0.url}: {0.content}".format(response)
+    logger.debug(msg)
 
 
 @celery.task(bind=True)
@@ -50,7 +60,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     is_internal_pr = is_internal_pull_request(pr)
 
     msg = "Processing {} PR #{} by {}...".format(repo, num, user)
-    log_info(self.request, msg)
+    logger.info(msg)
 
     if is_bot_pull_request(pr):
         # Bots never need OSPR attention.
@@ -59,14 +69,14 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
     if ignore_internal and is_internal_pr:
         # not an open source pull request, don't create an issue for it
         msg = "@{user} opened PR #{num} against {repo} (internal PR)".format(user=user, repo=repo, num=num)
-        log_info(self.request, msg)
+        logger.info(msg)
         return None, False
 
     if check_contractor and is_contractor_pull_request(pr):
         # have we already left a contractor comment?
         if has_contractor_comment(pr):
             msg = "Already left contractor comment for PR #{}".format(num)
-            log_info(self.request, msg)
+            logger.info(msg)
             return None, False
 
         # don't create a JIRA issue, but leave a comment
@@ -75,10 +85,10 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
         }
         url = "/repos/{repo}/issues/{num}/comments".format(repo=repo, num=num)
         msg = "Posting contractor comment to PR #{}".format(num)
-        log_info(self.request, msg)
+        logger.info(msg)
 
         comment_resp = github.post(url, json=comment)
-        log_request_response(self.request, comment_resp)
+        log_request_response(comment_resp)
         comment_resp.raise_for_status()
         return None, True
 
@@ -89,7 +99,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
             num=pr["number"],
             repo=pr["base"]["repo"]["full_name"],
         )
-        log_info(self.request, msg)
+        logger.info(msg)
         return issue_key, False
 
     repo = pr["base"]["repo"]["full_name"]
@@ -128,9 +138,9 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
         new_issue["fields"][custom_fields["Customer"]] = [institution]
     sentry_extra_context({"new_issue": new_issue})
 
-    log_info(self.request, 'Creating new JIRA issue...')
+    logger.info('Creating new JIRA issue...')
     resp = jira_bp.session.post("/rest/api/2/issue", json=new_issue)
-    log_request_response(self.request, resp)
+    log_request_response(resp)
     resp.raise_for_status()
 
     new_issue_body = resp.json()
@@ -142,17 +152,17 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
         "body": github_community_pr_comment(pr, new_issue_body, people),
     }
     url = "/repos/{repo}/issues/{num}/comments".format(repo=repo, num=pr["number"])
-    log_info(self.request, 'Creating new GitHub comment with JIRA issue...')
+    logger.info('Creating new GitHub comment with JIRA issue...')
     comment_resp = github.post(url, json=comment)
-    log_request_response(self.request, comment_resp)
+    log_request_response(comment_resp)
     comment_resp.raise_for_status()
 
     # Add the "Needs Triage" label to the PR
     issue_url = "/repos/{repo}/issues/{num}".format(repo=repo, num=pr["number"])
     labels = {'labels': ['needs triage', 'open-source-contribution']}
-    log_info(self.request, 'Updating GitHub labels...')
+    logger.info('Updating GitHub labels...')
     label_resp = github.patch(issue_url, data=json.dumps(labels))
-    log_request_response(self.request, label_resp)
+    log_request_response(label_resp)
     label_resp.raise_for_status()
 
     msg = "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
@@ -161,7 +171,7 @@ def pull_request_opened(self, pull_request, ignore_internal=True, check_contract
         num=pr["number"],
         issue=issue_key,
     )
-    log_info(self.request, msg)
+    logger.info(msg)
     return issue_key, True
 
 
@@ -183,18 +193,18 @@ def pull_request_closed(self, pull_request):
         msg = "Couldn't find JIRA issue for PR #{num} against {repo}".format(
             num=pr["number"], repo=repo,
         )
-        log_info(self.request, msg)
+        logger.info(msg)
         return "no JIRA issue :("
     sentry_extra_context({"jira_key": issue_key})
 
     # close the issue on JIRA
+    logger.info('Closing the issue on JIRA...')
     transition_url = (
         "/rest/api/2/issue/{key}/transitions"
         "?expand=transitions.fields".format(key=issue_key)
     )
-    log_info(self.request, 'Closing the issue on JIRA...')
     transitions_resp = jira.get(transition_url)
-    log_request_response(self.request, transitions_resp)
+    log_request_response(transitions_resp)
     if transitions_resp.status_code == requests.codes.not_found:
         # JIRA issue has been deleted
         return False
@@ -223,7 +233,7 @@ def pull_request_closed(self, pull_request):
             msg = "{key} is already in status {status}".format(
                 key=issue_key, status=transition_name
             )
-            log_info(self.request, msg)
+            logger.info(msg)
             return False
 
         # nope, raise an error message
@@ -236,16 +246,16 @@ def pull_request_closed(self, pull_request):
                 valid=", ".join(t["to"]["name"] for t in transitions),
             )
         )
-        log_error(self.request, fail_msg)
+        logger.error(fail_msg)
         raise Exception(fail_msg)
 
-    log_info(self.request, 'Changing JIRA issue status...')
+    logger.info('Changing JIRA issue status...')
     transition_resp = jira.post(transition_url, json={
         "transition": {
             "id": transition_id,
         }
     })
-    log_request_response(self.request, transition_resp)
+    log_request_response(transition_resp)
     transition_resp.raise_for_status()
     msg = "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
         num=pr["number"],
@@ -254,7 +264,7 @@ def pull_request_closed(self, pull_request):
         issue=issue_key,
         status="Merged" if merged else "Rejected",
     )
-    log_info(self.request, msg)
+    logger.info(msg)
     return True
 
 

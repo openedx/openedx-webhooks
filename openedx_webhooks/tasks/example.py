@@ -9,7 +9,7 @@ Example usage::
 """
 
 from openedx_webhooks import celery
-from openedx_webhooks.tasks.utils import log_info
+from openedx_webhooks.tasks import logger
 
 
 @celery.task(name='example.add', bind=True)
@@ -26,5 +26,5 @@ def add(self, num1, num2):
     """
     result = num1 + num2
     msg = "Results for `{}`: {}".format(self.name, result)
-    log_info(self.request, msg)
+    logger.info(msg)
     return result
