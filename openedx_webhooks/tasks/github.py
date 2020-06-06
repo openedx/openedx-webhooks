@@ -157,7 +157,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     sentry_extra_context({"new_issue": new_issue})
     # add a comment to the Github pull request with a link to the JIRA issue
     comment = {
-        "body": github_community_pr_comment(pr, new_issue_body, people),
+        "body": github_community_pr_comment(pr, new_issue_body),
     }
     url = "/repos/{repo}/issues/{num}/comments".format(repo=repo, num=pr["number"])
     logger.info('Creating new GitHub comment with JIRA issue...')
@@ -292,6 +292,7 @@ def transition_jira_issue(issue_key, status_name):
     })
     log_request_response(transition_resp)
     transition_resp.raise_for_status()
+    return True
 
 
 @celery.task(bind=True)
@@ -368,7 +369,25 @@ def get_jira_issue_key(pull_request):
     return None
 
 
-def github_community_pr_comment(pull_request, jira_issue, people=None):
+def pull_request_has_cla(pull_request):
+    """Does this pull request have a valid CLA?"""
+    pr_author = pull_request["user"]["login"].lower()
+    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
+    return person_has_cla(pr_author, created_at)
+
+
+def person_has_cla(author, created_at):
+    """Does `author` have a valid CLA at a point in time?"""
+    people = get_people_file()
+    people = {user.lower(): values for user, values in people.items()}
+    has_signed_agreement = (
+        author in people and
+        people[author].get("expires_on", date.max) > created_at.date()
+    )
+    return has_signed_agreement
+
+
+def github_community_pr_comment(pull_request, jira_issue):
     """
     For a newly-created pull request from an open source contributor,
     write a welcoming comment on the pull request. The comment should:
@@ -377,15 +396,8 @@ def github_community_pr_comment(pull_request, jira_issue, people=None):
     * check for contributor agreement
     * contain a link to our process documentation
     """
-    people = people or get_people_file()
-    people = {user.lower(): values for user, values in people.items()}
-    pr_author = pull_request["user"]["login"].lower()
-    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
     # does the user have a valid, signed contributor agreement?
-    has_signed_agreement = (
-        pr_author in people and
-        people[pr_author].get("expires_on", date.max) > created_at.date()
-    )
+    has_signed_agreement = pull_request_has_cla(pull_request)
     return render_template("github_community_pr_comment.md.j2",
         user=pull_request["user"]["login"],
         repo=pull_request["base"]["repo"]["full_name"],
