@@ -25,7 +25,7 @@ def _log(log_fn, task_request, message):
             call this function
         message (str): Log message
     """
-    log_fn("{}: {}".format(task_request.id, message))
+    log_fn(message)
 
 
 def log_debug(task_request, message):
