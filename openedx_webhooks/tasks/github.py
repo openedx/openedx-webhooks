@@ -118,8 +118,8 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
             "summary": pr["title"],
             "description": pr["body"],
             "customfield_10904": pr["html_url"],        # "URL" is ambiguous, use the internal name.
-            custom_fields["PR Number"]: pr["number"],
-            custom_fields["Repo"]: pr["base"]["repo"]["full_name"],
+            custom_fields["PR Number"]: num,
+            custom_fields["Repo"]: repo,
             custom_fields["Contributor Name"]: user_name,
         }
     }
