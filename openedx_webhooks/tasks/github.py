@@ -59,7 +59,6 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     work, such as making a JIRA issue or commenting on the pull request.
     """
 
-    github = github_bp.session
     pr = pull_request
     user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
