@@ -8,8 +8,8 @@ amqp==2.6.0               # via kombu
 arrow==0.15.6             # via -r requirements/base.in
 billiard==3.6.3.0         # via celery
 blinker==1.4              # via -r requirements/base.in, sentry-sdk
-celery==4.4.4             # via -r requirements/base.in
-certifi==2020.4.5.1       # via requests, sentry-sdk
+celery==4.4.5             # via -r requirements/base.in
+certifi==2020.4.5.2       # via requests, sentry-sdk
 cffi==1.14.0              # via cryptography
 chardet==3.0.4            # via requests
 click==7.1.2              # via -r requirements/base.in, flask, rq
@@ -20,6 +20,7 @@ flask-script==2.0.6       # via -r requirements/base.in
 flask-sqlalchemy==2.4.3   # via -r requirements/base.in
 flask-sslify==0.1.5       # via -r requirements/base.in
 flask==1.1.2              # via -r requirements/base.in, flask-dance, flask-script, flask-sqlalchemy, flask-sslify, sentry-sdk
+future==0.18.2            # via celery
 github3.py==1.3.0         # via -r requirements/base.in
 gunicorn==20.0.4          # via -r requirements/base.in
 idna==2.9                 # via requests
@@ -29,8 +30,8 @@ jinja2==2.11.2            # via flask
 jira==2.0.0               # via -r requirements/base.in
 jwcrypto==0.7             # via github3.py
 kombu==4.6.10             # via celery
+logging-tree==1.8.1       # via -r requirements/base.in
 markupsafe==1.1.1         # via jinja2
-logging_tree
 oauthlib[signedtoken]==3.1.0  # via -r requirements/base.in, flask-dance, jira, requests-oauthlib
 pbr==5.4.5                # via jira
 psycopg2==2.8.5           # via -r requirements/base.in
