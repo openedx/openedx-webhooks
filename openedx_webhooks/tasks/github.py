@@ -64,16 +64,15 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
-    is_internal_pr = is_internal_pull_request(pr)
 
-    msg = "Processing {} PR #{} by {}...".format(repo, num, user)
-    logger.info(msg)
+    logger.info(f"Processing {repo} PR #{num} by @{user}...")
 
     if is_bot_pull_request(pr):
         # Bots never need OSPR attention.
+        logger.info(f"@{user} is a bot, ignored.")
         return None, False
 
-    if ignore_internal and is_internal_pr:
+    if ignore_internal and is_internal_pull_request(pr):
         # not an open source pull request, don't create an issue for it
         logger.info(f"@{user} opened PR #{num} against {repo} (internal PR)")
         return None, False
@@ -91,17 +90,10 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
     issue_key = get_jira_issue_key(pr)
     if issue_key:
-        msg = "Already created {key} for PR #{num} against {repo}".format(
-            key=issue_key,
-            num=pr["number"],
-            repo=pr["base"]["repo"]["full_name"],
-        )
-        logger.info(msg)
+        logger.info(f"Already created {issue_key} for PR #{num} against {repo}")
         return issue_key, False
 
-    repo = pr["base"]["repo"]["full_name"]
     people = get_people_file()
-    custom_fields = get_jira_custom_fields(jira_bp.session)
 
     user_name = None
     if user in people:
@@ -114,6 +106,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
             user_name = user
 
     # create an issue on JIRA!
+    custom_fields = get_jira_custom_fields(jira_bp.session)
     new_issue = {
         "fields": {
             "project": {
@@ -135,7 +128,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         new_issue["fields"][custom_fields["Customer"]] = [institution]
     sentry_extra_context({"new_issue": new_issue})
 
-    logger.info('Creating new JIRA issue...')
+    logger.info(f"Creating new JIRA issue for PR #{num}...")
     resp = jira_bp.session.post("/rest/api/2/issue", json=new_issue)
     log_request_response(resp)
     resp.raise_for_status()
@@ -146,20 +139,14 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     sentry_extra_context({"new_issue": new_issue})
 
     # Add a comment to the Github pull request with a link to the JIRA issue.
-    logger.info('Creating new GitHub comment with JIRA issue...')
-    comment_on_pull_request(pr, github_community_pr_comment(pr, new_issue_body))
+    logger.info(f"Commenting on PR #{num} with issue id {issue_key}")
+    add_comment_to_pull_request(pr, github_community_pr_comment(pr, new_issue_body))
 
     # Add the "Needs Triage" label to the PR.
-    logger.info('Updating GitHub labels...')
+    logger.info(f"Updating GitHub labels on PR #{num}...")
     add_labels_to_pull_request(pr, ['needs triage', 'open-source-contribution'])
 
-    msg = "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
-        user=user,
-        repo=repo,
-        num=pr["number"],
-        issue=issue_key,
-    )
-    logger.info(msg)
+    logger.info(f"@{user} opened PR #{num} against {repo}, created {issue_key} to track it")
     return issue_key, True
 
 
@@ -202,31 +189,25 @@ def pull_request_closed(pull_request):
     """
     pr = pull_request
     repo = pr["base"]["repo"]["full_name"]
-
+    num = pr["number"]
     merged = pr["merged"]
+
     issue_key = get_jira_issue_key(pr)
     if not issue_key:
-        msg = "Couldn't find JIRA issue for PR #{num} against {repo}".format(
-            num=pr["number"], repo=repo,
-        )
-        logger.info(msg)
+        logger.info(f"Couldn't find Jira issue for PR #{num} against {repo}")
         return "no JIRA issue :("
     sentry_extra_context({"jira_key": issue_key})
 
     # close the issue on JIRA
-    logger.info('Closing the issue on JIRA...')
-    new_staus = "Merged" if merged else "Rejected"
-    if not transition_jira_issue(issue_key, new_staus):
+    new_status = "Merged" if merged else "Rejected"
+    logger.info(f"Closing Jira issue {issue_key} as {new_status}...")
+    if not transition_jira_issue(issue_key, new_status):
         return False
 
-    msg = "PR #{num} against {repo} was {action}, moving {issue} to status {status}".format(
-        num=pr["number"],
-        repo=repo,
-        action="merged" if merged else "closed",
-        issue=issue_key,
-        status="Merged" if merged else "Rejected",
+    action = "merged" if merged else "closed"
+    logger.info(
+        f"PR #{num} against {repo} was {action}, moved {issue_key} to status {new_status}"
     )
-    logger.info(msg)
     return True
 
 
