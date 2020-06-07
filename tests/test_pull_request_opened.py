@@ -58,6 +58,9 @@ def test_external_pr_opened(reqctx, mock_github, mock_jira):
     assert len(mock_jira.issues) == 1
     assert issue_id in mock_jira.issues
 
+    # Check that the Jira issue was moved to Community Manager Review.
+    assert mock_jira.issues[issue_id]["fields"]["status"]["name"] == "Community Manager Review"
+
     # Check the GitHub comment that was created.
     assert len(comments_post.request_history) == 1
     body = comments_post.request_history[0].json()["body"]
@@ -69,8 +72,8 @@ def test_external_pr_opened(reqctx, mock_github, mock_jira):
 
     # Check the GitHub labels that got applied.
     assert len(adjust_labels_patch.request_history) == 1
-    assert adjust_labels_patch.request_history[0].json() == {
-        "labels": ["needs triage", "open-source-contribution"],
+    assert set(adjust_labels_patch.request_history[0].json()["labels"]) == {
+        "community manager review", "open-source-contribution",
     }
 
 
@@ -115,8 +118,8 @@ def test_external_pr_opened_with_cla(reqctx, mock_github, mock_jira):
 
     # Check the GitHub labels that got applied.
     assert len(adjust_labels_patch.request_history) == 1
-    assert adjust_labels_patch.request_history[0].json() == {
-        "labels": ["needs triage", "open-source-contribution"],
+    assert set(adjust_labels_patch.request_history[0].json()["labels"]) == {
+        "needs triage", "open-source-contribution",
     }
 
 

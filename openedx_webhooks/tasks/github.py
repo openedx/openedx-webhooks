@@ -93,6 +93,8 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         logger.info(f"Already created {issue_key} for PR #{num} against {repo}")
         return issue_key, False
 
+    has_cla = pull_request_has_cla(pr)
+
     # Create an issue on Jira.
     new_issue = create_ospr_issue(pr)
     issue_key = new_issue["key"]
@@ -104,7 +106,16 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
     # Add the "Needs Triage" label to the PR.
     logger.info(f"Updating GitHub labels on PR #{num}...")
-    add_labels_to_pull_request(pr, ['needs triage', 'open-source-contribution'])
+    labels = ["open-source-contribution"]
+    if has_cla:
+        labels.append("needs triage")
+    else:
+        labels.append("community manager review")
+    update_labels_on_pull_request(pr, labels)
+
+    # If no CLA, move the issue to "Community Manager Review".
+    if not has_cla:
+        transition_jira_issue(issue_key, "Community Manager Review")
 
     logger.info(f"@{user} opened PR #{num} against {repo}, created {issue_key} to track it")
     return issue_key, True
@@ -192,9 +203,13 @@ def add_comment_to_pull_request(pr, comment_body):
     resp.raise_for_status()
 
 
-def add_labels_to_pull_request(pr, labels):
+def update_labels_on_pull_request(pr, labels):
     """
-    Add labels to a GitHub pull request.
+    Change the labels on a pull request.
+
+    Arguments:
+        pr: a dict of pull request info.
+        labels: a list of strings.
     """
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]

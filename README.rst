@@ -186,6 +186,16 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 
 
 
+Changelog
+---------
+
+2020-06-08
+~~~~~~~~~~
+
+- Pull requests that need a CLA signed now create Jira tickets in the
+  "Community Manager Review" status.
+
+
 TODO
 ----
 
