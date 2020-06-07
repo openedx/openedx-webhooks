@@ -93,9 +93,34 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         logger.info(f"Already created {issue_key} for PR #{num} against {repo}")
         return issue_key, False
 
+    # Create an issue on Jira.
+    new_issue = create_ospr_issue(pr)
+    issue_key = new_issue["key"]
+    sentry_extra_context({"new_issue": new_issue})
+
+    # Add a comment to the Github pull request with a link to the JIRA issue.
+    logger.info(f"Commenting on PR #{num} with issue id {issue_key}")
+    add_comment_to_pull_request(pr, github_community_pr_comment(pr, new_issue))
+
+    # Add the "Needs Triage" label to the PR.
+    logger.info(f"Updating GitHub labels on PR #{num}...")
+    add_labels_to_pull_request(pr, ['needs triage', 'open-source-contribution'])
+
+    logger.info(f"@{user} opened PR #{num} against {repo}, created {issue_key} to track it")
+    return issue_key, True
+
+
+def create_ospr_issue(pr):
+    """
+    Create a new OSPR issue for a pull request.
+
+    Returns the JSON describing the issue.
+    """
+    num = pr["number"]
+    repo = pr["base"]["repo"]["full_name"]
+
     user_name, institution = get_name_and_institution_for_pr(pr)
 
-    # create an issue on JIRA!
     custom_fields = get_jira_custom_fields(jira_bp.session)
     new_issue = {
         "fields": {
@@ -123,20 +148,8 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     resp.raise_for_status()
 
     new_issue_body = resp.json()
-    issue_key = new_issue_body["key"]
-    new_issue["key"] = issue_key
-    sentry_extra_context({"new_issue": new_issue})
-
-    # Add a comment to the Github pull request with a link to the JIRA issue.
-    logger.info(f"Commenting on PR #{num} with issue id {issue_key}")
-    add_comment_to_pull_request(pr, github_community_pr_comment(pr, new_issue_body))
-
-    # Add the "Needs Triage" label to the PR.
-    logger.info(f"Updating GitHub labels on PR #{num}...")
-    add_labels_to_pull_request(pr, ['needs triage', 'open-source-contribution'])
-
-    logger.info(f"@{user} opened PR #{num} against {repo}, created {issue_key} to track it")
-    return issue_key, True
+    new_issue["key"] = new_issue_body["key"]
+    return new_issue
 
 
 def get_name_and_institution_for_pr(pr):
