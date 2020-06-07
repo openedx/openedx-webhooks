@@ -39,6 +39,8 @@ class MockJira:
         ])
     }
 
+    TRANSITION_IDS = {id: name for name, id in TRANSITIONS.items()}
+
     def __init__(self, requests_mocker):
         self.requests_mocker = requests_mocker
 
@@ -76,6 +78,12 @@ class MockJira:
             json=self._issue_transitions_callback,
         )
 
+        # Transition an issue.
+        self.transition_issue_post = self.requests_mocker.post(
+            re.compile(fr"https://{self.HOST}/rest/api/2/issue/OSPR-\d+/transitions"),
+            json=self._transition_issue_callback,
+        )
+
     def request_history(self):
         """Return the list of requests made to this host."""
         return [r for r in self.requests_mocker.request_history if r.netloc == self.HOST]
@@ -98,6 +106,10 @@ class MockJira:
     def delete_issue(self, issue):
         """Delete a fake issue."""
         del self.issues[issue["key"]]
+
+    def get_issue_status(self, issue):
+        """Return the status of an issue."""
+        return self.issues[issue["key"]]["fields"]["status"]["name"]
 
     def set_issue_status(self, issue, status):
         """Set the status of a fake issue."""
@@ -141,8 +153,13 @@ class MockJira:
             context.status_code = 404
             return {}
 
-    def transitions_post(self, issue):
-        """Return a mocker for the POST to transition an issue."""
-        return self.requests_mocker.post(
-            f"https://{self.HOST}/rest/api/2/issue/{issue['key']}/transitions"
-        )
+    def _transition_issue_callback(self, request, _):
+        """
+        Implement the POST to transition an issue to a new status.
+        """
+        match_key = re.search(r"/rest/api/2/issue/(OSPR-\d+)/transitions", request.path)
+        assert match_key is not None
+        key = match_key.group(1)
+        assert key in self.issues
+        transition_id = request.json()["transition"]["id"]
+        self.set_issue_status(self.issues[key], self.TRANSITION_IDS[transition_id])
