@@ -1,4 +1,3 @@
-import json
 import re
 from datetime import date
 
@@ -76,28 +75,18 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
     if ignore_internal and is_internal_pr:
         # not an open source pull request, don't create an issue for it
-        msg = "@{user} opened PR #{num} against {repo} (internal PR)".format(user=user, repo=repo, num=num)
-        logger.info(msg)
+        logger.info(f"@{user} opened PR #{num} against {repo} (internal PR)")
         return None, False
 
     if check_contractor and is_contractor_pull_request(pr):
         # have we already left a contractor comment?
         if has_contractor_comment(pr):
-            msg = "Already left contractor comment for PR #{}".format(num)
-            logger.info(msg)
+            logger.info(f"Already left contractor comment for PR #{num}")
             return None, False
 
-        # don't create a JIRA issue, but leave a comment
-        comment = {
-            "body": github_contractor_pr_comment(pr),
-        }
-        url = "/repos/{repo}/issues/{num}/comments".format(repo=repo, num=num)
-        msg = "Posting contractor comment to PR #{}".format(num)
-        logger.info(msg)
-
-        comment_resp = github.post(url, json=comment)
-        log_request_response(comment_resp)
-        comment_resp.raise_for_status()
+        # Don't create a JIRA issue, but leave a comment.
+        logger.info(f"Posting contractor comment to PR #{num}")
+        add_comment_to_pull_request(pr, github_contractor_pr_comment(pr))
         return None, True
 
     issue_key = get_jira_issue_key(pr)
@@ -155,23 +144,14 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     issue_key = new_issue_body["key"]
     new_issue["key"] = issue_key
     sentry_extra_context({"new_issue": new_issue})
-    # add a comment to the Github pull request with a link to the JIRA issue
-    comment = {
-        "body": github_community_pr_comment(pr, new_issue_body),
-    }
-    url = "/repos/{repo}/issues/{num}/comments".format(repo=repo, num=pr["number"])
-    logger.info('Creating new GitHub comment with JIRA issue...')
-    comment_resp = github.post(url, json=comment)
-    log_request_response(comment_resp)
-    comment_resp.raise_for_status()
 
-    # Add the "Needs Triage" label to the PR
-    issue_url = "/repos/{repo}/issues/{num}".format(repo=repo, num=pr["number"])
-    labels = {'labels': ['needs triage', 'open-source-contribution']}
+    # Add a comment to the Github pull request with a link to the JIRA issue.
+    logger.info('Creating new GitHub comment with JIRA issue...')
+    comment_on_pull_request(pr, github_community_pr_comment(pr, new_issue_body))
+
+    # Add the "Needs Triage" label to the PR.
     logger.info('Updating GitHub labels...')
-    label_resp = github.patch(issue_url, data=json.dumps(labels))
-    log_request_response(label_resp)
-    label_resp.raise_for_status()
+    add_labels_to_pull_request(pr, ['needs triage', 'open-source-contribution'])
 
     msg = "@{user} opened PR #{num} against {repo}, created {issue} to track it".format(
         user=user,
@@ -181,6 +161,30 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     )
     logger.info(msg)
     return issue_key, True
+
+
+def add_comment_to_pull_request(pr, comment_body):
+    """
+    Add a comment to a pull request.
+    """
+    repo = pr["base"]["repo"]["full_name"]
+    num = pr["number"]
+    url = f"/repos/{repo}/issues/{num}/comments"
+    resp = github_bp.session.post(url, json={"body": comment_body})
+    log_request_response(resp)
+    resp.raise_for_status()
+
+
+def add_labels_to_pull_request(pr, labels):
+    """
+    Add labels to a GitHub pull request.
+    """
+    repo = pr["base"]["repo"]["full_name"]
+    num = pr["number"]
+    url = f"/repos/{repo}/issues/{num}"
+    resp = github_bp.session.patch(url, json={"labels": labels})
+    log_request_response(resp)
+    resp.raise_for_status()
 
 
 @celery.task(bind=True)
