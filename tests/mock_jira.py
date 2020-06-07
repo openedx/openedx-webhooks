@@ -124,19 +124,14 @@ class MockJira:
     def _get_issue_callback(self, request, _):
         """Implement the GET issue endpoint."""
         # Get the issue key from the request.
-        match_key = re.search(r"/rest/api/2/issue/(OSPR-\d+)", request.path)
-        assert match_key is not None
-        key = match_key.group(1)
+        key = get_regex_value(r"/rest/api/2/issue/(OSPR-\d+)", request.path)
         assert key in self.issues
         return self.issues[key]
 
     def _issue_transitions_callback(self, request, context):
         """Responds to the API endpoint for listing transitions between issue states."""
         # Get the issue key from the request.
-        match_key = re.search(r"/rest/api/2/issue/(OSPR-\d+)/transitions", request.path)
-        assert match_key is not None
-        key = match_key.group(1)
-
+        key = get_regex_value(r"/rest/api/2/issue/(OSPR-\d+)/transitions", request.path)
         if key in self.issues:
             # The transitions don't include the transitions to the current state.
             issue = self.issues[key]
@@ -157,9 +152,16 @@ class MockJira:
         """
         Implement the POST to transition an issue to a new status.
         """
-        match_key = re.search(r"/rest/api/2/issue/(OSPR-\d+)/transitions", request.path)
-        assert match_key is not None
-        key = match_key.group(1)
+        key = get_regex_value(r"/rest/api/2/issue/(OSPR-\d+)/transitions", request.path)
         assert key in self.issues
         transition_id = request.json()["transition"]["id"]
         self.set_issue_status(self.issues[key], self.TRANSITION_IDS[transition_id])
+
+
+def get_regex_value(pattern, string):
+    """
+    Search a string with a pattern (which must match), and return the group(1) value.
+    """
+    match = re.search(pattern, string)
+    assert match is not None
+    return match[1]
