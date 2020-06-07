@@ -93,17 +93,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         logger.info(f"Already created {issue_key} for PR #{num} against {repo}")
         return issue_key, False
 
-    people = get_people_file()
-
-    user_name = None
-    if user in people:
-        user_name = people[user].get("name", "")
-    if not user_name:
-        user_resp = github.get(pr["user"]["url"])
-        if user_resp.ok:
-            user_name = user_resp.json().get("name", user)
-        else:
-            user_name = user
+    user_name, institution = get_name_and_institution_for_pr(pr)
 
     # create an issue on JIRA!
     custom_fields = get_jira_custom_fields(jira_bp.session)
@@ -123,7 +113,6 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
             custom_fields["Contributor Name"]: user_name,
         }
     }
-    institution = people.get(user, {}).get("institution", None)
     if institution:
         new_issue["fields"][custom_fields["Customer"]] = [institution]
     sentry_extra_context({"new_issue": new_issue})
@@ -148,6 +137,34 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
     logger.info(f"@{user} opened PR #{num} against {repo}, created {issue_key} to track it")
     return issue_key, True
+
+
+def get_name_and_institution_for_pr(pr):
+    """
+    Get the author name and institution for a pull request.
+
+    The returned name will always be a string. The institution might be None.
+
+    Returns:
+        name, institution
+    """
+    github = github_bp.session
+    user = pr["user"]["login"]
+    people = get_people_file()
+
+    user_name = None
+    if user in people:
+        user_name = people[user].get("name", "")
+    if not user_name:
+        resp = github.get(pr["user"]["url"])
+        if resp.ok:
+            user_name = resp.json().get("name", user)
+        else:
+            user_name = user
+
+    institution = people.get(user, {}).get("institution", None)
+
+    return user_name, institution
 
 
 def add_comment_to_pull_request(pr, comment_body):
