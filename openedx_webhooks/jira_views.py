@@ -5,7 +5,6 @@ These are the views that process webhook events coming from JIRA.
 import json
 import logging
 import re
-import sys
 
 from flask import (
     Blueprint, current_app, jsonify, make_response, render_template, request,
@@ -96,8 +95,6 @@ def issue_created():
     sentry_extra_context({"event": event})
 
     logger.debug("Jira issue created: {}".format(json.dumps(event)))
-    if current_app.debug:
-        print(json.dumps(event), file=sys.stderr)
 
     if "issue" not in event:
         # It's rare, but we occasionally see junk data from JIRA. For example,
@@ -120,12 +117,7 @@ def should_transition(issue):
     issue_status = to_unicode(issue["fields"]["status"]["name"])
     project_key = to_unicode(issue["fields"]["project"]["key"])
     if issue_status != "Needs Triage":
-        print(
-            "{key} has status {status}, does not need to be processed".format(
-                key=issue_key, status=issue_status,
-            ),
-            file=sys.stderr,
-        )
+        logger.info(f"{issue_key} has status {issue_status}, does not need to be processed.")
         return False
 
     # Open source pull requests do not skip Needs Triage.
@@ -134,12 +126,7 @@ def should_transition(issue):
     # function.)
     is_subtask = issue["fields"]["issuetype"]["subtask"]
     if project_key == "OSPR" and not is_subtask:
-        print(
-            "{key} is an open source pull request, and does not need to be processed.".format(
-                key=issue_key
-            ),
-            file=sys.stderr,
-        )
+        logger.info(f"{issue_key} is an open source pull request, and does not need to be processed.")
         return False
 
     user_url = URLObject(issue["fields"]["creator"]["self"])
@@ -226,14 +213,13 @@ def issue_opened(issue):
         action = "Transitioned to Open"
     else:
         action = "ignored"
-    print(
+    logger.info(
         "{key} created by {name} ({account}), {action}".format(
             key=issue_key,
             name=to_unicode(issue["fields"]["creator"]["displayName"]),
             account=to_unicode(issue["fields"]["creator"]["accountId"]),
             action="Transitioned to Open" if transitioned else "ignored",
-        ),
-        file=sys.stderr,
+        )
     )
     return action
 
@@ -292,8 +278,7 @@ def issue_updated():
         raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
     sentry_extra_context({"event": event})
 
-    if current_app.debug:
-        print(json.dumps(event), file=sys.stderr)
+    logger.debug("/issue/updated data: {}".format(json.dumps(event)))
 
     if "issue" not in event:
         # It's rare, but we occasionally see junk data from JIRA. For example,
@@ -356,10 +341,6 @@ def issue_updated():
         change = jira_issue_rejected(event["issue"])
         changes.append(change)
 
-    elif 'blocked' in new_status.lower():
-        print("New status is: {}".format(new_status))
-        print("repo_labels_lower: {}".format(repo_labels_lower))
-
     if new_status.lower() in repo_labels_lower:
         change = jira_issue_status_changed(event["issue"], event["changelog"])
         changes.append(change)
@@ -383,10 +364,8 @@ def jira_issue_rejected(issue):
     sentry_extra_context({"github_issue": gh_issue})
     if gh_issue["state"] == "closed":
         # nothing to do
-        msg = "{key} was rejected, but PR #{num} was already closed".format(
-            key=issue_key, num=pr_num
-        )
-        print(msg, file=sys.stderr)
+        msg = f"{issue_key} was rejected, but PR #{pr_num} was already closed"
+        logger.info(msg)
         return msg
 
     # Comment on the PR to explain to look at JIRA
@@ -431,20 +410,20 @@ def jira_issue_status_changed(issue, changelog):
 
     # Get all the existing labels on this PR
     pr_labels = [label["name"] for label in gh_issue["labels"]]
-    print("old labels: {}".format(pr_labels), file=sys.stderr)
+    logger.info(f"old labels: {pr_labels}")
 
     # remove old status label
     old_status_label = repo_labels_lower.get(old_status.lower(), old_status)
-    print("old status label: {}".format(old_status_label), file=sys.stderr)
+    logger.info(f"old status label: {old_status_label}")
     if old_status_label in pr_labels:
         pr_labels.remove(old_status_label)
     # add new status label
     new_status_label = repo_labels_lower[new_status.lower()]
-    print("new status label: {}".format(new_status_label), file=sys.stderr)
+    logger.info(f"new status label: {new_status_label}")
     if new_status_label not in pr_labels:
         pr_labels.append(new_status_label)
 
-    print("new labels: {}".format(pr_labels), file=sys.stderr)
+    logger.info(f"new labels: {pr_labels}")
 
     # Update labels on github
     update_label_resp = github.patch(issue_url, json={"labels": pr_labels})

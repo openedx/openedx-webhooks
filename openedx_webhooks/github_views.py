@@ -4,7 +4,6 @@ These are the views that process webhook events coming from Github.
 
 import json
 import logging
-import sys
 
 from celery import group
 from flask import current_app as app
@@ -49,7 +48,7 @@ def hook_receiver():
     secret = app.config.get('GITHUB_WEBHOOKS_SECRET')
     if not is_valid_payload(secret, headers.signature, request.data):
         msg = "Rejecting because signature doesn't match!"
-        print(msg, file=sys.stderr)
+        logging.info(msg)
         return msg, 403
 
     q.enqueue(
@@ -68,52 +67,40 @@ def pull_request():
 
     .. _PullRequestEvent: https://developer.github.com/v3/activity/events/types/#pullrequestevent
     """
-    msg = "Incoming GitHub PR request: {}".format(request.data)
-    logger.debug(msg)
+    logger.debug(f"Incoming GitHub PR request: {request.data}")
 
     try:
         event = request.get_json()
     except ValueError:
-        msg = "Invalid JSON from Github: {data}".format(data=request.data)
-        print(msg, file=sys.stderr)
+        msg = f"Invalid JSON from Github: {request.data}"
+        logger.info(msg)
         raise ValueError(msg)
     sentry_extra_context({"event": event})
 
     if "pull_request" not in event and "hook" in event and "zen" in event:
         # this is a ping
         repo = event.get("repository", {}).get("full_name")
-        print("ping from {repo}".format(repo=repo), file=sys.stderr)
+        logger.info(f"ping from {repo}")
         return "PONG"
 
     pr = event["pull_request"]
-    pr_number = pr['number']
+    pr_number = pr["number"]
     repo = pr["base"]["repo"]["full_name"]
     action = event["action"]
-    # `synchronize` action is when a new commit is made for the PR
-    ignored_actions = {"labeled", "synchronize"}
-    if action in ignored_actions:
-        msg = "Ignoring {action} events from github".format(action=action)
-        print(msg, file=sys.stderr)
-        return msg, 200
 
-    pr_activity = "{}/pull/{} {}".format(repo, pr_number, action)
+    pr_activity = f"{repo} #{pr_number} {action!r}"
     if action == "opened":
-        msg = "{}, processing...".format(pr_activity)
-        print(msg, file=sys.stderr)
+        logger.info(f"{pr_activity}, processing...")
         result = pull_request_opened_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
     elif action == "closed":
-        msg = "{}, processing...".format(pr_activity)
-        print(msg, file=sys.stderr)
+        logger.info(f"{pr_activity}, processing...")
         result = pull_request_closed_task.delay(pr)
     else:
-        msg = "{}, rejecting with `400 Bad request`".format(pr_activity)
-        print(msg, file=sys.stderr)
-        # TODO: Is this really kosher? We should do no-op, not reject
-        #       the request!
-        return "Don't know how to handle this.", 400
+        logger.info(f"{pr_activity}, ignoring...")
+        return "Nothing for me to do", 200
 
     status_url = url_for("tasks.status", task_id=result.id, _external=True)
-    print("Job status URL: {}".format(status_url), file=sys.stderr)
+    logger.info(f"Job status URL: {status_url}")
 
     resp = jsonify({"message": "queued", "status_url": status_url})
     resp.status_code = 202
