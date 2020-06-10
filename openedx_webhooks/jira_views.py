@@ -17,7 +17,7 @@ from urlobject import URLObject
 from openedx_webhooks.oauth import jira_get
 from openedx_webhooks.tasks.jira import rescan_users as rescan_user_task
 from openedx_webhooks.utils import (
-    jira_paginated_get, memoize, pop_dict_id, to_unicode, sentry_extra_context
+    jira_paginated_get, memoize, pop_dict_id, sentry_extra_context
 )
 
 jira_bp = Blueprint('jira_views', __name__)
@@ -73,7 +73,7 @@ def rescan_issues():
     results = {}
 
     for issue in issues:
-        issue_key = to_unicode(issue["key"])
+        issue_key = issue["key"]
         results[issue_key] = issue_opened(issue)
 
     resp = make_response(json.dumps(results), 200)
@@ -113,9 +113,9 @@ def should_transition(issue):
     Return a boolean indicating if the given issue should be transitioned
     automatically from "Needs Triage" to an open status.
     """
-    issue_key = to_unicode(issue["key"])
-    issue_status = to_unicode(issue["fields"]["status"]["name"])
-    project_key = to_unicode(issue["fields"]["project"]["key"])
+    issue_key = issue["key"]
+    issue_status = issue["fields"]["status"]["name"]
+    project_key = issue["fields"]["project"]["key"]
     if issue_status != "Needs Triage":
         logger.info(f"{issue_key} has status {issue_status}, does not need to be processed.")
         return False
@@ -159,7 +159,7 @@ def should_transition(issue):
 def issue_opened(issue):
     sentry_extra_context({"issue": issue})
 
-    issue_key = to_unicode(issue["key"])
+    issue_key = issue["key"]
     issue_url = URLObject(issue["self"])
 
     transitioned = False
@@ -190,7 +190,7 @@ def issue_opened(issue):
 
         if not new_status:
             # If it's an OSPR subtask (used by teams to manage reviews), transition to team backlog
-            if to_unicode(issue["fields"]["project"]["key"]) == "OSPR" and issue["fields"]["issuetype"]["subtask"]:
+            if issue["fields"]["project"]["key"] == "OSPR" and issue["fields"]["issuetype"]["subtask"]:
                 new_status = "To Backlog"
                 action = "Transitioned to 'To Backlog'"
             else:
@@ -216,8 +216,8 @@ def issue_opened(issue):
     logger.info(
         "{key} created by {name} ({account}), {action}".format(
             key=issue_key,
-            name=to_unicode(issue["fields"]["creator"]["displayName"]),
-            account=to_unicode(issue["fields"]["creator"]["accountId"]),
+            name=issue["fields"]["creator"]["displayName"],
+            account=issue["fields"]["creator"]["accountId"],
             action="Transitioned to Open" if transitioned else "ignored",
         )
     )
@@ -259,7 +259,7 @@ def github_pr_url(issue):
     pr_repo = github_pr_repo(issue)
     pr_num = github_pr_num(issue)
     if not pr_repo or not pr_num:
-        issue_key = to_unicode(issue["key"])
+        issue_key = issue["key"]
         fail_msg = '{key} is missing "Repo" or "PR Number" fields'.format(key=issue_key)
         raise Exception(fail_msg)
     return "/repos/{repo}/pulls/{num}".format(repo=pr_repo, num=pr_num)
@@ -328,7 +328,7 @@ def issue_updated():
         return log_return("I don't care, not changing status")
 
     if not pr_repo:
-        issue_key = to_unicode(event["issue"]["key"])
+        issue_key = event["issue"]["key"]
         fail_msg = '{key} is missing "Repo" field'.format(key=issue_key)
         fail_msg += ' {0}'.format(event["issue"]["fields"]["issuetype"])
         raise Exception(fail_msg)
@@ -358,7 +358,7 @@ def issue_updated():
 
 
 def jira_issue_rejected(issue):
-    issue_key = to_unicode(issue["key"])
+    issue_key = issue["key"]
 
     pr_num = github_pr_num(issue)
     pr_url = github_pr_url(issue)
@@ -375,7 +375,7 @@ def jira_issue_rejected(issue):
         return msg
 
     # Comment on the PR to explain to look at JIRA
-    username = to_unicode(gh_issue["user"]["login"])
+    username = gh_issue["user"]["login"]
     comment = {"body": (
         "Hello @{username}: We are unable to continue with "
         "review of your submission at this time. Please see the "
@@ -438,7 +438,7 @@ def jira_issue_status_changed(issue, changelog):
 
 
 def jira_issue_comment_added(issue, comment):
-    issue_key = to_unicode(issue["key"])
+    issue_key = issue["key"]
 
     # we want to parse comments on Course Launch issues to fill out the cert report
     # see https://openedx.atlassian.net/browse/TOOLS-19

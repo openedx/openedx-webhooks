@@ -225,12 +225,6 @@ def clear_memoized_values():
         func.cache_clear()
 
 
-def to_unicode(s):
-    if isinstance(s, str):
-        return s
-    return s.decode('utf-8')
-
-
 @memoize
 def studio_crowd_tokenkey(base_url="https://openedx.atlassian.net"):
     """
