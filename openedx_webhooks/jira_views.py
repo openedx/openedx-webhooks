@@ -265,6 +265,11 @@ def github_pr_url(issue):
     return "/repos/{repo}/pulls/{num}".format(repo=pr_repo, num=pr_num)
 
 
+def log_return(msg):
+    logger.info(f"Returning: {msg}")
+    return msg
+
+
 @jira_bp.route("/issue/updated", methods=("POST",))
 def issue_updated():
     """
@@ -287,40 +292,40 @@ def issue_updated():
         #    "key": "jira:1fec1026-b232-438f-adab-13b301059297",
         #    "newVersion": 64005, "oldVersion": 64003}
         # If we don't have an "issue" key, it's junk.
-        return "What is this shit!?", 400
+        return log_return("What is this shit!?"), 400
 
     # is this a comment?
     comment = event.get("comment")
     if comment:
-        return jira_issue_comment_added(event["issue"], comment)
+        return log_return(jira_issue_comment_added(event["issue"], comment))
 
     # is the issue an open source pull request?
     if event["issue"]["fields"]["project"]["key"] != "OSPR":
-        return "I don't care"
+        return log_return("I don't care, not OSPR")
 
     # is it a pull request against an edX repo?
     pr_repo = github_pr_repo(event["issue"])
     if pr_repo and not pr_repo.startswith("edx/"):
-        return "ignoring PR on external repo"
+        return log_return("ignoring PR on external repo")
 
     # we don't care about OSPR subtasks
     if event["issue"]["fields"]["issuetype"]["subtask"]:
-        return "ignoring subtasks"
+        return log_return("ignoring subtasks")
 
     # don't care about feature proposals
     if event["issue"]["fields"]["issuetype"]["name"] == "Feature Proposal":
-        return "ignoring feature propsals"
+        return log_return("ignoring feature propsals")
 
     # is there a changelog?
     changelog = event.get("changelog")
     if not changelog:
         # it was just someone adding a comment
-        return "I don't care"
+        return log_return("I don't care, just someone adding a comment")
 
     # did the issue change status?
     status_changelog_items = [item for item in changelog["items"] if item["field"] == "status"]
     if len(status_changelog_items) == 0:
-        return "I don't care"
+        return log_return("I don't care, not changing status")
 
     if not pr_repo:
         issue_key = to_unicode(event["issue"]["key"])
@@ -341,14 +346,15 @@ def issue_updated():
         change = jira_issue_rejected(event["issue"])
         changes.append(change)
 
+    logger.info(f"Comparing labels: {new_status=}, {repo_labels_lower=}")
     if new_status.lower() in repo_labels_lower:
         change = jira_issue_status_changed(event["issue"], event["changelog"])
         changes.append(change)
 
     if changes:
-        return "\n".join(changes)
+        return log_return("\n".join(changes))
     else:
-        return "no change necessary"
+        return log_return("no change necessary")
 
 
 def jira_issue_rejected(issue):
@@ -437,11 +443,11 @@ def jira_issue_comment_added(issue, comment):
     # we want to parse comments on Course Launch issues to fill out the cert report
     # see https://openedx.atlassian.net/browse/TOOLS-19
     if issue["fields"]["project"]["key"] != "COR":
-        return "I don't care"
+        return "I don't care, not COR"
 
     lines = comment['body'].splitlines()
     if len(lines) < 2:
-        return "I don't care"
+        return "I don't care, part 37"
 
     # the comment that we want should have precisely these headings in this order
     headings = [
