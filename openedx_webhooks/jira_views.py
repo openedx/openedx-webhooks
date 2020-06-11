@@ -4,10 +4,9 @@ These are the views that process webhook events coming from JIRA.
 
 import json
 import logging
-import re
 
 from flask import (
-    Blueprint, current_app, jsonify, make_response, render_template, request,
+    Blueprint, jsonify, make_response, render_template, request,
     url_for
 )
 from flask_dance.contrib.github import github
@@ -297,7 +296,7 @@ def issue_updated():
     # is this a comment?
     comment = event.get("comment")
     if comment:
-        return log_return(jira_issue_comment_added(event["issue"], comment))
+        return log_return("Ignoring new-comment events")
 
     # is the issue an open source pull request?
     if event["issue"]["fields"]["project"]["key"] != "OSPR":
@@ -435,74 +434,6 @@ def jira_issue_status_changed(issue, changelog):
     update_label_resp = github.patch(issue_url, json={"labels": pr_labels})
     update_label_resp.raise_for_status()
     return "Changed labels of PR #{num} to {labels}".format(num=pr_num, labels=pr_labels)
-
-
-def jira_issue_comment_added(issue, comment):
-    issue_key = issue["key"]
-
-    # we want to parse comments on Course Launch issues to fill out the cert report
-    # see https://openedx.atlassian.net/browse/TOOLS-19
-    if issue["fields"]["project"]["key"] != "COR":
-        return "I don't care, not COR"
-
-    lines = comment['body'].splitlines()
-    if len(lines) < 2:
-        return "I don't care, part 37"
-
-    # the comment that we want should have precisely these headings in this order
-    headings = [
-        "course ID", "audit", "audit_enrolled", "downloadable",
-        "enrolled_current", "enrolled_total", "honor", "honor_enrolled",
-        "notpassing", "verified", "verified_enrolled",
-    ]
-    HEADING_RE = re.compile(r"\w+".join(headings))
-    TIMESTAMP_RE = re.compile(r"^\d\d:\d\d:\d\d ")
-
-    # test header/content pairs
-    values = None
-    for header, content in zip(lines, lines[1:]):
-        # if both header and content start with a timestamp, chop it off
-        if TIMESTAMP_RE.match(header) and TIMESTAMP_RE.match(content):
-            header = header[9:]
-            content = content[9:]
-
-        # does this have the headings we're expecting?
-        if not HEADING_RE.search(header):
-            # this is not the header, move on
-            continue
-
-        # this must be it! grab the values
-        values = content.split()
-
-        # check that we have the right number
-        if len(values) == len(headings):
-            # we got it!
-            break
-
-        # aww, we were so close...
-        values = None
-
-    if not values:
-        return "Didn't find header/content pair"
-
-    custom_fields = get_jira_custom_fields()
-    fields = {
-        custom_fields["Course ID"]: values[0],
-        custom_fields["?"]: int(values[1]), # "audit"
-        custom_fields["Enrolled Audit"]: int(values[2]),
-        custom_fields["?"]: int(values[3]), # "downloadable"
-        custom_fields["Current Enrolled"]: int(values[4]),
-        custom_fields["Total Enrolled"]: int(values[5]),
-        custom_fields["?"]: int(values[6]), # "honor"
-        custom_fields["Enrolled Honor Code"]: int(values[7]),
-        custom_fields["Not Passing"]: int(values[8]),
-        custom_fields["?"]: int(values[9]), # "verified"
-        custom_fields["Enrolled Verified"]: int(values[10]),
-    }
-    issue_url = issue["self"]
-    update_resp = jira.put(issue_url, json={"fields": fields})
-    update_resp.raise_for_status()
-    return "{key} cert info updated".format(key=issue_key)
 
 
 # a mapping of group name to email domain
