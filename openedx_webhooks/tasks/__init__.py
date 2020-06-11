@@ -3,10 +3,11 @@ import os
 from celery.utils.log import get_task_logger
 from flask import Blueprint, jsonify
 
-from openedx_webhooks import celery
+from openedx_webhooks import celery, log_level
 
 # Set up Celery logging.
 logger = get_task_logger(__name__)
+logger.setLevel(log_level)
 
 def dump_logging_tree():
     """Output a debug tree of the logging system."""
