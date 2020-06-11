@@ -1,21 +1,8 @@
+"""Install openedx-webhooks."""
+
 import re
-import sys
 
 from setuptools import find_packages, setup
-from setuptools.command.test import test as TestCommand
-
-
-class PyTest(TestCommand):
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        # import here, because outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(self.test_args)
-        sys.exit(errno)
 
 
 def is_requirement(line):
@@ -56,14 +43,12 @@ setup(
     url="https://github.com/edx/openedx_webhooks",
     packages=find_packages(),
     install_requires=get_requirements("requirements.txt"),
-    tests_require=get_requirements("requirements/test.txt"),
-    cmdclass={'test': PyTest},
     license='Apache 2.0',
     classifiers=(
         'License :: OSI Approved :: Apache Software License',
         'Framework :: Flask',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.8',
     ),
     zip_safe=False,
 )
