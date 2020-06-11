@@ -13,15 +13,12 @@ from openedx_webhooks.utils import memoize
 
 def _read_repotools_yaml_file(filename):
     """Read a YAML file from the repo-tools-data repo."""
-    # All yaml files are private data, so read from the private repo
     return yaml.safe_load(_read_repotools_file(filename))
 
 @memoize
 def _read_repotools_file(filename):
     """
-    Read the text of a repo-tools file.
-
-    `private` should be set to True to read the data from the private repo-tools repo.
+    Read the text of a repo-tools-data file.
     """
     github = github_bp.session
     resp = github.get(f"https://raw.githubusercontent.com/edx/repo-tools-data/master/{filename}")
