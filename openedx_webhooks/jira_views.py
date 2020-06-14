@@ -14,6 +14,7 @@ from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
 from openedx_webhooks.oauth import jira_get
+from openedx_webhooks.tasks.github import synchronize_labels
 from openedx_webhooks.tasks.jira import rescan_users as rescan_user_task
 from openedx_webhooks.utils import (
     jira_paginated_get, sentry_extra_context,
@@ -270,6 +271,9 @@ def issue_updated():
         fail_msg = '{key} is missing "Repo" field'.format(key=issue_key)
         fail_msg += ' {0}'.format(event["issue"]["fields"]["issuetype"])
         raise Exception(fail_msg)
+
+    synchronize_labels(pr_repo)
+
     repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
     repo_labels_resp.raise_for_status()
     # map of label name to label URL

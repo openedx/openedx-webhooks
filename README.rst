@@ -192,6 +192,9 @@ Changelog
 Unreleased
 ~~~~~~~~~~
 
+- Labels in GitHub repos are synchronized from repo-tools-data/labels.yaml
+  before any labels are adjusted in the repo.
+
 - Data read from repo-tools-data (people.yaml, label.yaml) is only cached for
   15 minutes. It used to be until the bot was restarted.
 
