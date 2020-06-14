@@ -1,15 +1,13 @@
-"""A mock implementation of the GitHub API."""
+"""A fake implementation of the GitHub API."""
 
 import os.path
 import random
 import re
 from datetime import datetime
 
-import yaml
 
-
-class MockGitHub:
-    """A mock implementation of the GitHub API."""
+class FakeGitHub:
+    """A fake implementation of the GitHub API."""
 
     API_HOST = "api.github.com"
     RAW_HOST = "raw.githubusercontent.com"
@@ -38,8 +36,8 @@ class MockGitHub:
         with open(os.path.join(repo_data_dir, filename)) as data:
             return data.read()
 
-    def mock_user(self, user_data):
-        """Define a user in the mock GitHub."""
+    def fake_user(self, user_data):
+        """Define a user in the fake GitHub."""
         user_data.setdefault("type", "User")
         self.requests_mocker.get(
             f"https://{self.API_HOST}/users/{user_data['login']}",
@@ -96,7 +94,7 @@ class MockGitHub:
         url = f"https://{self.API_HOST}/repos/{repo}/issues/{num}{suffix}"
         return url
 
-    def mock_comments(self, pr, comments):
+    def fake_comments(self, pr, comments):
         """Create fake comments on a fake PR."""
         self.requests_mocker.get(
             self._pr_api_url(pr, "/comments"),
@@ -111,8 +109,8 @@ class MockGitHub:
         """Get the mocked PATCH endpoint for adjusting a PR."""
         return self.requests_mocker.patch(self._pr_api_url(pr))
 
-    def mock_labels(self, repo, label_data):
-        """Create mock labels in a repo."""
+    def fake_labels(self, repo, label_data):
+        """Create fake labels in a repo."""
         self.requests_mocker.get(
             f"https://{self.API_HOST}/repos/{repo}/labels",
             json=label_data,

@@ -9,10 +9,10 @@ from openedx_webhooks.tasks.github import (
 from . import template_snips
 
 
-def test_community_pr_comment(reqctx, mock_github, mock_jira):
+def test_community_pr_comment(reqctx, fake_github, fake_jira):
     # A pull request from a member in good standing.
-    pr = mock_github.make_pull_request(user="tusbar", head_ref="tusbar/cool-feature")
-    jira = mock_jira.make_issue(key="TNL-12345")
+    pr = fake_github.make_pull_request(user="tusbar", head_ref="tusbar/cool-feature")
+    jira = fake_jira.make_issue(key="TNL-12345")
     with reqctx:
         comment = github_community_pr_comment(pr, jira)
     assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
@@ -20,9 +20,9 @@ def test_community_pr_comment(reqctx, mock_github, mock_jira):
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-def test_community_pr_comment_no_author(reqctx, mock_github, mock_jira):
-    pr = mock_github.make_pull_request(user="FakeUser")
-    jira = mock_jira.make_issue(key="FOO-1")
+def test_community_pr_comment_no_author(reqctx, fake_github, fake_jira):
+    pr = fake_github.make_pull_request(user="FakeUser")
+    jira = fake_jira.make_issue(key="FOO-1")
     with reqctx:
         comment = github_community_pr_comment(pr, jira)
     assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
@@ -30,8 +30,8 @@ def test_community_pr_comment_no_author(reqctx, mock_github, mock_jira):
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-def test_contractor_pr_comment(reqctx, mock_github):
-    pr = mock_github.make_pull_request(user="FakeUser")
+def test_contractor_pr_comment(reqctx, fake_github):
+    pr = fake_github.make_pull_request(user="FakeUser")
     with reqctx:
         comment = github_contractor_pr_comment(pr)
     assert "you're a member of a company that does contract work for edX" in comment
@@ -45,30 +45,30 @@ def test_contractor_pr_comment(reqctx, mock_github):
     assert not comment.startswith((" ", "\n", "\t"))
 
 
-def test_has_contractor_comment(reqctx, mock_github):
-    pr = mock_github.make_pull_request(user="testuser")
+def test_has_contractor_comment(reqctx, fake_github):
+    pr = fake_github.make_pull_request(user="testuser")
     with reqctx:
         comment = github_contractor_pr_comment(pr)
     comment_json = {
         "user": {
-            "login": mock_github.WEBHOOK_BOT_NAME,
+            "login": fake_github.WEBHOOK_BOT_NAME,
         },
         "body": comment
     }
-    mock_github.mock_comments(pr, [comment_json])
+    fake_github.fake_comments(pr, [comment_json])
 
     with reqctx:
         result = has_contractor_comment(pr)
     assert result is True
 
 
-def test_has_contractor_comment_unrelated_comments(reqctx, mock_github):
-    pr = mock_github.make_pull_request(user="testuser")
+def test_has_contractor_comment_unrelated_comments(reqctx, fake_github):
+    pr = fake_github.make_pull_request(user="testuser")
     comments = [
         {
             # A bot comment, but not about contracting.
             "user": {
-                "login": mock_github.WEBHOOK_BOT_NAME,
+                "login": fake_github.WEBHOOK_BOT_NAME,
             },
             "body": "this comment is unrelated",
         },
@@ -80,16 +80,16 @@ def test_has_contractor_comment_unrelated_comments(reqctx, mock_github):
             "body": template_snips.CONTRACTOR_TEXT,
         }
     ]
-    mock_github.mock_comments(pr, comments)
+    fake_github.fake_comments(pr, comments)
 
     with reqctx:
         result = has_contractor_comment(pr)
     assert result is False
 
 
-def test_has_contractor_comment_no_comments(reqctx, mock_github):
-    pr = mock_github.make_pull_request(user="testuser")
-    mock_github.mock_comments(pr, [])
+def test_has_contractor_comment_no_comments(reqctx, fake_github):
+    pr = fake_github.make_pull_request(user="testuser")
+    fake_github.fake_comments(pr, [])
 
     with reqctx:
         result = has_contractor_comment(pr)

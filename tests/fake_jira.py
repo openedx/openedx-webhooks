@@ -1,11 +1,11 @@
-"""A mock implementation of the Jira API."""
+"""A fake implementation of the Jira API."""
 
 import random
 import re
 
 
-class MockJira:
-    """A mock implementation of the Jira API, specialized to the OSPR project."""
+class FakeJira:
+    """A fake implementation of the Jira API, specialized to the OSPR project."""
 
     HOST = "openedx.atlassian.net"
 

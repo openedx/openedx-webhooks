@@ -9,8 +9,8 @@ from flask_dance.consumer.requests import OAuth2Session
 import openedx_webhooks
 import openedx_webhooks.utils
 
-from .mock_github import MockGitHub
-from .mock_jira import MockJira
+from .fake_github import FakeGitHub
+from .fake_jira import FakeJira
 
 
 @pytest.yield_fixture
@@ -32,7 +32,7 @@ class FakeBlueprint:
 
 
 @pytest.fixture
-def mock_github(mocker, requests_mocker):
+def fake_github(mocker, requests_mocker):
     github_token = os.environ.get("GITHUB_TOKEN", "faketoken")
     token = {"access_token": github_token, "token_type": "bearer"}
     github_session = OAuth2Session(
@@ -44,12 +44,12 @@ def mock_github(mocker, requests_mocker):
     mock_bp.session = github_session
     mocker.patch("openedx_webhooks.info.github_bp", mock_bp)
     mocker.patch("openedx_webhooks.tasks.github.github_bp", mock_bp)
-    the_mock_github = MockGitHub(requests_mocker)
-    return the_mock_github
+    the_fake_github = FakeGitHub(requests_mocker)
+    return the_fake_github
 
 
 @pytest.fixture
-def mock_jira(mocker, requests_mocker):
+def fake_jira(mocker, requests_mocker):
     token = {"access_token": "faketoken", "token_type": "bearer"}
     jira_session = OAuth2Session(
         base_url="https://openedx.atlassian.net/",
@@ -59,8 +59,8 @@ def mock_jira(mocker, requests_mocker):
     mock_bp = mock.Mock()
     mock_bp.session = jira_session
     mocker.patch("openedx_webhooks.tasks.github.jira_bp", mock_bp)
-    the_mock_jira = MockJira(requests_mocker)
-    return the_mock_jira
+    the_fake_jira = FakeJira(requests_mocker)
+    return the_fake_jira
 
 
 @pytest.fixture
