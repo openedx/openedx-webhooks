@@ -49,15 +49,13 @@ class MockGitHub:
     def make_pull_request(
         self,
         user, title="generic title", body="generic body", number=None,
-        base_repo_name="edx/edx-platform", head_repo_name=None,
+        base_repo_name="edx/edx-platform",
         base_ref="master", head_ref="patch-1", user_type="User",
         created_at=None
     ):
         """Create fake pull request data."""
         # This should really use a framework like factory_boy.
         created_at = created_at or datetime.now().replace(microsecond=0)
-        if head_repo_name is None:
-            head_repo_name = f"{user}/edx-platform"
         if number is None:
             number = random.randint(1111, 9999)
         return {
@@ -72,7 +70,7 @@ class MockGitHub:
             "created_at": created_at.isoformat(),
             "head": {
                 "repo": {
-                    "full_name": head_repo_name,
+                    "full_name": f"{user}/some-repo",
                 },
                 "ref": head_ref,
             },
