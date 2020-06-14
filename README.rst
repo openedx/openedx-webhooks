@@ -189,6 +189,13 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
+Unreleased
+~~~~~~~~~~
+
+- Data read from repo-tools-data (people.yaml, label.yaml) is only cached for
+  15 minutes. It used to be until the bot was restarted.
+
+
 2020-06-08
 ~~~~~~~~~~
 

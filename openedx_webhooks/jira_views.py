@@ -16,14 +16,14 @@ from urlobject import URLObject
 from openedx_webhooks.oauth import jira_get
 from openedx_webhooks.tasks.jira import rescan_users as rescan_user_task
 from openedx_webhooks.utils import (
-    jira_paginated_get, memoize, pop_dict_id, sentry_extra_context
+    jira_paginated_get, memoize_timed, pop_dict_id, sentry_extra_context
 )
 
 jira_bp = Blueprint('jira_views', __name__)
 logger = logging.getLogger()
 
 
-@memoize
+@memoize_timed(minutes=30)
 def get_jira_custom_fields(session=None):
     """
     Return a name-to-id mapping for the custom fields on JIRA.
@@ -39,7 +39,6 @@ def get_jira_custom_fields(session=None):
     }
 
 
-@memoize
 def get_jira_issue(key):
     return jira_get("/rest/api/2/issue/{key}".format(key=key))
 

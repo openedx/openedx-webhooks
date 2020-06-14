@@ -3,6 +3,7 @@
 -r doc.in
 
 codecov
+freezegun
 pytest
 pytest-cov
 pytest-mock

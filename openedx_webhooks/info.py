@@ -8,14 +8,14 @@ import yaml
 from iso8601 import parse_date
 
 from openedx_webhooks.oauth import github_bp
-from openedx_webhooks.utils import memoize
+from openedx_webhooks.utils import memoize_timed
 
 
 def _read_repotools_yaml_file(filename):
     """Read a YAML file from the repo-tools-data repo."""
     return yaml.safe_load(_read_repotools_file(filename))
 
-@memoize
+@memoize_timed(minutes=15)
 def _read_repotools_file(filename):
     """
     Read the text of a repo-tools-data file.

@@ -13,6 +13,7 @@ babel==2.8.0              # via sphinx
 billiard==3.6.3.0         # via celery
 bleach==3.1.5             # via readme-renderer
 blinker==1.4              # via -r requirements/base.in, sentry-sdk
+cachetools==4.1.0         # via -r requirements/base.in
 celery==4.4.5             # via -r requirements/base.in
 certifi==2020.4.5.2       # via requests, sentry-sdk
 cffi==1.14.0              # via cryptography
@@ -30,6 +31,7 @@ flask-script==2.0.6       # via -r requirements/base.in
 flask-sqlalchemy==2.4.3   # via -r requirements/base.in
 flask-sslify==0.1.5       # via -r requirements/base.in
 flask==1.1.2              # via -r requirements/base.in, flask-dance, flask-script, flask-sqlalchemy, flask-sslify, rq-dashboard, sentry-sdk
+freezegun==0.3.15         # via -r requirements/test.in
 future==0.18.2            # via celery
 github3.py==1.3.0         # via -r requirements/base.in
 gunicorn==20.0.4          # via -r requirements/base.in
@@ -66,7 +68,7 @@ pyparsing==2.4.7          # via packaging
 pytest-cov==2.10.0        # via -r requirements/test.in
 pytest-mock==3.1.1        # via -r requirements/test.in
 pytest==5.4.3             # via -r requirements/test.in, pylint-pytest, pytest-cov, pytest-mock
-python-dateutil==2.8.1    # via arrow, github3.py
+python-dateutil==2.8.1    # via arrow, freezegun, github3.py
 python-dotenv==0.13.0     # via -r requirements/dev.in
 pytz==2020.1              # via -r requirements/test.in, babel, celery
 pyyaml==5.3.1             # via -r requirements/base.in
@@ -79,7 +81,7 @@ requests==2.23.0          # via -r requirements/base.in, codecov, flask-dance, g
 rq-dashboard==0.6.1       # via -r requirements/dev.in
 rq==1.4.2                 # via -r requirements/base.in, rq-dashboard
 sentry-sdk[flask]==0.14.4  # via -r requirements/base.in
-six==1.15.0               # via astroid, bleach, cryptography, edx-lint, flask-dance, jira, packaging, pip-tools, python-dateutil, readme-renderer, requests-mock, sphinxcontrib-httpdomain, sqlalchemy-utils
+six==1.15.0               # via astroid, bleach, cryptography, edx-lint, flask-dance, freezegun, jira, packaging, pip-tools, python-dateutil, readme-renderer, requests-mock, sphinxcontrib-httpdomain, sqlalchemy-utils
 snowballstemmer==2.0.0    # via sphinx
 sphinx-rtd-theme==0.4.3   # via -r requirements/doc.in
 sphinx==3.1.1             # via -r requirements/doc.in, sphinx-rtd-theme, sphinxcontrib-httpdomain

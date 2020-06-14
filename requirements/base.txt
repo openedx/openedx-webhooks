@@ -8,6 +8,7 @@ amqp==2.6.0               # via kombu
 arrow==0.15.6             # via -r requirements/base.in
 billiard==3.6.3.0         # via celery
 blinker==1.4              # via -r requirements/base.in, sentry-sdk
+cachetools==4.1.0         # via -r requirements/base.in
 celery==4.4.5             # via -r requirements/base.in
 certifi==2020.4.5.2       # via requests, sentry-sdk
 cffi==1.14.0              # via cryptography

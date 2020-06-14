@@ -6,11 +6,13 @@ import functools
 import hmac
 import os
 import sys
+import time
+from functools import wraps
 from hashlib import sha1
 
+import cachetools.func
 import requests
 from flask import request, Response
-from functools import wraps
 from urlobject import URLObject
 
 
@@ -214,13 +216,26 @@ def jira_users(filter=None, session=None, debug=False):
 _memoized_functions = []
 
 def memoize(func):
-    """Cache the value returned by a function call."""
+    """Cache the value returned by a function call forever."""
     func = functools.lru_cache()(func)
     _memoized_functions.append(func)
     return func
 
+def memoize_timed(minutes):
+    """Cache the value of a function for `minutes` minutes."""
+    def _timed(func):
+        # We use time.time as the timer so that freezegun can test it, and in a
+        # new function so that freezegun's patching will work.  Freezegun doesn't
+        # patch time.monotonic, and we aren't that picky about the time anyway.
+        def patchable_timer():
+            return time.time()
+        func = cachetools.func.ttl_cache(ttl=60 * minutes, timer=patchable_timer)(func)
+        _memoized_functions.append(func)
+        return func
+    return _timed
+
 def clear_memoized_values():
-    """Clear all the values saved by @memoize, to ensure isolated tests."""
+    """Clear all the values saved by @memoize and @memoize_timed, to ensure isolated tests."""
     for func in _memoized_functions:
         func.cache_clear()
 
