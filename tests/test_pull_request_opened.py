@@ -27,12 +27,12 @@ def test_pr_opened_by_bot(reqctx, mock_github):
     assert anything_happened is False
 
 
-def test_external_pr_opened(reqctx, mock_github, mock_jira):
+def test_external_pr_opened(reqctx, mocker, mock_github, mock_jira):
     mock_github.mock_user({"login": "new_contributor", "name": "Newb Contributor"})
     pr = mock_github.make_pull_request(user='new_contributor')
     mock_github.mock_comments(pr, [])
     comments_post = mock_github.comments_post(pr)
-    mock_github.mock_labels(pr["base"]["repo"]["full_name"])
+    sync_labels_fn = mocker.patch("openedx_webhooks.tasks.github.synchronize_labels")
     adjust_labels_patch = mock_github.pr_patch(pr)
 
     with reqctx:
@@ -62,6 +62,9 @@ def test_external_pr_opened(reqctx, mock_github, mock_jira):
     # Check that the Jira issue was moved to Community Manager Review.
     assert mock_jira.issues[issue_id]["fields"]["status"]["name"] == "Community Manager Review"
 
+    # Check that we synchronized labels.
+    sync_labels_fn.assert_called_once_with("edx/edx-platform")
+
     # Check the GitHub comment that was created.
     assert len(comments_post.request_history) == 1
     body = comments_post.request_history[0].json()["body"]
@@ -78,11 +81,15 @@ def test_external_pr_opened(reqctx, mock_github, mock_jira):
     }
 
 
-def test_external_pr_opened_with_cla(reqctx, mock_github, mock_jira):
-    pr = mock_github.make_pull_request(user='tusbar')
+def test_external_pr_opened_with_cla(reqctx, mocker, mock_github, mock_jira):
+    pr = mock_github.make_pull_request(
+        user="tusbar",
+        base_repo_name="edx/some-code",
+        number=11235,
+    )
     mock_github.mock_comments(pr, [])
     comments_post = mock_github.comments_post(pr)
-    mock_github.mock_labels(pr["base"]["repo"]["full_name"])
+    sync_labels_fn = mocker.patch("openedx_webhooks.tasks.github.synchronize_labels")
     adjust_labels_patch = mock_github.pr_patch(pr)
 
     with reqctx:
@@ -99,8 +106,8 @@ def test_external_pr_opened_with_cla(reqctx, mock_github, mock_jira):
         "fields": {
             mock_jira.CONTRIBUTOR_NAME: "Bertrand Marron",
             mock_jira.CUSTOMER: ["IONISx"],
-            mock_jira.PR_NUMBER: pr["number"],
-            mock_jira.REPO: pr["base"]["repo"]["full_name"],
+            mock_jira.PR_NUMBER: 11235,
+            mock_jira.REPO: "edx/some-code",
             mock_jira.URL: pr["html_url"],
             "description": pr["body"],
             "issuetype": {"name": "Pull Request Review"},
@@ -108,6 +115,9 @@ def test_external_pr_opened_with_cla(reqctx, mock_github, mock_jira):
             "summary": pr["title"],
         }
     }
+
+    # Check that we synchronized labels.
+    sync_labels_fn.assert_called_once_with("edx/some-code")
 
     # Check the GitHub comment that was created.
     assert len(comments_post.request_history) == 1

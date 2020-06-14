@@ -113,20 +113,8 @@ class MockGitHub:
         """Get the mocked PATCH endpoint for adjusting a PR."""
         return self.requests_mocker.patch(self._pr_api_url(pr))
 
-    def mock_labels(self, repo, label_data=None):
-        """Create mock labels in a repo.
-
-        If label_data is None, labels will be read from the repo_data/labels.yaml file.
-
-        """
-        if label_data is None:
-            labels_yaml = yaml.safe_load(self._repo_data("labels.yaml"))
-            label_data = []
-            for name, ydata in labels_yaml.items():
-                if not ydata.get("delete", False):
-                    ydata["name"] = name
-                    ydata.setdefault("description", "")
-                    label_data.append(ydata)
+    def mock_labels(self, repo, label_data):
+        """Create mock labels in a repo."""
         self.requests_mocker.get(
             f"https://{self.API_HOST}/repos/{repo}/labels",
             json=label_data,
