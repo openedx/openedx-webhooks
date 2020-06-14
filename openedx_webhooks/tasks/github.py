@@ -418,17 +418,18 @@ def synchronize_labels(repo):
         else:
             # A label that should exist in the repo.
             label_data["name"] = name
-            add = False
             if name in repo_labels:
                 repo_label = repo_labels[name]
                 color_differs = repo_label["color"] != label_data["color"]
                 repo_desc = repo_label.get("description", "") or ""
                 desired_desc = label_data.get("description", "") or ""
                 desc_differs = repo_desc != desired_desc
-                add = color_differs or desc_differs
+                if color_differs or desc_differs:
+                    logger.info(f"Updating label {name} in {repo}")
+                    resp = github_bp.session.patch(f"{url}/{name}", json=label_data)
+                    log_request_response(resp)
+                    resp.raise_for_status()
             else:
-                add = True
-            if add:
                 logger.info(f"Adding label {name} to {repo}")
                 resp = github_bp.session.post(url, json=label_data)
                 log_request_response(resp)

@@ -120,6 +120,12 @@ class FakeGitHub:
         """Get the mocked POST endpoint for creating labels in a repo."""
         return self.requests_mocker.post(f"https://{self.API_HOST}/repos/{repo}/labels")
 
+    def labels_patch(self, repo):
+        """Get the mocked PATCH endpoint for updating labels in a repo."""
+        return self.requests_mocker.patch(
+            re.compile(f"https://{self.API_HOST}/repos/{repo}/labels"),
+        )
+
     def labels_delete(self, repo):
         """Get the mocked DELETE endpoint for deleting labels in a repo."""
         return self.requests_mocker.delete(
