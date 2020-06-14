@@ -16,31 +16,12 @@ from urlobject import URLObject
 from openedx_webhooks.oauth import jira_get
 from openedx_webhooks.tasks.jira import rescan_users as rescan_user_task
 from openedx_webhooks.utils import (
-    jira_paginated_get, memoize_timed, pop_dict_id, sentry_extra_context
+    jira_paginated_get, sentry_extra_context,
+    github_pr_num, github_pr_url, github_pr_repo,
 )
 
 jira_bp = Blueprint('jira_views', __name__)
 logger = logging.getLogger()
-
-
-@memoize_timed(minutes=30)
-def get_jira_custom_fields(session=None):
-    """
-    Return a name-to-id mapping for the custom fields on JIRA.
-    """
-    session = session or jira
-    field_resp = session.get("/rest/api/2/field")
-    field_resp.raise_for_status()
-    field_map = dict(pop_dict_id(f) for f in field_resp.json())
-    return {
-        value["name"]: id
-        for id, value in field_map.items()
-        if value["custom"]
-    }
-
-
-def get_jira_issue(key):
-    return jira_get("/rest/api/2/issue/{key}".format(key=key))
 
 
 @jira_bp.route("/issue/rescan", methods=("GET",))
@@ -220,47 +201,6 @@ def issue_opened(issue):
         )
     )
     return action
-
-
-def github_pr_repo(issue):
-    custom_fields = get_jira_custom_fields()
-    pr_repo = issue["fields"].get(custom_fields["Repo"])
-    parent_ref = parent_ref = issue["fields"].get("parent")
-    if not pr_repo and parent_ref:
-        parent_resp = get_jira_issue(parent_ref["key"])
-        parent_resp.raise_for_status()
-        parent = parent_resp.json()
-        pr_repo = parent["fields"].get(custom_fields["Repo"])
-    return pr_repo
-
-
-def github_pr_num(issue):
-    custom_fields = get_jira_custom_fields()
-    pr_num = issue["fields"].get(custom_fields["PR Number"])
-    parent_ref = parent_ref = issue["fields"].get("parent")
-    if not pr_num and parent_ref:
-        parent_resp = get_jira_issue(parent_ref["key"])
-        parent_resp.raise_for_status()
-        parent = parent_resp.json()
-        pr_num = parent["fields"].get(custom_fields["PR Number"])
-    try:
-        return int(pr_num)
-    except Exception:       # pylint: disable=broad-except
-        return None
-
-
-def github_pr_url(issue):
-    """
-    Return the pull request URL for the given JIRA issue,
-    or raise an exception if they can't be determined.
-    """
-    pr_repo = github_pr_repo(issue)
-    pr_num = github_pr_num(issue)
-    if not pr_repo or not pr_num:
-        issue_key = issue["key"]
-        fail_msg = '{key} is missing "Repo" or "PR Number" fields'.format(key=issue_key)
-        raise Exception(fail_msg)
-    return "/repos/{repo}/pulls/{num}".format(repo=pr_repo, num=pr_num)
 
 
 def log_return(msg):

@@ -11,10 +11,11 @@ from openedx_webhooks.info import (
     get_labels_file, get_people_file,
     is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request
 )
-from openedx_webhooks.jira_views import get_jira_custom_fields
 from openedx_webhooks.oauth import github_bp, jira_bp
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.utils import memoize, paginated_get, sentry_extra_context
+from openedx_webhooks.utils import (
+    memoize, paginated_get, sentry_extra_context, get_jira_custom_fields,
+)
 
 
 def log_request_response(response):
