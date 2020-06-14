@@ -19,7 +19,7 @@ cffi==1.14.0              # via cryptography
 chardet==3.0.4            # via requests
 click-log==0.3.2          # via edx-lint
 click==7.1.2              # via -r requirements/base.in, click-log, edx-lint, flask, pip-tools, rq
-codecov==2.1.4            # via -r requirements/test.in
+codecov==2.1.5            # via -c requirements/constraints.txt, -r requirements/test.in
 coverage==5.1             # via codecov, pytest-cov
 cryptography==2.9.2       # via -r requirements/base.in, jwcrypto, oauthlib
 defusedxml==0.6.0         # via jira
@@ -46,11 +46,11 @@ lazy-object-proxy==1.4.3  # via astroid
 logging-tree==1.8.1       # via -r requirements/base.in
 markupsafe==1.1.1         # via jinja2
 mccabe==0.6.1             # via pylint
-more-itertools==8.3.0     # via pytest
+more-itertools==8.4.0     # via pytest
 oauthlib[signedtoken]==3.1.0  # via -r requirements/base.in, flask-dance, jira, requests-oauthlib
 packaging==20.4           # via bleach, pytest, sphinx
 pbr==5.4.5                # via jira
-pip-tools==5.2.0          # via -r requirements/dev.in
+pip-tools==5.2.1          # via -r requirements/dev.in
 pluggy==0.13.1            # via pytest
 psycopg2==2.8.5           # via -r requirements/base.in
 py==1.8.1                 # via pytest
@@ -63,7 +63,7 @@ pylint-plugin-utils==0.6  # via pylint-celery, pylint-django
 pylint-pytest==0.2.0      # via -r requirements/dev.in
 pylint==2.4.2             # via edx-lint, pylint-celery, pylint-django, pylint-plugin-utils, pylint-pytest
 pyparsing==2.4.7          # via packaging
-pytest-cov==2.9.0         # via -r requirements/test.in
+pytest-cov==2.10.0        # via -r requirements/test.in
 pytest-mock==3.1.1        # via -r requirements/test.in
 pytest==5.4.3             # via -r requirements/test.in, pylint-pytest, pytest-cov, pytest-mock
 python-dateutil==2.8.1    # via arrow, github3.py
@@ -82,7 +82,7 @@ sentry-sdk[flask]==0.14.4  # via -r requirements/base.in
 six==1.15.0               # via astroid, bleach, cryptography, edx-lint, flask-dance, jira, packaging, pip-tools, python-dateutil, readme-renderer, requests-mock, sphinxcontrib-httpdomain, sqlalchemy-utils
 snowballstemmer==2.0.0    # via sphinx
 sphinx-rtd-theme==0.4.3   # via -r requirements/doc.in
-sphinx==3.0.4             # via -r requirements/doc.in, sphinx-rtd-theme, sphinxcontrib-httpdomain
+sphinx==3.1.1             # via -r requirements/doc.in, sphinx-rtd-theme, sphinxcontrib-httpdomain
 sphinxcontrib-applehelp==1.0.2  # via sphinx
 sphinxcontrib-devhelp==1.0.2  # via sphinx
 sphinxcontrib-htmlhelp==1.0.3  # via sphinx
