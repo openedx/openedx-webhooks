@@ -32,6 +32,7 @@ def test_external_pr_opened(reqctx, mock_github, mock_jira):
     pr = mock_github.make_pull_request(user='new_contributor')
     mock_github.mock_comments(pr, [])
     comments_post = mock_github.comments_post(pr)
+    mock_github.mock_labels(pr["base"]["repo"]["full_name"])
     adjust_labels_patch = mock_github.pr_patch(pr)
 
     with reqctx:
@@ -81,6 +82,7 @@ def test_external_pr_opened_with_cla(reqctx, mock_github, mock_jira):
     pr = mock_github.make_pull_request(user='tusbar')
     mock_github.mock_comments(pr, [])
     comments_post = mock_github.comments_post(pr)
+    mock_github.mock_labels(pr["base"]["repo"]["full_name"])
     adjust_labels_patch = mock_github.pr_patch(pr)
 
     with reqctx:

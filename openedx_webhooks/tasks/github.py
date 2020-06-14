@@ -8,7 +8,7 @@ from urlobject import URLObject
 
 from openedx_webhooks import celery
 from openedx_webhooks.info import (
-    get_people_file,
+    get_labels_file, get_people_file,
     is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request
 )
 from openedx_webhooks.jira_views import get_jira_custom_fields
@@ -91,6 +91,8 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     if issue_key:
         logger.info(f"Already created {issue_key} for PR #{num} against {repo}")
         return issue_key, False
+
+    synchronize_labels(repo)
 
     has_cla = pull_request_has_cla(pr)
 
@@ -396,6 +398,40 @@ def get_jira_issue_key(pull_request):
         if match:
             return match.group(0)
     return None
+
+
+def synchronize_labels(repo):
+    """Ensure the labels in `repo` match the specs in repo-tools-data/labels.yaml"""
+
+    url = f"/repos/{repo}/labels"
+    repo_labels = {lbl["name"]: lbl for lbl in paginated_get(url, session=github_bp.session)}
+    desired_labels = get_labels_file()
+    for name, label_data in desired_labels.items():
+        if label_data.get("delete", False):
+            # A label that should not exist in the repo.
+            if name in repo_labels:
+                logger.info(f"Deleting label {name} from {repo}")
+                resp = github_bp.session.delete(f"{url}/{name}")
+                log_request_response(resp)
+                resp.raise_for_status()
+        else:
+            # A label that should exist in the repo.
+            label_data["name"] = name
+            add = False
+            if name in repo_labels:
+                repo_label = repo_labels[name]
+                color_differs = repo_label["color"] != label_data["color"]
+                repo_desc = repo_label.get("description", "") or ""
+                desired_desc = label_data.get("description", "") or ""
+                desc_differs = repo_desc != desired_desc
+                add = color_differs or desc_differs
+            else:
+                add = True
+            if add:
+                logger.info(f"Adding label {name} to {repo}")
+                resp = github_bp.session.post(url, json=label_data)
+                log_request_response(resp)
+                resp.raise_for_status()
 
 
 def pull_request_has_cla(pull_request):

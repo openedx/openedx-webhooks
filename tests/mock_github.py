@@ -5,9 +5,14 @@ import random
 import re
 from datetime import datetime
 
+import yaml
+
 
 class MockGitHub:
     """A mock implementation of the GitHub API."""
+
+    API_HOST = "api.github.com"
+    RAW_HOST = "raw.githubusercontent.com"
 
     WEBHOOK_BOT_NAME = "the-webhook-bot"
 
@@ -19,14 +24,17 @@ class MockGitHub:
         )
 
         self.requests_mocker.get(
-            re.compile("https://raw.githubusercontent.com/edx/repo-tools-data/master/"),
+            re.compile(f"https://{self.RAW_HOST}/edx/repo-tools-data/master/"),
             text=self._repo_data_callback,
         )
 
     def _repo_data_callback(self, request, _):
         """Read repo_data data from local data."""
+        return self._repo_data(filename=request.path.split("/")[-1])
+
+    def _repo_data(self, filename):
+        """Read data from a file in our repo_data directory."""
         repo_data_dir = os.path.join(os.path.dirname(__file__), "repo_data")
-        filename = request.path.split("/")[-1]
         with open(os.path.join(repo_data_dir, filename)) as data:
             return data.read()
 
@@ -34,7 +42,7 @@ class MockGitHub:
         """Define a user in the mock GitHub."""
         user_data.setdefault("type", "User")
         self.requests_mocker.get(
-            "https://api.github.com/users/{}".format(user_data["login"]),
+            f"https://{self.API_HOST}/users/{user_data['login']}",
             json=user_data,
         )
 
@@ -56,7 +64,7 @@ class MockGitHub:
             "user": {
                 "login": user,
                 "type": user_type,
-                "url": f"https://api.github.com/users/{user}",
+                "url": f"https://{self.API_HOST}/users/{user}",
             },
             "number": number,
             "title": title,
@@ -85,11 +93,9 @@ class MockGitHub:
 
     def _pr_api_url(self, pr, suffix=""):
         """Construct the API url for a pull request."""
-        url = "https://api.github.com/repos/{repo}/issues/{num}".format(
-            repo=pr["base"]["repo"]["full_name"],
-            num=pr["number"],
-        )
-        url += suffix
+        repo = pr["base"]["repo"]["full_name"]
+        num = pr["number"]
+        url = f"https://{self.API_HOST}/repos/{repo}/issues/{num}{suffix}"
         return url
 
     def mock_comments(self, pr, comments):
@@ -106,3 +112,32 @@ class MockGitHub:
     def pr_patch(self, pr):
         """Get the mocked PATCH endpoint for adjusting a PR."""
         return self.requests_mocker.patch(self._pr_api_url(pr))
+
+    def mock_labels(self, repo, label_data=None):
+        """Create mock labels in a repo.
+
+        If label_data is None, labels will be read from the repo_data/labels.yaml file.
+
+        """
+        if label_data is None:
+            labels_yaml = yaml.safe_load(self._repo_data("labels.yaml"))
+            label_data = []
+            for name, ydata in labels_yaml.items():
+                if not ydata.get("delete", False):
+                    ydata["name"] = name
+                    ydata.setdefault("description", "")
+                    label_data.append(ydata)
+        self.requests_mocker.get(
+            f"https://{self.API_HOST}/repos/{repo}/labels",
+            json=label_data,
+        )
+
+    def labels_post(self, repo):
+        """Get the mocked POST endpoint for creating labels in a repo."""
+        return self.requests_mocker.post(f"https://{self.API_HOST}/repos/{repo}/labels")
+
+    def labels_delete(self, repo):
+        """Get the mocked DELETE endpoint for deleting labels in a repo."""
+        return self.requests_mocker.delete(
+            re.compile(f"https://{self.API_HOST}/repos/{repo}/labels"),
+        )

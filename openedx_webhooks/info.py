@@ -34,6 +34,9 @@ def get_repos_file():
 def get_orgs_file():
     return _read_repotools_yaml_file("orgs.yaml")
 
+def get_labels_file():
+    return _read_repotools_yaml_file("labels.yaml")
+
 def get_orgs(key):
     """Return the set of orgs with a true `key`."""
     orgs = get_orgs_file()
