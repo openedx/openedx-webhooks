@@ -189,7 +189,7 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
-Unreleased
+2020-06-15
 ~~~~~~~~~~
 
 - Labels in GitHub repos are synchronized from repo-tools-data/labels.yaml
