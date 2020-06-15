@@ -23,7 +23,7 @@ def dump_logging_tree():
         f"print(gzip.decompress(binascii.a2b_base64({data!r})).decode('utf8'))"
     )
 
-# dump_logging_tree()
+dump_logging_tree()
 
 # create a Flask blueprint for getting task status info
 tasks = Blueprint('tasks', __name__)
