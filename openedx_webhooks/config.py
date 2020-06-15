@@ -21,7 +21,6 @@ class DefaultConfig:
 class WorkerConfig(DefaultConfig):
     CELERY_IMPORTS = (
         'openedx_webhooks.tasks.github',
-        'openedx_webhooks.tasks.jira',
         'openedx_webhooks.tasks.example',
     )
 
