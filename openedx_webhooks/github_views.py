@@ -25,7 +25,7 @@ from openedx_webhooks.utils import (
 )
 
 github_bp = Blueprint('github_views', __name__)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 @github_bp.route('/hook-receiver', methods=('POST',))

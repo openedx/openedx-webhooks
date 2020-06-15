@@ -20,7 +20,7 @@ from openedx_webhooks.utils import (
 )
 
 jira_bp = Blueprint('jira_views', __name__)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 @jira_bp.route("/issue/rescan", methods=("GET",))

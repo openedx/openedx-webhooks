@@ -7,7 +7,7 @@ from openedx_webhooks.utils import requires_auth
 
 
 ui = Blueprint('ui', __name__)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 @ui.route("/")
 @requires_auth
