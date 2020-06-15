@@ -159,61 +159,6 @@ def jira_paginated_get(url, session=None,
             more_results = True  # just keep going until there are no more results.
 
 
-def jira_group_members(groupname, session=None, start=0, retries=3, debug=False):
-    """
-    JIRA's group members API is horrible. This makes it easier to use.
-    """
-    session = session or requests.Session()
-    url = URLObject("/rest/api/2/group").set_query_param("groupname", groupname)
-    more_results = True
-    while more_results:
-        end = start + 49  # max 50 users per page
-        expand = "users[{start}:{end}]".format(start=start, end=end)
-        result_url = url.set_query_param("expand", expand)
-        for _ in range(retries):
-            try:
-                if debug:
-                    print(result_url, file=sys.stderr)
-                result_resp = session.get(result_url)
-                result = result_resp.json()
-                break
-            except ValueError:
-                continue
-        result_resp.raise_for_status()
-        result = result_resp.json()
-        if not result:
-            break
-        users = result["users"]["items"]
-        for user in users:
-            yield user
-        returned = len(users)
-        total = result["users"]["size"]
-        if start + returned < total:
-            start += returned
-        else:
-            more_results = False
-
-
-def jira_users(filter=None, session=None, debug=False):
-    """
-    JIRA has an API for returning all users, but it's not ready for primetime.
-    It's used only by the admin pages, and it does authentication based on
-    session cookies only. We'll use it anyway, since there is no alternative.
-    """
-    session = session or requests.Session()
-    session.cookies["studio.crowd.tokenkey"] = studio_crowd_tokenkey()
-
-    users = jira_paginated_get(
-        "/admin/rest/um/1/user/search",
-        filter=filter,
-        start_param="start-index",
-        session=session,
-        debug=debug,
-    )
-    for user in users:
-        yield user
-
-
 # A list of all the memoized functions, so that `clear_memoized_values` can
 # clear them all.
 _memoized_functions = []
@@ -241,25 +186,6 @@ def clear_memoized_values():
     """Clear all the values saved by @memoize and @memoize_timed, to ensure isolated tests."""
     for func in _memoized_functions:
         func.cache_clear()
-
-
-@memoize
-def studio_crowd_tokenkey(base_url="https://openedx.atlassian.net"):
-    """
-    This is the authentication cookie used to authenticate to the admin site.
-    """
-    JIRA_USERNAME = os.environ.get("JIRA_USERNAME")
-    JIRA_PASSWORD = os.environ.get("JIRA_PASSWORD")
-
-    if not JIRA_USERNAME or not JIRA_PASSWORD:
-        raise Exception("Missing required environment variables: JIRA_USERNAME, JIRA_PASSWORD")
-
-    login_url = URLObject(base_url).relative("/login")
-    payload = {"username": JIRA_USERNAME, "password": JIRA_PASSWORD}
-    login_resp = requests.post(login_url, data=payload, allow_redirects=False)
-    if not login_resp.status_code in (200, 303):
-        raise requests.exceptions.RequestException(login_resp.text)
-    return login_resp.cookies["studio.crowd.tokenkey"]
 
 
 def minimal_wsgi_environ():

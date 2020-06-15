@@ -6,8 +6,7 @@ import json
 import logging
 
 from flask import (
-    Blueprint, jsonify, make_response, render_template, request,
-    url_for
+    Blueprint, make_response, render_template, request,
 )
 from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
@@ -15,7 +14,6 @@ from urlobject import URLObject
 
 from openedx_webhooks.oauth import jira_get
 from openedx_webhooks.tasks.github import synchronize_labels
-from openedx_webhooks.tasks.jira import rescan_users as rescan_user_task
 from openedx_webhooks.utils import (
     jira_paginated_get, sentry_extra_context,
     github_pr_num, github_pr_url, github_pr_repo,
@@ -377,44 +375,3 @@ def jira_issue_status_changed(issue, changelog):
     update_label_resp = github.patch(issue_url, json={"labels": pr_labels})
     update_label_resp.raise_for_status()
     return "Changed labels of PR #{num} to {labels}".format(num=pr_num, labels=pr_labels)
-
-
-# a mapping of group name to email domain
-# TODO: ??? re duplicate dict keys
-domain_groups = {
-    "partner-ubc": "@cs.ubc.ca",
-    "partner-ubc": "@ubc.ca",
-}
-
-
-@jira_bp.route("/user/rescan", methods=("GET",))
-def rescan_users_get():
-    """
-    Display a friendly HTML form for rescanning JIRA users.
-    """
-    return render_template("jira_rescan_users.html", domain_groups=domain_groups)
-
-
-@jira_bp.route("/user/rescan", methods=("POST",))
-def rescan_users():
-    """
-    This task goes through all users on JIRA and ensures that they are assigned
-    to the correct group based on the user's email address. It's meant to be
-    run regularly: once an hour or so.
-    """
-    requested_group = request.form.get("group")
-    if requested_group:
-        if requested_group not in domain_groups:
-            resp = jsonify({"error": "Not found", "groups": domain_groups.keys()})
-            resp.status_code = 404
-            return resp
-        requested_groups = {requested_group: domain_groups[requested_group]}
-    else:
-        requested_groups = domain_groups
-
-    result = rescan_user_task.delay(requested_groups)
-    status_url = url_for("tasks.status", task_id=result.id, _external=True)
-    resp = jsonify({"message": "queued", "status_url": status_url})
-    resp.status_code = 202
-    resp.headers["Location"] = status_url
-    return resp
