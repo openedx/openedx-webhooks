@@ -12,6 +12,7 @@ from flask import (
 )
 from flask_dance.contrib.github import github
 
+from openedx_webhooks.debug import is_debug, print_long_json
 from openedx_webhooks.info import get_repos_file
 from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
 from openedx_webhooks.lib.github.utils import create_or_update_webhook
@@ -67,8 +68,6 @@ def pull_request():
 
     .. _PullRequestEvent: https://developer.github.com/v3/activity/events/types/#pullrequestevent
     """
-    logger.debug(f"Incoming GitHub PR request: {request.data}")
-
     try:
         event = request.get_json()
     except ValueError:
@@ -76,6 +75,9 @@ def pull_request():
         logger.info(msg)
         raise ValueError(msg)
     sentry_extra_context({"event": event})
+
+    if is_debug(__name__):
+        print_long_json("Incoming GitHub PR request", event)
 
     if "pull_request" not in event and "hook" in event and "zen" in event:
         # this is a ping

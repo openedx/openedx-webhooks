@@ -2,28 +2,17 @@ import os
 
 from celery.utils.log import get_task_logger
 from flask import Blueprint, jsonify
+import logging_tree
 
 from openedx_webhooks import celery, log_level
+from openedx_webhooks.debug import print_long
 
 # Set up Celery logging.
 logger = get_task_logger(__name__)
 logger.setLevel(log_level)
 
-def dump_logging_tree():
-    """Output a debug tree of the logging system."""
-    # pylint: disable=import-outside-toplevel
-    import binascii
-    import gzip
-    import logging_tree
-    logging_debug = logging_tree.format.build_description()
-    data = binascii.b2a_base64(gzip.compress(logging_debug.encode("utf8"))).decode("utf8")
-    print(
-        "logging_tree output: " +
-        "import binascii,gzip;" +
-        f"print(gzip.decompress(binascii.a2b_base64({data!r})).decode('utf8'))"
-    )
-
-dump_logging_tree()
+# Always show the logging configuration.
+print_long("logging_tree output", logging_tree.format.build_description())
 
 # create a Flask blueprint for getting task status info
 tasks = Blueprint('tasks', __name__)
