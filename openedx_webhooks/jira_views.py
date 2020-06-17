@@ -238,7 +238,7 @@ def issue_updated():
 
     # is the issue an open source pull request?
     if event["issue"]["fields"]["project"]["key"] != "OSPR":
-        return log_return("I don't care, not OSPR")
+        return log_return(f"Don't care, not OSPR: {event['issue']['key']}")
 
     # is it a pull request against an edX repo?
     pr_repo = github_pr_repo(event["issue"])
