@@ -53,6 +53,13 @@ def hook_receiver():
         return msg, 403
 
     event = request.get_json()
+    action = event["action"]
+    repo = event["repository"]["full_name"]
+    keys = set(event.keys()) - {"action", "sender", "repository", "organization", "installation"}
+    if is_debug(__name__):
+        print_long_json("Incoming GitHub event", event)
+    else:
+        logger.info(f"Incoming GitHub event: {repo=!r}, {action=!r}, keys: {' '.join(sorted(keys))}")
 
     q.enqueue(
         'openedx_webhooks.github.dispatcher.dispatch',
@@ -65,9 +72,6 @@ def hook_receiver():
     # One of them is above this comment, the other is below.
 
     sentry_extra_context({"event": event})
-
-    if is_debug(__name__):
-        print_long_json("Incoming GitHub PR request", event)
 
     if "pull_request" not in event and "hook" in event and "zen" in event:
         # this is a ping
@@ -82,7 +86,6 @@ def hook_receiver():
 
     pr = event["pull_request"]
     pr_number = pr["number"]
-    repo = pr["base"]["repo"]["full_name"]
     action = event["action"]
 
     pr_activity = f"{repo} #{pr_number} {action!r}"
