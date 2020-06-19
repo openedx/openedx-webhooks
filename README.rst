@@ -173,10 +173,6 @@ On GitHub, visit the repo webhooks
 
 Create or edit a webhook.
 
-https://openedx-webhooks.herokuapp.com/github/pr
-    content type: application/json
-    - Pull Requests
-
 https://openedx-webhooks.herokuapp.com/github/hook-receiver
     content type: application/json
     - Issue comments
@@ -188,6 +184,15 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 
 Changelog
 ---------
+
+Unreleased
+~~~~~~~~~~
+
+- We used to have two GitHub webhooks.  They have been combined.  Only
+  /github/hook-receiver is needed now.  The obsolete /github/pr endpoint still
+  exists just to log unneeded webhook action so we can fix the GitHub
+  configuration.
+
 
 2020-06-15
 ~~~~~~~~~~

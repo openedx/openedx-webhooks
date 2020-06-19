@@ -40,7 +40,7 @@ def hook_receiver():
     3.  Respond with http status 202.
 
     Returns:
-        Tuple[str, int]: Message payload and HTTP status code
+        A response, or Tuple[str, int]: Message payload and HTTP status code
     """
     headers = GithubWebHookRequestHeader(request.headers)
 
@@ -52,28 +52,18 @@ def hook_receiver():
         logging.info(msg)
         return msg, 403
 
+    event = request.get_json()
+
     q.enqueue(
         'openedx_webhooks.github.dispatcher.dispatch',
         dict(request.headers),
-        request.get_json()
+        event,
     )
 
-    return 'Thank you', 202
+    # There used to be two webhook endpoints.  This is the two of them
+    # concatenated, just to combine them in the simplest possible way.
+    # One of them is above this comment, the other is below.
 
-
-@github_bp.route("/pr", methods=("POST",))
-def pull_request():
-    """
-    Process a `PullRequestEvent`_ from Github.
-
-    .. _PullRequestEvent: https://developer.github.com/v3/activity/events/types/#pullrequestevent
-    """
-    try:
-        event = request.get_json()
-    except ValueError:
-        msg = f"Invalid JSON from Github: {request.data}"
-        logger.info(msg)
-        raise ValueError(msg)
     sentry_extra_context({"event": event})
 
     if is_debug(__name__):
@@ -84,6 +74,11 @@ def pull_request():
         repo = event.get("repository", {}).get("full_name")
         logger.info(f"ping from {repo}")
         return "PONG"
+
+    # This handler code only expected pull_request creation events, so ignore
+    # other events.
+    if "pull_request" not in event:
+        return "Thank you", 202
 
     pr = event["pull_request"]
     pr_number = pr["number"]
@@ -108,6 +103,22 @@ def pull_request():
     resp.status_code = 202
     resp.headers["Location"] = status_url
     return resp
+
+
+@github_bp.route("/pr", methods=("POST",))
+def pull_request():
+    """
+    An obsolete GitHub webhook endpoint.  If this gets traffic,
+    a GitHub webhook can be removed.
+    """
+    event = request.get_json()
+    pr = event["pull_request"]
+    pr_number = pr["number"]
+    repo = pr["base"]["repo"]["full_name"]
+    action = event["action"]
+
+    logger.info(f"Obsolete endpoint /github/pr fired from: {repo} #{pr_number} {action!r}")
+    return "This is obsolete", 410
 
 
 @github_bp.route("/rescan", methods=("GET",))

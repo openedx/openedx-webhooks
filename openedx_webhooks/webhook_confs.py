@@ -16,14 +16,8 @@ from flask import url_for
 #
 # .. _GitHub documentation: https://developer.github.com/v3/repos/hooks/#create-a-hook
 # .. _list of possible events: https://developer.github.com/webhooks/#events
-WEBHOOK_CONFS = [{
-    'config': {
-        'url': url_for("github_views.pull_request", _external=True),
-        'content_type': 'json',
-        'insecure_ssl': False,
-    },
-    'events': ['pull_request']
-}, {
+WEBHOOK_CONFS = [
+{
     'config': {
         'url': url_for("github_views.hook_receiver", _external=True),
         'content_type': 'json',
@@ -36,4 +30,5 @@ WEBHOOK_CONFS = [{
         'pull_request_review',
         'pull_request_review_comment',
     ]
-}]
+}
+]
