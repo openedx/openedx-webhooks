@@ -185,7 +185,7 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
-Unreleased
+2020-06-19
 ~~~~~~~~~~
 
 - We used to have two GitHub webhooks.  They have been combined.  Only
