@@ -5,7 +5,7 @@
 
 edX:
     internal: true
-    committer: true
+    committer: false
 OpenCraft:
-    internal: true
+    internal: false
     contractor: true

@@ -5,7 +5,11 @@ from datetime import datetime
 
 import pytest
 
-from openedx_webhooks.info import get_orgs, get_people_file, is_internal_pull_request, get_person_certain_time
+from openedx_webhooks.info import (
+    get_orgs, get_people_file, get_person_certain_time,
+    is_committer_pull_request, is_internal_pull_request,
+)
+
 
 pytestmark = pytest.mark.usefixtures('fake_github')
 
@@ -21,8 +25,8 @@ def make_pull_request(user, created_at=None):
     }
 
 
-def test_committer_orgs():
-    orgs = get_orgs("committer")
+def test_internal_orgs():
+    orgs = get_orgs("internal")
     assert isinstance(orgs, set)
     assert "edX" in orgs
 
@@ -58,7 +62,8 @@ def test_left_but_still_a_fan():
 
 def test_committers():
     pr = make_pull_request("antoviaque")
-    assert is_internal_pull_request(pr)
+    assert not is_internal_pull_request(pr)
+    assert is_committer_pull_request(pr)
 
 def test_current_person_no_institution():
     people = get_people_file()

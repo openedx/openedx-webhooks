@@ -185,6 +185,17 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
+Unreleased
+~~~~~~~~~~
+
+- Slight change to people.yaml schema: "internal:true" is used to indicate edX
+  people (or Arbisoft).  The "committer:true" flag indicates core committers.
+
+- Core commiter pull request handling: a different welcome message is used,
+  OSPR issues are started in the "Engineering Review" status, and a "core
+  committer" GitHub label is applied to the pull request.
+
+
 2020-06-19
 ~~~~~~~~~~
 

@@ -70,3 +70,12 @@ joecontractor:
     email: joe@contractor.com
     agreement: individual
     contractor: true
+felipemontoya:
+    name: Felipe Montoya
+    email: felipe.montoya@edunext.co
+    agreement: institution
+    institution: EduNEXT
+    committer: true
+    jira: felipemontoya
+    comments:
+    - also signed individual agreement (CLA)

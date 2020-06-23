@@ -64,6 +64,12 @@ def is_internal_pull_request(pull_request):
     """
     Was this pull request created by someone who works for edX?
     """
+    return _is_pull_request(pull_request, "internal")
+
+def is_committer_pull_request(pull_request):
+    """
+    Was this pull request created by a core committer?
+    """
     return _is_pull_request(pull_request, "committer")
 
 def is_contractor_pull_request(pull_request):
@@ -87,7 +93,7 @@ def _is_pull_request(pull_request, kind):
 
     Arguments:
         pull_request: the dict data read from GitHub.
-        kind (str): either "committer" or "contractor".
+        kind (str): one of "internal", "committer", or "contractor".
 
     Returns:
         bool

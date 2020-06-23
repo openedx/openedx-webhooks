@@ -9,7 +9,8 @@ from urlobject import URLObject
 from openedx_webhooks import celery
 from openedx_webhooks.info import (
     get_labels_file, get_people_file,
-    is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request
+    is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request,
+    is_committer_pull_request,
 )
 from openedx_webhooks.oauth import github_bp, jira_bp
 from openedx_webhooks.tasks import logger
@@ -95,29 +96,42 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
     synchronize_labels(repo)
 
-    has_cla = pull_request_has_cla(pr)
-
     # Create an issue on Jira.
     new_issue = create_ospr_issue(pr)
     issue_key = new_issue["key"]
     sentry_extra_context({"new_issue": new_issue})
 
+    committer = is_committer_pull_request(pr)
+    if committer:
+        comment_body = github_committer_pr_comment(pr, new_issue)
+    else:
+        comment_body = github_community_pr_comment(pr, new_issue)
+
     # Add a comment to the Github pull request with a link to the JIRA issue.
     logger.info(f"Commenting on PR #{num} with issue id {issue_key}")
-    add_comment_to_pull_request(pr, github_community_pr_comment(pr, new_issue))
+    add_comment_to_pull_request(pr, comment_body)
 
     # Add the "Needs Triage" label to the PR.
     logger.info(f"Updating GitHub labels on PR #{num}...")
     labels = ["open-source-contribution"]
-    if has_cla:
-        labels.append("needs triage")
+    if committer:
+        labels.append("core committer")
+        labels.append("engineering review")
     else:
-        labels.append("community manager review")
+        has_cla = pull_request_has_cla(pr)
+        if has_cla:
+            labels.append("needs triage")
+        else:
+            labels.append("community manager review")
     update_labels_on_pull_request(pr, labels)
 
-    # If no CLA, move the issue to "Community Manager Review".
-    if not has_cla:
-        transition_jira_issue(issue_key, "Community Manager Review")
+    # Set the Jira status. Core committers get Engineering Review, non-cla get
+    # Community Manager Review, everything else stays in Needs Triage.
+    if committer:
+        transition_jira_issue(issue_key, "Engineering Review")
+    else:
+        if not has_cla:
+            transition_jira_issue(issue_key, "Community Manager Review")
 
     logger.info(f"@{user} opened PR #{num} against {repo}, created {issue_key} to track it")
     return issue_key, True
@@ -486,6 +500,18 @@ def github_contractor_pr_comment(pull_request):
         user=pull_request["user"]["login"],
         repo=pull_request["base"]["repo"]["full_name"],
         number=pull_request["number"],
+    )
+
+
+def github_committer_pr_comment(pull_request, jira_issue):
+    """
+    Create the body of the comment for new pull requests from core committers.
+    """
+    return render_template("github_committer_pr_comment.md.j2",
+        user=pull_request["user"]["login"],
+        repo=pull_request["base"]["repo"]["full_name"],
+        number=pull_request["number"],
+        issue_key=jira_issue["key"],
     )
 
 
