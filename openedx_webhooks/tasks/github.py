@@ -96,12 +96,16 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
     synchronize_labels(repo)
 
+    committer = is_committer_pull_request(pr)
+    jira_labels = []
+    if committer:
+        jira_labels.append("core committer")
+
     # Create an issue on Jira.
-    new_issue = create_ospr_issue(pr)
+    new_issue = create_ospr_issue(pr, jira_labels)
     issue_key = new_issue["key"]
     sentry_extra_context({"new_issue": new_issue})
 
-    committer = is_committer_pull_request(pr)
     if committer:
         comment_body = github_committer_pr_comment(pr, new_issue)
     else:
@@ -137,7 +141,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     return issue_key, True
 
 
-def create_ospr_issue(pr):
+def create_ospr_issue(pr, labels):
     """
     Create a new OSPR issue for a pull request.
 
@@ -159,6 +163,7 @@ def create_ospr_issue(pr):
             },
             "summary": pr["title"],
             "description": pr["body"],
+            "labels": labels,
             "customfield_10904": pr["html_url"],        # "URL" is ambiguous, use the internal name.
             custom_fields["PR Number"]: num,
             custom_fields["Repo"]: repo,

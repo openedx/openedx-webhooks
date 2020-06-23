@@ -191,9 +191,9 @@ Unreleased
 - Slight change to people.yaml schema: "internal:true" is used to indicate edX
   people (or Arbisoft).  The "committer:true" flag indicates core committers.
 
-- Core commiter pull request handling: a different welcome message is used,
-  OSPR issues are started in the "Engineering Review" status, and a "core
-  committer" GitHub label is applied to the pull request.
+- Core committer pull request handling: a different welcome message is used,
+  OSPR issues are started in the "Engineering Review" status, and "core
+  committer" GitHub and Jira labels are applied.
 
 
 2020-06-19

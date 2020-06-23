@@ -54,6 +54,7 @@ def test_external_pr_opened_no_cla(reqctx, mocker, fake_github, fake_jira):
             "issuetype": {"name": "Pull Request Review"},
             "project": {"key": "OSPR"},
             "summary": pr["title"],
+            "labels": [],
         }
     }
     assert len(fake_jira.issues) == 1
@@ -113,6 +114,7 @@ def test_external_pr_opened_with_cla(reqctx, mocker, fake_github, fake_jira):
             "issuetype": {"name": "Pull Request Review"},
             "project": {"key": "OSPR"},
             "summary": pr["title"],
+            "labels": [],
         }
     }
 
@@ -169,6 +171,7 @@ def test_core_committer_pr_opened(reqctx, mocker, fake_github, fake_jira):
             "issuetype": {"name": "Pull Request Review"},
             "project": {"key": "OSPR"},
             "summary": pr["title"],
+            "labels": ["core committer"],
         }
     }
 
