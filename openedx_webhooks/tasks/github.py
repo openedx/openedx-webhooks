@@ -99,7 +99,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     committer = is_committer_pull_request(pr)
     jira_labels = []
     if committer:
-        jira_labels.append("core committer")
+        jira_labels.append("core-committer")
 
     # Create an issue on Jira.
     new_issue = create_ospr_issue(pr, jira_labels)

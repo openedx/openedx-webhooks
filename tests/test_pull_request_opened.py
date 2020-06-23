@@ -171,7 +171,7 @@ def test_core_committer_pr_opened(reqctx, mocker, fake_github, fake_jira):
             "issuetype": {"name": "Pull Request Review"},
             "project": {"key": "OSPR"},
             "summary": pr["title"],
-            "labels": ["core committer"],
+            "labels": ["core-committer"],
         }
     }
 
