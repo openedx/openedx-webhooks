@@ -192,7 +192,7 @@ Unreleased
   people (or Arbisoft).  The "committer:true" flag indicates core committers.
 
 - Core committer pull request handling: a different welcome message is used,
-  OSPR issues are started in the "Engineering Review" status, and "core
+  OSPR issues are started in the "Open edX Community Review" status, and "core
   committer" GitHub and Jira labels are applied.
 
 

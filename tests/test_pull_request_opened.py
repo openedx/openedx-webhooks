@@ -178,8 +178,8 @@ def test_core_committer_pr_opened(reqctx, mocker, fake_github, fake_jira):
     assert len(fake_jira.issues) == 1
     assert issue_id in fake_jira.issues
 
-    # Check that the Jira issue was moved to Engineering Review.
-    assert fake_jira.issues[issue_id]["fields"]["status"]["name"] == "Engineering Review"
+    # Check that the Jira issue was moved to Open edX Community Review.
+    assert fake_jira.issues[issue_id]["fields"]["status"]["name"] == "Open edX Community Review"
 
     # Check that we synchronized labels.
     sync_labels_fn.assert_called_once_with("edx/edx-platform")
@@ -197,7 +197,7 @@ def test_core_committer_pr_opened(reqctx, mocker, fake_github, fake_jira):
     # Check the GitHub labels that got applied.
     assert len(adjust_labels_patch.request_history) == 1
     assert set(adjust_labels_patch.request_history[0].json()["labels"]) == {
-        "engineering review", "open-source-contribution", "core committer",
+        "open edx community review", "open-source-contribution", "core committer",
     }
 
 

@@ -120,7 +120,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     labels = ["open-source-contribution"]
     if committer:
         labels.append("core committer")
-        labels.append("engineering review")
+        labels.append("open edx community review")
     else:
         has_cla = pull_request_has_cla(pr)
         if has_cla:
@@ -132,7 +132,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     # Set the Jira status. Core committers get Engineering Review, non-cla get
     # Community Manager Review, everything else stays in Needs Triage.
     if committer:
-        transition_jira_issue(issue_key, "Engineering Review")
+        transition_jira_issue(issue_key, "Open edX Community Review")
     else:
         if not has_cla:
             transition_jira_issue(issue_key, "Community Manager Review")
