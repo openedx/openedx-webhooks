@@ -4,8 +4,10 @@ Thanks for the pull request, @{{ user }}! I've created
 to keep track of it in JIRA.
 {% endfilter %}
 
+{% filter replace("\n", " ")|trim %}
 As a core committer, you can merge this once the pull request is approved per the 
 [core committer reviewer requirements](https://openedx.atlassian.net/wiki/spaces/COMM/pages/1529675973/Open+edX+Core+Committers#Reviews-and-Ownership)
 and according to the agreement with your edX Champion.
+{% endfilter %}
 
 <!-- comment:welcome-core-committer -->
