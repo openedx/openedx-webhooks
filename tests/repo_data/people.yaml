@@ -1,30 +1,20 @@
-pmitros:
-    email: pmitros@edx.org
-    name: Piotr Mitros
-    agreement: institution
-    institution: edX
-    jira: pmitros
-nedbat:
-    email: ned@edx.org
-    name: Ned Batchelder
-    agreement: institution
-    institution: edX
-    jira: ned
-    other_emails:
-        - ned@nedbatchelder.com
-mmprandom:
-    email: mpeterson@edx.org
-    name: Mat Peterson
-    agreement: institution
-    institution: edX
-    comment: LMS intern, summer 2014
-    jira: mpeterson
-    expires_on: 2014-08-12
-theJohnnyBrown:
-    email: johnnybrown7@gmail.com
-    name: Johnny Brown
+antoviaque:
+    email: xavier@antoviaque.org
+    name: Xavier Antoviaque
     agreement: institution
     institution: OpenCraft
+    jira: XavierAntoviaque
+felipemontoya:
+    name: Felipe Montoya
+    email: felipe.montoya@edunext.co
+    agreement: institution
+    institution: EduNEXT
+    committer:
+        orgs:
+            - edx
+    jira: felipemontoya
+    comments:
+    - also signed individual agreement (CLA)
 jarv:
     email: jarv@edx.org
     name: John Jarvis
@@ -34,17 +24,52 @@ jarv:
         2014-12-12:
             agreement: institution
             institution: edX
-antoviaque:
-    email: xavier@antoviaque.org
-    name: Xavier Antoviaque
-    agreement: institution
-    institution: OpenCraft
-    jira: XavierAntoviaque
-tusbar:
-    email: tusbar@tusbar.com
-    name: Bertrand Marron
+joecontractor:
+    name: Joe Contractor
+    email: joe@contractor.com
     agreement: individual
-    institution: IONISx
+    contractor: true
+mduboseedx:
+    name: Matt DuBose
+    email: mdubose@edx.org
+    agreement: institution
+    institution: edX
+mmprandom:
+    email: mpeterson@edx.org
+    name: Mat Peterson
+    agreement: institution
+    institution: edX
+    comments:
+    - LMS intern, summer 2014
+    jira: mpeterson
+    expires_on: 2014-08-12
+nedbat:
+    email: ned@edx.org
+    name: Ned Batchelder
+    agreement: institution
+    institution: edX
+    jira: ned
+    other_emails:
+        - ned@nedbatchelder.com
+pdpinch:
+    name: Peter Pinch
+    email: pdpinch@mit.edu
+    agreement: institution
+    institution: MIT
+    jira: pdpinch@mit.edu
+    committer:
+        repos:
+            - edx/ccx-keys
+    other_emails:
+    - github@hawklake.com
+    comments:
+    - Also signed CLA (individual agreement)
+pmitros:
+    email: pmitros@edx.org
+    name: Piotr Mitros
+    agreement: institution
+    institution: edX
+    jira: pmitros
 raisingarizona:
     email: hi.mcdunnough@noemail.com
     name: H.I. Mcdunnough
@@ -60,37 +85,13 @@ raisingarizona:
                     - edx/edx-platform
         2016-01-02:
             agreement: none
-mduboseedx:
-    name: Matt DuBose
-    email: mdubose@edx.org
+theJohnnyBrown:
+    email: johnnybrown7@gmail.com
+    name: Johnny Brown
     agreement: institution
-    institution: edX
-joecontractor:
-    name: Joe Contractor
-    email: joe@contractor.com
+    institution: OpenCraft
+tusbar:
+    email: tusbar@tusbar.com
+    name: Bertrand Marron
     agreement: individual
-    contractor: true
-felipemontoya:
-    name: Felipe Montoya
-    email: felipe.montoya@edunext.co
-    agreement: institution
-    institution: EduNEXT
-    committer:
-        orgs:
-            - edx
-    jira: felipemontoya
-    comments:
-    - also signed individual agreement (CLA)
-pdpinch:
-    name: Peter Pinch
-    email: pdpinch@mit.edu
-    agreement: institution
-    institution: MIT
-    jira: pdpinch@mit.edu
-    committer:
-        repos:
-            - edx/ccx-keys
-    other_emails:
-    - github@hawklake.com
-    comments:
-    - Also signed CLA (individual agreement)
+    institution: IONISx
