@@ -14,7 +14,7 @@ from openedx_webhooks.info import (
 pytestmark = pytest.mark.usefixtures('fake_github')
 
 
-def make_pull_request(user, created_at=None):
+def make_pull_request(user, created_at=None, repo="edx/edx-platform"):
     # This should really use a framework like factory_boy.
     created_at = created_at or datetime.now().replace(microsecond=0)
     return {
@@ -22,6 +22,11 @@ def make_pull_request(user, created_at=None):
             "login": user,
         },
         "created_at": created_at.isoformat(),
+        "base": {
+            "repo": {
+                "full_name": repo,
+            },
+        },
     }
 
 
@@ -60,10 +65,21 @@ def test_left_but_still_a_fan():
     pr = make_pull_request("jarv")
     assert not is_internal_pull_request(pr)
 
-def test_committers():
-    pr = make_pull_request("antoviaque")
+def test_org_committers():
+    pr = make_pull_request("felipemontoya", repo="edx/something")
     assert not is_internal_pull_request(pr)
     assert is_committer_pull_request(pr)
+    pr = make_pull_request("felipemontoya", repo="openedx/something")
+    assert not is_internal_pull_request(pr)
+    assert not is_committer_pull_request(pr)
+
+def test_repo_committers():
+    pr = make_pull_request("pdpinch", repo="edx/ccx-keys")
+    assert not is_internal_pull_request(pr)
+    assert is_committer_pull_request(pr)
+    pr = make_pull_request("pdpinch", repo="edx/edx-platform")
+    assert not is_internal_pull_request(pr)
+    assert not is_committer_pull_request(pr)
 
 def test_current_person_no_institution():
     people = get_people_file()
@@ -89,3 +105,11 @@ def test_updated_person():
     created_at = datetime(2014, 1, 1)
     updated_person = get_person_certain_time(people["raisingarizona"], created_at)
     assert updated_person["agreement"] == "individual"
+
+def test_old_committer():
+    pr = make_pull_request("raisingarizona")
+    assert not is_committer_pull_request(pr)
+    pr = make_pull_request("raisingarizona", created_at=datetime(2014, 12, 31))
+    assert is_committer_pull_request(pr)
+    pr = make_pull_request("raisingarizona", created_at=datetime(2015, 12, 31))
+    assert not is_committer_pull_request(pr)

@@ -39,7 +39,6 @@ antoviaque:
     name: Xavier Antoviaque
     agreement: institution
     institution: OpenCraft
-    committer: true
     jira: XavierAntoviaque
 tusbar:
     email: tusbar@tusbar.com
@@ -50,14 +49,15 @@ raisingarizona:
     email: hi.mcdunnough@noemail.com
     name: H.I. Mcdunnough
     agreement: none
-    committer: false
     before:
         2017-01-02:
             agreement: institution
             institution: edX
         2015-01-02:
             agreement: individual
-            committer: true
+            committer:
+                repos:
+                    - edx/edx-platform
         2016-01-02:
             agreement: none
 mduboseedx:
@@ -75,7 +75,22 @@ felipemontoya:
     email: felipe.montoya@edunext.co
     agreement: institution
     institution: EduNEXT
-    committer: true
+    committer:
+        orgs:
+            - edx
     jira: felipemontoya
     comments:
     - also signed individual agreement (CLA)
+pdpinch:
+    name: Peter Pinch
+    email: pdpinch@mit.edu
+    agreement: institution
+    institution: MIT
+    jira: pdpinch@mit.edu
+    committer:
+        repos:
+            - edx/ccx-keys
+    other_emails:
+    - github@hawklake.com
+    comments:
+    - Also signed CLA (individual agreement)

@@ -185,6 +185,15 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
+2020-06-25
+~~~~~~~~~~
+
+- Core committer logic has to be particular to specific repos, it's not a
+  blanket right.  Now "committer" isn't a simple boolean, it's an object with
+  subkeys: "repos" is a list of repos the user can commit to, and "orgs" is a
+  list of GitHub organizations the user can commit to (any repo).
+
+
 2020-06-24
 ~~~~~~~~~~
 

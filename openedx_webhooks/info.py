@@ -66,12 +66,6 @@ def is_internal_pull_request(pull_request):
     """
     return _is_pull_request(pull_request, "internal")
 
-def is_committer_pull_request(pull_request):
-    """
-    Was this pull request created by a core committer?
-    """
-    return _is_pull_request(pull_request, "committer")
-
 def is_contractor_pull_request(pull_request):
     """
     Was this pull request created by someone in an organization that does
@@ -87,31 +81,43 @@ def is_bot_pull_request(pull_request):
     """
     return pull_request["user"]["type"] == "Bot"
 
+def _pr_author_data(pull_request):
+    """
+    Get data about the author of the pull request, as of the
+    creation of the pull request.
+
+    Returns None if the author had no CLA.
+    """
+    people = get_people_file()
+    author = pull_request["user"]["login"]
+    if author not in people:
+        # We don't know this person!
+        return None
+
+    person = people[author]
+    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
+    if person.get("expires_on", date.max) <= created_at.date():
+        # This person's agreement has expired.
+        return None
+
+    person = get_person_certain_time(people[author], created_at)
+    return person
+
 def _is_pull_request(pull_request, kind):
     """
     Is this pull request of a certain kind?
 
     Arguments:
         pull_request: the dict data read from GitHub.
-        kind (str): one of "internal", "committer", or "contractor".
+        kind (str): either "internal" or "contractor".
 
     Returns:
         bool
 
     """
-    people = get_people_file()
-    author = pull_request["user"]["login"]
-    if author not in people:
-        # We don't know this person!
+    person = _pr_author_data(pull_request)
+    if person is None:
         return False
-
-    person = people[author]
-    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
-    if person.get("expires_on", date.max) <= created_at.date():
-        # This person's agreement has expired.
-        return False
-
-    person = get_person_certain_time(people[author], created_at)
 
     if person.get(kind, False):
         # This person has the flag personally.
@@ -122,4 +128,26 @@ def _is_pull_request(pull_request, kind):
         # This person's institution has the flag.
         return True
 
+    return False
+
+
+def is_committer_pull_request(pull_request):
+    """
+    Was this pull request created by a core committer for this repo?
+    """
+    person = _pr_author_data(pull_request)
+    if person is None:
+        return False
+    if "committer" not in person:
+        return False
+
+    repo = pull_request["base"]["repo"]["full_name"]
+    org = repo.partition("/")[0]
+    commit_rights = person["committer"]
+    if "orgs" in commit_rights:
+        if org in commit_rights["orgs"]:
+            return True
+    if "repos" in commit_rights:
+        if repo in commit_rights["repos"]:
+            return True
     return False
