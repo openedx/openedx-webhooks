@@ -4,6 +4,7 @@
 
 codecov
 freezegun
+glom
 pytest
 pytest-cov
 pytest-mock

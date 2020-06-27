@@ -3,7 +3,8 @@
 -r test.in
 
 edx-lint                  # For updating pylintrc
-pylint-pytest               # So that pylint understands pytest fixture naming
+pylint-pytest             # So that pylint understands pytest fixture naming
+mypy
 isort
 pip-tools                 # Requirements file management
 python-dotenv
