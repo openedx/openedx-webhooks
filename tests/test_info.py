@@ -11,7 +11,7 @@ from openedx_webhooks.info import (
 )
 
 
-pytestmark = pytest.mark.usefixtures('fake_github')
+pytestmark = pytest.mark.usefixtures("fake_repo_data", "mock_github_bp")
 
 
 def make_pull_request(user, created_at=None, repo="edx/edx-platform"):

@@ -10,33 +10,32 @@ from . import template_snips
 
 
 def test_internal_pr_opened(reqctx, fake_github):
-    pr = fake_github.make_pull_request(user='nedbat')
-    comments_post = fake_github.comments_post(pr)
+    pr = fake_github.make_pull_request(user="nedbat")
     with reqctx:
-        key, anything_happened = pull_request_opened(pr)
+        key, anything_happened = pull_request_opened(pr.as_json())
     assert key is None
     assert anything_happened is False
-    assert len(comments_post.request_history) == 0
+    assert len(pr.comments) == 0
 
 
 def test_pr_opened_by_bot(reqctx, fake_github):
-    pr = fake_github.make_pull_request(user="some_bot", user_type="Bot")
+    fake_github.make_user(login="some_bot", type="Bot")
+    pr = fake_github.make_pull_request(user="some_bot")
     with reqctx:
-        key, anything_happened = pull_request_opened(pr)
+        key, anything_happened = pull_request_opened(pr.as_json())
     assert key is None
     assert anything_happened is False
+    assert len(pr.comments) == 0
 
 
 def test_external_pr_opened_no_cla(reqctx, mocker, fake_github, fake_jira):
-    fake_github.fake_user({"login": "new_contributor", "name": "Newb Contributor"})
-    pr = fake_github.make_pull_request(user='new_contributor')
-    fake_github.fake_comments(pr, [])
-    comments_post = fake_github.comments_post(pr)
+    fake_github.make_user(login="new_contributor", name="Newb Contributor")
+    pr = fake_github.make_pull_request(owner="edx", repo="edx-platform", user="new_contributor")
+    prj = pr.as_json()
     sync_labels_fn = mocker.patch("openedx_webhooks.tasks.github.synchronize_labels")
-    adjust_labels_patch = fake_github.pr_patch(pr)
 
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(pr)
+        issue_id, anything_happened = pull_request_opened(prj)
 
     assert issue_id is not None
     assert issue_id.startswith("OSPR-")
@@ -47,13 +46,13 @@ def test_external_pr_opened_no_cla(reqctx, mocker, fake_github, fake_jira):
     assert fake_jira.new_issue_post.request_history[0].json() == {
         "fields": {
             fake_jira.CONTRIBUTOR_NAME: "Newb Contributor",
-            fake_jira.PR_NUMBER: pr["number"],
-            fake_jira.REPO: pr["base"]["repo"]["full_name"],
-            fake_jira.URL: pr["html_url"],
-            "description": pr["body"],
+            fake_jira.PR_NUMBER: prj["number"],
+            fake_jira.REPO: prj["base"]["repo"]["full_name"],
+            fake_jira.URL: prj["html_url"],
+            "description": prj["body"],
             "issuetype": {"name": "Pull Request Review"},
             "project": {"key": "OSPR"},
-            "summary": pr["title"],
+            "summary": prj["title"],
             "labels": [],
         }
     }
@@ -67,8 +66,8 @@ def test_external_pr_opened_no_cla(reqctx, mocker, fake_github, fake_jira):
     sync_labels_fn.assert_called_once_with("edx/edx-platform")
 
     # Check the GitHub comment that was created.
-    assert len(comments_post.request_history) == 1
-    body = comments_post.request_history[0].json()["body"]
+    assert len(pr.comments) == 1
+    body = pr.comments[0].body
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @new_contributor!" in body
@@ -77,25 +76,16 @@ def test_external_pr_opened_no_cla(reqctx, mocker, fake_github, fake_jira):
     assert template_snips.NO_CLA_LINK in body
 
     # Check the GitHub labels that got applied.
-    assert len(adjust_labels_patch.request_history) == 1
-    assert set(adjust_labels_patch.request_history[0].json()["labels"]) == {
-        "community manager review", "open-source-contribution",
-    }
+    assert pr.labels == {"community manager review", "open-source-contribution"}
 
 
 def test_external_pr_opened_with_cla(reqctx, mocker, fake_github, fake_jira):
-    pr = fake_github.make_pull_request(
-        user="tusbar",
-        base_repo_name="edx/some-code",
-        number=11235,
-    )
-    fake_github.fake_comments(pr, [])
-    comments_post = fake_github.comments_post(pr)
+    pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", number=11235)
+    prj = pr.as_json()
     sync_labels_fn = mocker.patch("openedx_webhooks.tasks.github.synchronize_labels")
-    adjust_labels_patch = fake_github.pr_patch(pr)
 
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(pr)
+        issue_id, anything_happened = pull_request_opened(prj)
 
     assert issue_id is not None
     assert issue_id.startswith("OSPR-")
@@ -109,14 +99,16 @@ def test_external_pr_opened_with_cla(reqctx, mocker, fake_github, fake_jira):
             fake_jira.CUSTOMER: ["IONISx"],
             fake_jira.PR_NUMBER: 11235,
             fake_jira.REPO: "edx/some-code",
-            fake_jira.URL: pr["html_url"],
-            "description": pr["body"],
+            fake_jira.URL: prj["html_url"],
+            "description": prj["body"],
             "issuetype": {"name": "Pull Request Review"},
             "project": {"key": "OSPR"},
-            "summary": pr["title"],
+            "summary": prj["title"],
             "labels": [],
         }
     }
+    assert len(fake_jira.issues) == 1
+    assert issue_id in fake_jira.issues
 
     assert len(fake_jira.issues) == 1
     assert issue_id in fake_jira.issues
@@ -128,8 +120,8 @@ def test_external_pr_opened_with_cla(reqctx, mocker, fake_github, fake_jira):
     sync_labels_fn.assert_called_once_with("edx/some-code")
 
     # Check the GitHub comment that was created.
-    assert len(comments_post.request_history) == 1
-    body = comments_post.request_history[0].json()["body"]
+    assert len(pr.comments) == 1
+    body = pr.comments[0].body
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @tusbar!" in body
@@ -138,21 +130,16 @@ def test_external_pr_opened_with_cla(reqctx, mocker, fake_github, fake_jira):
     assert template_snips.NO_CLA_LINK not in body
 
     # Check the GitHub labels that got applied.
-    assert len(adjust_labels_patch.request_history) == 1
-    assert set(adjust_labels_patch.request_history[0].json()["labels"]) == {
-        "needs triage", "open-source-contribution",
-    }
+    assert pr.labels == {"needs triage", "open-source-contribution"}
 
 
 def test_core_committer_pr_opened(reqctx, mocker, fake_github, fake_jira):
-    pr = fake_github.make_pull_request(user="felipemontoya")
-    fake_github.fake_comments(pr, [])
-    comments_post = fake_github.comments_post(pr)
+    pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform")
+    prj = pr.as_json()
     sync_labels_fn = mocker.patch("openedx_webhooks.tasks.github.synchronize_labels")
-    adjust_labels_patch = fake_github.pr_patch(pr)
 
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(pr)
+        issue_id, anything_happened = pull_request_opened(prj)
 
     assert issue_id is not None
     assert issue_id.startswith("OSPR-")
@@ -164,13 +151,13 @@ def test_core_committer_pr_opened(reqctx, mocker, fake_github, fake_jira):
         "fields": {
             fake_jira.CONTRIBUTOR_NAME: "Felipe Montoya",
             fake_jira.CUSTOMER: ["EduNEXT"],
-            fake_jira.PR_NUMBER: pr["number"],
-            fake_jira.REPO: pr["base"]["repo"]["full_name"],
-            fake_jira.URL: pr["html_url"],
-            "description": pr["body"],
+            fake_jira.PR_NUMBER: prj["number"],
+            fake_jira.REPO: prj["base"]["repo"]["full_name"],
+            fake_jira.URL: prj["html_url"],
+            "description": prj["body"],
             "issuetype": {"name": "Pull Request Review"},
             "project": {"key": "OSPR"},
-            "summary": pr["title"],
+            "summary": prj["title"],
             "labels": ["core-committer"],
         }
     }
@@ -185,8 +172,8 @@ def test_core_committer_pr_opened(reqctx, mocker, fake_github, fake_jira):
     sync_labels_fn.assert_called_once_with("edx/edx-platform")
 
     # Check the GitHub comment that was created.
-    assert len(comments_post.request_history) == 1
-    body = comments_post.request_history[0].json()["body"]
+    assert len(pr.comments) == 1
+    body = pr.comments[0].body
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @felipemontoya!" in body
@@ -195,25 +182,19 @@ def test_core_committer_pr_opened(reqctx, mocker, fake_github, fake_jira):
     assert template_snips.NO_CLA_LINK not in body
 
     # Check the GitHub labels that got applied.
-    assert len(adjust_labels_patch.request_history) == 1
-    assert set(adjust_labels_patch.request_history[0].json()["labels"]) == {
-        "open edx community review", "open-source-contribution", "core committer",
-    }
+    assert pr.labels == {"open edx community review", "open-source-contribution", "core committer"}
 
 
 def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="tusbar")
+    prj = pr.as_json()
     with reqctx:
-        comment = github_community_pr_comment(pr, jira_issue=fake_jira.make_issue(key="OSPR-12345"))
-    comment_data = {
-        "user": {"login": fake_github.WEBHOOK_BOT_NAME},
-        "body": comment,
-    }
-    fake_github.fake_comments(pr, [comment_data])
-    comments_post = fake_github.comments_post(pr)
+        comment = github_community_pr_comment(prj, jira_issue=fake_jira.make_issue(key="OSPR-12345"))
+    pr.add_comment(user=fake_github.login, body=comment)
+    assert len(pr.comments) == 1
 
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(pr)
+        issue_id, anything_happened = pull_request_opened(prj)
 
     assert issue_id == "OSPR-12345"
     assert anything_happened is False
@@ -222,16 +203,15 @@ def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
     assert len(fake_jira.new_issue_post.request_history) == 0
 
     # No new GitHub comment was created.
-    assert len(comments_post.request_history) == 0
+    assert len(pr.comments) == 1
 
 
 def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="joecontractor")
-    fake_github.fake_comments(pr, [])
-    comments_post = fake_github.comments_post(pr)
+    prj = pr.as_json()
 
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(pr)
+        issue_id, anything_happened = pull_request_opened(prj)
 
     assert issue_id is None
     assert anything_happened is True
@@ -240,13 +220,13 @@ def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
     assert len(fake_jira.new_issue_post.request_history) == 0
 
     # Check the GitHub comment that was created.
-    assert len(comments_post.request_history) == 1
-    body = comments_post.request_history[0].json()["body"]
+    assert len(pr.comments) == 1
+    body = pr.comments[0].body
     assert template_snips.CONTRACTOR_TEXT in body
     href = (
         'href="https://openedx-webhooks.herokuapp.com/github/process_pr' +
-        '?repo={}'.format(pr["base"]["repo"]["full_name"].replace("/", "%2F")) +
-        '&number={}"'.format(pr["number"])
+        '?repo={}'.format(prj["base"]["repo"]["full_name"].replace("/", "%2F")) +
+        '&number={}"'.format(prj["number"])
     )
     assert href in body
     assert 'Create an OSPR issue for this pull request' in body
@@ -254,17 +234,13 @@ def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
 
 def test_contractor_pr_rescanned(reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="joecontractor")
+    prj = pr.as_json()
     with reqctx:
-        comment = github_contractor_pr_comment(pr)
-    comment_data = {
-        "user": {"login": fake_github.WEBHOOK_BOT_NAME},
-        "body": comment,
-    }
-    fake_github.fake_comments(pr, [comment_data])
-    comments_post = fake_github.comments_post(pr)
+        comment = github_contractor_pr_comment(prj)
+    pr.add_comment(user=fake_github.login, body=comment)
 
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(pr)
+        issue_id, anything_happened = pull_request_opened(prj)
 
     assert issue_id is None
     assert anything_happened is False
@@ -273,4 +249,4 @@ def test_contractor_pr_rescanned(reqctx, fake_github, fake_jira):
     assert len(fake_jira.new_issue_post.request_history) == 0
 
     # No new GitHub comment was created.
-    assert len(comments_post.request_history) == 0
+    assert len(pr.comments) == 1
