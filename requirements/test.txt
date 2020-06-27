@@ -6,15 +6,16 @@
 #
 alabaster==0.7.12         # via sphinx
 amqp==2.6.0               # via kombu
-arrow==0.15.6             # via -r requirements/base.in
-attrs==19.3.0             # via pytest
+arrow==0.15.7             # via -r requirements/base.in
+attrs==19.3.0             # via glom, pytest
 babel==2.8.0              # via sphinx
 billiard==3.6.3.0         # via celery
 bleach==3.1.5             # via readme-renderer
 blinker==1.4              # via -r requirements/base.in, sentry-sdk
+boltons==20.2.0           # via face, glom
 cachetools==4.1.0         # via -r requirements/base.in
-celery==4.4.5             # via -r requirements/base.in
-certifi==2020.4.5.2       # via requests, sentry-sdk
+celery==4.4.6             # via -r requirements/base.in
+certifi==2020.6.20        # via requests, sentry-sdk
 cffi==1.14.0              # via cryptography
 chardet==3.0.4            # via requests
 click==7.1.2              # via -r requirements/base.in, flask, rq
@@ -23,6 +24,7 @@ coverage==5.1             # via codecov, pytest-cov
 cryptography==2.9.2       # via -r requirements/base.in, jwcrypto, oauthlib
 defusedxml==0.6.0         # via jira
 docutils==0.16            # via readme-renderer, sphinx
+face==20.1.1              # via glom
 flask-dance[sqla]==3.0.0  # via -r requirements/base.in
 flask-script==2.0.6       # via -r requirements/base.in
 flask-sqlalchemy==2.4.3   # via -r requirements/base.in
@@ -31,6 +33,7 @@ flask==1.1.2              # via -r requirements/base.in, flask-dance, flask-scri
 freezegun==0.3.15         # via -r requirements/test.in
 future==0.18.2            # via celery
 github3.py==1.3.0         # via -r requirements/base.in
+glom==20.5.0              # via -r requirements/test.in
 gunicorn==20.0.4          # via -r requirements/base.in
 idna==2.9                 # via requests
 imagesize==1.2.0          # via sphinx
@@ -39,7 +42,7 @@ itsdangerous==1.1.0       # via flask
 jinja2==2.11.2            # via flask, sphinx
 jira==2.0.0               # via -r requirements/base.in
 jwcrypto==0.7             # via github3.py
-kombu==4.6.10             # via celery
+kombu==4.6.11             # via celery
 logging-tree==1.8.1       # via -r requirements/base.in
 markupsafe==1.1.1         # via jinja2
 more-itertools==8.4.0     # via pytest
@@ -48,7 +51,7 @@ packaging==20.4           # via bleach, pytest, sphinx
 pbr==5.4.5                # via jira
 pluggy==0.13.1            # via pytest
 psycopg2==2.8.5           # via -r requirements/base.in
-py==1.8.1                 # via pytest
+py==1.9.0                 # via pytest
 pycparser==2.20           # via cffi
 pygments==2.6.1           # via readme-renderer, sphinx
 pyjwt==1.7.1              # via oauthlib
@@ -64,12 +67,12 @@ redis==3.5.3              # via -r requirements/base.in, rq
 requests-mock==1.8.0      # via -r requirements/test.in
 requests-oauthlib==1.3.0  # via -r requirements/base.in, flask-dance, jira
 requests-toolbelt==0.9.1  # via jira
-requests==2.23.0          # via -r requirements/base.in, codecov, flask-dance, github3.py, jira, requests-mock, requests-oauthlib, requests-toolbelt, sphinx
+requests==2.24.0          # via -r requirements/base.in, codecov, flask-dance, github3.py, jira, requests-mock, requests-oauthlib, requests-toolbelt, sphinx
 rq==1.4.2                 # via -r requirements/base.in
-sentry-sdk[flask]==0.14.4  # via -r requirements/base.in
+sentry-sdk[flask]==0.15.1  # via -r requirements/base.in
 six==1.15.0               # via bleach, cryptography, flask-dance, freezegun, jira, packaging, python-dateutil, readme-renderer, requests-mock, sphinxcontrib-httpdomain, sqlalchemy-utils
 snowballstemmer==2.0.0    # via sphinx
-sphinx-rtd-theme==0.4.3   # via -r requirements/doc.in
+sphinx-rtd-theme==0.5.0   # via -r requirements/doc.in
 sphinx==3.1.1             # via -r requirements/doc.in, sphinx-rtd-theme, sphinxcontrib-httpdomain
 sphinxcontrib-applehelp==1.0.2  # via sphinx
 sphinxcontrib-devhelp==1.0.2  # via sphinx
@@ -79,12 +82,12 @@ sphinxcontrib-jsmath==1.0.1  # via sphinx
 sphinxcontrib-qthelp==1.0.3  # via sphinx
 sphinxcontrib-serializinghtml==1.1.4  # via sphinx
 sqlalchemy-utils==0.36.6  # via flask-dance
-sqlalchemy==1.3.17        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
+sqlalchemy==1.3.18        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
 uritemplate==3.0.1        # via github3.py
 urllib3==1.25.9           # via requests, sentry-sdk
 urlobject==2.4.3          # via -r requirements/base.in, flask-dance
 vine==1.3.0               # via amqp, celery
-wcwidth==0.2.4            # via pytest
+wcwidth==0.2.5            # via pytest
 webencodings==0.5.1       # via bleach
 werkzeug==1.0.1           # via flask
 
