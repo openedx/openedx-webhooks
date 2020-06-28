@@ -11,11 +11,6 @@ class FakerException(Exception):
         return {"error": str(self)}
 
 
-class FakerModel:
-    def as_json(self):
-        return dataclasses.asdict(self)
-
-
 def callback(path_regex, http_method="GET", data_type="json"):
     """
     Decorator to associate a method with a particular HTTP route.

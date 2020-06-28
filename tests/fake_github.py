@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 from urllib.parse import unquote
 
-from .faker import Faker, FakerException, FakerModel, callback
+from .faker import Faker, FakerException, callback
 
 
 class FakeGitHubException(FakerException):
@@ -34,7 +34,7 @@ class ValidationError(FakeGitHubException):
 
 
 @dataclass
-class User(FakerModel):
+class User:
     login: str = "some-user"
     name: str = "Some User"
     type: str = "User"
@@ -49,7 +49,7 @@ class User(FakerModel):
 
 
 @dataclass
-class Label(FakerModel):
+class Label:
     name: str
     color: Optional[str] = "ededed"
     description: Optional[str] = None
@@ -58,6 +58,8 @@ class Label(FakerModel):
         if not re.fullmatch(r"[0-9a-fA-F]{6}", self.color):
             raise ValidationError(resource="Label", code="invalid", field="color")
 
+    def as_json(self):
+        return dataclasses.asdict(self)
 
 DEFAULT_LABELS = [
     {"name": "bug", "color": "d73a4a", "description": "Something isn't working"},
@@ -72,7 +74,7 @@ DEFAULT_LABELS = [
 ]
 
 @dataclass
-class Comment(FakerModel):
+class Comment:
     issue: PullRequest
     user: User
     body: str
@@ -85,7 +87,7 @@ class Comment(FakerModel):
 
 
 @dataclass
-class PullRequest(FakerModel):
+class PullRequest:
     repo: Repo
     number: int
     user: User
@@ -119,7 +121,7 @@ class PullRequest(FakerModel):
 
 
 @dataclass
-class Repo(FakerModel):
+class Repo:
     github: FakeGitHub
     owner: str
     repo: str
