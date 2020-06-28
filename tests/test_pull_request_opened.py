@@ -42,25 +42,20 @@ def test_external_pr_opened_no_cla(reqctx, mocker, fake_github, fake_jira):
     assert anything_happened is True
 
     # Check the Jira issue that was created.
-    assert len(fake_jira.new_issue_post.request_history) == 1
-    assert fake_jira.new_issue_post.request_history[0].json() == {
-        "fields": {
-            fake_jira.CONTRIBUTOR_NAME: "Newb Contributor",
-            fake_jira.PR_NUMBER: prj["number"],
-            fake_jira.REPO: prj["base"]["repo"]["full_name"],
-            fake_jira.URL: prj["html_url"],
-            "description": prj["body"],
-            "issuetype": {"name": "Pull Request Review"},
-            "project": {"key": "OSPR"},
-            "summary": prj["title"],
-            "labels": [],
-        }
-    }
     assert len(fake_jira.issues) == 1
-    assert issue_id in fake_jira.issues
+    issue = fake_jira.issues[issue_id]
+    assert issue.contributor_name == "Newb Contributor"
+    assert issue.customer is None
+    assert issue.pr_number == prj["number"]
+    assert issue.repo == prj["base"]["repo"]["full_name"]
+    assert issue.url == prj["html_url"]
+    assert issue.description == prj["body"]
+    assert issue.issuetype == "Pull Request Review"
+    assert issue.summary == prj["title"]
+    assert issue.labels == []
 
     # Check that the Jira issue was moved to Community Manager Review.
-    assert fake_jira.issues[issue_id]["fields"]["status"]["name"] == "Community Manager Review"
+    assert issue.status == "Community Manager Review"
 
     # Check that we synchronized labels.
     sync_labels_fn.assert_called_once_with("edx/edx-platform")
@@ -92,29 +87,20 @@ def test_external_pr_opened_with_cla(reqctx, mocker, fake_github, fake_jira):
     assert anything_happened is True
 
     # Check the Jira issue that was created.
-    assert len(fake_jira.new_issue_post.request_history) == 1
-    assert fake_jira.new_issue_post.request_history[0].json() == {
-        "fields": {
-            fake_jira.CONTRIBUTOR_NAME: "Bertrand Marron",
-            fake_jira.CUSTOMER: ["IONISx"],
-            fake_jira.PR_NUMBER: 11235,
-            fake_jira.REPO: "edx/some-code",
-            fake_jira.URL: prj["html_url"],
-            "description": prj["body"],
-            "issuetype": {"name": "Pull Request Review"},
-            "project": {"key": "OSPR"},
-            "summary": prj["title"],
-            "labels": [],
-        }
-    }
     assert len(fake_jira.issues) == 1
-    assert issue_id in fake_jira.issues
-
-    assert len(fake_jira.issues) == 1
-    assert issue_id in fake_jira.issues
+    issue = fake_jira.issues[issue_id]
+    assert issue.contributor_name == "Bertrand Marron"
+    assert issue.customer == ["IONISx"]
+    assert issue.pr_number == 11235
+    assert issue.repo == "edx/some-code"
+    assert issue.url == prj["html_url"]
+    assert issue.description == prj["body"]
+    assert issue.issuetype == "Pull Request Review"
+    assert issue.summary == prj["title"]
+    assert issue.labels == []
 
     # Check that the Jira issue is in Needs Triage.
-    assert fake_jira.issues[issue_id]["fields"]["status"]["name"] == "Needs Triage"
+    assert issue.status == "Needs Triage"
 
     # Check that we synchronized labels.
     sync_labels_fn.assert_called_once_with("edx/some-code")
@@ -146,27 +132,20 @@ def test_core_committer_pr_opened(reqctx, mocker, fake_github, fake_jira):
     assert anything_happened is True
 
     # Check the Jira issue that was created.
-    assert len(fake_jira.new_issue_post.request_history) == 1
-    assert fake_jira.new_issue_post.request_history[0].json() == {
-        "fields": {
-            fake_jira.CONTRIBUTOR_NAME: "Felipe Montoya",
-            fake_jira.CUSTOMER: ["EduNEXT"],
-            fake_jira.PR_NUMBER: prj["number"],
-            fake_jira.REPO: prj["base"]["repo"]["full_name"],
-            fake_jira.URL: prj["html_url"],
-            "description": prj["body"],
-            "issuetype": {"name": "Pull Request Review"},
-            "project": {"key": "OSPR"},
-            "summary": prj["title"],
-            "labels": ["core-committer"],
-        }
-    }
-
     assert len(fake_jira.issues) == 1
-    assert issue_id in fake_jira.issues
+    issue = fake_jira.issues[issue_id]
+    assert issue.contributor_name == "Felipe Montoya"
+    assert issue.customer == ["EduNEXT"]
+    assert issue.pr_number == prj["number"]
+    assert issue.repo == prj["base"]["repo"]["full_name"]
+    assert issue.url == prj["html_url"]
+    assert issue.description == prj["body"]
+    assert issue.issuetype == "Pull Request Review"
+    assert issue.summary == prj["title"]
+    assert issue.labels == ["core-committer"]
 
     # Check that the Jira issue was moved to Open edX Community Review.
-    assert fake_jira.issues[issue_id]["fields"]["status"]["name"] == "Open edX Community Review"
+    assert issue.status == "Open edX Community Review"
 
     # Check that we synchronized labels.
     sync_labels_fn.assert_called_once_with("edx/edx-platform")
@@ -188,8 +167,9 @@ def test_core_committer_pr_opened(reqctx, mocker, fake_github, fake_jira):
 def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="tusbar")
     prj = pr.as_json()
+    issue = fake_jira.make_issue(key="OSPR-12345")
     with reqctx:
-        comment = github_community_pr_comment(prj, jira_issue=fake_jira.make_issue(key="OSPR-12345"))
+        comment = github_community_pr_comment(prj, jira_issue=issue.as_json())
     pr.add_comment(user=fake_github.login, body=comment)
     assert len(pr.comments) == 1
 
@@ -200,7 +180,7 @@ def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
     assert anything_happened is False
 
     # No Jira issue was created.
-    assert len(fake_jira.new_issue_post.request_history) == 0
+    assert len(fake_jira.issues) == 1
 
     # No new GitHub comment was created.
     assert len(pr.comments) == 1
@@ -217,7 +197,7 @@ def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
     assert anything_happened is True
 
     # No Jira issue was created.
-    assert len(fake_jira.new_issue_post.request_history) == 0
+    assert len(fake_jira.issues) == 0
 
     # Check the GitHub comment that was created.
     assert len(pr.comments) == 1
@@ -246,7 +226,7 @@ def test_contractor_pr_rescanned(reqctx, fake_github, fake_jira):
     assert anything_happened is False
 
     # No Jira issue was created.
-    assert len(fake_jira.new_issue_post.request_history) == 0
+    assert len(fake_jira.issues) == 0
 
     # No new GitHub comment was created.
     assert len(pr.comments) == 1

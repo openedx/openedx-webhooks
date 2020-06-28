@@ -86,7 +86,8 @@ def mock_jira_bp(mocker):
 
 @pytest.fixture
 def fake_jira(mock_jira_bp, requests_mocker):
-    the_fake_jira = FakeJira(requests_mocker)
+    the_fake_jira = FakeJira()
+    the_fake_jira.install_mocks(requests_mocker)
     return the_fake_jira
 
 

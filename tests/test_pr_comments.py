@@ -14,7 +14,7 @@ def test_community_pr_comment(reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="tusbar")
     jira = fake_jira.make_issue(key="TNL-12345")
     with reqctx:
-        comment = github_community_pr_comment(pr.as_json(), jira)
+        comment = github_community_pr_comment(pr.as_json(), jira.as_json())
     assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
     assert template_snips.NO_CLA_TEXT not in comment
     assert not comment.startswith((" ", "\n", "\t"))
@@ -24,7 +24,7 @@ def test_community_pr_comment_no_author(reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="FakeUser")
     jira = fake_jira.make_issue(key="FOO-1")
     with reqctx:
-        comment = github_community_pr_comment(pr.as_json(), jira)
+        comment = github_community_pr_comment(pr.as_json(), jira.as_json())
     assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
     assert template_snips.NO_CLA_TEXT in comment
     assert not comment.startswith((" ", "\n", "\t"))

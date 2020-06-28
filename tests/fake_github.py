@@ -260,7 +260,7 @@ class FakeGitHub(Faker):
 
     # Repo labels
 
-    @callback(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels(\?.*)?")
+    @callback(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels")
     def _get_labels(self, match, _request, _context) -> List[Dict]:
         # https://developer.github.com/v3/issues/labels/#list-labels-for-a-repository
         r = self.get_repo(match["owner"], match["repo"])

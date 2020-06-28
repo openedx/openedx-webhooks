@@ -23,7 +23,7 @@ def test_internal_pr_merged(merged, reqctx, fake_github, fake_jira):
         pull_request_closed(pr.as_json())
 
     # No Jira issue for this PR, so we should have never talked to Jira.
-    assert len(fake_jira.request_history()) == 0
+    assert len(fake_jira.requests_made()) == 0
 
 
 @pytest.fixture
@@ -36,7 +36,7 @@ def closed_pull_request(merged, reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="tusbar", state="closed", merged=merged)
     issue = fake_jira.make_issue()
     with reqctx:
-        bot_comment = github_community_pr_comment(pr.as_json(), jira_issue=issue)
+        bot_comment = github_community_pr_comment(pr.as_json(), jira_issue=issue.as_json())
     pr.add_comment(user=fake_github.login, body=bot_comment)
     pr.add_comment(user="nedbat", body="Please make some changes")
     pr.add_comment(user="tusbar", body="OK, I made the changes")
@@ -51,32 +51,32 @@ def test_external_pr_merged(merged, reqctx, fake_jira, closed_pull_request):
 
     # We moved the Jira issue to Merged or Rejected.
     expected_status = "Merged" if merged else "Rejected"
-    assert fake_jira.get_issue_status(issue) == expected_status
+    assert fake_jira.issues[issue.key].status == expected_status
 
 
 def test_external_pr_merged_but_issue_deleted(reqctx, fake_jira, closed_pull_request):
     # A closing pull request, but its Jira issue has been deleted.
     pr, issue = closed_pull_request
-    fake_jira.delete_issue(issue)
+    del fake_jira.issues[issue.key]
 
     with reqctx:
         pull_request_closed(pr.as_json())
 
     # Issue was deleted, so nothing was transitioned.
-    assert len(fake_jira.transition_issue_post.request_history) == 0
+    assert fake_jira.requests_made(method="POST") == []
 
 
 def test_external_pr_merged_but_issue_in_status(merged, reqctx, fake_jira, closed_pull_request):
     # The Jira issue associated with a closing pull request is already in the
     # status we want to move it to.
     pr, issue = closed_pull_request
-    fake_jira.set_issue_status(issue, "Merged" if merged else "Rejected")
+    fake_jira.issues[issue.key].status = ("Merged" if merged else "Rejected")
 
     with reqctx:
         pull_request_closed(pr.as_json())
 
     # Issue is already correct, so nothing was transitioned.
-    assert len(fake_jira.transition_issue_post.request_history) == 0
+    assert fake_jira.requests_made(method="POST") == []
 
 
 def test_external_pr_merged_but_issue_cant_transition(reqctx, fake_jira, closed_pull_request):
@@ -94,4 +94,4 @@ def test_external_pr_merged_but_issue_cant_transition(reqctx, fake_jira, closed_
             pull_request_closed(pr.as_json())
 
     # No valid transition, so nothing was transitioned.
-    assert len(fake_jira.transition_issue_post.request_history) == 0
+    assert fake_jira.requests_made(method="POST") == []

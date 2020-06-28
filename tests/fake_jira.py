@@ -1,10 +1,47 @@
 """A fake implementation of the Jira API."""
 
 import random
-import re
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Set
+
+from .faker import Faker, callback
 
 
-class FakeJira:
+@dataclass
+class Issue:
+    """A Jira issue."""
+    key: str
+    status: str
+    issuetype: Optional[str] = None
+    contributor_name: Optional[str] = None
+    customer: Optional[str] = None
+    pr_number: Optional[int] = None
+    repo: Optional[str] = None
+    url: Optional[str] = None
+    description: Optional[str] = None
+    summary: Optional[str] = None
+    labels: Set[str] = field(default_factory=set)
+
+    def as_json(self) -> Dict:
+        return {
+            "key": self.key,
+            "fields": {
+                "project": {"key": self.key.partition("-")[0]},
+                "status": {"name": self.status},
+                "issuetype": {"name": self.issuetype},
+                "summary": self.summary,
+                "description": self.description,
+                "labels": sorted(self.labels),
+                FakeJira.CONTRIBUTOR_NAME: self.contributor_name,
+                FakeJira.CUSTOMER: self.customer,
+                FakeJira.PR_NUMBER: self.pr_number,
+                FakeJira.REPO: self.repo,
+                FakeJira.URL: self.url,
+            },
+        }
+
+
+class FakeJira(Faker):
     """A fake implementation of the Jira API, specialized to the OSPR project."""
 
     HOST = "openedx.atlassian.net"
@@ -41,97 +78,61 @@ class FakeJira:
 
     TRANSITION_IDS = {id: name for name, id in TRANSITIONS.items()}
 
-    def __init__(self, requests_mocker):
-        self.requests_mocker = requests_mocker
-
-        # Custom fields particular to the OSPR project.
-        self.requests_mocker.get(
-            f"https://{self.HOST}/rest/api/2/field",
-            json=[
-                {"id": self.CONTRIBUTOR_NAME, "name": "Contributor Name", "custom": True},
-                {"id": self.CUSTOMER, "name": "Customer", "custom": True},
-                {"id": self.PR_NUMBER, "name": "PR Number", "custom": True},
-                {"id": self.REPO, "name": "Repo", "custom": True},
-                {"id": self.URL, "name": "URL", "custom": True},
-            ]
-        )
-
-        # Get an issue.
-        self.requests_mocker.get(
-            re.compile(fr"https://{self.HOST}/rest/api/2/issue/OSPR-\d+"),
-            json=self._get_issue_callback,
-        )
-
-        # Make a new issue.
-        self.new_issue_post = self.requests_mocker.post(
-            f"https://{self.HOST}/rest/api/2/issue",
-            json=self._new_issue_callback,
-        )
+    def __init__(self):
+        super().__init__(host="https://openedx.atlassian.net")
         self.issues = {}
 
-        # Get an issue's transitions.
-        self.requests_mocker.get(
-            re.compile(
-                fr"https://{self.HOST}/rest/api/2/issue/OSPR-\d+/transitions" +
-                r"\?expand=transitions.fields"
-            ),
-            json=self._issue_transitions_callback,
-        )
+    @callback(r"/rest/api/2/field")
+    def _get_field(self, _match, _request, _context) -> List[Dict]:
+        # Custom fields particular to the OSPR project.
+        return [
+            {"id": self.CONTRIBUTOR_NAME, "name": "Contributor Name", "custom": True},
+            {"id": self.CUSTOMER, "name": "Customer", "custom": True},
+            {"id": self.PR_NUMBER, "name": "PR Number", "custom": True},
+            {"id": self.REPO, "name": "Repo", "custom": True},
+            {"id": self.URL, "name": "URL", "custom": True},
+        ]
 
-        # Transition an issue.
-        self.transition_issue_post = self.requests_mocker.post(
-            re.compile(fr"https://{self.HOST}/rest/api/2/issue/OSPR-\d+/transitions"),
-            json=self._transition_issue_callback,
-        )
-
-    def request_history(self):
-        """Return the list of requests made to this host."""
-        return [r for r in self.requests_mocker.request_history if r.netloc == self.HOST]
-
-    def make_issue(self, key=None):
+    def make_issue(self, key=None, **kwargs):
         """Make fake issue data."""
         if key is None:
             key = "OSPR-{}".format(random.randint(1001, 9009))
-        issue = {
-            "key": key,
-            "fields": {
-                "status": {
-                    "name": self.INITIAL_STATE,
-                },
-            },
-        }
+        issue = Issue(key=key, status=self.INITIAL_STATE, **kwargs)
         self.issues[key] = issue
         return issue
 
-    def delete_issue(self, issue):
-        """Delete a fake issue."""
-        del self.issues[issue["key"]]
-
-    def get_issue_status(self, issue):
-        """Return the status of an issue."""
-        return self.issues[issue["key"]]["fields"]["status"]["name"]
-
-    def set_issue_status(self, issue, status):
-        """Set the status of a fake issue."""
-        self.issues[issue["key"]]["fields"]["status"]["name"] = status
-
-    def _new_issue_callback(self, request, _):
-        """Responds to the API endpoint for creating new issues."""
-        project = request.json()["fields"]["project"]["key"]
-        key = "{}-{}".format(project, random.randint(111, 999))
-        return self.make_issue(key)
-
-    def _get_issue_callback(self, request, _):
+    @callback(r"/rest/api/2/issue/(?P<key>\w+-\d+)")
+    def _get_issue(self, match, _request, _context) -> Dict:
         """Implement the GET issue endpoint."""
-        # Get the issue key from the request.
-        key = get_regex_value(r"/rest/api/2/issue/(OSPR-\d+)", request.path)
+        key = match["key"]
         assert key in self.issues
-        return self.issues[key]
+        return self.issues[key].as_json()
 
-    def _issue_transitions_callback(self, request, context):
+    @callback(r"/rest/api/2/issue", "POST")
+    def _post_issue(self, _match, request, _context):
+        """Responds to the API endpoint for creating new issues."""
+        issue_data = request.json()
+        fields = issue_data["fields"]
+        project = fields["project"]["key"]
+        key = "{}-{}".format(project, random.randint(111, 999))
+        kwargs = dict(
+            issuetype="Pull Request Review",
+            summary=fields.get("summary"),
+            description=fields.get("description"),
+            labels=fields.get("labels"),
+            contributor_name=fields.get(FakeJira.CONTRIBUTOR_NAME),
+            customer=fields.get(FakeJira.CUSTOMER),
+            pr_number=fields.get(FakeJira.PR_NUMBER),
+            repo=fields.get(FakeJira.REPO),
+            url=fields.get(FakeJira.URL),
+        )
+        issue = self.make_issue(key, **kwargs)
+        return issue.as_json()
+
+    @callback(r"/rest/api/2/issue/(?P<key>\w+-\d+)/transitions")
+    def _get_issue_transitions(self, match, _request, context) -> Dict:
         """Responds to the API endpoint for listing transitions between issue states."""
-        # Get the issue key from the request.
-        key = get_regex_value(r"/rest/api/2/issue/(OSPR-\d+)/transitions", request.path)
+        key = match["key"]
         if key in self.issues:
             # The transitions don't include the transitions to the current state.
             issue = self.issues[key]
@@ -140,7 +141,7 @@ class FakeJira:
                 "transitions": [
                     {"id": id, "to": {"name": name}}
                     for name, id in self.TRANSITIONS.items()
-                    if name != issue["fields"]["status"]["name"]
+                    if name != issue.status
                 ],
             }
         else:
@@ -148,20 +149,12 @@ class FakeJira:
             context.status_code = 404
             return {}
 
-    def _transition_issue_callback(self, request, _):
+    @callback(r"/rest/api/2/issue/(?P<key>\w+-\d+)/transitions", "POST")
+    def _post_issue_transitions(self, match, request, _context):
         """
         Implement the POST to transition an issue to a new status.
         """
-        key = get_regex_value(r"/rest/api/2/issue/(OSPR-\d+)/transitions", request.path)
+        key = match["key"]
         assert key in self.issues
         transition_id = request.json()["transition"]["id"]
-        self.set_issue_status(self.issues[key], self.TRANSITION_IDS[transition_id])
-
-
-def get_regex_value(pattern, string):
-    """
-    Search a string with a pattern (which must match), and return the group(1) value.
-    """
-    match = re.search(pattern, string)
-    assert match is not None
-    return match[1]
+        self.issues[key].status = self.TRANSITION_IDS[transition_id]

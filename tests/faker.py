@@ -17,7 +17,22 @@ class FakerModel:
 
 
 def callback(path_regex, http_method="GET", data_type="json"):
-    """Associate this method with a particular HTTP route."""
+    """
+    Decorator to associate a method with a particular HTTP route.
+
+    The decorated function should have this signature:
+
+        def _route_handler(self, match, request, context):
+
+    The regex is matched against the path. It should not include a host name,
+    or query parameters.  If you need the query parameters, access then on the
+    request object.
+
+    Arguments:
+        path_regex: a regex to match against the path of the request.
+        http_method: the HTTP method this function will receive.
+        data_type: "json" or "text", the type of data the function will return.
+    """
     def _decorator(func):
         func.callback_spec = (path_regex, http_method.upper(), data_type)
         @functools.wraps(func)
@@ -44,18 +59,20 @@ class Faker:
                 path_regex, http_method, data_type = method.callback_spec
                 self.requests_mocker.register_uri(
                     http_method,
-                    re.compile(fr"^{self.host}{path_regex}$"),
+                    re.compile(fr"^{self.host}{path_regex}(\?.*)?$"),
                     **{data_type: method},
                 )
 
     def requests_made(self, path_regex: str = None, method: str = None) -> List[Tuple[str, str]]:
         """
-        Returns a list of (method, url) pairs that have been made.
+        Returns a list of (method, url) pairs that have been made to this host.
 
         If no method is provided, all methods are returned.
         """
         reqs = []
         for req in self.requests_mocker.request_history:
+            if f"{req.scheme}://{req.hostname}" != self.host:
+                continue
             if method is not None and method != req.method:
                 continue
             if path_regex is not None and not re.search(path_regex, req.path):
