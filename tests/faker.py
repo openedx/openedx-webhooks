@@ -1,17 +1,29 @@
-import dataclasses
+"""
+Base classes for defining fake implementations of APIs.
+
+"""
+
 import functools
 import inspect
 import re
-from typing import Dict, List, Tuple
+from typing import Any, List, Tuple
+
 
 class FakerException(Exception):
+    """
+    An exception to be raised from a route handler.
+
+    It will be converted to an HTTP response using `status_code` and
+    `as_json()`.
+    """
+
     status_code: int = 500
 
     def as_json(self):
         return {"error": str(self)}
 
 
-def callback(path_regex, http_method="GET", data_type="json"):
+def route(path_regex, http_method="GET", data_type="json"):
     """
     Decorator to associate a method with a particular HTTP route.
 
@@ -20,18 +32,22 @@ def callback(path_regex, http_method="GET", data_type="json"):
         def _route_handler(self, match, request, context):
 
     The regex is matched against the path. It should not include a host name,
-    or query parameters.  If you need the query parameters, access then on the
+    or query parameters.  If you need the query parameters, access them on the
     request object.
+
+    In the route handler, `match` is the re.match object matching the request
+    path.  `request` and `context` are as defined by requests-mock.
 
     Arguments:
         path_regex: a regex to match against the path of the request.
         http_method: the HTTP method this function will receive.
         data_type: "json" or "text", the type of data the function will return.
+
     """
     def _decorator(func):
         func.callback_spec = (path_regex, http_method.upper(), data_type)
         @functools.wraps(func)
-        def _decorated(self, request, context) -> Dict:
+        def _decorated(self, request, context) -> Any:
             match = re.match(path_regex, request.path)
             try:
                 return func(self, match, request, context)
@@ -60,7 +76,7 @@ class Faker:
 
     def requests_made(self, path_regex: str = None, method: str = None) -> List[Tuple[str, str]]:
         """
-        Returns a list of (method, url) pairs that have been made to this host.
+        Return a list of (method, url) pairs that have been made to this host.
 
         If no method is provided, all methods are returned.
         """

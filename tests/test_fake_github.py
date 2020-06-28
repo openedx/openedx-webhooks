@@ -2,7 +2,6 @@ import pytest
 import requests
 from glom import glom
 
-from .fake_github import DoesNotExist as fake_github_DoesNotExist
 
 
 class TestFaker:
@@ -28,6 +27,7 @@ class TestFaker:
         assert fake_github.requests_made(r"123", "GET") == [
             ("/repos/xyzzy/quux/pulls/1234", "GET"),
         ]
+from .fake_github import DoesNotExist
 
 
 class TestUsers:
@@ -69,7 +69,7 @@ class TestRepoLabels:
     def test_create_label(self, fake_github):
         repo = fake_github.make_repo("an-org", "a-repo")
         # At first, the label doesn't exist.
-        with pytest.raises(fake_github_DoesNotExist):
+        with pytest.raises(DoesNotExist):
             repo.get_label("nice")
         # We make a label with the API.
         resp = requests.post(
@@ -165,9 +165,10 @@ class TestRepoLabels:
         # Delete the label.
         resp = requests.delete("https://api.github.com/repos/an-org/a-repo/labels/help%20wanted")
         assert resp.status_code == 204
+        assert resp.text == ""
 
         # Now the label doesn't exist.
-        with pytest.raises(fake_github_DoesNotExist):
+        with pytest.raises(DoesNotExist):
             repo.get_label("help wanted")
 
     def test_cant_delete_missing_label(self, fake_github):

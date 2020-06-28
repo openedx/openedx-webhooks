@@ -8,10 +8,10 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 from urllib.parse import unquote
 
-from .faker import Faker, FakerException, callback
+from . import faker
 
 
-class FakeGitHubException(FakerException):
+class FakeGitHubException(faker.FakerException):
     def __init__(self, message, errors=None):
         super().__init__(message)
         self.errors = errors
@@ -187,7 +187,7 @@ class Repo:
             raise DoesNotExist(f"Label {self.owner}/{self.repo} {name!r} does not exist")
 
 
-class FakeGitHub(Faker):
+class FakeGitHub(faker.Faker):
 
     def __init__(self, login: str = "some-user"):
         super().__init__(host="https://api.github.com")
@@ -229,25 +229,25 @@ class FakeGitHub(Faker):
 
     # Users
 
-    @callback(r"/user")
+    @faker.route(r"/user")
     def _get_user(self, _match, _request, _context) -> Dict:
         return {"login": self.login}
 
-    @callback(r"/users/(?P<login>[^/]+)")
+    @faker.route(r"/users/(?P<login>[^/]+)")
     def _get_users(self, match, _request, _context) -> Dict:
         # https://developer.github.com/v3/users/#get-a-user
         return self.users[match["login"]].as_json()
 
     # Pull requests
 
-    @callback(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pulls/(?P<number>\d+)")
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pulls/(?P<number>\d+)")
     def _get_pulls(self, match, _request, _context) -> Dict:
         # https://developer.github.com/v3/pulls/#get-a-pull-request
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))
         return pr.as_json()
 
-    @callback(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/(?P<number>\d+)", "PATCH")
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/(?P<number>\d+)", "PATCH")
     def _patch_issues(self, match, request, _context) -> Dict:
         # https://developer.github.com/v3/issues/#update-an-issue
         r = self.get_repo(match["owner"], match["repo"])
@@ -262,13 +262,13 @@ class FakeGitHub(Faker):
 
     # Repo labels
 
-    @callback(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels")
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels")
     def _get_labels(self, match, _request, _context) -> List[Dict]:
         # https://developer.github.com/v3/issues/labels/#list-labels-for-a-repository
         r = self.get_repo(match["owner"], match["repo"])
         return [label.as_json() for label in r.labels.values()]
 
-    @callback(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels", "POST")
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels", "POST")
     def _post_labels(self, match, request, context):
         # https://developer.github.com/v3/issues/labels/#create-a-label
         r = self.get_repo(match["owner"], match["repo"])
@@ -276,7 +276,7 @@ class FakeGitHub(Faker):
         context.status_code = 201
         return label.as_json()
 
-    @callback(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels/(?P<name>.*)", "PATCH")
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels/(?P<name>.*)", "PATCH")
     def _patch_labels(self, match, request, _context):
         # https://developer.github.com/v3/issues/labels/#update-a-label
         r = self.get_repo(match["owner"], match["repo"])
@@ -286,24 +286,23 @@ class FakeGitHub(Faker):
         label = r.update_label(unquote(match["name"]), **data)
         return label.as_json()
 
-    @callback(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels/(?P<name>.*)", "DELETE")
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels/(?P<name>.*)", "DELETE")
     def _delete_labels(self, match, _request, context):
         # https://developer.github.com/v3/issues/labels/#delete-a-label
         r = self.get_repo(match["owner"], match["repo"])
         r.delete_label(unquote(match["name"]))
         context.status_code = 204
-        return {}
 
     # Comments
 
-    @callback(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/(?P<number>\d+)/comments(\?.*)?")
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/(?P<number>\d+)/comments(\?.*)?")
     def _get_issues_comments(self, match, _request, _context) -> List[Dict]:
         # https://developer.github.com/v3/issues/comments/#list-issue-comments
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))
         return [c.as_json() for c in pr.comments]
 
-    @callback(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/(?P<number>\d+)/comments", "POST")
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/(?P<number>\d+)/comments", "POST")
     def _post_issues_comments(self, match, request, _context) -> Dict:
         # https://developer.github.com/v3/issues/comments/#create-an-issue-comment
         r = self.get_repo(match["owner"], match["repo"])

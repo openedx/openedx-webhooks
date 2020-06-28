@@ -4,7 +4,7 @@ import random
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 
-from .faker import Faker, callback
+from . import faker
 
 
 @dataclass
@@ -41,7 +41,7 @@ class Issue:
         }
 
 
-class FakeJira(Faker):
+class FakeJira(faker.Faker):
     """A fake implementation of the Jira API, specialized to the OSPR project."""
 
     HOST = "openedx.atlassian.net"
@@ -82,7 +82,7 @@ class FakeJira(Faker):
         super().__init__(host="https://openedx.atlassian.net")
         self.issues = {}
 
-    @callback(r"/rest/api/2/field")
+    @faker.route(r"/rest/api/2/field")
     def _get_field(self, _match, _request, _context) -> List[Dict]:
         # Custom fields particular to the OSPR project.
         return [
@@ -101,14 +101,14 @@ class FakeJira(Faker):
         self.issues[key] = issue
         return issue
 
-    @callback(r"/rest/api/2/issue/(?P<key>\w+-\d+)")
+    @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)")
     def _get_issue(self, match, _request, _context) -> Dict:
         """Implement the GET issue endpoint."""
         key = match["key"]
         assert key in self.issues
         return self.issues[key].as_json()
 
-    @callback(r"/rest/api/2/issue", "POST")
+    @faker.route(r"/rest/api/2/issue", "POST")
     def _post_issue(self, _match, request, _context):
         """Responds to the API endpoint for creating new issues."""
         issue_data = request.json()
@@ -129,7 +129,7 @@ class FakeJira(Faker):
         issue = self.make_issue(key, **kwargs)
         return issue.as_json()
 
-    @callback(r"/rest/api/2/issue/(?P<key>\w+-\d+)/transitions")
+    @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)/transitions")
     def _get_issue_transitions(self, match, _request, context) -> Dict:
         """Responds to the API endpoint for listing transitions between issue states."""
         key = match["key"]
@@ -149,7 +149,7 @@ class FakeJira(Faker):
             context.status_code = 404
             return {}
 
-    @callback(r"/rest/api/2/issue/(?P<key>\w+-\d+)/transitions", "POST")
+    @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)/transitions", "POST")
     def _post_issue_transitions(self, match, request, _context):
         """
         Implement the POST to transition an issue to a new status.
