@@ -2,31 +2,6 @@ import pytest
 import requests
 from glom import glom
 
-
-
-class TestFaker:
-    def test_requests_made(self, fake_github):
-        requests.get("https://api.github.com/repos/xyzzy/quux/pulls/1")
-        requests.get("https://api.github.com/repos/xyzzy/quux/pulls/1234")
-        requests.post("https://api.github.com/repos/xyzzy/quux/labels")
-        requests.delete("https://api.github.com/repos/xyzzy/quux/labels/bug123")
-        assert fake_github.requests_made() == [
-            ("/repos/xyzzy/quux/pulls/1", "GET"),
-            ("/repos/xyzzy/quux/pulls/1234", "GET"),
-            ("/repos/xyzzy/quux/labels", "POST"),
-            ("/repos/xyzzy/quux/labels/bug123", "DELETE"),
-        ]
-        assert fake_github.requests_made(method="GET") == [
-            ("/repos/xyzzy/quux/pulls/1", "GET"),
-            ("/repos/xyzzy/quux/pulls/1234", "GET"),
-        ]
-        assert fake_github.requests_made(r"123") == [
-            ("/repos/xyzzy/quux/pulls/1234", "GET"),
-            ("/repos/xyzzy/quux/labels/bug123", "DELETE"),
-        ]
-        assert fake_github.requests_made(r"123", "GET") == [
-            ("/repos/xyzzy/quux/pulls/1234", "GET"),
-        ]
 from .fake_github import DoesNotExist
 
 
