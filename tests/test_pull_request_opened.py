@@ -1,5 +1,7 @@
 """Tests of task/github.py:pull_request_opened."""
 
+import pytest
+
 from openedx_webhooks.tasks.github import (
     github_community_pr_comment,
     github_contractor_pr_comment,
@@ -7,6 +9,12 @@ from openedx_webhooks.tasks.github import (
 )
 
 from . import template_snips
+
+
+@pytest.fixture
+def sync_labels_fn(mocker):
+    """A patch on synchronize_labels"""
+    return mocker.patch("openedx_webhooks.tasks.github.synchronize_labels")
 
 
 def test_internal_pr_opened(reqctx, fake_github):
@@ -28,11 +36,10 @@ def test_pr_opened_by_bot(reqctx, fake_github):
     assert len(pr.comments) == 0
 
 
-def test_external_pr_opened_no_cla(reqctx, mocker, fake_github, fake_jira):
+def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jira):
     fake_github.make_user(login="new_contributor", name="Newb Contributor")
     pr = fake_github.make_pull_request(owner="edx", repo="edx-platform", user="new_contributor")
     prj = pr.as_json()
-    sync_labels_fn = mocker.patch("openedx_webhooks.tasks.github.synchronize_labels")
 
     with reqctx:
         issue_id, anything_happened = pull_request_opened(prj)
@@ -74,10 +81,9 @@ def test_external_pr_opened_no_cla(reqctx, mocker, fake_github, fake_jira):
     assert pr.labels == {"community manager review", "open-source-contribution"}
 
 
-def test_external_pr_opened_with_cla(reqctx, mocker, fake_github, fake_jira):
+def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_jira):
     pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", number=11235)
     prj = pr.as_json()
-    sync_labels_fn = mocker.patch("openedx_webhooks.tasks.github.synchronize_labels")
 
     with reqctx:
         issue_id, anything_happened = pull_request_opened(prj)
@@ -119,10 +125,9 @@ def test_external_pr_opened_with_cla(reqctx, mocker, fake_github, fake_jira):
     assert pr.labels == {"needs triage", "open-source-contribution"}
 
 
-def test_core_committer_pr_opened(reqctx, mocker, fake_github, fake_jira):
+def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform")
     prj = pr.as_json()
-    sync_labels_fn = mocker.patch("openedx_webhooks.tasks.github.synchronize_labels")
 
     with reqctx:
         issue_id, anything_happened = pull_request_opened(prj)
