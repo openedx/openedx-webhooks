@@ -19,17 +19,21 @@ from openedx_webhooks.utils import (
 )
 
 
-def log_request_response(response):
+def log_check_response(response, raise_for_status=True):
     """
-    Logs HTTP request and response at debug level.
+    Logs HTTP request and response at debug level and checks if it succeeded.
 
     Arguments:
         response (requests.Response)
+        raise_for_status (bool): if True, call raise_for_status on the response
+            also.
     """
     msg = "{0.method} {0.url}: {0.body}".format(response.request)
     logger.debug(msg)
     msg = "{0.status_code} {0.reason} for {0.url}: {0.content}".format(response)
     logger.debug(msg)
+    if raise_for_status:
+        response.raise_for_status()
 
 
 @celery.task(bind=True)
@@ -176,8 +180,7 @@ def create_ospr_issue(pr, labels):
 
     logger.info(f"Creating new JIRA issue for PR #{num}...")
     resp = jira_bp.session.post("/rest/api/2/issue", json=new_issue)
-    log_request_response(resp)
-    resp.raise_for_status()
+    log_check_response(resp)
 
     new_issue_body = resp.json()
     new_issue["key"] = new_issue_body["key"]
@@ -220,8 +223,7 @@ def add_comment_to_pull_request(pr, comment_body):
     num = pr["number"]
     url = f"/repos/{repo}/issues/{num}/comments"
     resp = github_bp.session.post(url, json={"body": comment_body})
-    log_request_response(resp)
-    resp.raise_for_status()
+    log_check_response(resp)
 
 
 def update_labels_on_pull_request(pr, labels):
@@ -236,8 +238,7 @@ def update_labels_on_pull_request(pr, labels):
     num = pr["number"]
     url = f"/repos/{repo}/issues/{num}"
     resp = github_bp.session.patch(url, json={"labels": labels})
-    log_request_response(resp)
-    resp.raise_for_status()
+    log_check_response(resp)
 
 
 @celery.task(bind=True)
@@ -291,7 +292,7 @@ def transition_jira_issue(issue_key, status_name):
         "?expand=transitions.fields".format(key=issue_key)
     )
     transitions_resp = jira.get(transition_url)
-    log_request_response(transitions_resp)
+    log_check_response(transitions_resp, raise_for_status=False)
     if transitions_resp.status_code == requests.codes.not_found:
         # JIRA issue has been deleted
         return False
@@ -341,8 +342,7 @@ def transition_jira_issue(issue_key, status_name):
             "id": transition_id,
         }
     })
-    log_request_response(transition_resp)
-    transition_resp.raise_for_status()
+    log_check_response(transition_resp)
     return True
 
 
@@ -432,8 +432,7 @@ def synchronize_labels(repo):
             if name in repo_labels:
                 logger.info(f"Deleting label {name} from {repo}")
                 resp = github_bp.session.delete(f"{url}/{name}")
-                log_request_response(resp)
-                resp.raise_for_status()
+                log_check_response(resp)
         else:
             # A label that should exist in the repo.
             label_data["name"] = name
@@ -446,13 +445,11 @@ def synchronize_labels(repo):
                 if color_differs or desc_differs:
                     logger.info(f"Updating label {name} in {repo}")
                     resp = github_bp.session.patch(f"{url}/{name}", json=label_data)
-                    log_request_response(resp)
-                    resp.raise_for_status()
+                    log_check_response(resp)
             else:
                 logger.info(f"Adding label {name} to {repo}")
                 resp = github_bp.session.post(url, json=label_data)
-                log_request_response(resp)
-                resp.raise_for_status()
+                log_check_response(resp)
 
 
 def pull_request_has_cla(pull_request):
