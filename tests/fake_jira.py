@@ -85,13 +85,13 @@ class FakeJira(faker.Faker):
     @faker.route(r"/rest/api/2/field")
     def _get_field(self, _match, _request, _context) -> List[Dict]:
         # Custom fields particular to the OSPR project.
-        return [
-            {"id": self.CONTRIBUTOR_NAME, "name": "Contributor Name", "custom": True},
-            {"id": self.CUSTOMER, "name": "Customer", "custom": True},
-            {"id": self.PR_NUMBER, "name": "PR Number", "custom": True},
-            {"id": self.REPO, "name": "Repo", "custom": True},
-            {"id": self.URL, "name": "URL", "custom": True},
-        ]
+        return [{"id": i, "name": n, "custom": True} for i, n in [
+            (self.CONTRIBUTOR_NAME, "Contributor Name"),
+            (self.CUSTOMER, "Customer"),
+            (self.PR_NUMBER, "PR Number"),
+            (self.REPO, "Repo"),
+            (self.URL, "URL"),
+        ]]
 
     def make_issue(self, key=None, **kwargs):
         """Make fake issue data."""
