@@ -21,6 +21,11 @@ class Issue:
     description: Optional[str] = None
     summary: Optional[str] = None
     labels: Set[str] = field(default_factory=set)
+    epic_link: Optional[str] = None
+    platform_map_1_2: Optional[str] = None
+    platform_map_3_4: Optional[str] = None
+    blended_project_status_page: Optional[str] = None
+    blended_project_id: Optional[str] = None
 
     def as_json(self) -> Dict:
         return {
@@ -32,11 +37,16 @@ class Issue:
                 "summary": self.summary,
                 "description": self.description,
                 "labels": sorted(self.labels),
+                FakeJira.EPIC_LINK: self.epic_link,
                 FakeJira.CONTRIBUTOR_NAME: self.contributor_name,
                 FakeJira.CUSTOMER: self.customer,
                 FakeJira.PR_NUMBER: self.pr_number,
                 FakeJira.REPO: self.repo,
                 FakeJira.URL: self.url,
+                FakeJira.PLATFORM_MAP_1_2: self.platform_map_1_2,
+                FakeJira.PLATFORM_MAP_3_4: self.platform_map_3_4,
+                FakeJira.BLENDED_PROJECT_STATUS_PAGE: self.blended_project_status_page,
+                FakeJira.BLENDED_PROJECT_ID: self.blended_project_id,
             },
         }
 
@@ -46,12 +56,17 @@ class FakeJira(faker.Faker):
 
     HOST = "openedx.atlassian.net"
 
-    # Custom fields for OSPR.
+    # Custom fields for OSPR. The values are arbitrary.
     CONTRIBUTOR_NAME = "custom_101"
     CUSTOMER = "custom_102"
     PR_NUMBER = "custom_103"
     REPO = "custom_104"
     URL = "customfield_10904"   # This one is hard-coded
+    EPIC_LINK = "custom_900"
+    PLATFORM_MAP_1_2 = "custom_105"
+    PLATFORM_MAP_3_4 = "custom_106"
+    BLENDED_PROJECT_STATUS_PAGE = "custom_107"
+    BLENDED_PROJECT_ID = "custom_108"
 
     # Issue states and transitions for OSPR.
     INITIAL_STATE = "Needs Triage"
@@ -86,11 +101,16 @@ class FakeJira(faker.Faker):
     def _get_field(self, _match, _request, _context) -> List[Dict]:
         # Custom fields particular to the OSPR project.
         return [{"id": i, "name": n, "custom": True} for i, n in [
+            (self.EPIC_LINK, "Epic Link"),
             (self.CONTRIBUTOR_NAME, "Contributor Name"),
             (self.CUSTOMER, "Customer"),
             (self.PR_NUMBER, "PR Number"),
             (self.REPO, "Repo"),
             (self.URL, "URL"),
+            (self.PLATFORM_MAP_1_2, "Platform Map Area (Levels 1 & 2)"),
+            (self.PLATFORM_MAP_3_4, "Platform Map Area (Levels 3 & 4)"),
+            (self.BLENDED_PROJECT_STATUS_PAGE, "Blended Project Status Page"),
+            (self.BLENDED_PROJECT_ID, "Blended Project ID"),
         ]]
 
     def make_issue(self, key=None, **kwargs):
@@ -120,11 +140,14 @@ class FakeJira(faker.Faker):
             summary=fields.get("summary"),
             description=fields.get("description"),
             labels=fields.get("labels"),
+            epic_link=fields.get(FakeJira.EPIC_LINK),
             contributor_name=fields.get(FakeJira.CONTRIBUTOR_NAME),
             customer=fields.get(FakeJira.CUSTOMER),
             pr_number=fields.get(FakeJira.PR_NUMBER),
             repo=fields.get(FakeJira.REPO),
             url=fields.get(FakeJira.URL),
+            platform_map_1_2=fields.get(FakeJira.PLATFORM_MAP_1_2),
+            platform_map_3_4=fields.get(FakeJira.PLATFORM_MAP_3_4),
         )
         issue = self.make_issue(key, **kwargs)
         return issue.as_json()
