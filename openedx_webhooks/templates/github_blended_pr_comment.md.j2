@@ -1,0 +1,12 @@
+{% filter replace("\n", " ")|trim %}
+Thanks for the pull request, @{{ user }}!
+I've created [{{ issue_key }}](https://openedx.atlassian.net/browse/{{ issue_key }})
+to keep track of it in Jira.
+{% if project_page %}
+More details are on the [{{ project_name }}]({{ project_page }}) project page.
+{% endif %}
+{% endfilter %}
+
+When this pull request is ready, tag your edX technical lead.
+
+<!-- comment:welcome-blended -->

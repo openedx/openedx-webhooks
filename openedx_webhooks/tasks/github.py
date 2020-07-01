@@ -16,6 +16,7 @@ from openedx_webhooks.oauth import github_bp, jira_bp
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.utils import (
     memoize, paginated_get, sentry_extra_context, get_jira_custom_fields,
+    jira_paginated_get,
 )
 
 
@@ -100,54 +101,70 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
 
     synchronize_labels(repo)
 
-    committer = is_committer_pull_request(pr)
     jira_labels = []
-    if committer:
-        jira_labels.append("core-committer")
+    jira_project = "OSPR"
+    jira_extra_fields = []
+    jira_status = "Needs Triage"
+    github_labels = []
+    committer = False
+    has_cla = True
+
+    blended_id = get_blended_project_id(pr)
+    if blended_id is not None:
+        jira_labels.append("blended")
+        jira_project = "BLENDED"
+        github_labels.append("blended")
+        blended_epic = find_blended_epic(blended_id)
+        custom_fields = get_jira_custom_fields(jira_bp.session)
+        jira_extra_fields.extend([
+            ("Epic Link", blended_epic["key"]),
+            ("Platform Map Area (Levels 1 & 2)",
+                blended_epic["fields"].get(custom_fields["Platform Map Area (Levels 1 & 2)"])),
+        ])
+    else:
+        github_labels.append("open-source-contribution")
+        committer = is_committer_pull_request(pr)
+        if committer:
+            jira_labels.append("core-committer")
+            jira_status = "Open edX Community Review"
+            github_labels.append("core committer")
+        else:
+            has_cla = pull_request_has_cla(pr)
+            if not has_cla:
+                jira_status = "Community Manager Review"
 
     # Create an issue on Jira.
-    new_issue = create_ospr_issue(pr, jira_labels)
+    new_issue = create_ospr_issue(pr, jira_labels, jira_project, jira_extra_fields)
     issue_key = new_issue["key"]
     sentry_extra_context({"new_issue": new_issue})
 
-    if committer:
+    # Add a comment to the Github pull request with a link to the JIRA issue.
+    if blended_id is not None:
+        comment_body = github_blended_pr_comment(pr, new_issue, blended_epic)
+    elif committer:
         comment_body = github_committer_pr_comment(pr, new_issue)
     else:
         comment_body = github_community_pr_comment(pr, new_issue)
 
-    # Add a comment to the Github pull request with a link to the JIRA issue.
     logger.info(f"Commenting on PR #{num} with issue id {issue_key}")
     add_comment_to_pull_request(pr, comment_body)
 
-    # Add the "Needs Triage" label to the PR.
+    # Set the GitHub labels.
     logger.info(f"Updating GitHub labels on PR #{num}...")
-    labels = ["open-source-contribution"]
-    if committer:
-        labels.append("core committer")
-        labels.append("open edx community review")
-    else:
-        has_cla = pull_request_has_cla(pr)
-        if has_cla:
-            labels.append("needs triage")
-        else:
-            labels.append("community manager review")
-    update_labels_on_pull_request(pr, labels)
+    github_labels.append(jira_status.lower())
+    update_labels_on_pull_request(pr, github_labels)
 
-    # Set the Jira status. Core committers get Engineering Review, non-cla get
-    # Community Manager Review, everything else stays in Needs Triage.
-    if committer:
-        transition_jira_issue(issue_key, "Open edX Community Review")
-    else:
-        if not has_cla:
-            transition_jira_issue(issue_key, "Community Manager Review")
+    # Set the Jira status.
+    if jira_status != "Needs Triage":
+        transition_jira_issue(issue_key, jira_status)
 
     logger.info(f"@{user} opened PR #{num} against {repo}, created {issue_key} to track it")
     return issue_key, True
 
 
-def create_ospr_issue(pr, labels):
+def create_ospr_issue(pr, labels, project, extra_fields):
     """
-    Create a new OSPR issue for a pull request.
+    Create a new OSPR or OSPR-like issue for a pull request.
 
     Returns the JSON describing the issue.
     """
@@ -160,7 +177,7 @@ def create_ospr_issue(pr, labels):
     new_issue = {
         "fields": {
             "project": {
-                "key": "OSPR",
+                "key": project,
             },
             "issuetype": {
                 "name": "Pull Request Review",
@@ -176,6 +193,8 @@ def create_ospr_issue(pr, labels):
     }
     if institution:
         new_issue["fields"][custom_fields["Customer"]] = [institution]
+    for name, value in extra_fields:
+        new_issue["fields"][custom_fields[name]] = value
     sentry_extra_context({"new_issue": new_issue})
 
     logger.info(f"Creating new JIRA issue for PR #{num}...")
@@ -413,7 +432,7 @@ def get_bot_comments(pull_request):
 def get_jira_issue_key(pull_request):
     """Find mention of a Jira issue number in bot-authored comments."""
     for comment in get_bot_comments(pull_request):
-        # search for the first occurrance of a JIRA ticket key in the comment body
+        # search for the first occurrence of a JIRA ticket key in the comment body
         match = re.search(r"\b([A-Z]{2,}-\d+)\b", comment["body"])
         if match:
             return match.group(0)
@@ -517,6 +536,24 @@ def github_committer_pr_comment(pull_request, jira_issue):
     )
 
 
+def github_blended_pr_comment(pull_request, jira_issue, blended_epic):
+    """
+    Create a Blended PR comment.
+    """
+    custom_fields = get_jira_custom_fields(jira_bp.session)
+    project_name = blended_epic["fields"].get(custom_fields["Blended Project ID"])
+    project_page = blended_epic["fields"].get(custom_fields["Blended Project Status Page"])
+    return render_template("github_blended_pr_comment.md.j2",
+        user=pull_request["user"]["login"],
+        repo=pull_request["base"]["repo"]["full_name"],
+        number=pull_request["number"],
+        issue_key=jira_issue["key"],
+        epic=blended_epic["key"],
+        project_name=project_name,
+        project_page=project_page,
+    )
+
+
 def has_contractor_comment(pull_request):
     """
     Given a pull request, this function returns a boolean indicating whether
@@ -528,6 +565,36 @@ def has_contractor_comment(pull_request):
         if magic_phrase in comment["body"]:
             return True
     return False
+
+
+def get_blended_project_id(pull_request):
+    """
+    Find the blended project id in the pull request, if any.
+
+    Returns:
+        An int ("[BD-5]" returns 5, for example) found in the pull request, or None.
+    """
+    m = re.search(r"\[\s*BD-(\d+)\s*\]", pull_request["title"])
+    if m:
+        return int(m[1])
+
+
+def find_blended_epic(project_id):
+    """
+    Find the blended epic for a blended project.
+    """
+    jql = (
+        '"Blended Project ID" ~ "BD-00{id}" or ' +
+        '"Blended Project ID" ~ "BD-0{id}" or ' +
+        '"Blended Project ID" ~ "BD-{id}"'
+    ).format(id=project_id)
+    issues = list(jira_paginated_get("/rest/api/2/search", jql=jql, obj_name="issues", session=jira_bp.session))
+    if not issues:
+        logger.info(f"Couldn't find a blended epic for {project_id}")
+    elif len(issues) > 1:
+        logger.info(f"Found {len(issues)} blended epics for {project_id}")
+    else:
+        return issues[0]
 
 
 @memoize

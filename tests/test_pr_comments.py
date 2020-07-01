@@ -1,9 +1,12 @@
 """Tests of the comment creation functions in tasks/github.py."""
 
+import pytest
+
 from openedx_webhooks.tasks.github import (
     github_community_pr_comment,
     github_contractor_pr_comment,
     has_contractor_comment,
+    get_blended_project_id,
 )
 
 from . import template_snips
@@ -73,3 +76,15 @@ def test_has_contractor_comment_no_comments(reqctx, fake_github):
     with reqctx:
         result = has_contractor_comment(pr.as_json())
     assert result is False
+
+
+@pytest.mark.parametrize("title, number", [
+    ("Please take my change", None),
+    ("[BD-17] Fix typo", 17),
+    ("This is for [  BD-007]", 7),
+    ("Blended BD-18 doesn't count", None)
+])
+def test_get_blended_project_id(fake_github, title, number):
+    pr = fake_github.make_pull_request(title=title)
+    num = get_blended_project_id(pr.as_json())
+    assert number == num

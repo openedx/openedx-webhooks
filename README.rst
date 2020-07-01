@@ -185,6 +185,14 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
+Unreleased
+~~~~~~~~~~
+
+- Blended workflow: if "[BD-XX]" is found in the title of an opened pull
+  request, then the Jira ticket will be in the BLENDED project, with links to
+  the correct epic, etc.
+
+
 2020-06-25
 ~~~~~~~~~~
 

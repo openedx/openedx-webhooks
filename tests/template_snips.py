@@ -6,6 +6,8 @@ EXTERNAL_TEXT = "Please note that it may take us up to several weeks or months t
 # Text in the bot comment for core committers.
 CORE_COMMITTER_TEXT = "<!-- comment:welcome-core-committer -->"
 
+BLENDED_TEXT = "<!-- comment:welcome-blended -->"
+
 # Text in the bot comment if the contributor has no CLA.
 NO_CLA_TEXT = "We can't start reviewing your pull request until you've submitted"
 

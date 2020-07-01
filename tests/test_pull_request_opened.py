@@ -37,6 +37,7 @@ def test_pr_opened_by_bot(reqctx, fake_github):
 
 
 def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jira):
+    # No CLA, because this person is not in people.yaml
     fake_github.make_user(login="new_contributor", name="Newb Contributor")
     pr = fake_github.make_pull_request(owner="edx", repo="edx-platform", user="new_contributor")
     prj = pr.as_json()
@@ -167,6 +168,68 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"open edx community review", "open-source-contribution", "core committer"}
+
+
+def test_blended_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_jira):
+    pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", title="[BD-34] Something good")
+    prj = pr.as_json()
+    map_1_2 = {
+        "child": {
+            "id": "14522",
+            "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14522",
+            "value": "Course Level Insights"
+        },
+        "id": "14209",
+        "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
+        "value": "Researcher & Data Experiences"
+    }
+    epic = fake_jira.make_issue(
+        project="BLENDED",
+        blended_project_id="BD-34",
+        blended_project_status_page="https://thewiki/bd-34",
+        platform_map_1_2=map_1_2,
+    )
+    with reqctx:
+        issue_id, anything_happened = pull_request_opened(prj)
+
+    assert issue_id is not None
+    assert issue_id.startswith("BLENDED-")
+    assert anything_happened is True
+
+    # Check the Jira issue that was created.
+    assert len(fake_jira.issues) == 2
+    issue = fake_jira.issues[issue_id]
+    assert issue.contributor_name == "Bertrand Marron"
+    assert issue.customer == ["IONISx"]
+    assert issue.pr_number == prj["number"]
+    assert issue.repo == "edx/some-code"
+    assert issue.url == prj["html_url"]
+    assert issue.description == prj["body"]
+    assert issue.issuetype == "Pull Request Review"
+    assert issue.summary == prj["title"]
+    assert issue.labels == ["blended"]
+    assert issue.epic_link == epic.key
+    assert issue.platform_map_1_2 == map_1_2
+
+    # Check that the Jira issue is in Needs Triage.
+    assert issue.status == "Needs Triage"
+
+    # Check that we synchronized labels.
+    sync_labels_fn.assert_called_once_with("edx/some-code")
+
+    # Check the GitHub comment that was created.
+    assert len(pr.comments) == 1
+    body = pr.comments[0].body
+    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
+    assert jira_link in body
+    assert "Thanks for the pull request, @tusbar!" in body
+    assert "the [BD-34](https://thewiki/bd-34) project page" in body
+    assert template_snips.BLENDED_TEXT in body
+    assert template_snips.NO_CLA_TEXT not in body
+    assert template_snips.NO_CLA_LINK not in body
+
+    # Check the GitHub labels that got applied.
+    assert pr.labels == {"needs triage", "blended"}
 
 
 def test_external_pr_rescanned(reqctx, fake_github, fake_jira):

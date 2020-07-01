@@ -1,6 +1,7 @@
 """A fake implementation of the Jira API."""
 
 import random
+import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 
@@ -113,10 +114,10 @@ class FakeJira(faker.Faker):
             (self.BLENDED_PROJECT_ID, "Blended Project ID"),
         ]]
 
-    def make_issue(self, key=None, **kwargs):
+    def make_issue(self, key=None, project="OSPR", **kwargs):
         """Make fake issue data."""
         if key is None:
-            key = "OSPR-{}".format(random.randint(1001, 9009))
+            key = "{}-{}".format(project, random.randint(1001, 9009))
         issue = Issue(key=key, status=self.INITIAL_STATE, **kwargs)
         self.issues[key] = issue
         return issue
@@ -181,3 +182,18 @@ class FakeJira(faker.Faker):
         assert key in self.issues
         transition_id = request.json()["transition"]["id"]
         self.issues[key].status = self.TRANSITION_IDS[transition_id]
+
+    @faker.route(r"/rest/api/2/search", "GET")
+    def _get_search(self, match, request, _context):
+        jql = request.qs["jql"][0]
+        # We only handle certain specific queries.
+        if bd_ids := re.findall(r'"Blended Project ID" ~ "(.*?)"', jql):
+            issues = [iss for iss in self.issues.values() if iss.blended_project_id in bd_ids]
+        else:
+            # We don't understand this query.
+            _context.status_code = 500
+            return None
+        return {
+            "issues": [iss.as_json() for iss in issues],
+            "total": len(issues),
+        }
