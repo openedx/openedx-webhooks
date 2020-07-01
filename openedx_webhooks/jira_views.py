@@ -141,8 +141,9 @@ def issue_opened(issue):
     issue_key = issue["key"]
     issue_url = URLObject(issue["self"])
 
-    transitioned = False
-    if should_transition(issue):
+    action = "ignored"
+    do_it = should_transition(issue)
+    if do_it:
         # In JIRA, a "transition" is how an issue changes from one status
         # to another, like going from "Open" to "In Progress". The workflow
         # defines what transitions are allowed, and this API will tell us
@@ -150,7 +151,14 @@ def issue_opened(issue):
         # Ref: https://docs.atlassian.com/jira/REST/ondemand/#d2e4954
         transitions_url = issue_url.with_path(issue_url.path + "/transitions")
         transitions_resp = jira_get(transitions_url)
-        transitions_resp.raise_for_status()
+        if transitions_resp.status_code == 404:
+            # Issue was deleted.
+            do_it = False
+            action = "Issue is gone, ignored"
+        else:
+            transitions_resp.raise_for_status()
+
+    if do_it:
         # This transforms the API response into a simple mapping from the
         # name of the transition (like "In Progress") to the ID of the transition.
         # Note that a transition may not have the same name as the state that it
@@ -161,7 +169,6 @@ def issue_opened(issue):
         # We attempt to transition the issue into the "Open" state for the given project
         # (some projects use a different name), so look for a transition with the right name
         new_status = None
-        action = None
         for state_name in ["Open", "Design Backlog", "To Do"]:
             if state_name in transitions:
                 new_status = state_name
@@ -185,19 +192,13 @@ def issue_opened(issue):
         }
         transition_resp = jira.post(transitions_url, json=body)
         transition_resp.raise_for_status()
-        transitioned = True
 
-    # log to stderr
-    if transitioned and not action:
-        action = "Transitioned to Open"
-    else:
-        action = "ignored"
     logger.info(
         "{key} created by {name} ({account}), {action}".format(
             key=issue_key,
             name=issue["fields"]["creator"]["displayName"],
             account=issue["fields"]["creator"]["accountId"],
-            action="Transitioned to Open" if transitioned else "ignored",
+            action=action,
         )
     )
     return action
