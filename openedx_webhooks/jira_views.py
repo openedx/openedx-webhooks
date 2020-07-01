@@ -72,7 +72,8 @@ def issue_created():
         raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
     sentry_extra_context({"event": event})
 
-    logger.debug("Jira issue created: {}".format(json.dumps(event)))
+    logger.info("Jira issue created: {}".format(event["issue"]["key"]))
+    logger.debug("/jira/issue/created data: {}".format(json.dumps(event)))
 
     if "issue" not in event:
         # It's rare, but we occasionally see junk data from JIRA. For example,
@@ -220,7 +221,8 @@ def issue_updated():
         raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
     sentry_extra_context({"event": event})
 
-    logger.debug("/issue/updated data: {}".format(json.dumps(event)))
+    logger.info("Jira issue updated: {}".format(event["issue"]["key"]))
+    logger.debug("/jira/issue/updated data: {}".format(json.dumps(event)))
 
     if "issue" not in event:
         # It's rare, but we occasionally see junk data from JIRA. For example,
