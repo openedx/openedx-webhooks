@@ -258,6 +258,7 @@ def issue_updated():
     if len(status_changelog_items) == 0:
         return log_return("I don't care, not changing status")
 
+    pr_repo = github_pr_repo(event["issue"])
     if not pr_repo:
         issue_key = event["issue"]["key"]
         fail_msg = '{key} is missing "Repo" field'.format(key=issue_key)
