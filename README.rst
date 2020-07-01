@@ -185,7 +185,7 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
-Unreleased
+2020-07-01
 ~~~~~~~~~~
 
 - Blended workflow: if "[BD-XX]" is found in the title of an opened pull
