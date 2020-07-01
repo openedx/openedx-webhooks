@@ -236,15 +236,6 @@ def issue_updated():
     if comment:
         return log_return("Ignoring new-comment events")
 
-    # is the issue an open source pull request?
-    if event["issue"]["fields"]["project"]["key"] != "OSPR":
-        return log_return(f"Don't care, not OSPR: {event['issue']['key']}")
-
-    # is it a pull request against an edX repo?
-    pr_repo = github_pr_repo(event["issue"])
-    if pr_repo and not pr_repo.startswith("edx/"):
-        return log_return("ignoring PR on external repo")
-
     # we don't care about OSPR subtasks
     if event["issue"]["fields"]["issuetype"]["subtask"]:
         return log_return("ignoring subtasks")
