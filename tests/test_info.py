@@ -14,20 +14,17 @@ from openedx_webhooks.info import (
 pytestmark = pytest.mark.usefixtures("fake_repo_data", "mock_github_bp")
 
 
-def make_pull_request(user, created_at=None, repo="edx/edx-platform"):
-    # This should really use a framework like factory_boy.
-    created_at = created_at or datetime.now().replace(microsecond=0)
-    return {
-        "user": {
-            "login": user,
-        },
-        "created_at": created_at.isoformat(),
-        "base": {
-            "repo": {
-                "full_name": repo,
-            },
-        },
-    }
+@pytest.fixture
+def make_pull_request(fake_github):
+    """
+    Provide a function for making a JSON pull request object.
+    """
+    def _fn(user, repo="edx/edx-platform", **kwargs):
+        fake_github.make_user(user)
+        owner, repo = repo.split("/")
+        pr = fake_github.make_pull_request(user=user, owner=owner, repo=repo, **kwargs)
+        return pr.as_json()
+    return _fn
 
 
 def test_internal_orgs():
@@ -40,32 +37,32 @@ def test_contractor_orgs():
     assert isinstance(orgs, set)
     assert "edX" not in orgs
 
-def test_edx_employee():
+def test_edx_employee(make_pull_request):
     pr = make_pull_request("nedbat")
     assert is_internal_pull_request(pr)
 
-def test_ex_edx_employee():
+def test_ex_edx_employee(make_pull_request):
     pr = make_pull_request("mmprandom")
     assert not is_internal_pull_request(pr)
 
-def test_ex_edx_employee_old_pr():
+def test_ex_edx_employee_old_pr(make_pull_request):
     created_at = datetime(2014, 1, 1)
     pr = make_pull_request("jarv", created_at=created_at)
     assert is_internal_pull_request(pr)
 
-def test_never_heard_of_you():
+def test_never_heard_of_you(make_pull_request):
     pr = make_pull_request("some_random_guy")
     assert not is_internal_pull_request(pr)
 
-def test_hourly_worker():
+def test_hourly_worker(make_pull_request):
     pr = make_pull_request("theJohnnyBrown")
     assert not is_internal_pull_request(pr)
 
-def test_left_but_still_a_fan():
+def test_left_but_still_a_fan(make_pull_request):
     pr = make_pull_request("jarv")
     assert not is_internal_pull_request(pr)
 
-def test_org_committers():
+def test_org_committers(make_pull_request):
     pr = make_pull_request("felipemontoya", repo="edx/something")
     assert not is_internal_pull_request(pr)
     assert is_committer_pull_request(pr)
@@ -73,7 +70,7 @@ def test_org_committers():
     assert not is_internal_pull_request(pr)
     assert not is_committer_pull_request(pr)
 
-def test_repo_committers():
+def test_repo_committers(make_pull_request):
     pr = make_pull_request("pdpinch", repo="edx/ccx-keys")
     assert not is_internal_pull_request(pr)
     assert is_committer_pull_request(pr)
@@ -106,7 +103,7 @@ def test_updated_person():
     updated_person = get_person_certain_time(people["raisingarizona"], created_at)
     assert updated_person["agreement"] == "individual"
 
-def test_old_committer():
+def test_old_committer(make_pull_request):
     pr = make_pull_request("raisingarizona")
     assert not is_committer_pull_request(pr)
     pr = make_pull_request("raisingarizona", created_at=datetime(2014, 12, 31))
