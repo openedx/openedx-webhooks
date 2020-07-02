@@ -151,3 +151,21 @@ def is_committer_pull_request(pull_request):
         if repo in commit_rights["repos"]:
             return True
     return False
+
+
+def pull_request_has_cla(pull_request):
+    """Does this pull request have a valid CLA?"""
+    pr_author = pull_request["user"]["login"].lower()
+    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
+    return person_has_cla(pr_author, created_at)
+
+
+def person_has_cla(author, created_at):
+    """Does `author` have a valid CLA at a point in time?"""
+    people = get_people_file()
+    people = {user.lower(): values for user, values in people.items()}
+    has_signed_agreement = (
+        author in people and
+        people[author].get("expires_on", date.max) > created_at.date()
+    )
+    return has_signed_agreement
