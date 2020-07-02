@@ -82,7 +82,10 @@ def test_has_contractor_comment_no_comments(reqctx, fake_github):
     ("Please take my change", None),
     ("[BD-17] Fix typo", 17),
     ("This is for [  BD-007]", 7),
-    ("Blended BD-18 doesn't count", None)
+    ("This is for [  BD  -  0070     ]", 70),
+    ("Blended BD-18 doesn't count", None),
+    ("[BD-34] [BB-1234] extra tags are OK", 34),
+    ("[BB-1234] [BD-34] extra tags are OK", 34),
 ])
 def test_get_blended_project_id(fake_github, title, number):
     pr = fake_github.make_pull_request(title=title)

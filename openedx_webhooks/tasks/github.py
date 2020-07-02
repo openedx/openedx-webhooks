@@ -574,7 +574,7 @@ def get_blended_project_id(pull_request):
     Returns:
         An int ("[BD-5]" returns 5, for example) found in the pull request, or None.
     """
-    m = re.search(r"\[\s*BD-(\d+)\s*\]", pull_request["title"])
+    m = re.search(r"\[\s*BD\s*-\s*(\d+)\s*\]", pull_request["title"])
     if m:
         return int(m[1])
 
