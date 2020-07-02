@@ -185,6 +185,13 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
+Unreleased
+~~~~~~~~~~
+
+- If an opened pull request has a CLA, then the bot will comment "jenkins ok to
+  test" on it to get the tests started automatically.
+
+
 2020-07-01
 ~~~~~~~~~~
 

@@ -107,7 +107,7 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     jira_status = "Needs Triage"
     github_labels = []
     committer = False
-    has_cla = True
+    has_cla = pull_request_has_cla(pr)
 
     blended_id = get_blended_project_id(pr)
     if blended_id is not None:
@@ -129,7 +129,6 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
             jira_status = "Open edX Community Review"
             github_labels.append("core committer")
         else:
-            has_cla = pull_request_has_cla(pr)
             if not has_cla:
                 jira_status = "Community Manager Review"
 
@@ -145,6 +144,9 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         comment_body = github_committer_pr_comment(pr, new_issue)
     else:
         comment_body = github_community_pr_comment(pr, new_issue)
+
+    if has_cla:
+        comment_body += "\n<!-- jenkins ok to test -->"
 
     logger.info(f"Commenting on PR #{num} with issue id {issue_key}")
     add_comment_to_pull_request(pr, comment_body)

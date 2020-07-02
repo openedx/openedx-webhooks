@@ -77,6 +77,7 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     assert template_snips.EXTERNAL_TEXT in body
     assert template_snips.NO_CLA_TEXT in body
     assert template_snips.NO_CLA_LINK in body
+    assert "jenkins ok to test" not in body
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"community manager review", "open-source-contribution"}
@@ -121,6 +122,7 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
     assert template_snips.EXTERNAL_TEXT in body
     assert template_snips.NO_CLA_TEXT not in body
     assert template_snips.NO_CLA_LINK not in body
+    assert "jenkins ok to test" in body
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"needs triage", "open-source-contribution"}
@@ -165,6 +167,7 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     assert template_snips.CORE_COMMITTER_TEXT in body
     assert template_snips.NO_CLA_TEXT not in body
     assert template_snips.NO_CLA_LINK not in body
+    assert "jenkins ok to test" in body
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"open edx community review", "open-source-contribution", "core committer"}
@@ -227,6 +230,7 @@ def test_blended_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_ji
     assert template_snips.BLENDED_TEXT in body
     assert template_snips.NO_CLA_TEXT not in body
     assert template_snips.NO_CLA_LINK not in body
+    assert "jenkins ok to test" in body
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"needs triage", "blended"}
