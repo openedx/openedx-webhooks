@@ -45,7 +45,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Open edX Webhooks Bot'
-copyright = u'2016, David Baumgold, Sarina Canelake'
+copyright = u'2016–2020, edX Inc.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -188,7 +188,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'OpenedXWebhooksBot.tex', u'Open edX Webhooks Bot Documentation',
-   u'David Baumgold, Sarina Canelake', 'manual'),
+   u'edX Inc.', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -218,7 +218,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'openedxwebhooksbot', u'Open edX Webhooks Bot Documentation',
-     [u'David Baumgold, Sarina Canelake'], 1)
+     [u'edX Inc.'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -232,7 +232,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'OpenedXWebhooksBot', u'Open edX Webhooks Bot Documentation',
-   u'David Baumgold, Sarina Canelake', 'OpenedXWebhooksBot', 'One line description of project.',
+   u'edX Inc.', 'OpenedXWebhooksBot', 'One line description of project.',
    'Miscellaneous'),
 ]
 
