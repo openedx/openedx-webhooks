@@ -185,6 +185,14 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
+Unreleased
+~~~~~~~~~~
+
+- Some incorrect CLA logic was fixed. An entry in people.yaml with no
+  "expires_on" key would be considered to have a signed CLA, even if the
+  agreement was "none".
+
+
 2020-07-02
 ~~~~~~~~~~
 

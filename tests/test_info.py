@@ -8,6 +8,7 @@ import pytest
 from openedx_webhooks.info import (
     get_orgs, get_people_file, get_person_certain_time,
     is_committer_pull_request, is_internal_pull_request,
+    pull_request_has_cla,
 )
 
 
@@ -110,3 +111,15 @@ def test_old_committer(make_pull_request):
     assert is_committer_pull_request(pr)
     pr = make_pull_request("raisingarizona", created_at=datetime(2015, 12, 31))
     assert not is_committer_pull_request(pr)
+
+@pytest.mark.parametrize("user, created_at_args, has_cla", [
+    ("nedbat", (2020, 7, 2), True),
+    ("raisingarizona", (2020, 7, 2), False),
+    ("raisingarizona", (2017, 1, 1), True),
+    ("raisingarizona", (2016, 1, 1), False),
+    ("raisingarizona", (2015, 1, 1), True),
+    ("never-heard-of-her", (2020, 7, 2), False),
+])
+def test_pull_request_has_cla(make_pull_request, user, created_at_args, has_cla):
+    pr = make_pull_request(user, created_at=datetime(*created_at_args))
+    assert pull_request_has_cla(pr) is has_cla
