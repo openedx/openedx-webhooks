@@ -127,9 +127,7 @@ class Person:
         """
         Optional[datetime.date]: When did the user's agreement expire?
         """
-        expires_on = self._data.get('expires_on')
-        if expires_on:
-            return expires_on
+        expires_on = None
 
         if not self.agreement:
             # TODO: Is there a better way to handle this edge case?
@@ -139,7 +137,7 @@ class Person:
             expires_on = yesterday
 
         if not self.agreement and self._before:
-            expires_on = max(self._before.keys())
+            expires_on = arrow.get(max(self._before.keys())).date()
 
         return expires_on
 

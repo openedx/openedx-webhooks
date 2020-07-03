@@ -26,9 +26,13 @@ def active_edx_data():
 @pytest.fixture
 def expired_data():
     data = {'expired-person': {
-        'agreement': 'institution',
-        'expires_on': datetime.date(2012, 10, 1),
-        'institution': 'edX',
+        'agreement': 'none',
+        'before': {
+            '2012-10-01': {
+                'agreement': 'institution',
+                'institution': 'edX',
+            },
+        },
     }}
     return data
 

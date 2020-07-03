@@ -99,10 +99,6 @@ def _pr_author_data(pull_request: PrDict) -> Optional[Dict]:
 
     person = people[author]
     created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
-    if person.get("expires_on", datetime.date.max) <= created_at.date():
-        # This person's agreement has expired.
-        return None
-
     person = get_person_certain_time(people[author], created_at)
     return person
 
