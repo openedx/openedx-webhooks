@@ -17,7 +17,6 @@ Contents:
    install
    endpoints
    things-that-go-wrong
-   future
 
 
 Indices and tables
