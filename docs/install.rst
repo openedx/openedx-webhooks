@@ -48,17 +48,17 @@ Generate a secret key for Flask, so that it can save information into the sessio
 Setup OAuth
 -----------
 
-JIRA
+Jira
 ~~~~
 
-OAuth authentication for JIRA requires a RSA keypair. To set this up:
+OAuth authentication for Jira requires a RSA keypair. To set this up:
 
 1.  Run ``openssl genrsa -out jira.pem``. This will generate a private key.
 2.  Run ``openssl rsa -in jira.pem -pubout -out jira.pub``. This will generate the
     public key.
 3.  Generate a random string to serve as the consumer key. For example, run
     ``python -c "import uuid; print(uuid.uuid4().hex)" > jira.uuid``.
-4.  Configure an Application Link in JIRA. The consumer key is the contents
+4.  Configure an Application Link in Jira. The consumer key is the contents
     of ``jira.uuid``, and the public key is the contents of ``jira.pub``.
 5.  Set RSA key and consumer key in Heroku environment:
 
@@ -87,7 +87,7 @@ Deploy
 2. ``git push heroku``
 3. Initialize the database by running ``heroku run python manage.py dbcreate``
 4. Visit your website -- it should load!
-5. Visit ``/login/jira`` and authorize with JIRA
+5. Visit ``/login/jira`` and authorize with Jira
 6. Visit ``/login/github`` and authorize with GitHub
 7. Enjoy the sweet, sweet taste of API integration
 
