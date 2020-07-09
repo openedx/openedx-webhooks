@@ -20,6 +20,8 @@ if necessary. Otherwise, the bot automatically makes an OSPR issue for the
 pull request, and adds a comment to the pull request that links to the OSPR
 issue.
 
+The details of this process are explained in :ref:`pr_to_jira`.
+
 "Force" process a GitHub pull request
 -------------------------------------
 

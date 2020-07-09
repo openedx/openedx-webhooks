@@ -14,16 +14,10 @@ Contents:
    :maxdepth: 2
 
    about
+   pr_to_jira
    install
    endpoints
    things-that-go-wrong
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
 .. _pull request process: http://edx.readthedocs.org/projects/edx-developer-guide/en/latest/process/overview.html
