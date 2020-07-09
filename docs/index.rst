@@ -14,7 +14,7 @@ Contents:
    :maxdepth: 2
 
    about
-   pr_to_jira
+   details
    install
    endpoints
    things-that-go-wrong
