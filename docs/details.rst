@@ -8,7 +8,9 @@ Here are the details of what the bot does.
 Making a Jira issue for a pull request
 --------------------------------------
 
-The bot gets notifications from GitHub when a pull request is created.
+The bot gets notifications from GitHub when a pull request is created in the
+organizations and/or repos where it is configured.  It's currently configured
+in the edx organization, and probably a few other places we have lost track of.
 
 A number of aspects of the pull request are examined:
 
@@ -78,8 +80,8 @@ Now we can decide what to do:
   - Blended pull requests get "blended" applied as a GitHub label and Jira
     label.
 
-  - Core committer pull requests get "core-commiter" as a Jira label and "core
-    committer" as a GitHub label.
+  - Core committer pull requests get "core-commiter" as a Jira label. They get
+    "core committer" and "open-source-contribution" as GitHub labels.
 
   - Regular pull requests get "open-source-contribution" as a GitHub label.
 
