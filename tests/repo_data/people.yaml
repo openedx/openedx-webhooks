@@ -37,12 +37,14 @@ mduboseedx:
 mmprandom:
     email: mpeterson@edx.org
     name: Mat Peterson
-    agreement: institution
-    institution: edX
+    agreement: none
     comments:
     - LMS intern, summer 2014
     jira: mpeterson
-    expires_on: 2014-08-12
+    before:
+        2014-08-12:
+            agreement: institution
+            institution: edX
 nedbat:
     email: ned@edx.org
     name: Ned Batchelder

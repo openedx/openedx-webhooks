@@ -1,0 +1,472 @@
+{
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "fields": {
+        "aggregateprogress": {
+            "progress": 0,
+            "total": 0
+        },
+        "aggregatetimeestimate": null,
+        "aggregatetimeoriginalestimate": null,
+        "aggregatetimespent": null,
+        "assignee": null,
+        "attachment": [],
+        "comment": {
+            "comments": [],
+            "maxResults": 0,
+            "startAt": 0,
+            "total": 0
+        },
+        "components": [],
+        "created": "2020-03-17T17:51:17.179-0400",
+        "creator": {
+            "accountId": "557058:8c5503fa-355c-4af3-9283-3d248968e949",
+            "accountType": "atlassian",
+            "active": true,
+            "avatarUrls": {
+                "16x16": "https://secure.gravatar.com/avatar/5b524824a1e436c00c3aec1c45f8bbf3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FOB-1.png",
+                "24x24": "https://secure.gravatar.com/avatar/5b524824a1e436c00c3aec1c45f8bbf3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FOB-1.png",
+                "32x32": "https://secure.gravatar.com/avatar/5b524824a1e436c00c3aec1c45f8bbf3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FOB-1.png",
+                "48x48": "https://secure.gravatar.com/avatar/5b524824a1e436c00c3aec1c45f8bbf3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FOB-1.png"
+            },
+            "displayName": "Open Source Pull Request Bot",
+            "emailAddress": "oscm+ospr-bot@edx.org",
+            "self": "https://openedx.atlassian.net/rest/api/2/user?accountId=557058%3A8c5503fa-355c-4af3-9283-3d248968e949",
+            "timeZone": "America/New_York"
+        },
+        "customfield_10000": "10200_*:*_1_*:*_63806251_*|*_10104_*:*_1_*:*_0",
+        "customfield_10001": null,
+        "customfield_10002": null,
+        "customfield_10003": null,
+        "customfield_10004": null,
+        "customfield_10007": null,
+        "customfield_10008": "BLENDED-34",
+        "customfield_10200": "1|i00rnv:",
+        "customfield_10300": null,
+        "customfield_10303": null,
+        "customfield_10304": null,
+        "customfield_10306": [
+            "EduNEXT"
+        ],
+        "customfield_10400": null,
+        "customfield_10401": null,
+        "customfield_10501": null,
+        "customfield_10600": null,
+        "customfield_10700": null,
+        "customfield_10821": null,
+        "customfield_10823": null,
+        "customfield_10832": null,
+        "customfield_10901": null,
+        "customfield_10902": null,
+        "customfield_10903": null,
+        "customfield_10904": "https://github.com/edx/edx-analytics-data-api/pull/341",
+        "customfield_10905": 341.0,
+        "customfield_10906": "edx/edx-analytics-data-api",
+        "customfield_11000": "Luis Manuel Moreno",
+        "customfield_11001": null,
+        "customfield_11100": null,
+        "customfield_11101": null,
+        "customfield_11200": null,
+        "customfield_11300": null,
+        "customfield_11301": null,
+        "customfield_11400": null,
+        "customfield_11401": null,
+        "customfield_11402": null,
+        "customfield_11403": null,
+        "customfield_11404": null,
+        "customfield_11500": null,
+        "customfield_11501": null,
+        "customfield_11502": null,
+        "customfield_11600": null,
+        "customfield_11800": null,
+        "customfield_11900": null,
+        "customfield_12000": null,
+        "customfield_12001": null,
+        "customfield_12002": null,
+        "customfield_12003": {
+            "id": "11300",
+            "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/11300",
+            "value": "False"
+        },
+        "customfield_12004": null,
+        "customfield_12005": null,
+        "customfield_12006": null,
+        "customfield_12007": null,
+        "customfield_12008": null,
+        "customfield_12100": null,
+        "customfield_12101": [],
+        "customfield_12102": {
+            "errorMessage": "The Service Desk you are trying to view does not exist.",
+            "i18nErrorMessage": {
+                "i18nKey": "sd.agent.servicedesk.error.servicedesk.missing",
+                "parameters": []
+            }
+        },
+        "customfield_12103": {
+            "errorMessage": "The Service Desk you are trying to view does not exist.",
+            "i18nErrorMessage": {
+                "i18nKey": "sd.agent.servicedesk.error.servicedesk.missing",
+                "parameters": []
+            }
+        },
+        "customfield_12300": null,
+        "customfield_12301": null,
+        "customfield_12400": null,
+        "customfield_12401": null,
+        "customfield_12501": null,
+        "customfield_12502": null,
+        "customfield_12600": "{panel:title=Service Desk Project|borderStyle=solid|borderColor=blue|titleBGColor=#EAECFF|titleColor=Black|bgColor=#EAECFF}\r\nPlease submit and respond to issues through the [edX Service Desk Portal|https://employees.edx.org/support] and not through this screen.\r\n\r\nThanks!\r\nThe edX Service Desk Teams\r\n{panel}",
+        "customfield_12700": null,
+        "customfield_12800": null,
+        "customfield_12900": null,
+        "customfield_13000": null,
+        "customfield_13001": null,
+        "customfield_13002": null,
+        "customfield_13003": null,
+        "customfield_13207": null,
+        "customfield_13214": null,
+        "customfield_13226": null,
+        "customfield_13501": null,
+        "customfield_13502": null,
+        "customfield_13503": null,
+        "customfield_13504": null,
+        "customfield_13505": null,
+        "customfield_13700": {
+            "hasEpicLinkFieldDependency": true,
+            "nonEditableReason": {
+                "message": "Cannot use parent link when epic link is set.",
+                "reason": "EPIC_LINK_IS_SET"
+            },
+            "showField": false
+        },
+        "customfield_13800": null,
+        "customfield_13801": null,
+        "customfield_13802": null,
+        "customfield_13803": null,
+        "customfield_13804": null,
+        "customfield_13900": "{}",
+        "customfield_14000": null,
+        "customfield_14106": null,
+        "customfield_14200": null,
+        "customfield_14300": null,
+        "customfield_14402": "pull_request_review_comment: created",
+        "customfield_14403": {
+            "id": "12701",
+            "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/12701",
+            "value": "No"
+        },
+        "customfield_14404": "2020-03-18T10:33:00.000-0400",
+        "customfield_14405": "morenol",
+        "customfield_14600": null,
+        "customfield_14601": null,
+        "customfield_14602": null,
+        "customfield_14700": null,
+        "customfield_14800": null,
+        "customfield_15200": {
+            "errorMessage": "The Service Desk you are trying to view does not exist.",
+            "i18nErrorMessage": {
+                "i18nKey": "sd.agent.servicedesk.error.servicedesk.missing",
+                "parameters": []
+            }
+        },
+        "customfield_15302": null,
+        "customfield_15400": null,
+        "customfield_15401": null,
+        "customfield_15402": null,
+        "customfield_15403": null,
+        "customfield_15404": null,
+        "customfield_15405": null,
+        "customfield_15500": null,
+        "customfield_15600": null,
+        "customfield_15601": null,
+        "customfield_15700": null,
+        "customfield_15701": null,
+        "customfield_15702": null,
+        "customfield_15703": null,
+        "customfield_15704": null,
+        "customfield_15705": null,
+        "customfield_15706": null,
+        "customfield_15707": null,
+        "customfield_15708": null,
+        "customfield_15709": null,
+        "customfield_15710": null,
+        "customfield_15711": null,
+        "customfield_15800": null,
+        "customfield_15900": null,
+        "customfield_15901": null,
+        "customfield_15919": null,
+        "customfield_15921": null,
+        "customfield_15922": null,
+        "customfield_15923": null,
+        "customfield_15924": null,
+        "customfield_15926": null,
+        "customfield_15927": null,
+        "customfield_15928": null,
+        "customfield_15929": null,
+        "customfield_15930": null,
+        "customfield_15931": null,
+        "customfield_15932": null,
+        "customfield_15933": null,
+        "customfield_15934": null,
+        "customfield_15938": null,
+        "customfield_15939": null,
+        "customfield_15940": null,
+        "customfield_15941": null,
+        "customfield_15942": null,
+        "customfield_15947": null,
+        "customfield_15948": null,
+        "customfield_15949": null,
+        "customfield_15950": null,
+        "customfield_15951": null,
+        "customfield_15952": null,
+        "customfield_15955": null,
+        "customfield_15956": null,
+        "customfield_15962": null,
+        "customfield_15964": null,
+        "customfield_15965": null,
+        "customfield_15968": null,
+        "customfield_15969": null,
+        "customfield_15970": null,
+        "customfield_15971": null,
+        "customfield_15972": null,
+        "customfield_15973": null,
+        "customfield_15974": null,
+        "customfield_15975": null,
+        "customfield_15976": null,
+        "customfield_15977": null,
+        "customfield_15978": null,
+        "customfield_15979": null,
+        "customfield_15982": null,
+        "customfield_15983": null,
+        "customfield_15984": null,
+        "customfield_15985": null,
+        "customfield_15990": {
+            "errorMessage": "The Service Desk you are trying to view does not exist.",
+            "i18nErrorMessage": {
+                "i18nKey": "sd.agent.servicedesk.error.servicedesk.missing",
+                "parameters": []
+            }
+        },
+        "customfield_15991": {
+            "errorMessage": "The Service Desk you are trying to view does not exist.",
+            "i18nErrorMessage": {
+                "i18nKey": "sd.agent.servicedesk.error.servicedesk.missing",
+                "parameters": []
+            }
+        },
+        "customfield_15992": {
+            "errorMessage": "The Service Desk you are trying to view does not exist.",
+            "i18nErrorMessage": {
+                "i18nKey": "sd.agent.servicedesk.error.servicedesk.missing",
+                "parameters": []
+            }
+        },
+        "customfield_15993": null,
+        "customfield_15994": null,
+        "customfield_15995": null,
+        "customfield_15996": null,
+        "customfield_15997": null,
+        "customfield_16000": null,
+        "customfield_16005": null,
+        "customfield_16006": null,
+        "customfield_16007": null,
+        "customfield_16008": null,
+        "customfield_16009": null,
+        "customfield_16010": null,
+        "customfield_16011": null,
+        "customfield_16012": null,
+        "customfield_16013": null,
+        "customfield_16014": null,
+        "customfield_16015": null,
+        "customfield_16016": null,
+        "customfield_16017": null,
+        "customfield_16020": null,
+        "customfield_16021": null,
+        "customfield_16022": null,
+        "customfield_16023": null,
+        "customfield_16024": null,
+        "customfield_16025": null,
+        "customfield_16029": null,
+        "customfield_16030": null,
+        "customfield_16036": null,
+        "customfield_16039": null,
+        "customfield_16040": null,
+        "customfield_16047": {
+            "child": {
+                "id": "14522",
+                "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14522",
+                "value": "Course Level Insights"
+            },
+            "id": "14209",
+            "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
+            "value": "Researcher & Data Experiences"
+        },
+        "customfield_16048": null,
+        "customfield_16049": {
+            "errorMessage": "The Service Desk you are trying to view does not exist.",
+            "i18nErrorMessage": {
+                "i18nKey": "sd.agent.servicedesk.error.servicedesk.missing",
+                "parameters": []
+            }
+        },
+        "customfield_16050": {
+            "errorMessage": "The Service Desk you are trying to view does not exist.",
+            "i18nErrorMessage": {
+                "i18nKey": "sd.agent.servicedesk.error.servicedesk.missing",
+                "parameters": []
+            }
+        },
+        "customfield_16051": {
+            "errorMessage": "The Service Desk you are trying to view does not exist.",
+            "i18nErrorMessage": {
+                "i18nKey": "sd.agent.servicedesk.error.servicedesk.missing",
+                "parameters": []
+            }
+        },
+        "customfield_16052": {
+            "errorMessage": "The Service Desk you are trying to view does not exist.",
+            "i18nErrorMessage": {
+                "i18nKey": "sd.agent.servicedesk.error.servicedesk.missing",
+                "parameters": []
+            }
+        },
+        "customfield_16055": null,
+        "customfield_16058": null,
+        "customfield_16059": null,
+        "customfield_16060": null,
+        "customfield_16080": null,
+        "customfield_16083": null,
+        "customfield_16085": null,
+        "customfield_16086": null,
+        "customfield_16090": {
+            "errorMessage": "The Service Desk you are trying to view does not exist.",
+            "i18nErrorMessage": {
+                "i18nKey": "sd.agent.servicedesk.error.servicedesk.missing",
+                "parameters": []
+            }
+        },
+        "customfield_16119": null,
+        "customfield_16120": null,
+        "customfield_16121": null,
+        "customfield_16122": null,
+        "customfield_16123": null,
+        "customfield_16124": null,
+        "customfield_16125": null,
+        "customfield_16126": null,
+        "customfield_16127": null,
+        "customfield_16128": null,
+        "customfield_16130": null,
+        "customfield_16131": null,
+        "customfield_16132": null,
+        "customfield_16134": null,
+        "description": "### Description\r\nChanges in the  tests in order to avoid runtime warnings related to DateTimeFields\r\n\r\n### Reviewers\r\n- [ ] @andrey-canon\r\n- [ ] Ready for edX review\r\n- [ ] jmbowman",
+        "duedate": null,
+        "environment": null,
+        "fixVersions": [],
+        "issuelinks": [],
+        "issuerestriction": {
+            "issuerestrictions": {},
+            "shouldDisplay": false
+        },
+        "issuetype": {
+            "avatarId": 11306,
+            "description": "Reviewing a pull request on Github.com",
+            "iconUrl": "https://openedx.atlassian.net/secure/viewavatar?size=medium&avatarId=11306&avatarType=issuetype",
+            "id": "10401",
+            "name": "Pull Request Review",
+            "self": "https://openedx.atlassian.net/rest/api/2/issuetype/10401",
+            "subtask": false
+        },
+        "labels": [],
+        "lastViewed": "2020-06-29T16:52:36.574-0400",
+        "priority": {
+            "iconUrl": "http://files.edx.org.s3.amazonaws.com/Icon-round-Question_mark.jpg",
+            "id": "9",
+            "name": "Unset",
+            "self": "https://openedx.atlassian.net/rest/api/2/priority/9"
+        },
+        "progress": {
+            "progress": 0,
+            "total": 0
+        },
+        "project": {
+            "avatarUrls": {
+                "16x16": "https://openedx.atlassian.net/secure/projectavatar?size=xsmall&s=xsmall&pid=17094&avatarId=24916",
+                "24x24": "https://openedx.atlassian.net/secure/projectavatar?size=small&s=small&pid=17094&avatarId=24916",
+                "32x32": "https://openedx.atlassian.net/secure/projectavatar?size=medium&s=medium&pid=17094&avatarId=24916",
+                "48x48": "https://openedx.atlassian.net/secure/projectavatar?pid=17094&avatarId=24916"
+            },
+            "id": "17094",
+            "key": "BLENDED",
+            "name": "Blended",
+            "projectTypeKey": "software",
+            "self": "https://openedx.atlassian.net/rest/api/2/project/17094",
+            "simplified": false
+        },
+        "reporter": {
+            "accountId": "557058:8c5503fa-355c-4af3-9283-3d248968e949",
+            "accountType": "atlassian",
+            "active": true,
+            "avatarUrls": {
+                "16x16": "https://secure.gravatar.com/avatar/5b524824a1e436c00c3aec1c45f8bbf3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FOB-1.png",
+                "24x24": "https://secure.gravatar.com/avatar/5b524824a1e436c00c3aec1c45f8bbf3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FOB-1.png",
+                "32x32": "https://secure.gravatar.com/avatar/5b524824a1e436c00c3aec1c45f8bbf3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FOB-1.png",
+                "48x48": "https://secure.gravatar.com/avatar/5b524824a1e436c00c3aec1c45f8bbf3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FOB-1.png"
+            },
+            "displayName": "Open Source Pull Request Bot",
+            "emailAddress": "oscm+ospr-bot@edx.org",
+            "self": "https://openedx.atlassian.net/rest/api/2/user?accountId=557058%3A8c5503fa-355c-4af3-9283-3d248968e949",
+            "timeZone": "America/New_York"
+        },
+        "resolution": {
+            "description": "Issue is resolved, but does not fit into any other category.",
+            "id": "10000",
+            "name": "Done",
+            "self": "https://openedx.atlassian.net/rest/api/2/resolution/10000"
+        },
+        "resolutiondate": "2020-03-18T11:34:43.265-0400",
+        "security": null,
+        "status": {
+            "description": "",
+            "iconUrl": "https://openedx.atlassian.net/images/icons/statuses/generic.png",
+            "id": "10104",
+            "name": "Merged",
+            "self": "https://openedx.atlassian.net/rest/api/2/status/10104",
+            "statusCategory": {
+                "colorName": "green",
+                "id": 3,
+                "key": "done",
+                "name": "Done",
+                "self": "https://openedx.atlassian.net/rest/api/2/statuscategory/3"
+            }
+        },
+        "statuscategorychangedate": "2020-03-18T11:34:43.271-0400",
+        "subtasks": [],
+        "summary": "[BD] Fix runtime warning related to DateTimeFields",
+        "timeestimate": null,
+        "timeoriginalestimate": null,
+        "timespent": null,
+        "timetracking": {},
+        "updated": "2020-03-18T11:34:43.271-0400",
+        "versions": [],
+        "votes": {
+            "hasVoted": false,
+            "self": "https://openedx.atlassian.net/rest/api/2/issue/BLENDED-123/votes",
+            "votes": 0
+        },
+        "watches": {
+            "isWatching": false,
+            "self": "https://openedx.atlassian.net/rest/api/2/issue/BLENDED-123/watchers",
+            "watchCount": 1
+        },
+        "worklog": {
+            "maxResults": 20,
+            "startAt": 0,
+            "total": 0,
+            "worklogs": []
+        },
+        "workratio": -1
+    },
+    "id": "175439",
+    "key": "BLENDED-123",
+    "self": "https://openedx.atlassian.net/rest/api/2/issue/175439"
+}

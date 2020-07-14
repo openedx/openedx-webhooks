@@ -1,16 +1,14 @@
 import re
-from datetime import date
 
 import requests
 from flask import render_template
-from iso8601 import parse_date
 from urlobject import URLObject
 
 from openedx_webhooks import celery
 from openedx_webhooks.info import (
     get_labels_file, get_people_file,
     is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request,
-    is_committer_pull_request,
+    is_committer_pull_request, pull_request_has_cla,
 )
 from openedx_webhooks.oauth import github_bp, jira_bp
 from openedx_webhooks.tasks import logger
@@ -471,24 +469,6 @@ def synchronize_labels(repo):
                 logger.info(f"Adding label {name} to {repo}")
                 resp = github_bp.session.post(url, json=label_data)
                 log_check_response(resp)
-
-
-def pull_request_has_cla(pull_request):
-    """Does this pull request have a valid CLA?"""
-    pr_author = pull_request["user"]["login"].lower()
-    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
-    return person_has_cla(pr_author, created_at)
-
-
-def person_has_cla(author, created_at):
-    """Does `author` have a valid CLA at a point in time?"""
-    people = get_people_file()
-    people = {user.lower(): values for user, values in people.items()}
-    has_signed_agreement = (
-        author in people and
-        people[author].get("expires_on", date.max) > created_at.date()
-    )
-    return has_signed_agreement
 
 
 def github_community_pr_comment(pull_request, jira_issue):

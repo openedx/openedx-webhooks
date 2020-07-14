@@ -2,12 +2,14 @@
 Get information about people, repos, orgs, pull requests, etc.
 """
 
-from datetime import date
+import datetime
+from typing import Dict, Optional
 
 import yaml
 from iso8601 import parse_date
 
 from openedx_webhooks.oauth import github_bp
+from openedx_webhooks.types import PrDict
 from openedx_webhooks.utils import memoize_timed
 
 
@@ -42,7 +44,7 @@ def get_orgs(key):
     orgs = get_orgs_file()
     return {o for o, info in orgs.items() if info.get(key, False)}
 
-def get_person_certain_time(person, certain_time):
+def get_person_certain_time(person: Dict, certain_time: datetime.datetime) -> Dict:
     """
     Return person data structure for a particular time
 
@@ -60,13 +62,13 @@ def get_person_certain_time(person, certain_time):
     return person
 
 
-def is_internal_pull_request(pull_request):
+def is_internal_pull_request(pull_request: PrDict) -> bool:
     """
     Was this pull request created by someone who works for edX?
     """
     return _is_pull_request(pull_request, "internal")
 
-def is_contractor_pull_request(pull_request):
+def is_contractor_pull_request(pull_request: PrDict) -> bool:
     """
     Was this pull request created by someone in an organization that does
     paid contracting work for edX? If so, we don't know if this pull request
@@ -75,13 +77,14 @@ def is_contractor_pull_request(pull_request):
     """
     return _is_pull_request(pull_request, "contractor")
 
-def is_bot_pull_request(pull_request):
+def is_bot_pull_request(pull_request: PrDict) -> bool:
     """
     Was this pull request created by a bot?
     """
     return pull_request["user"]["type"] == "Bot"
 
-def _pr_author_data(pull_request):
+
+def _pr_author_data(pull_request: PrDict) -> Optional[Dict]:
     """
     Get data about the author of the pull request, as of the
     creation of the pull request.
@@ -96,14 +99,10 @@ def _pr_author_data(pull_request):
 
     person = people[author]
     created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
-    if person.get("expires_on", date.max) <= created_at.date():
-        # This person's agreement has expired.
-        return None
-
     person = get_person_certain_time(people[author], created_at)
     return person
 
-def _is_pull_request(pull_request, kind):
+def _is_pull_request(pull_request: PrDict, kind: str) -> bool:
     """
     Is this pull request of a certain kind?
 
@@ -131,7 +130,7 @@ def _is_pull_request(pull_request, kind):
     return False
 
 
-def is_committer_pull_request(pull_request):
+def is_committer_pull_request(pull_request: PrDict) -> bool:
     """
     Was this pull request created by a core committer for this repo?
     """
@@ -151,3 +150,12 @@ def is_committer_pull_request(pull_request):
         if repo in commit_rights["repos"]:
             return True
     return False
+
+
+def pull_request_has_cla(pull_request: PrDict) -> bool:
+    """Does this pull request have a valid CLA?"""
+    person = _pr_author_data(pull_request)
+    if person is None:
+        return False
+    agreement = person.get("agreement", "none")
+    return agreement != "none"
