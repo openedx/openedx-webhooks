@@ -185,7 +185,7 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
-Unreleased
+2020-07-14
 ~~~~~~~~~~
 
 - The "expires_on" key in people.yaml is officially obsolete, and no longer
