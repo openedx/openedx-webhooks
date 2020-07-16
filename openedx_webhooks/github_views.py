@@ -224,10 +224,7 @@ def process_pr():
         return resp
 
     pr = pr_resp.json()
-    result = pull_request_opened_task.delay(
-        pr, ignore_internal=False, check_contractor=False,
-        wsgi_environ=minimal_wsgi_environ(),
-    )
+    result = pull_request_opened_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
     status_url = url_for("tasks.status", task_id=result.id, _external=True)
     resp = jsonify({"message": "queued", "status_url": status_url})
     resp.status_code = 202

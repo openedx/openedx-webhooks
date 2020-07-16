@@ -22,14 +22,6 @@ issue.
 
 The details of this process are explained in :ref:`pr_to_jira`.
 
-"Force" process a GitHub pull request
--------------------------------------
-
-Sometimes, a pull request made by an edX employee or a contractor needs an OSPR
-issue. The bot has an interface where you can ask it to process a specific
-pull request, and it will do so even if the author is an edX employee or
-a contractor.
-
 Synchronize Jira issue states with GitHub PR labels
 ---------------------------------------------------
 

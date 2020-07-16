@@ -36,22 +36,18 @@ def log_check_response(response, raise_for_status=True):
 
 
 @celery.task(bind=True)
-def pull_request_opened_task(_, pull_request, ignore_internal=True, check_contractor=True):
+def pull_request_opened_task(_, pull_request):
     """A bound Celery task to call pull_request_opened."""
-    return pull_request_opened(
-        pull_request,
-        ignore_internal=ignore_internal,
-        check_contractor=check_contractor,
-    )
+    return pull_request_opened(pull_request)
 
-def pull_request_opened(pull_request, ignore_internal=True, check_contractor=True):
+def pull_request_opened(pr):
     """
-    Process a pull request. This is called when a pull request is opened, or
-    when the pull requests of a repo are re-scanned. By default, this function
-    will ignore internal pull requests,
-    and will add a comment to pull requests made by contractors (if if has not yet added
-    a comment). However, this function can be called in such a way that it processes those pull
-    requests anyway.
+    Process a pull request.
+
+    This is called when a pull request is opened, or when the pull requests of
+    a repo are re-scanned. This function will ignore internal pull requests,
+    and will add a comment to pull requests made by contractors (if if has not
+    yet added a comment).
 
     This function must be idempotent. Every time the repositories are re-scanned,
     this function will be called for pull requests that have already been opened.
@@ -64,7 +60,6 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
     work, such as making a JIRA issue or commenting on the pull request.
     """
 
-    pr = pull_request
     user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
@@ -76,12 +71,12 @@ def pull_request_opened(pull_request, ignore_internal=True, check_contractor=Tru
         logger.info(f"@{user} is a bot, ignored.")
         return None, False
 
-    if ignore_internal and is_internal_pull_request(pr):
+    if is_internal_pull_request(pr):
         # not an open source pull request, don't create an issue for it
         logger.info(f"@{user} opened PR #{num} against {repo} (internal PR)")
         return None, False
 
-    if check_contractor and is_contractor_pull_request(pr):
+    if is_contractor_pull_request(pr):
         # have we already left a contractor comment?
         if has_contractor_comment(pr):
             logger.info(f"Already left contractor comment for PR #{num}")
