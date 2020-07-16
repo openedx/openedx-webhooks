@@ -9,6 +9,7 @@ from openedx_webhooks.tasks.github import (
 )
 
 from . import template_snips
+from .helpers import is_good_markdown
 
 
 def test_community_pr_comment(reqctx, fake_github, fake_jira):
@@ -19,7 +20,7 @@ def test_community_pr_comment(reqctx, fake_github, fake_jira):
         comment = github_community_pr_comment(pr.as_json(), jira.as_json())
     assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
     assert template_snips.NO_CLA_TEXT not in comment
-    assert not comment.startswith((" ", "\n", "\t"))
+    assert is_good_markdown(comment)
 
 
 def test_community_pr_comment_no_author(reqctx, fake_github, fake_jira):
@@ -29,7 +30,7 @@ def test_community_pr_comment_no_author(reqctx, fake_github, fake_jira):
         comment = github_community_pr_comment(pr.as_json(), jira.as_json())
     assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
     assert template_snips.NO_CLA_TEXT in comment
-    assert not comment.startswith((" ", "\n", "\t"))
+    assert is_good_markdown(comment)
 
 
 def test_contractor_pr_comment(reqctx, fake_github):
@@ -45,7 +46,7 @@ def test_contractor_pr_comment(reqctx, fake_github):
     )
     assert href in comment
     assert 'Create an OSPR issue for this pull request' in comment
-    assert not comment.startswith((" ", "\n", "\t"))
+    assert is_good_markdown(comment)
 
 
 @pytest.mark.parametrize("title, number", [

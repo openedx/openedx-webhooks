@@ -9,6 +9,7 @@ from openedx_webhooks.tasks.github import (
 )
 
 from . import template_snips
+from .helpers import is_good_markdown
 
 
 @pytest.fixture
@@ -71,6 +72,7 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     # Check the GitHub comment that was created.
     assert len(pr.comments) == 1
     body = pr.comments[0].body
+    assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @new_contributor!" in body
@@ -116,6 +118,7 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
     # Check the GitHub comment that was created.
     assert len(pr.comments) == 1
     body = pr.comments[0].body
+    assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @tusbar!" in body
@@ -161,6 +164,7 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     # Check the GitHub comment that was created.
     assert len(pr.comments) == 1
     body = pr.comments[0].body
+    assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @felipemontoya!" in body
@@ -232,6 +236,7 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
     # Check the GitHub comment that was created.
     assert len(pr.comments) == 1
     body = pr.comments[0].body
+    assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @tusbar!" in body
@@ -284,6 +289,7 @@ def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
     # Check the GitHub comment that was created.
     assert len(pr.comments) == 1
     body = pr.comments[0].body
+    assert is_good_markdown(body)
     assert template_snips.CONTRACTOR_TEXT in body
     href = (
         'href="https://openedx-webhooks.herokuapp.com/github/process_pr' +

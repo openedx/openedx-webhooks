@@ -1,5 +1,4 @@
 {% filter replace("\n", " ")|trim %}
-<!-- comment:external_pr -->
 Thanks for the pull request, @{{ user }}! I've created
 [{{ issue_key }}](https://openedx.atlassian.net/browse/{{ issue_key }})
 to keep track of it in JIRA, where we prioritize reviews.
@@ -23,12 +22,15 @@ GitHub pull request interface. As a reminder,
 Please let us know once your PR is ready for our review and all tests are green.
 {% endfilter %}
 
-{% filter replace("\n", " ")|trim %}
-  {%- if not has_signed_agreement %}
-    <!-- comment:no_cla -->
+{% if not has_signed_agreement %}
+    {%- filter replace("\n", " ")|trim %}
     :warning: We can't start reviewing your pull request until you've submitted a
     [signed contributor agreement](https://open.edx.org/wp-content/uploads/2019/01/individual-contributor-agreement.pdf)
     or indicated your institutional affiliation. Please see the [CONTRIBUTING](https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst)
     file for more information.
-  {%- endif %}
-{% endfilter %}
+    {%- endfilter %}
+
+<!-- comment:no_cla -->
+{% endif %}
+
+<!-- comment:external_pr -->
