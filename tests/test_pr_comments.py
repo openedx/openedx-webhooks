@@ -5,7 +5,6 @@ import pytest
 from openedx_webhooks.tasks.github import (
     github_community_pr_comment,
     github_contractor_pr_comment,
-    has_contractor_comment,
     get_blended_project_id,
 )
 
@@ -47,35 +46,6 @@ def test_contractor_pr_comment(reqctx, fake_github):
     assert href in comment
     assert 'Create an OSPR issue for this pull request' in comment
     assert not comment.startswith((" ", "\n", "\t"))
-
-
-def test_has_contractor_comment(reqctx, fake_github):
-    pr = fake_github.make_pull_request(user="testuser")
-    with reqctx:
-        comment = github_contractor_pr_comment(pr.as_json())
-    pr.add_comment(user=fake_github.login, body=comment)
-
-    with reqctx:
-        result = has_contractor_comment(pr.as_json())
-    assert result is True
-
-
-def test_has_contractor_comment_unrelated_comments(reqctx, fake_github):
-    pr = fake_github.make_pull_request(user="testuser")
-    pr.add_comment(user=fake_github.login, body="this comment is unrelated")
-    pr.add_comment(user="different_user", body=template_snips.CONTRACTOR_TEXT)
-
-    with reqctx:
-        result = has_contractor_comment(pr.as_json())
-    assert result is False
-
-
-def test_has_contractor_comment_no_comments(reqctx, fake_github):
-    pr = fake_github.make_pull_request(user="testuser")
-
-    with reqctx:
-        result = has_contractor_comment(pr.as_json())
-    assert result is False
 
 
 @pytest.mark.parametrize("title, number", [

@@ -173,7 +173,8 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     assert pr.labels == {"open edx community review", "open-source-contribution", "core committer"}
 
 
-def test_blended_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_jira):
+@pytest.mark.parametrize("with_epic", [False, True])
+def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_github, fake_jira):
     pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", title="[BD-34] Something good")
     prj = pr.as_json()
     map_1_2 = {
@@ -186,12 +187,16 @@ def test_blended_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_ji
         "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
         "value": "Researcher & Data Experiences"
     }
-    epic = fake_jira.make_issue(
-        project="BLENDED",
-        blended_project_id="BD-34",
-        blended_project_status_page="https://thewiki/bd-34",
-        platform_map_1_2=map_1_2,
-    )
+    total_issues = 0
+    if with_epic:
+        epic = fake_jira.make_issue(
+            project="BLENDED",
+            blended_project_id="BD-34",
+            blended_project_status_page="https://thewiki/bd-34",
+            platform_map_1_2=map_1_2,
+        )
+        total_issues += 1
+
     with reqctx:
         issue_id, anything_happened = pull_request_opened(prj)
 
@@ -200,7 +205,7 @@ def test_blended_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_ji
     assert anything_happened is True
 
     # Check the Jira issue that was created.
-    assert len(fake_jira.issues) == 2
+    assert len(fake_jira.issues) == total_issues + 1
     issue = fake_jira.issues[issue_id]
     assert issue.contributor_name == "Bertrand Marron"
     assert issue.customer == ["IONISx"]
@@ -211,8 +216,12 @@ def test_blended_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_ji
     assert issue.issuetype == "Pull Request Review"
     assert issue.summary == prj["title"]
     assert issue.labels == ["blended"]
-    assert issue.epic_link == epic.key
-    assert issue.platform_map_1_2 == map_1_2
+    if with_epic:
+        assert issue.epic_link == epic.key
+        assert issue.platform_map_1_2 == map_1_2
+    else:
+        assert issue.epic_link is None
+        assert issue.platform_map_1_2 is None
 
     # Check that the Jira issue is in Needs Triage.
     assert issue.status == "Needs Triage"
@@ -226,7 +235,8 @@ def test_blended_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_ji
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @tusbar!" in body
-    assert "the [BD-34](https://thewiki/bd-34) project page" in body
+    has_project_link = "the [BD-34](https://thewiki/bd-34) project page" in body
+    assert has_project_link == with_epic
     assert template_snips.BLENDED_TEXT in body
     assert template_snips.NO_CLA_TEXT not in body
     assert template_snips.NO_CLA_LINK not in body

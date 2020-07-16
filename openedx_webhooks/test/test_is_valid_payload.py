@@ -10,7 +10,7 @@ from openedx_webhooks.utils import is_valid_payload
 
 
 def _make_signature(secret, payload):
-    """Compte a signature from a secret and a payload."""
+    """Compute a signature from a secret and a payload."""
     return (
         'sha1=' +
         hmac.new(secret.encode(), msg=payload, digestmod=sha1).hexdigest()
