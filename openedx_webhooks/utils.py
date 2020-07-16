@@ -74,6 +74,20 @@ def pop_dict_id(d):
     return (id, d)
 
 
+def text_summary(text, length=40):
+    """
+    Make a summary of `text`, at most `length` chars long.
+
+    The middle will be elided if needed.
+    """
+    if len(text) <= length:
+        return text
+    else:
+        start = (length - 3) // 2
+        end = (length - 3 - start)
+        return text[:start] + "..." + text[-end:]
+
+
 def paginated_get(url, session=None, limit=None, per_page=100, callback=None, **kwargs):
     """
     Retrieve all objects from a paginated API.
