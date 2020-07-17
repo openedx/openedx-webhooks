@@ -2,12 +2,13 @@
 
 import pytest
 
-from openedx_webhooks.bot_comments import BotComment, is_comment_kind
-from openedx_webhooks.tasks.github import (
+from openedx_webhooks.bot_comments import (
+    BotComment,
+    is_comment_kind,
     github_community_pr_comment,
     github_contractor_pr_comment,
-    pull_request_opened,
 )
+from openedx_webhooks.tasks.github import pull_request_opened
 
 from .helpers import is_good_markdown
 

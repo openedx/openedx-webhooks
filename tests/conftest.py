@@ -82,6 +82,7 @@ def mock_jira_bp(mocker):
     mock_bp = mock.Mock()
     mock_bp.session = jira_session
     mocker.patch("openedx_webhooks.tasks.github.jira_bp", mock_bp)
+    mocker.patch("openedx_webhooks.bot_comments.jira_bp", mock_bp)
 
 
 @pytest.fixture

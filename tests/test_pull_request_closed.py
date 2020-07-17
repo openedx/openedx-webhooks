@@ -2,10 +2,8 @@
 
 import pytest
 
-from openedx_webhooks.tasks.github import (
-    github_community_pr_comment,
-    pull_request_closed,
-)
+from openedx_webhooks.bot_comments import github_community_pr_comment
+from openedx_webhooks.tasks.github import pull_request_closed
 
 
 @pytest.fixture(params=[False, True])

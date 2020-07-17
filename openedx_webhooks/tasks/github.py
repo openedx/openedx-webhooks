@@ -3,11 +3,17 @@ import re
 from typing import List, Optional, Set, Tuple
 
 import requests
-from flask import render_template
 from urlobject import URLObject
 
 from openedx_webhooks import celery
-from openedx_webhooks.bot_comments import BOT_COMMENT_INDICATORS, BotComment
+from openedx_webhooks.bot_comments import (
+    BOT_COMMENT_INDICATORS,
+    BotComment,
+    github_community_pr_comment,
+    github_contractor_pr_comment,
+    github_blended_pr_comment,
+    github_committer_pr_comment,
+)
 from openedx_webhooks.info import (
     get_labels_file, get_people_file,
     is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request,
@@ -387,73 +393,6 @@ def synchronize_labels(repo: str) -> None:
                 logger.info(f"Adding label {name} to {repo}")
                 resp = github_bp.session.post(url, json=label_data)
                 log_check_response(resp)
-
-
-def github_community_pr_comment(pull_request, jira_issue):
-    """
-    For a newly-created pull request from an open source contributor,
-    write a welcoming comment on the pull request. The comment should:
-
-    * contain a link to the JIRA issue
-    * check for contributor agreement
-    * contain a link to our process documentation
-    """
-    # does the user have a valid, signed contributor agreement?
-    has_signed_agreement = pull_request_has_cla(pull_request)
-    return render_template("github_community_pr_comment.md.j2",
-        user=pull_request["user"]["login"],
-        repo=pull_request["base"]["repo"]["full_name"],
-        number=pull_request["number"],
-        issue_key=jira_issue["key"],
-        has_signed_agreement=has_signed_agreement,
-    )
-
-
-def github_contractor_pr_comment(pull_request):
-    """
-    For a newly-created pull request from a contractor that edX works with,
-    write a comment on the pull request. The comment should:
-
-    * Help the author determine if the work is paid for by edX or not
-    * If not, show the author how to trigger the creation of an OSPR issue
-    """
-    return render_template("github_contractor_pr_comment.md.j2",
-        user=pull_request["user"]["login"],
-        repo=pull_request["base"]["repo"]["full_name"],
-        number=pull_request["number"],
-    )
-
-
-def github_committer_pr_comment(pull_request, jira_issue):
-    """
-    Create the body of the comment for new pull requests from core committers.
-    """
-    return render_template("github_committer_pr_comment.md.j2",
-        user=pull_request["user"]["login"],
-        repo=pull_request["base"]["repo"]["full_name"],
-        number=pull_request["number"],
-        issue_key=jira_issue["key"],
-    )
-
-
-def github_blended_pr_comment(pull_request, jira_issue, blended_epic):
-    """
-    Create a Blended PR comment.
-    """
-    custom_fields = get_jira_custom_fields(jira_bp.session)
-    if blended_epic is not None:
-        project_name = blended_epic["fields"].get(custom_fields["Blended Project ID"])
-        project_page = blended_epic["fields"].get(custom_fields["Blended Project Status Page"])
-    else:
-        project_name = project_page = None
-    return render_template("github_blended_pr_comment.md.j2",
-        user=pull_request["user"]["login"],
-        repo=pull_request["base"]["repo"]["full_name"],
-        number=pull_request["number"],
-        issue_key=jira_issue["key"],
-        project_name=project_name,
-        project_page=project_page,
-    )
 
 
 def get_blended_project_id(pull_request: PrDict) -> Optional[int]:
