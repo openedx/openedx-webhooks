@@ -14,7 +14,7 @@ from openedx_webhooks.tasks.jira_work import transition_jira_issue
 from openedx_webhooks.tasks.pr_tracking import (
     current_support_state,
     desired_support_state,
-    update_state,
+    PrTrackingFixer,
 )
 from openedx_webhooks.types import PrDict
 from openedx_webhooks.utils import (
@@ -59,7 +59,9 @@ def pull_request_opened(pr: PrDict) -> Tuple[Optional[str], bool]:
     if desired is not None:
         synchronize_labels(repo)
         current = current_support_state(pr)
-        return update_state(pr, current, desired)
+        fixer = PrTrackingFixer(pr, current, desired)
+        fixer.fix()
+        return fixer.result()
     else:
         return None, False
 

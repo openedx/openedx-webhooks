@@ -125,64 +125,71 @@ def desired_support_state(pr: PrDict) -> Optional[PrTrackingInfo]:
     return desired
 
 
-def update_state(pr: PrDict, current: PrTrackingInfo, desired: PrTrackingInfo) -> Tuple[Optional[str], bool]:
-    anything_happened = False
+class PrTrackingFixer:
+    def __init__(self, pr: PrDict, current: PrTrackingInfo, desired: PrTrackingInfo):
+        self.pr = pr
+        self.current = current
+        self.desired = desired
+        self.happened = False
 
-    # Check the Jira issue.
-    if desired.jira_project_for_ticket is not None:
-        if current.jira_ticket_id is None:
-            extra_fields = desired.jira_extra_fields
-            if desired.jira_epic:
-                extra_fields.append(("Epic Link", desired.jira_epic["key"]))
-            new_issue = create_ospr_issue(
-                pr,
-                project=desired.jira_project_for_ticket,
-                labels=desired.jira_labels,
-                extra_fields=extra_fields,
-            )
-            current.jira_ticket_id = issue_key = new_issue["key"]
-            if desired.jira_ticket_status != "Needs Triage":
-                transition_jira_issue(issue_key, desired.jira_ticket_status)
+    def result(self) -> Tuple[Optional[str], bool]:
+        return self.current.jira_ticket_id, self.happened
 
-    # Check the bot comments.
-    needed_comments = desired.bot_comments - current.bot_comments
-    comment_body = ""
-    if BotComment.WELCOME in needed_comments:
-        comment_body += github_community_pr_comment(pr, new_issue)
-        needed_comments.remove(BotComment.WELCOME)
+    def fix(self) -> None:
+        # Check the Jira issue.
+        if self.desired.jira_project_for_ticket is not None:
+            if self.current.jira_ticket_id is None:
+                extra_fields = self.desired.jira_extra_fields
+                if self.desired.jira_epic:
+                    extra_fields.append(("Epic Link", self.desired.jira_epic["key"]))
+                new_issue = create_ospr_issue(
+                    self.pr,
+                    project=self.desired.jira_project_for_ticket,
+                    labels=self.desired.jira_labels,
+                    extra_fields=extra_fields,
+                )
+                self.current.jira_ticket_id = issue_key = new_issue["key"]
+                if self.desired.jira_ticket_status != "Needs Triage":
+                    transition_jira_issue(issue_key, self.desired.jira_ticket_status)
+                self.happened = True
 
-    if BotComment.CONTRACTOR in needed_comments:
-        comment_body += github_contractor_pr_comment(pr)
-        needed_comments.remove(BotComment.CONTRACTOR)
+        # Check the bot comments.
+        needed_comments = self.desired.bot_comments - self.current.bot_comments
+        comment_body = ""
+        if BotComment.WELCOME in needed_comments:
+            comment_body += github_community_pr_comment(self.pr, new_issue)
+            needed_comments.remove(BotComment.WELCOME)
 
-    if BotComment.CORE_COMMITTER in needed_comments:
-        comment_body += github_committer_pr_comment(pr, new_issue)
-        needed_comments.remove(BotComment.CORE_COMMITTER)
+        if BotComment.CONTRACTOR in needed_comments:
+            comment_body += github_contractor_pr_comment(self.pr)
+            needed_comments.remove(BotComment.CONTRACTOR)
 
-    if BotComment.BLENDED in needed_comments:
-        comment_body += github_blended_pr_comment(pr, new_issue, desired.jira_epic)
-        needed_comments.remove(BotComment.BLENDED)
+        if BotComment.CORE_COMMITTER in needed_comments:
+            comment_body += github_committer_pr_comment(self.pr, new_issue)
+            needed_comments.remove(BotComment.CORE_COMMITTER)
 
-    if BotComment.OK_TO_TEST in needed_comments:
+        if BotComment.BLENDED in needed_comments:
+            comment_body += github_blended_pr_comment(self.pr, new_issue, self.desired.jira_epic)
+            needed_comments.remove(BotComment.BLENDED)
+
+        if BotComment.OK_TO_TEST in needed_comments:
+            if comment_body:
+                comment_body += "\n<!-- jenkins ok to test -->"
+            needed_comments.remove(BotComment.OK_TO_TEST)
+
+        if BotComment.NEED_CLA in needed_comments:
+            # This is handled in github_community_pr_comment.
+            needed_comments.remove(BotComment.NEED_CLA)
+
         if comment_body:
-            comment_body += "\n<!-- jenkins ok to test -->"
-        needed_comments.remove(BotComment.OK_TO_TEST)
+            add_comment_to_pull_request(self.pr, comment_body)
+            self.happened = True
 
-    if BotComment.NEED_CLA in needed_comments:
-        # This is handled in github_community_pr_comment.
-        needed_comments.remove(BotComment.NEED_CLA)
+        assert needed_comments == set(), "Couldn't make comments: {}".format(needed_comments)
 
-    if comment_body:
-        add_comment_to_pull_request(pr, comment_body)
-        anything_happened = True
-
-    assert needed_comments == set(), "Couldn't make comments: {}".format(needed_comments)
-
-    # Check the GitHub labels.
-    if desired.github_labels:
-        update_labels_on_pull_request(pr, list(desired.github_labels))
-
-    return current.jira_ticket_id, anything_happened
+        # Check the GitHub labels.
+        if self.desired.github_labels:
+            update_labels_on_pull_request(self.pr, list(self.desired.github_labels))
 
 
 def find_blended_epic(project_id: int) -> Optional[JiraDict]:
