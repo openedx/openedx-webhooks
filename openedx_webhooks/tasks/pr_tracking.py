@@ -20,7 +20,7 @@ from openedx_webhooks.info import (
     is_internal_pull_request,
     pull_request_has_cla,
 )
-from openedx_webhooks.oauth import github_bp, jira_bp
+from openedx_webhooks.oauth import get_github_session, get_jira_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.jira_work import transition_jira_issue
 from openedx_webhooks.types import JiraDict, PrDict
@@ -94,7 +94,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrTrackingInfo]:
         blended_epic = find_blended_epic(blended_id)
         if blended_epic is not None:
             desired.jira_epic = blended_epic
-            custom_fields = get_jira_custom_fields(jira_bp.session)
+            custom_fields = get_jira_custom_fields(get_jira_session())
             desired.jira_extra_fields.extend([
                 ("Epic Link", blended_epic["key"]),
                 ("Platform Map Area (Levels 1 & 2)",
@@ -194,7 +194,7 @@ def find_blended_epic(project_id: int) -> Optional[JiraDict]:
         '"Blended Project ID" ~ "BD-0{id}" or ' +
         '"Blended Project ID" ~ "BD-{id}"'
     ).format(id=project_id)
-    issues = list(jira_paginated_get("/rest/api/2/search", jql=jql, obj_name="issues", session=jira_bp.session))
+    issues = list(jira_paginated_get("/rest/api/2/search", jql=jql, obj_name="issues", session=get_jira_session()))
     issue = None
     if not issues:
         logger.info(f"Couldn't find a blended epic for {project_id}")
@@ -214,7 +214,7 @@ def get_name_and_institution_for_pr(pr: PrDict) -> Tuple[str, Optional[str]]:
     Returns:
         name, institution
     """
-    github = github_bp.session
+    github = get_github_session()
     user = pr["user"]["login"]
     people = get_people_file()
 
@@ -244,7 +244,7 @@ def create_ospr_issue(pr, project, labels, extra_fields=None):
 
     user_name, institution = get_name_and_institution_for_pr(pr)
 
-    custom_fields = get_jira_custom_fields(jira_bp.session)
+    custom_fields = get_jira_custom_fields(get_jira_session())
     new_issue = {
         "fields": {
             "project": {
@@ -270,7 +270,7 @@ def create_ospr_issue(pr, project, labels, extra_fields=None):
     sentry_extra_context({"new_issue": new_issue})
 
     logger.info(f"Creating new JIRA issue for PR {repo} #{num}...")
-    resp = jira_bp.session.post("/rest/api/2/issue", json=new_issue)
+    resp = get_jira_session().post("/rest/api/2/issue", json=new_issue)
     log_check_response(resp)
 
     new_issue_body = resp.json()
@@ -286,7 +286,7 @@ def add_comment_to_pull_request(pr, comment_body):
     num = pr["number"]
     url = f"/repos/{repo}/issues/{num}/comments"
     logger.info(f"Commenting on PR {repo} #{num}: {text_summary(comment_body, 90)!r}")
-    resp = github_bp.session.post(url, json={"body": comment_body})
+    resp = get_github_session().post(url, json={"body": comment_body})
     log_check_response(resp)
 
 
@@ -302,5 +302,5 @@ def update_labels_on_pull_request(pr, labels):
     num = pr["number"]
     url = f"/repos/{repo}/issues/{num}"
     logger.info(f"Patching labels on PR {repo} #{num}: {labels}")
-    resp = github_bp.session.patch(url, json={"labels": labels})
+    resp = get_github_session().patch(url, json={"labels": labels})
     log_check_response(resp)

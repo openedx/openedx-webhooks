@@ -8,7 +8,7 @@ from typing import Optional
 from flask import render_template
 
 from openedx_webhooks.info import pull_request_has_cla
-from openedx_webhooks.oauth import jira_bp
+from openedx_webhooks.oauth import get_jira_session
 from openedx_webhooks.types import JiraDict, PrDict
 from openedx_webhooks.utils import get_jira_custom_fields
 
@@ -109,7 +109,7 @@ def github_blended_pr_comment(pull_request: PrDict, jira_issue: JiraDict, blende
     """
     Create a Blended PR comment.
     """
-    custom_fields = get_jira_custom_fields(jira_bp.session)
+    custom_fields = get_jira_custom_fields(get_jira_session())
     if blended_epic is not None:
         project_name = blended_epic["fields"].get(custom_fields["Blended Project ID"])
         project_page = blended_epic["fields"].get(custom_fields["Blended Project Status Page"])

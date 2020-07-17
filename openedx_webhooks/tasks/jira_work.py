@@ -1,6 +1,6 @@
 import requests
 
-from openedx_webhooks.oauth import jira_bp
+from openedx_webhooks.oauth import get_jira_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.utils import (
     log_check_response,
@@ -16,7 +16,7 @@ def transition_jira_issue(issue_key, status_name):
 
     """
     assert status_name is not None
-    jira = jira_bp.session
+    jira = get_jira_session()
     transition_url = (
         "/rest/api/2/issue/{key}/transitions"
         "?expand=transitions.fields".format(key=issue_key)

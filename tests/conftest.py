@@ -59,9 +59,7 @@ def mock_github_bp(mocker):
     mocker.patch("flask_dance.contrib.github.github", github_session)
     mock_bp = mock.Mock()
     mock_bp.session = github_session
-    mocker.patch("openedx_webhooks.info.github_bp", mock_bp)
-    mocker.patch("openedx_webhooks.tasks.pr_tracking.github_bp", mock_bp)
-    mocker.patch("openedx_webhooks.tasks.github.github_bp", mock_bp)
+    mocker.patch("openedx_webhooks.oauth.github_bp", mock_bp)
 
 
 @pytest.fixture
@@ -81,9 +79,7 @@ def mock_jira_bp(mocker):
     mocker.patch("flask_dance.contrib.jira.jira", jira_session)
     mock_bp = mock.Mock()
     mock_bp.session = jira_session
-    mocker.patch("openedx_webhooks.tasks.github.jira_bp", mock_bp)
-    mocker.patch("openedx_webhooks.bot_comments.jira_bp", mock_bp)
-    mocker.patch("openedx_webhooks.tasks.pr_tracking.jira_bp", mock_bp)
+    mocker.patch("openedx_webhooks.oauth.jira_bp", mock_bp)
 
 
 @pytest.fixture

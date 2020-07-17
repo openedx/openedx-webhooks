@@ -9,7 +9,7 @@ from typing import Dict, Optional
 import yaml
 from iso8601 import parse_date
 
-from openedx_webhooks.oauth import github_bp
+from openedx_webhooks.oauth import get_github_session
 from openedx_webhooks.types import PrDict
 from openedx_webhooks.utils import (
     memoize,
@@ -27,7 +27,7 @@ def _read_repotools_file(filename):
     """
     Read the text of a repo-tools-data file.
     """
-    github = github_bp.session
+    github = get_github_session()
     resp = github.get(f"https://raw.githubusercontent.com/edx/repo-tools-data/master/{filename}")
     resp.raise_for_status()
     return resp.text
@@ -182,7 +182,7 @@ def get_blended_project_id(pull_request: PrDict) -> Optional[int]:
 
 @memoize
 def github_whoami():
-    self_resp = github_bp.session.get("/user")
+    self_resp = get_github_session().get("/user")
     self_resp.raise_for_status()
     return self_resp.json()
 
@@ -195,7 +195,7 @@ def get_bot_comments(pull_request):
         repo=pull_request["base"]["repo"]["full_name"],
         num=pull_request["number"],
     )
-    for comment in paginated_get(comment_url, session=github_bp.session):
+    for comment in paginated_get(comment_url, session=get_github_session()):
         # I only care about comments I made
         if comment["user"]["login"] == my_username:
             yield comment

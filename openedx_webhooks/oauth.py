@@ -22,6 +22,9 @@ jira_bp = make_jira_blueprint(
 )
 
 
+def get_jira_session():
+    return jira_bp.session
+
 @oauth_authorized.connect_via(jira_bp)
 def jira_logged_in(blueprint, token):
     if token:
@@ -42,6 +45,9 @@ github_bp = make_github_blueprint(
     storage=SQLAlchemyStorage(OAuth, db.session),
 )
 
+
+def get_github_session():
+    return github_bp.session
 
 @oauth_authorized.connect_via(github_bp)
 def github_logged_in(blueprint, token):
