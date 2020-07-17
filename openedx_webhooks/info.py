@@ -3,6 +3,7 @@ Get information about people, repos, orgs, pull requests, etc.
 """
 
 import datetime
+import re
 from typing import Dict, Optional
 
 import yaml
@@ -10,7 +11,11 @@ from iso8601 import parse_date
 
 from openedx_webhooks.oauth import github_bp
 from openedx_webhooks.types import PrDict
-from openedx_webhooks.utils import memoize_timed
+from openedx_webhooks.utils import (
+    memoize,
+    memoize_timed,
+    paginated_get,
+)
 
 
 def _read_repotools_yaml_file(filename):
@@ -159,3 +164,48 @@ def pull_request_has_cla(pull_request: PrDict) -> bool:
         return False
     agreement = person.get("agreement", "none")
     return agreement != "none"
+
+
+def get_blended_project_id(pull_request: PrDict) -> Optional[int]:
+    """
+    Find the blended project id in the pull request, if any.
+
+    Returns:
+        An int ("[BD-5]" returns 5, for example) found in the pull request, or None.
+    """
+    m = re.search(r"\[\s*BD\s*-\s*(\d+)\s*\]", pull_request["title"])
+    if m:
+        return int(m[1])
+    else:
+        return None
+
+
+@memoize
+def github_whoami():
+    self_resp = github_bp.session.get("/user")
+    self_resp.raise_for_status()
+    return self_resp.json()
+
+
+def get_bot_comments(pull_request):
+    """Find all the comments the bot has made on a pull request."""
+    me = github_whoami()
+    my_username = me["login"]
+    comment_url = "/repos/{repo}/issues/{num}/comments".format(
+        repo=pull_request["base"]["repo"]["full_name"],
+        num=pull_request["number"],
+    )
+    for comment in paginated_get(comment_url, session=github_bp.session):
+        # I only care about comments I made
+        if comment["user"]["login"] == my_username:
+            yield comment
+
+
+def get_jira_issue_key(pull_request):
+    """Find mention of a Jira issue number in bot-authored comments."""
+    for comment in get_bot_comments(pull_request):
+        # search for the first occurrence of a JIRA ticket key in the comment body
+        match = re.search(r"\b([A-Z]{2,}-\d+)\b", comment["body"])
+        if match:
+            return match.group(0)
+    return None

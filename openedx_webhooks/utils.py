@@ -16,6 +16,7 @@ from flask import request, Response
 from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
+from openedx_webhooks import logger
 from openedx_webhooks.oauth import jira_get
 
 
@@ -46,6 +47,24 @@ def requires_auth(f):
             return _authenticate()
         return f(*args, **kwargs)
     return decorated
+
+
+def log_check_response(response, raise_for_status=True):
+    """
+    Logs HTTP request and response at debug level and checks if it succeeded.
+
+    Arguments:
+        response (requests.Response)
+        raise_for_status (bool): if True, call raise_for_status on the response
+            also.
+    """
+    msg = "{0.method} {0.url}: {0.body}".format(response.request)
+    logger.debug(msg)
+    msg = "{0.status_code} {0.reason} for {0.url}: {0.content}".format(response)
+    logger.debug(msg)
+    if raise_for_status:
+        response.raise_for_status()
+
 
 def is_valid_payload(secret: str, signature: str, payload: bytes) -> bool:
     """

@@ -15,11 +15,11 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 __version__ = "0.1.0"
 
 log_level = os.environ.get('LOGLEVEL', 'INFO').upper()
-rootLogger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 handler = logging.StreamHandler(sys.stderr)
 handler.setLevel(log_level)
-rootLogger.addHandler(handler)
-rootLogger.setLevel(log_level)
+logger.addHandler(handler)
+logger.setLevel(log_level)
 
 # Github3 is chatty on info-level, quiet it.
 logging.getLogger("github3").setLevel("WARN")

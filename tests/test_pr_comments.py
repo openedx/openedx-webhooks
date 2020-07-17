@@ -8,9 +8,6 @@ from openedx_webhooks.bot_comments import (
     github_community_pr_comment,
     github_contractor_pr_comment,
 )
-from openedx_webhooks.tasks.github import (
-    get_blended_project_id,
-)
 
 from .helpers import is_good_markdown
 
@@ -54,18 +51,3 @@ def test_contractor_pr_comment(reqctx, fake_github):
     assert href in comment
     assert 'Create an OSPR issue for this pull request' in comment
     assert is_good_markdown(comment)
-
-
-@pytest.mark.parametrize("title, number", [
-    ("Please take my change", None),
-    ("[BD-17] Fix typo", 17),
-    ("This is for [  BD-007]", 7),
-    ("This is for [  BD  -  0070     ]", 70),
-    ("Blended BD-18 doesn't count", None),
-    ("[BD-34] [BB-1234] extra tags are OK", 34),
-    ("[BB-1234] [BD-34] extra tags are OK", 34),
-])
-def test_get_blended_project_id(fake_github, title, number):
-    pr = fake_github.make_pull_request(title=title)
-    num = get_blended_project_id(pr.as_json())
-    assert number == num

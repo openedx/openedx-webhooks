@@ -9,6 +9,7 @@ from openedx_webhooks.info import (
     get_orgs, get_people_file, get_person_certain_time,
     is_committer_pull_request, is_internal_pull_request,
     pull_request_has_cla,
+    get_blended_project_id,
 )
 
 
@@ -123,3 +124,18 @@ def test_old_committer(make_pull_request):
 def test_pull_request_has_cla(make_pull_request, user, created_at_args, has_cla):
     pr = make_pull_request(user, created_at=datetime(*created_at_args))
     assert pull_request_has_cla(pr) is has_cla
+
+
+@pytest.mark.parametrize("title, number", [
+    ("Please take my change", None),
+    ("[BD-17] Fix typo", 17),
+    ("This is for [  BD-007]", 7),
+    ("This is for [  BD  -  0070     ]", 70),
+    ("Blended BD-18 doesn't count", None),
+    ("[BD-34] [BB-1234] extra tags are OK", 34),
+    ("[BB-1234] [BD-34] extra tags are OK", 34),
+])
+def test_get_blended_project_id(fake_github, title, number):
+    pr = fake_github.make_pull_request(title=title)
+    num = get_blended_project_id(pr.as_json())
+    assert number == num

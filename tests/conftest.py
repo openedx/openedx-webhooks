@@ -1,4 +1,3 @@
-
 import os
 import os.path
 import re
@@ -61,6 +60,7 @@ def mock_github_bp(mocker):
     mock_bp = mock.Mock()
     mock_bp.session = github_session
     mocker.patch("openedx_webhooks.info.github_bp", mock_bp)
+    mocker.patch("openedx_webhooks.tasks.pr_tracking.github_bp", mock_bp)
     mocker.patch("openedx_webhooks.tasks.github.github_bp", mock_bp)
 
 
@@ -83,6 +83,7 @@ def mock_jira_bp(mocker):
     mock_bp.session = jira_session
     mocker.patch("openedx_webhooks.tasks.github.jira_bp", mock_bp)
     mocker.patch("openedx_webhooks.bot_comments.jira_bp", mock_bp)
+    mocker.patch("openedx_webhooks.tasks.pr_tracking.jira_bp", mock_bp)
 
 
 @pytest.fixture
