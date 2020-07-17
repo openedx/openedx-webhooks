@@ -2,13 +2,13 @@
 
 import pytest
 
+from openedx_webhooks.bot_comments import BotComment, is_comment_kind
 from openedx_webhooks.tasks.github import (
     github_community_pr_comment,
     github_contractor_pr_comment,
     get_blended_project_id,
 )
 
-from . import template_snips
 from .helpers import is_good_markdown
 
 
@@ -19,7 +19,7 @@ def test_community_pr_comment(reqctx, fake_github, fake_jira):
     with reqctx:
         comment = github_community_pr_comment(pr.as_json(), jira.as_json())
     assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
-    assert template_snips.NO_CLA_TEXT not in comment
+    assert not is_comment_kind(BotComment.NEED_CLA, comment)
     assert is_good_markdown(comment)
 
 
@@ -29,7 +29,11 @@ def test_community_pr_comment_no_author(reqctx, fake_github, fake_jira):
     with reqctx:
         comment = github_community_pr_comment(pr.as_json(), jira.as_json())
     assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
-    assert template_snips.NO_CLA_TEXT in comment
+    assert is_comment_kind(BotComment.NEED_CLA, comment)
+    assert (
+        "[signed contributor agreement]" +
+        "(https://open.edx.org/wp-content/uploads/2019/01/individual-contributor-agreement.pdf)"
+    ) in comment
     assert is_good_markdown(comment)
 
 

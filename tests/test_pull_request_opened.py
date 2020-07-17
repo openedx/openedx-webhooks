@@ -2,13 +2,13 @@
 
 import pytest
 
+from openedx_webhooks.bot_comments import BotComment, is_comment_kind
 from openedx_webhooks.tasks.github import (
     github_community_pr_comment,
     github_contractor_pr_comment,
     pull_request_opened,
 )
 
-from . import template_snips
 from .helpers import is_good_markdown
 
 
@@ -76,9 +76,8 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @new_contributor!" in body
-    assert template_snips.EXTERNAL_TEXT in body
-    assert template_snips.NO_CLA_TEXT in body
-    assert template_snips.NO_CLA_LINK in body
+    assert is_comment_kind(BotComment.NEED_CLA, body)
+    assert is_comment_kind(BotComment.WELCOME, body)
     assert "jenkins ok to test" not in body
 
     # Check the GitHub labels that got applied.
@@ -122,9 +121,8 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @tusbar!" in body
-    assert template_snips.EXTERNAL_TEXT in body
-    assert template_snips.NO_CLA_TEXT not in body
-    assert template_snips.NO_CLA_LINK not in body
+    assert is_comment_kind(BotComment.WELCOME, body)
+    assert not is_comment_kind(BotComment.NEED_CLA, body)
     assert "jenkins ok to test" in body
 
     # Check the GitHub labels that got applied.
@@ -168,9 +166,8 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @felipemontoya!" in body
-    assert template_snips.CORE_COMMITTER_TEXT in body
-    assert template_snips.NO_CLA_TEXT not in body
-    assert template_snips.NO_CLA_LINK not in body
+    assert is_comment_kind(BotComment.CORE_COMMITTER, body)
+    assert not is_comment_kind(BotComment.NEED_CLA, body)
     assert "jenkins ok to test" in body
 
     # Check the GitHub labels that got applied.
@@ -242,10 +239,9 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
     assert "Thanks for the pull request, @tusbar!" in body
     has_project_link = "the [BD-34](https://thewiki/bd-34) project page" in body
     assert has_project_link == with_epic
-    assert template_snips.BLENDED_TEXT in body
-    assert template_snips.NO_CLA_TEXT not in body
-    assert template_snips.NO_CLA_LINK not in body
-    assert "jenkins ok to test" in body
+    assert is_comment_kind(BotComment.BLENDED, body)
+    assert not is_comment_kind(BotComment.NEED_CLA, body)
+    assert is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"needs triage", "blended"}
@@ -290,7 +286,7 @@ def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
     assert len(pr.comments) == 1
     body = pr.comments[0].body
     assert is_good_markdown(body)
-    assert template_snips.CONTRACTOR_TEXT in body
+    assert is_comment_kind(BotComment.CONTRACTOR, body)
     href = (
         'href="https://openedx-webhooks.herokuapp.com/github/process_pr' +
         '?repo={}'.format(prj["base"]["repo"]["full_name"].replace("/", "%2F")) +

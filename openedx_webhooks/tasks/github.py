@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from enum import Enum, auto
 import re
 from typing import List, Optional, Set, Tuple
 
@@ -8,6 +7,7 @@ from flask import render_template
 from urlobject import URLObject
 
 from openedx_webhooks import celery
+from openedx_webhooks.bot_comments import BOT_COMMENT_INDICATORS, BotComment
 from openedx_webhooks.info import (
     get_labels_file, get_people_file,
     is_contractor_pull_request, is_internal_pull_request, is_bot_pull_request,
@@ -497,40 +497,6 @@ def github_whoami():
     return self_resp.json()
 
 
-class BotComment(Enum):
-    WELCOME = auto()
-    NEED_CLA = auto()
-    CONTRACTOR = auto()
-    CORE_COMMITER = auto()
-    BLENDED = auto()
-    OK_TO_TEST = auto()
-    CLOSED = auto()
-    MERGED = auto()
-
-BOT_COMMENT_INDICATORS = {
-    BotComment.WELCOME: [
-        "Thanks for the pull request,",
-        "comment:external_pr",
-    ],
-    BotComment.NEED_CLA: [
-        "We can't start reviewing your pull request until you've submimitted",
-        "comment:no_cla",
-    ],
-    BotComment.CONTRACTOR: [
-        "company that does contract work for edX",
-        "comment:contractor",
-    ],
-    BotComment.CORE_COMMITER: [
-        "comment:welcome-core-committer",
-    ],
-    BotComment.BLENDED: [
-        "comment:welcome-blended",
-    ],
-    BotComment.OK_TO_TEST: [
-        "jenkins ok to test",
-    ],
-}
-
 @dataclass
 class PrSupport:
     bot_comments: Set[BotComment] = field(default_factory=set)
@@ -601,10 +567,10 @@ def desired_support_state(pr: PrDict) -> Optional[PrSupport]:
         desired.github_labels.add("open-source-contribution")
         committer = is_committer_pull_request(pr)
         if committer:
-            comment = BotComment.CORE_COMMITER
+            comment = BotComment.CORE_COMMITTER
             desired.jira_labels.add("core-committer")
             desired.jira_ticket_status = "Open edX Community Review"
-            desired.bot_comments.add(BotComment.CORE_COMMITER)
+            desired.bot_comments.add(BotComment.CORE_COMMITTER)
             desired.github_labels.add("core committer")
         else:
             if not has_signed_agreement:
@@ -650,9 +616,9 @@ def update_state(pr: PrDict, current: PrSupport, desired: PrSupport) -> Tuple[Op
         comment_body += github_contractor_pr_comment(pr)
         needed_comments.remove(BotComment.CONTRACTOR)
 
-    if BotComment.CORE_COMMITER in needed_comments:
+    if BotComment.CORE_COMMITTER in needed_comments:
         comment_body += github_committer_pr_comment(pr, new_issue)
-        needed_comments.remove(BotComment.CORE_COMMITER)
+        needed_comments.remove(BotComment.CORE_COMMITTER)
 
     if BotComment.BLENDED in needed_comments:
         comment_body += github_blended_pr_comment(pr, new_issue, desired.jira_epic)
