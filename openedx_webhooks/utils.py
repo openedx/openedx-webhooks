@@ -18,6 +18,7 @@ from urlobject import URLObject
 
 from openedx_webhooks import logger
 from openedx_webhooks.oauth import jira_get
+from openedx_webhooks.types import JiraDict
 
 
 def _check_auth(username, password):
@@ -254,8 +255,13 @@ def get_jira_custom_fields(session=None):
     }
 
 
-def get_jira_issue(key):
-    return jira_get("/rest/api/2/issue/{key}".format(key=key))
+def get_jira_issue(key: str) -> JiraDict:
+    """
+    Get the dictionary for a Jira issue, from its key.
+    """
+    resp = jira_get("/rest/api/2/issue/{key}".format(key=key))
+    log_check_response(resp)
+    return resp.json()
 
 
 def github_pr_repo(issue):
@@ -263,9 +269,7 @@ def github_pr_repo(issue):
     pr_repo = issue["fields"].get(custom_fields["Repo"])
     parent_ref = issue["fields"].get("parent")
     if not pr_repo and parent_ref:
-        parent_resp = get_jira_issue(parent_ref["key"])
-        parent_resp.raise_for_status()
-        parent = parent_resp.json()
+        parent = get_jira_issue(parent_ref["key"])
         pr_repo = parent["fields"].get(custom_fields["Repo"])
     return pr_repo
 
@@ -275,9 +279,7 @@ def github_pr_num(issue):
     pr_num = issue["fields"].get(custom_fields["PR Number"])
     parent_ref = issue["fields"].get("parent")
     if not pr_num and parent_ref:
-        parent_resp = get_jira_issue(parent_ref["key"])
-        parent_resp.raise_for_status()
-        parent = parent_resp.json()
+        parent = get_jira_issue(parent_ref["key"])
         pr_num = parent["fields"].get(custom_fields["PR Number"])
     try:
         return int(pr_num)
