@@ -1,3 +1,5 @@
+"""Tests of FakeGithub."""
+
 import pytest
 import requests
 from glom import glom

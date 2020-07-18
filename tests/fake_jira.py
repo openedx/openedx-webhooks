@@ -1,5 +1,6 @@
 """A fake implementation of the Jira API."""
 
+import dataclasses
 import random
 import re
 from dataclasses import dataclass, field
@@ -137,7 +138,7 @@ class FakeJira(faker.Faker):
         project = fields["project"]["key"]
         key = "{}-{}".format(project, random.randint(111, 999))
         kwargs = dict(
-            issuetype="Pull Request Review",
+            issuetype=fields["issuetype"]["name"],
             summary=fields.get("summary"),
             description=fields.get("description"),
             labels=fields.get("labels"),
@@ -152,6 +153,21 @@ class FakeJira(faker.Faker):
         )
         issue = self.make_issue(key, **kwargs)
         return issue.as_json()
+
+    @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)", "PUT")
+    def _put_issue(self, match, request, context) -> None:
+        key = match["key"]
+        if issue := self.issues.get(key):
+            changes = request.json()
+            fields = changes["fields"]
+            kwargs = {}
+            if "summary" in fields:
+                kwargs["summary"] = fields["summary"]
+            issue = dataclasses.replace(issue, **kwargs)
+            self.issues[key] = issue
+            context.status_code = 204
+        else:
+            context.status_code = 404
 
     @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)/transitions")
     def _get_issue_transitions(self, match, _request, context) -> Dict:
@@ -184,7 +200,10 @@ class FakeJira(faker.Faker):
         self.issues[key].status = self.TRANSITION_IDS[transition_id]
 
     @faker.route(r"/rest/api/2/search", "GET")
-    def _get_search(self, match, request, _context):
+    def _get_search(self, _match, request, _context):
+        """
+        Implement the search endpoint.
+        """
         jql = request.qs["jql"][0]
         # We only handle certain specific queries.
         if bd_ids := re.findall(r'"Blended Project ID" ~ "(.*?)"', jql):
