@@ -16,12 +16,11 @@ def transition_jira_issue(issue_key, status_name):
 
     """
     assert status_name is not None
-    jira = get_jira_session()
     transition_url = (
         "/rest/api/2/issue/{key}/transitions"
         "?expand=transitions.fields".format(key=issue_key)
     )
-    transitions_resp = jira.get(transition_url)
+    transitions_resp = get_jira_session().get(transition_url)
     log_check_response(transitions_resp, raise_for_status=False)
     if transitions_resp.status_code == requests.codes.not_found:
         # JIRA issue has been deleted
@@ -41,7 +40,7 @@ def transition_jira_issue(issue_key, status_name):
     if not transition_id:
         # maybe the issue is *already* in the right status?
         issue_url = "/rest/api/2/issue/{key}".format(key=issue_key)
-        issue_resp = jira.get(issue_url)
+        issue_resp = get_jira_session().get(issue_url)
         issue_resp.raise_for_status()
         issue = issue_resp.json()
         sentry_extra_context({"jira_issue": issue})
@@ -64,10 +63,25 @@ def transition_jira_issue(issue_key, status_name):
         raise Exception(fail_msg)
 
     logger.info(f"Changing status on issue {issue_key} to {status_name}")
-    transition_resp = jira.post(transition_url, json={
+    transition_resp = get_jira_session().post(transition_url, json={
         "transition": {
             "id": transition_id,
         }
     })
     log_check_response(transition_resp)
     return True
+
+
+def update_jira_issue(issue_key, summary=None, description=None):
+    """
+    Update some fields on a Jira issue.
+    """
+    fields = {}
+    if summary is not None:
+        fields["summary"] = summary
+    if description is not None:
+        fields["description"] = description
+    assert fields
+    put_url = f"/rest/api/2/issue/{issue_key}"
+    resp = get_jira_session().put(put_url, json={"fields": fields})
+    log_check_response(resp)

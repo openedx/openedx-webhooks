@@ -99,6 +99,13 @@ Now we can decide what to do:
     the tests started.
 
 
+Updating Jira issue when pull requests change
+---------------------------------------------
+
+Changes to pull requests are reflected in the Jira issue.  The titles and
+descriptions are copied over to the Jira issue if they are changed in GitHub.
+
+
 Updating GitHub labels when Jira status changes
 -----------------------------------------------
 

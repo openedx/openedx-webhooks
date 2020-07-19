@@ -59,9 +59,9 @@ def log_check_response(response, raise_for_status=True):
         raise_for_status (bool): if True, call raise_for_status on the response
             also.
     """
-    msg = "{0.method} {0.url}: {0.body}".format(response.request)
+    msg = "Request: {0.method} {0.url}: {0.body!r}".format(response.request)
     logger.debug(msg)
-    msg = "{0.status_code} {0.reason} for {0.url}: {0.content}".format(response)
+    msg = "Response: {0.status_code} {0.reason!r} for {0.url}: {0.content!r}".format(response)
     logger.debug(msg)
     if raise_for_status:
         response.raise_for_status()

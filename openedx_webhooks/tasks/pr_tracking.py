@@ -22,10 +22,14 @@ from openedx_webhooks.info import (
 )
 from openedx_webhooks.oauth import get_github_session, get_jira_session
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.tasks.jira_work import transition_jira_issue
+from openedx_webhooks.tasks.jira_work import (
+    transition_jira_issue,
+    update_jira_issue,
+)
 from openedx_webhooks.types import JiraDict, PrDict
 from openedx_webhooks.utils import (
     get_jira_custom_fields,
+    get_jira_issue,
     jira_paginated_get,
     log_check_response,
     sentry_extra_context,
@@ -39,9 +43,11 @@ class PrTrackingInfo:
     The information we want to have for a pull request.
     """
     bot_comments: Set[BotComment] = field(default_factory=set)
-    jira_ticket_id: Optional[str] = None
-    jira_project_for_ticket: Optional[str] = None
-    jira_ticket_status: Optional[str] = None
+    jira_id: Optional[str] = None
+    jira_project: Optional[str] = None
+    jira_title: Optional[str] = None
+    jira_description: Optional[str] = None
+    jira_status: Optional[str] = None
     jira_labels: Set[str] = field(default_factory=set)
     jira_epic: Optional[JiraDict] = None
     jira_extra_fields: List[Tuple[str, str]] = field(default_factory=list)
@@ -60,7 +66,13 @@ def existing_bot_comments(pr: PrDict) -> Set[BotComment]:
 def current_support_state(pr: PrDict) -> PrTrackingInfo:
     current = PrTrackingInfo()
     current.bot_comments = existing_bot_comments(pr)
-    current.jira_ticket_id = get_jira_issue_key(pr)
+    current.jira_id = get_jira_issue_key(pr)
+    if current.jira_id:
+        issue = get_jira_issue(current.jira_id)
+        current.jira_title = issue["fields"]["summary"]
+        current.jira_description = issue["fields"]["description"]
+        current.jira_status = issue["fields"]["status"]["name"]
+    current.github_labels = set(lbl["name"] for lbl in pr["labels"])
     return current
 
 def desired_support_state(pr: PrDict) -> Optional[PrTrackingInfo]:
@@ -82,13 +94,15 @@ def desired_support_state(pr: PrDict) -> Optional[PrTrackingInfo]:
         desired.bot_comments.add(BotComment.CONTRACTOR)
         return desired
 
-    desired.jira_ticket_status = "Needs Triage"
+    desired.jira_status = "Needs Triage"
+    desired.jira_title = pr["title"]
+    desired.jira_description = pr["body"]
 
     has_signed_agreement = pull_request_has_cla(pr)
     blended_id = get_blended_project_id(pr)
     if blended_id is not None:
         comment = BotComment.BLENDED
-        desired.jira_project_for_ticket = "BLENDED"
+        desired.jira_project = "BLENDED"
         desired.github_labels.add("blended")
         desired.jira_labels.add("blended")
         blended_epic = find_blended_epic(blended_id)
@@ -102,25 +116,25 @@ def desired_support_state(pr: PrDict) -> Optional[PrTrackingInfo]:
             ])
     else:
         comment = BotComment.WELCOME
-        desired.jira_project_for_ticket = "OSPR"
+        desired.jira_project = "OSPR"
         desired.github_labels.add("open-source-contribution")
         committer = is_committer_pull_request(pr)
         if committer:
             comment = BotComment.CORE_COMMITTER
             desired.jira_labels.add("core-committer")
-            desired.jira_ticket_status = "Open edX Community Review"
+            desired.jira_status = "Open edX Community Review"
             desired.bot_comments.add(BotComment.CORE_COMMITTER)
             desired.github_labels.add("core committer")
         else:
             if not has_signed_agreement:
                 desired.bot_comments.add(BotComment.NEED_CLA)
-                desired.jira_ticket_status = "Community Manager Review"
+                desired.jira_status = "Community Manager Review"
 
     if has_signed_agreement:
         desired.bot_comments.add(BotComment.OK_TO_TEST)
 
     desired.bot_comments.add(comment)
-    desired.github_labels.add(desired.jira_ticket_status.lower())
+    desired.github_labels.add(desired.jira_status.lower())
 
     return desired
 
@@ -133,25 +147,47 @@ class PrTrackingFixer:
         self.happened = False
 
     def result(self) -> Tuple[Optional[str], bool]:
-        return self.current.jira_ticket_id, self.happened
+        return self.current.jira_id, self.happened
 
     def fix(self) -> None:
-        # Check the Jira issue.
-        if self.desired.jira_project_for_ticket is not None:
-            if self.current.jira_ticket_id is None:
+        # If needed, make a Jira issue.
+        if self.desired.jira_project is not None:
+            if self.current.jira_id is None:
                 extra_fields = self.desired.jira_extra_fields
                 if self.desired.jira_epic:
                     extra_fields.append(("Epic Link", self.desired.jira_epic["key"]))
                 new_issue = create_ospr_issue(
                     self.pr,
-                    project=self.desired.jira_project_for_ticket,
+                    project=self.desired.jira_project,
+                    summary=self.desired.jira_title,
+                    description=self.desired.jira_description,
                     labels=self.desired.jira_labels,
                     extra_fields=extra_fields,
                 )
-                self.current.jira_ticket_id = issue_key = new_issue["key"]
-                if self.desired.jira_ticket_status != "Needs Triage":
-                    transition_jira_issue(issue_key, self.desired.jira_ticket_status)
+                self.current.jira_id = new_issue["key"]
+                self.current.jira_status = new_issue["fields"]["status"]["name"]
+                self.current.jira_title = new_issue["fields"]["summary"]
+                self.current.jira_description = new_issue["fields"]["description"]
                 self.happened = True
+
+        # Check the state of the Jira issue.
+        if self.desired.jira_status != self.current.jira_status:
+            transition_jira_issue(self.current.jira_id, self.desired.jira_status)
+            self.happened = True
+
+        update_kwargs = {}
+        if self.desired.jira_title != self.current.jira_title:
+            update_kwargs["summary"] = self.desired.jira_title
+        if self.desired.jira_description != self.current.jira_description:
+            update_kwargs["description"] = self.desired.jira_description
+        if update_kwargs:
+            update_jira_issue(self.current.jira_id, **update_kwargs)
+            self.happened = True
+
+        # Check the GitHub labels.
+        if self.desired.github_labels != self.current.github_labels:
+            update_labels_on_pull_request(self.pr, list(self.desired.github_labels))
+            self.happened = True
 
         # Check the bot comments.
         needed_comments = self.desired.bot_comments - self.current.bot_comments
@@ -186,10 +222,6 @@ class PrTrackingFixer:
             self.happened = True
 
         assert needed_comments == set(), "Couldn't make comments: {}".format(needed_comments)
-
-        # Check the GitHub labels.
-        if self.desired.github_labels:
-            update_labels_on_pull_request(self.pr, list(self.desired.github_labels))
 
 
 def find_blended_epic(project_id: int) -> Optional[JiraDict]:
@@ -240,7 +272,7 @@ def get_name_and_institution_for_pr(pr: PrDict) -> Tuple[str, Optional[str]]:
     return user_name, institution
 
 
-def create_ospr_issue(pr, project, labels, extra_fields=None):
+def create_ospr_issue(pr, project, summary, description, labels, extra_fields=None):
     """
     Create a new OSPR or OSPR-like issue for a pull request.
 
@@ -260,8 +292,8 @@ def create_ospr_issue(pr, project, labels, extra_fields=None):
             "issuetype": {
                 "name": "Pull Request Review",
             },
-            "summary": pr["title"],
-            "description": pr["body"],
+            "summary": summary,
+            "description": description,
             "labels": list(labels),
             "customfield_10904": pr["html_url"],        # "URL" is ambiguous, use the internal name.
             custom_fields["PR Number"]: num,
@@ -280,8 +312,12 @@ def create_ospr_issue(pr, project, labels, extra_fields=None):
     resp = get_jira_session().post("/rest/api/2/issue", json=new_issue)
     log_check_response(resp)
 
+    # Jira only sends the key.  Put it into the JSON we started with, and
+    # return it as the state of the issue.
     new_issue_body = resp.json()
     new_issue["key"] = new_issue_body["key"]
+    # Our issues all start as "Needs Triage".
+    new_issue["fields"]["status"] = {"name": "Needs Triage"}
     return new_issue
 
 

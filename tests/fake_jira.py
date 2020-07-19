@@ -131,7 +131,7 @@ class FakeJira(faker.Faker):
         return self.issues[key].as_json()
 
     @faker.route(r"/rest/api/2/issue", "POST")
-    def _post_issue(self, _match, request, _context):
+    def _post_issue(self, _match, request, context):
         """Responds to the API endpoint for creating new issues."""
         issue_data = request.json()
         fields = issue_data["fields"]
@@ -151,8 +151,12 @@ class FakeJira(faker.Faker):
             platform_map_1_2=fields.get(FakeJira.PLATFORM_MAP_1_2),
             platform_map_3_4=fields.get(FakeJira.PLATFORM_MAP_3_4),
         )
-        issue = self.make_issue(key, **kwargs)
-        return issue.as_json()
+        self.make_issue(key, **kwargs)
+        # Response is only some information:
+        # {"id":"184975","key":"OSPR-4836","self":"https://openedx.atlassian.net/rest/api/2/issue/184975"}
+        # We don't use id or self, so just return the key.
+        context.status_code = 201
+        return {"key": key}
 
     @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)", "PUT")
     def _put_issue(self, match, request, context) -> None:
@@ -163,6 +167,8 @@ class FakeJira(faker.Faker):
             kwargs = {}
             if "summary" in fields:
                 kwargs["summary"] = fields["summary"]
+            if "description" in fields:
+                kwargs["description"] = fields["description"]
             issue = dataclasses.replace(issue, **kwargs)
             self.issues[key] = issue
             context.status_code = 204

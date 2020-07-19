@@ -5,8 +5,6 @@ import pytest
 from openedx_webhooks.bot_comments import (
     BotComment,
     is_comment_kind,
-    github_community_pr_comment,
-    github_contractor_pr_comment,
 )
 from openedx_webhooks.tasks.github import pull_request_opened
 
@@ -249,19 +247,22 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
 
 
 def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
+    # Rescanning a pull request shouldn't do anything.
+
+    # Make a pull request and process it.
     pr = fake_github.make_pull_request(user="tusbar")
-    prj = pr.as_json()
-    issue = fake_jira.make_issue(key="OSPR-12345")
     with reqctx:
-        comment = github_community_pr_comment(prj, jira_issue=issue.as_json())
-    pr.add_comment(user=fake_github.login, body=comment)
+        issue_id1, anything_happened1 = pull_request_opened(pr.as_json())
+
+    assert anything_happened1 is True
     assert len(pr.comments) == 1
 
+    # Rescan the pull request.
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(prj)
+        issue_id2, anything_happened2 = pull_request_opened(pr.as_json())
 
-    assert issue_id == "OSPR-12345"
-    assert anything_happened is False
+    assert issue_id2 == issue_id1
+    assert anything_happened2 is False
 
     # No Jira issue was created.
     assert len(fake_jira.issues) == 1
@@ -299,13 +300,21 @@ def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
 
 def test_contractor_pr_rescanned(reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="joecontractor")
-    prj = pr.as_json()
     with reqctx:
-        comment = github_contractor_pr_comment(prj)
-    pr.add_comment(user=fake_github.login, body=comment)
+        issue_id, anything_happened = pull_request_opened(pr.as_json())
 
+    assert issue_id is None
+    assert anything_happened is True
+
+    # No Jira issue was created.
+    assert len(fake_jira.issues) == 0
+
+    # One GitHub comment was created.
+    assert len(pr.comments) == 1
+
+    # Rescan it.  Nothing should happen.
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(prj)
+        issue_id, anything_happened = pull_request_opened(pr.as_json())
 
     assert issue_id is None
     assert anything_happened is False
@@ -313,5 +322,64 @@ def test_contractor_pr_rescanned(reqctx, fake_github, fake_jira):
     # No Jira issue was created.
     assert len(fake_jira.issues) == 0
 
-    # No new GitHub comment was created.
+    # One GitHub comment was created.
+    assert len(pr.comments) == 1
+
+
+def test_changing_pr_title(reqctx, fake_github, fake_jira):
+    # After the Jira issue is created, changing the title of the pull request
+    # will update the title of the issue.
+    pr = fake_github.make_pull_request(
+        user="tusbar",
+        title="These are my changes, please take them.",
+    )
+
+    with reqctx:
+        issue_id1, _ = pull_request_opened(pr.as_json())
+
+    issue = fake_jira.issues[issue_id1]
+    assert issue.summary == "These are my changes, please take them."
+    # The bot made one comment on the PR.
+    assert len(pr.comments) == 1
+
+    pr.title = "This is the best!"
+    with reqctx:
+        issue_id2, _ = pull_request_opened(pr.as_json())
+
+    assert issue_id2 == issue_id1
+    issue = fake_jira.issues[issue_id2]
+    # The issue title has changed.
+    assert issue.summary == "This is the best!"
+    # The bot didn't make another comment.
+    assert len(pr.comments) == 1
+
+
+def test_changing_pr_description(reqctx, fake_github, fake_jira):
+    # After the Jira issue is created, changing the body of the pull request
+    # will update the description of the issue.
+    pr = fake_github.make_pull_request(
+        user="tusbar",
+        title="These are my changes, please take them.",
+        body="Blah blah lots of description.",
+    )
+
+    with reqctx:
+        issue_id1, _ = pull_request_opened(pr.as_json())
+
+    issue = fake_jira.issues[issue_id1]
+    assert issue.summary == "These are my changes, please take them."
+    assert issue.description == "Blah blah lots of description."
+    # The bot made one comment on the PR.
+    assert len(pr.comments) == 1
+
+    pr.body = "OK, now I am really describing things."
+    with reqctx:
+        issue_id2, _ = pull_request_opened(pr.as_json())
+
+    assert issue_id2 == issue_id1
+    issue = fake_jira.issues[issue_id2]
+    # The issue title hasn't changed, but the description has.
+    assert issue.summary == "These are my changes, please take them."
+    assert issue.description == "OK, now I am really describing things."
+    # The bot didn't make another comment.
     assert len(pr.comments) == 1

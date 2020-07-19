@@ -89,7 +89,7 @@ def hook_receiver():
     action = event["action"]
 
     pr_activity = f"{repo} #{pr_number} {action!r}"
-    if action == "opened":
+    if action in ["opened", "edited"]:
         logger.info(f"{pr_activity}, processing...")
         result = pull_request_opened_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
     elif action == "closed":

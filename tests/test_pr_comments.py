@@ -1,7 +1,5 @@
 """Tests of the comment creation functions in tasks/github.py."""
 
-import pytest
-
 from openedx_webhooks.bot_comments import (
     BotComment,
     is_comment_kind,
