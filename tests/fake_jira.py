@@ -124,11 +124,14 @@ class FakeJira(faker.Faker):
         return issue
 
     @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)")
-    def _get_issue(self, match, _request, _context) -> Dict:
+    def _get_issue(self, match, _request, context) -> Dict:
         """Implement the GET issue endpoint."""
         key = match["key"]
-        assert key in self.issues
-        return self.issues[key].as_json()
+        if key in self.issues:
+            return self.issues[key].as_json()
+        else:
+            context.status_code = 404
+            return {"errorMessages": ["Issue does not exist or you do not have permission to see it."], "errors": {}}
 
     @faker.route(r"/rest/api/2/issue", "POST")
     def _post_issue(self, _match, request, context):
@@ -160,6 +163,9 @@ class FakeJira(faker.Faker):
 
     @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)", "PUT")
     def _put_issue(self, match, request, context) -> None:
+        """
+        Implement the issue PUT endpoint for updating issues.
+        """
         key = match["key"]
         if issue := self.issues.get(key):
             changes = request.json()
@@ -171,6 +177,18 @@ class FakeJira(faker.Faker):
                 kwargs["description"] = fields["description"]
             issue = dataclasses.replace(issue, **kwargs)
             self.issues[key] = issue
+            context.status_code = 204
+        else:
+            context.status_code = 404
+
+    @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)", "DELETE")
+    def _delete_issue(self, match, _request, context) -> None:
+        """
+        Implement the endpoint for deleting issues.
+        """
+        key = match["key"]
+        if key in self.issues:
+            del self.issues[key]
             context.status_code = 204
         else:
             context.status_code = 404

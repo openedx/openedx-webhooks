@@ -7,6 +7,14 @@ from openedx_webhooks.utils import (
     sentry_extra_context,
 )
 
+def delete_jira_issue(issue_key):
+    """
+    Delete an issue from Jira.
+    """
+    resp = get_jira_session().delete(f"/rest/api/2/issue/{issue_key}")
+    log_check_response(resp)
+
+
 def transition_jira_issue(issue_key, status_name):
     """
     Transition a Jira issue to a new status.
@@ -82,6 +90,6 @@ def update_jira_issue(issue_key, summary=None, description=None):
     if description is not None:
         fields["description"] = description
     assert fields
-    put_url = f"/rest/api/2/issue/{issue_key}"
-    resp = get_jira_session().put(put_url, json={"fields": fields})
+    url = f"/rest/api/2/issue/{issue_key}"
+    resp = get_jira_session().put(url, json={"fields": fields})
     log_check_response(resp)

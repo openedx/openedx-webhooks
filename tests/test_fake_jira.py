@@ -30,3 +30,16 @@ class TestIssues:
         assert "This is OK." == issue2["fields"]["summary"]
         # The body is unchanged.
         assert "Here are the details so you can see how serious it is." == issue2["fields"]["description"]
+
+    def test_delete_issue(self, fake_jira):
+        fake_jira.make_issue(key="HELLO-123", summary="This is a bad bug!")
+        resp = requests.get("https://openedx.atlassian.net/rest/api/2/issue/HELLO-123")
+        assert resp.status_code == 200
+        assert "HELLO-123" in fake_jira.issues
+
+        resp = requests.delete("https://openedx.atlassian.net/rest/api/2/issue/HELLO-123")
+        assert resp.status_code == 204
+
+        resp = requests.get("https://openedx.atlassian.net/rest/api/2/issue/HELLO-123")
+        assert resp.status_code == 404
+        assert "HELLO-123" not in fake_jira.issues
