@@ -185,7 +185,7 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
-Unreleased
+2020-07-20
 ~~~~~~~~~~
 
 - Changes to the title or description of a pull request are copied over to the
