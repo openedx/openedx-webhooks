@@ -191,6 +191,12 @@ Unreleased
 - Changes to the title or description of a pull request are copied over to the
   associated Jira issue to keep them in sync.
 
+- If a change to a pull request requires a different Jira issue, the old issue
+  is deleted, and a new one made.  For example, if a blended pull request
+  doesn't have "[BD-xx]" in the title, an OSPR issue gets made initially.
+  Now when the developer updates the title, the OSPR issue is deleted, and a
+  new BLENDED issue is created for it.
+
 
 2020-07-14
 ~~~~~~~~~~

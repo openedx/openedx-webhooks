@@ -383,3 +383,65 @@ def test_changing_pr_description(reqctx, fake_github, fake_jira):
     assert issue.description == "OK, now I am really describing things."
     # The bot didn't make another comment.
     assert len(pr.comments) == 1
+
+
+def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
+    """
+    A blended developer opens a PR, but forgets to put "[BD]" in the title.
+    """
+    # The blended project exists:
+    map_1_2 = {
+        "child": {
+            "id": "14522",
+            "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14522",
+            "value": "Course Level Insights"
+        },
+        "id": "14209",
+        "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
+        "value": "Researcher & Data Experiences"
+    }
+    epic = fake_jira.make_issue(
+        project="BLENDED",
+        blended_project_id="BD-34",
+        blended_project_status_page="https://thewiki/bd-34",
+        platform_map_1_2=map_1_2,
+    )
+
+    # The developer makes a pull request, but forgets the right syntax in the title.
+    pr = fake_github.make_pull_request(user="tusbar", title="This is for BD-34")
+
+    with reqctx:
+        ospr_id, anything_happened = pull_request_opened(pr.as_json())
+
+    # An OSPR issue was made.
+    assert ospr_id.startswith("OSPR-")
+    assert anything_happened is True
+    assert ospr_id in fake_jira.issues
+
+    # The developer changes the title.
+    pr.title = "This is for [BD-34]."
+    with reqctx:
+        issue_id, anything_happened = pull_request_opened(pr.as_json())
+
+    assert anything_happened is True
+    assert issue_id.startswith("BLENDED-")
+
+    # The original issue has been deleted.
+    assert ospr_id not in fake_jira.issues
+
+    issue = fake_jira.issues[issue_id]
+    prj = pr.as_json()
+    assert issue.contributor_name == "Bertrand Marron"
+    assert issue.customer == ["IONISx"]
+    assert issue.pr_number == prj["number"]
+    assert issue.repo == "an-org/a-repo"
+    assert issue.url == prj["html_url"]
+    assert issue.description == prj["body"]
+    assert issue.issuetype == "Pull Request Review"
+    assert issue.summary == prj["title"]
+    assert issue.labels == ["blended"]
+    assert issue.epic_link == epic.key
+    assert issue.platform_map_1_2 == map_1_2
+
+    # Check that the Jira issue is in Needs Triage.
+    assert issue.status == "Needs Triage"

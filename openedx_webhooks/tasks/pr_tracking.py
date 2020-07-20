@@ -23,6 +23,7 @@ from openedx_webhooks.info import (
 from openedx_webhooks.oauth import get_github_session, get_jira_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.jira_work import (
+    delete_jira_issue,
     transition_jira_issue,
     update_jira_issue,
 )
@@ -150,6 +151,18 @@ class PrTrackingFixer:
         return self.current.jira_id, self.happened
 
     def fix(self) -> None:
+        # We might have an issue already, but in the wrong project.
+        if self.current.jira_id is not None:
+            current_project = self.current.jira_id.partition("-")[0]
+            if current_project != self.desired.jira_project:
+                # Delete the existing issue and forget the current state.
+                delete_jira_issue(self.current.jira_id)
+                self.current.jira_id = None
+                self.current.jira_project = None
+                self.current.jira_title = None
+                self.current.jira_description = None
+                self.current.jira_status = None
+
         # If needed, make a Jira issue.
         if self.desired.jira_project is not None:
             if self.current.jira_id is None:

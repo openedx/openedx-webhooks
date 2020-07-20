@@ -105,6 +105,12 @@ Updating Jira issue when pull requests change
 Changes to pull requests are reflected in the Jira issue.  The titles and
 descriptions are copied over to the Jira issue if they are changed in GitHub.
 
+If a change to a pull request means that a different Jira issue is needed, the
+old issue will be deleted, and a new one created.  For example, if a blended
+pull request doesn't have "[BD-xx]" in the title, an OSPR issue gets made
+initially.  When the developer updates the title, the bot deletes the OSPR
+issue and makes a new BLENDED issue for it.
+
 
 Updating GitHub labels when Jira status changes
 -----------------------------------------------
