@@ -8,7 +8,7 @@ check-setup.py: ## Check setup
 	python setup.py check -r -s
 
 clean: ## Clean cache, test, and build directories
-	-rm -rf .cache build dist *.egg-info .coverage htmlcov docs/_build
+	-rm -rf .cache build dist *.egg-info .coverage htmlcov docs/_build prof
 
 test: ## Run tests
 	py.test -rxefs --cov=openedx_webhooks --cov=tests --cov-context=test --cov-report=

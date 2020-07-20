@@ -9,6 +9,7 @@ from flask_dance.consumer.requests import OAuth2Session
 
 import openedx_webhooks
 import openedx_webhooks.utils
+import openedx_webhooks.info
 
 from .fake_github import FakeGitHub
 from .fake_jira import FakeJira
@@ -34,11 +35,31 @@ def fake_repo_data(requests_mocker):
         with open(os.path.join(repo_data_dir, filename)) as data:
             return data.read()
 
-    RAW_HOST = "raw.githubusercontent.com"
     requests_mocker.get(
-        re.compile(f"https://{RAW_HOST}/edx/repo-tools-data/master/"),
+        re.compile(f"https://raw.githubusercontent.com/edx/repo-tools-data/master/"),
         text=_repo_data_callback,
     )
+
+
+@pytest.yield_fixture(scope="session", autouse=True)
+def hard_cache_repotools_yaml_files():
+    """
+    Reading yaml files is slowish, and these data files don't change.
+    Read them once per test run, and re-use the data.
+    """
+    real_read_repotools_yaml_file = openedx_webhooks.info._read_repotools_yaml_file
+    repotools_files = {}
+    def new_read_repotools_yaml_file(filename):
+        data = repotools_files.get(filename)
+        if data is None:
+            data = real_read_repotools_yaml_file(filename)
+            repotools_files[filename] = data
+        return data
+    openedx_webhooks.info._read_repotools_yaml_file = new_read_repotools_yaml_file
+    try:
+        yield
+    finally:
+        openedx_webhooks.info._read_repotools_yaml_file = real_read_repotools_yaml_file
 
 
 class FakeBlueprint:
