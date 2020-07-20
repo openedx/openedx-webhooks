@@ -29,7 +29,7 @@ class BotComment(Enum):
 BOT_COMMENT_INDICATORS = {
     BotComment.WELCOME: [
         "<!-- comment:external_pr -->",
-        "Thanks for the pull request,",
+        "Feel free to add as much of the following information to the ticket:",
     ],
     BotComment.NEED_CLA: [
         "<!-- comment:no_cla -->",
@@ -58,7 +58,7 @@ def is_comment_kind(kind: BotComment, text: str) -> bool:
     return BOT_COMMENT_INDICATORS[kind][0] in text
 
 
-def github_community_pr_comment(pull_request: PrDict, jira_issue: JiraDict) -> str:
+def github_community_pr_comment(pull_request: PrDict, jira_issue: JiraDict, **kwargs) -> str:
     """
     For a newly-created pull request from an open source contributor,
     write a welcoming comment on the pull request. The comment should:
@@ -71,14 +71,13 @@ def github_community_pr_comment(pull_request: PrDict, jira_issue: JiraDict) -> s
     has_signed_agreement = pull_request_has_cla(pull_request)
     return render_template("github_community_pr_comment.md.j2",
         user=pull_request["user"]["login"],
-        repo=pull_request["base"]["repo"]["full_name"],
-        number=pull_request["number"],
         issue_key=jira_issue["key"],
         has_signed_agreement=has_signed_agreement,
+        **kwargs
     )
 
 
-def github_contractor_pr_comment(pull_request: PrDict) -> str:
+def github_contractor_pr_comment(pull_request: PrDict, **kwargs) -> str:
     """
     For a newly-created pull request from a contractor that edX works with,
     write a comment on the pull request. The comment should:
@@ -90,22 +89,27 @@ def github_contractor_pr_comment(pull_request: PrDict) -> str:
         user=pull_request["user"]["login"],
         repo=pull_request["base"]["repo"]["full_name"],
         number=pull_request["number"],
+        **kwargs
     )
 
 
-def github_committer_pr_comment(pull_request: PrDict, jira_issue: JiraDict) -> str:
+def github_committer_pr_comment(pull_request: PrDict, jira_issue: JiraDict, **kwargs) -> str:
     """
     Create the body of the comment for new pull requests from core committers.
     """
     return render_template("github_committer_pr_comment.md.j2",
         user=pull_request["user"]["login"],
-        repo=pull_request["base"]["repo"]["full_name"],
-        number=pull_request["number"],
         issue_key=jira_issue["key"],
+        **kwargs
     )
 
 
-def github_blended_pr_comment(pull_request: PrDict, jira_issue: JiraDict, blended_epic: Optional[JiraDict]) -> str:
+def github_blended_pr_comment(
+    pull_request: PrDict,
+    jira_issue: JiraDict,
+    blended_epic: Optional[JiraDict],
+    **kwargs
+) -> str:
     """
     Create a Blended PR comment.
     """
@@ -117,9 +121,8 @@ def github_blended_pr_comment(pull_request: PrDict, jira_issue: JiraDict, blende
         project_name = project_page = None
     return render_template("github_blended_pr_comment.md.j2",
         user=pull_request["user"]["login"],
-        repo=pull_request["base"]["repo"]["full_name"],
-        number=pull_request["number"],
         issue_key=jira_issue["key"],
         project_name=project_name,
         project_page=project_page,
+        **kwargs
     )
