@@ -23,7 +23,7 @@ def test_internal_pr_opened(reqctx, fake_github):
         key, anything_happened = pull_request_opened(pr.as_json())
     assert key is None
     assert anything_happened is False
-    assert len(pr.comments) == 0
+    assert len(pr.list_comments()) == 0
 
 
 def test_pr_opened_by_bot(reqctx, fake_github):
@@ -33,7 +33,7 @@ def test_pr_opened_by_bot(reqctx, fake_github):
         key, anything_happened = pull_request_opened(pr.as_json())
     assert key is None
     assert anything_happened is False
-    assert len(pr.comments) == 0
+    assert len(pr.list_comments()) == 0
 
 
 def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jira):
@@ -69,8 +69,9 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     sync_labels_fn.assert_called_once_with("edx/edx-platform")
 
     # Check the GitHub comment that was created.
-    assert len(pr.comments) == 1
-    body = pr.comments[0].body
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
     assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
@@ -114,8 +115,9 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
     sync_labels_fn.assert_called_once_with("edx/some-code")
 
     # Check the GitHub comment that was created.
-    assert len(pr.comments) == 1
-    body = pr.comments[0].body
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
     assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
@@ -159,8 +161,9 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     sync_labels_fn.assert_called_once_with("edx/edx-platform")
 
     # Check the GitHub comment that was created.
-    assert len(pr.comments) == 1
-    body = pr.comments[0].body
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
     assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
@@ -230,8 +233,9 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
     sync_labels_fn.assert_called_once_with("edx/some-code")
 
     # Check the GitHub comment that was created.
-    assert len(pr.comments) == 1
-    body = pr.comments[0].body
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
     assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
@@ -255,7 +259,7 @@ def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
         issue_id1, anything_happened1 = pull_request_opened(pr.as_json())
 
     assert anything_happened1 is True
-    assert len(pr.comments) == 1
+    assert len(pr.list_comments()) == 1
 
     # Rescan the pull request.
     with reqctx:
@@ -268,7 +272,7 @@ def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
     assert len(fake_jira.issues) == 1
 
     # No new GitHub comment was created.
-    assert len(pr.comments) == 1
+    assert len(pr.list_comments()) == 1
 
 
 def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
@@ -285,8 +289,9 @@ def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
     assert len(fake_jira.issues) == 0
 
     # Check the GitHub comment that was created.
-    assert len(pr.comments) == 1
-    body = pr.comments[0].body
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
     assert is_good_markdown(body)
     assert is_comment_kind(BotComment.CONTRACTOR, body)
     href = (
@@ -310,7 +315,7 @@ def test_contractor_pr_rescanned(reqctx, fake_github, fake_jira):
     assert len(fake_jira.issues) == 0
 
     # One GitHub comment was created.
-    assert len(pr.comments) == 1
+    assert len(pr.list_comments()) == 1
 
     # Rescan it.  Nothing should happen.
     with reqctx:
@@ -323,7 +328,7 @@ def test_contractor_pr_rescanned(reqctx, fake_github, fake_jira):
     assert len(fake_jira.issues) == 0
 
     # One GitHub comment was created.
-    assert len(pr.comments) == 1
+    assert len(pr.list_comments()) == 1
 
 
 def test_changing_pr_title(reqctx, fake_github, fake_jira):
@@ -340,7 +345,7 @@ def test_changing_pr_title(reqctx, fake_github, fake_jira):
     issue = fake_jira.issues[issue_id1]
     assert issue.summary == "These are my changes, please take them."
     # The bot made one comment on the PR.
-    assert len(pr.comments) == 1
+    assert len(pr.list_comments()) == 1
 
     pr.title = "This is the best!"
     with reqctx:
@@ -351,7 +356,7 @@ def test_changing_pr_title(reqctx, fake_github, fake_jira):
     # The issue title has changed.
     assert issue.summary == "This is the best!"
     # The bot didn't make another comment.
-    assert len(pr.comments) == 1
+    assert len(pr.list_comments()) == 1
 
 
 def test_changing_pr_description(reqctx, fake_github, fake_jira):
@@ -370,7 +375,7 @@ def test_changing_pr_description(reqctx, fake_github, fake_jira):
     assert issue.summary == "These are my changes, please take them."
     assert issue.description == "Blah blah lots of description."
     # The bot made one comment on the PR.
-    assert len(pr.comments) == 1
+    assert len(pr.list_comments()) == 1
 
     pr.body = "OK, now I am really describing things."
     with reqctx:
@@ -382,7 +387,7 @@ def test_changing_pr_description(reqctx, fake_github, fake_jira):
     assert issue.summary == "These are my changes, please take them."
     assert issue.description == "OK, now I am really describing things."
     # The bot didn't make another comment.
-    assert len(pr.comments) == 1
+    assert len(pr.list_comments()) == 1
 
 
 def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):

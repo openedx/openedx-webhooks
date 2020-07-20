@@ -1,7 +1,12 @@
+"""
+A fake implementation of the GitHub REST API.
+"""
+
 from __future__ import annotations
 
 import dataclasses
 import datetime
+import itertools
 import random
 import re
 from dataclasses import dataclass, field
@@ -73,14 +78,20 @@ DEFAULT_LABELS = [
     {"name": "wontfix", "color": "ffffff", "description": "This will not be worked on"},
 ]
 
+comment_ids = itertools.count(start=1001, step=137)
+
 @dataclass
 class Comment:
-    issue: PullRequest
+    """
+    A comment on an issue or pull request.
+    """
+    id: int = field(init=False, default_factory=comment_ids.__next__)
     user: User
     body: str
 
     def as_json(self) -> Dict:
         return {
+            "id": self.id,
             "body": self.body,
             "user": self.user.as_json(),
         }
@@ -94,7 +105,7 @@ class PullRequest:
     title: str = ""
     body: str = ""
     created_at: datetime.datetime = field(default_factory=datetime.datetime.now)
-    comments: List[Comment] = field(default_factory=list)
+    comments: List[int] = field(default_factory=list)
     labels: Set[str] = field(default_factory=set)
     state: str = "open"
     merged: bool = False
@@ -114,10 +125,12 @@ class PullRequest:
         }
 
     def add_comment(self, user="someone", **kwargs) -> Comment:
-        user = self.repo.github.get_user(user, create=True)
-        comment = Comment(self, user, **kwargs)
-        self.comments.append(comment)
+        comment = self.repo.make_comment(user, **kwargs)
+        self.comments.append(comment.id)
         return comment
+
+    def list_comments(self) -> List[Comment]:
+        return [self.repo.comments[cid] for cid in self.comments]
 
 
 @dataclass
@@ -127,6 +140,7 @@ class Repo:
     repo: str
     labels: Dict[str, Label] = field(default_factory=dict)
     pull_requests: Dict[int, PullRequest] = field(default_factory=dict)
+    comments: Dict[int, Comment] = field(default_factory=dict)
 
     def as_json(self) -> Dict:
         return {
@@ -149,6 +163,12 @@ class Repo:
             return self.pull_requests[number]
         except KeyError:
             raise DoesNotExist(f"Pull request {self.owner}/{self.repo} #{number} does not exist")
+
+    def make_comment(self, user, **kwargs) -> Comment:
+        user = self.github.get_user(user, create=True)
+        comment = Comment(user, **kwargs)
+        self.comments[comment.id] = comment
+        return comment
 
     def get_label(self, name: str) -> Label:
         try:
@@ -300,7 +320,7 @@ class FakeGitHub(faker.Faker):
         # https://developer.github.com/v3/issues/comments/#list-issue-comments
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))
-        return [c.as_json() for c in pr.comments]
+        return [r.comments[cid].as_json() for cid in pr.comments]
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/(?P<number>\d+)/comments", "POST")
     def _post_issues_comments(self, match, request, _context) -> Dict:
@@ -308,4 +328,12 @@ class FakeGitHub(faker.Faker):
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))
         comment = pr.add_comment(user=self.login, body=request.json()["body"])
+        return comment.as_json()
+
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/comments/(?P<comment_id>\d+)", "PATCH")
+    def _patch_issues_comments(self, match, request, _context) -> Dict:
+        # https://developer.github.com/v3/issues/comments/#update-an-issue-comment
+        r = self.get_repo(match["owner"], match["repo"])
+        comment = r.comments[int(match["comment_id"])]
+        comment.body = request.json()["body"]
         return comment.as_json()

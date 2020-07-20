@@ -255,5 +255,28 @@ class TestComments:
         )
         assert resp.status_code == 200
 
-        assert pr.comments[0].user.login == "webhook-bot"
-        assert pr.comments[0].body == "I'm making a comment"
+        the_comment = pr.list_comments()[0]
+        assert the_comment.user.login == "webhook-bot"
+        assert the_comment.body == "I'm making a comment"
+
+    def test_editing_comments(self, fake_github):
+        repo = fake_github.make_repo("an-org", "a-repo")
+        pr = repo.make_pull_request()
+
+        pr.add_comment(user="tusbar", body="This is my comment")
+        pr.add_comment(user="feanil", body="I love this change!")
+
+        # List the comments, and get the id of the first one.
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments")
+        comment_id = resp.json()[0]["id"]
+
+        # Update the first comment.
+        resp = requests.patch(
+            f"https://api.github.com/repos/an-org/a-repo/issues/comments/{comment_id}",
+            json={"body": "I've changed my mind about my comment."},
+        )
+        assert resp.status_code == 200
+
+        # List the comments, and see the body of the first comment has changed.
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments")
+        assert resp.json()[0]["body"] == "I've changed my mind about my comment."
