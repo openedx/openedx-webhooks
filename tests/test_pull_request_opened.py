@@ -6,6 +6,7 @@ from openedx_webhooks.bot_comments import (
     BotComment,
     is_comment_kind,
 )
+from openedx_webhooks.info import get_jira_issue_key
 from openedx_webhooks.tasks.github import pull_request_opened
 
 from .helpers import is_good_markdown
@@ -450,3 +451,6 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
 
     # Check that the Jira issue is in Needs Triage.
     assert issue.status == "Needs Triage"
+
+    # The pull request has to be associated with the new issue.
+    assert get_jira_issue_key(prj) == issue_id

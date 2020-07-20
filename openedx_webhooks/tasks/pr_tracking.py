@@ -64,6 +64,7 @@ def existing_bot_comments(pr: PrDict) -> Set[BotComment]:
                 comment_ids.add(comment_id)
     return comment_ids
 
+
 def current_support_state(pr: PrDict) -> PrTrackingInfo:
     current = PrTrackingInfo()
     current.bot_comments = existing_bot_comments(pr)
@@ -75,6 +76,7 @@ def current_support_state(pr: PrDict) -> PrTrackingInfo:
         current.jira_status = issue["fields"]["status"]["name"]
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
     return current
+
 
 def desired_support_state(pr: PrDict) -> Optional[PrTrackingInfo]:
     user = pr["user"]["login"]
@@ -151,12 +153,15 @@ class PrTrackingFixer:
         return self.current.jira_id, self.happened
 
     def fix(self) -> None:
+        comment_kwargs = {}
+
         # We might have an issue already, but in the wrong project.
         if self.current.jira_id is not None:
             current_project = self.current.jira_id.partition("-")[0]
             if current_project != self.desired.jira_project:
                 # Delete the existing issue and forget the current state.
                 delete_jira_issue(self.current.jira_id)
+                comment_kwargs["old_issue_key"] = self.current.jira_id
                 self.current.jira_id = None
                 self.current.jira_project = None
                 self.current.jira_title = None
@@ -206,19 +211,19 @@ class PrTrackingFixer:
         needed_comments = self.desired.bot_comments - self.current.bot_comments
         comment_body = ""
         if BotComment.WELCOME in needed_comments:
-            comment_body += github_community_pr_comment(self.pr, new_issue)
+            comment_body += github_community_pr_comment(self.pr, new_issue, **comment_kwargs)
             needed_comments.remove(BotComment.WELCOME)
 
         if BotComment.CONTRACTOR in needed_comments:
-            comment_body += github_contractor_pr_comment(self.pr)
+            comment_body += github_contractor_pr_comment(self.pr, **comment_kwargs)
             needed_comments.remove(BotComment.CONTRACTOR)
 
         if BotComment.CORE_COMMITTER in needed_comments:
-            comment_body += github_committer_pr_comment(self.pr, new_issue)
+            comment_body += github_committer_pr_comment(self.pr, new_issue, **comment_kwargs)
             needed_comments.remove(BotComment.CORE_COMMITTER)
 
         if BotComment.BLENDED in needed_comments:
-            comment_body += github_blended_pr_comment(self.pr, new_issue, self.desired.jira_epic)
+            comment_body += github_blended_pr_comment(self.pr, new_issue, self.desired.jira_epic, **comment_kwargs)
             needed_comments.remove(BotComment.BLENDED)
 
         if BotComment.OK_TO_TEST in needed_comments:
@@ -231,7 +236,12 @@ class PrTrackingFixer:
             needed_comments.remove(BotComment.NEED_CLA)
 
         if comment_body:
-            add_comment_to_pull_request(self.pr, comment_body)
+            # If there are current-state comments, then we need to edit the
+            # comment, otherwise create one.
+            if self.current.bot_comments:
+                edit_comment_on_pull_request(self.pr, comment_body)
+            else:
+                add_comment_to_pull_request(self.pr, comment_body)
             self.happened = True
 
         assert needed_comments == set(), "Couldn't make comments: {}".format(needed_comments)
@@ -334,7 +344,7 @@ def create_ospr_issue(pr, project, summary, description, labels, extra_fields=No
     return new_issue
 
 
-def add_comment_to_pull_request(pr, comment_body):
+def add_comment_to_pull_request(pr: PrDict, comment_body: str) -> None:
     """
     Add a comment to a pull request.
     """
@@ -343,6 +353,18 @@ def add_comment_to_pull_request(pr, comment_body):
     url = f"/repos/{repo}/issues/{num}/comments"
     logger.info(f"Commenting on PR {repo} #{num}: {text_summary(comment_body, 90)!r}")
     resp = get_github_session().post(url, json={"body": comment_body})
+    log_check_response(resp)
+
+
+def edit_comment_on_pull_request(pr: PrDict, comment_body: str) -> None:
+    """
+    Edit the bot-authored comment on this pull request.
+    """
+    repo = pr["base"]["repo"]["full_name"]
+    bot_comments = list(get_bot_comments(pr))
+    comment_id = bot_comments[0]["id"]
+    url = f"/repos/{repo}/issues/comments/{comment_id}"
+    resp = get_github_session().patch(url, json={"body": comment_body})
     log_check_response(resp)
 
 

@@ -4,13 +4,13 @@ Get information about people, repos, orgs, pull requests, etc.
 
 import datetime
 import re
-from typing import Dict, Optional
+from typing import Dict, Iterable, Optional
 
 import yaml
 from iso8601 import parse_date
 
 from openedx_webhooks.oauth import get_github_session
-from openedx_webhooks.types import PrDict
+from openedx_webhooks.types import PrDict, PrCommentDict
 from openedx_webhooks.utils import (
     memoize,
     memoize_timed,
@@ -187,7 +187,7 @@ def github_whoami():
     return self_resp.json()
 
 
-def get_bot_comments(pull_request):
+def get_bot_comments(pull_request: PrDict) -> Iterable[PrCommentDict]:
     """Find all the comments the bot has made on a pull request."""
     me = github_whoami()
     my_username = me["login"]
@@ -201,7 +201,7 @@ def get_bot_comments(pull_request):
             yield comment
 
 
-def get_jira_issue_key(pull_request):
+def get_jira_issue_key(pull_request: PrDict) -> Optional[str]:
     """Find mention of a Jira issue number in bot-authored comments."""
     for comment in get_bot_comments(pull_request):
         # search for the first occurrence of a JIRA ticket key in the comment body
