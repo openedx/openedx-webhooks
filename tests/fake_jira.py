@@ -1,13 +1,15 @@
 """A fake implementation of the Jira API."""
 
 import dataclasses
-import random
+import itertools
 import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 
 from . import faker
 
+
+issue_ids = itertools.count(start=101, step=13)
 
 @dataclass
 class Issue:
@@ -118,7 +120,7 @@ class FakeJira(faker.Faker):
     def make_issue(self, key=None, project="OSPR", **kwargs):
         """Make fake issue data."""
         if key is None:
-            key = "{}-{}".format(project, random.randint(1001, 9009))
+            key = "{}-{}".format(project, next(issue_ids))
         issue = Issue(key=key, status=self.INITIAL_STATE, **kwargs)
         self.issues[key] = issue
         return issue
@@ -139,7 +141,7 @@ class FakeJira(faker.Faker):
         issue_data = request.json()
         fields = issue_data["fields"]
         project = fields["project"]["key"]
-        key = "{}-{}".format(project, random.randint(111, 999))
+        key = "{}-{}".format(project, next(issue_ids))
         kwargs = dict(
             issuetype=fields["issuetype"]["name"],
             summary=fields.get("summary"),
