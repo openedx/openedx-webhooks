@@ -185,7 +185,7 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
-Unreleased
+2020-07-21
 ~~~~~~~~~~
 
 - Previously, if an OSPR issue had been manually moved to BLENDED, and then the
