@@ -58,7 +58,7 @@ def is_comment_kind(kind: BotComment, text: str) -> bool:
     return BOT_COMMENT_INDICATORS[kind][0] in text
 
 
-def github_community_pr_comment(pull_request: PrDict, jira_issue: JiraDict, **kwargs) -> str:
+def github_community_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) -> str:
     """
     For a newly-created pull request from an open source contributor,
     write a welcoming comment on the pull request. The comment should:
@@ -71,7 +71,7 @@ def github_community_pr_comment(pull_request: PrDict, jira_issue: JiraDict, **kw
     has_signed_agreement = pull_request_has_cla(pull_request)
     return render_template("github_community_pr_comment.md.j2",
         user=pull_request["user"]["login"],
-        issue_key=jira_issue["key"],
+        issue_key=issue_key,
         has_signed_agreement=has_signed_agreement,
         **kwargs
     )
@@ -93,20 +93,20 @@ def github_contractor_pr_comment(pull_request: PrDict, **kwargs) -> str:
     )
 
 
-def github_committer_pr_comment(pull_request: PrDict, jira_issue: JiraDict, **kwargs) -> str:
+def github_committer_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) -> str:
     """
     Create the body of the comment for new pull requests from core committers.
     """
     return render_template("github_committer_pr_comment.md.j2",
         user=pull_request["user"]["login"],
-        issue_key=jira_issue["key"],
+        issue_key=issue_key,
         **kwargs
     )
 
 
 def github_blended_pr_comment(
     pull_request: PrDict,
-    jira_issue: JiraDict,
+    issue_key: str,
     blended_epic: Optional[JiraDict],
     **kwargs
 ) -> str:
@@ -121,7 +121,7 @@ def github_blended_pr_comment(
         project_name = project_page = None
     return render_template("github_blended_pr_comment.md.j2",
         user=pull_request["user"]["login"],
-        issue_key=jira_issue["key"],
+        issue_key=issue_key,
         project_name=project_name,
         project_page=project_page,
         **kwargs

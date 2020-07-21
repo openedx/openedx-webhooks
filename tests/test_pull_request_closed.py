@@ -34,7 +34,7 @@ def closed_pull_request(merged, reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="tusbar", state="closed", merged=merged)
     issue = fake_jira.make_issue()
     with reqctx:
-        bot_comment = github_community_pr_comment(pr.as_json(), jira_issue=issue.as_json())
+        bot_comment = github_community_pr_comment(pr.as_json(), issue.key)
     pr.add_comment(user=fake_github.login, body=bot_comment)
     pr.add_comment(user="nedbat", body="Please make some changes")
     pr.add_comment(user="tusbar", body="OK, I made the changes")

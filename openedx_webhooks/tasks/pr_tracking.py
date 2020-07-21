@@ -211,7 +211,7 @@ class PrTrackingFixer:
         needed_comments = self.desired.bot_comments - self.current.bot_comments
         comment_body = ""
         if BotComment.WELCOME in needed_comments:
-            comment_body += github_community_pr_comment(self.pr, new_issue, **comment_kwargs)
+            comment_body += github_community_pr_comment(self.pr, self.current.jira_id, **comment_kwargs)
             needed_comments.remove(BotComment.WELCOME)
 
         if BotComment.CONTRACTOR in needed_comments:
@@ -219,11 +219,11 @@ class PrTrackingFixer:
             needed_comments.remove(BotComment.CONTRACTOR)
 
         if BotComment.CORE_COMMITTER in needed_comments:
-            comment_body += github_committer_pr_comment(self.pr, new_issue, **comment_kwargs)
+            comment_body += github_committer_pr_comment(self.pr, self.current.jira_id, **comment_kwargs)
             needed_comments.remove(BotComment.CORE_COMMITTER)
 
         if BotComment.BLENDED in needed_comments:
-            comment_body += github_blended_pr_comment(self.pr, new_issue, self.desired.jira_epic, **comment_kwargs)
+            comment_body += github_blended_pr_comment(self.pr, self.current.jira_id, self.desired.jira_epic, **comment_kwargs)
             needed_comments.remove(BotComment.BLENDED)
 
         if BotComment.OK_TO_TEST in needed_comments:
