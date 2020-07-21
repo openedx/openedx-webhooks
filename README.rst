@@ -185,6 +185,15 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
+Unreleased
+~~~~~~~~~~
+
+- Previously, if an OSPR issue had been manually moved to BLENDED, and then the
+  title of the pull request amended to have "[BD-xx]", the bot would try and
+  fail to delete the moved issue.  Now it understands the move, and leaves the
+  moved issue alone.
+
+
 2020-07-20
 ~~~~~~~~~~
 

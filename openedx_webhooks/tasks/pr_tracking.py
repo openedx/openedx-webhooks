@@ -45,6 +45,7 @@ class PrTrackingInfo:
     """
     bot_comments: Set[BotComment] = field(default_factory=set)
     jira_id: Optional[str] = None
+    jira_actual_id: Optional[str] = None    # Can differ if the issue was moved.
     jira_project: Optional[str] = None
     jira_title: Optional[str] = None
     jira_description: Optional[str] = None
@@ -71,6 +72,7 @@ def current_support_state(pr: PrDict) -> PrTrackingInfo:
     current.jira_id = get_jira_issue_key(pr)
     if current.jira_id:
         issue = get_jira_issue(current.jira_id)
+        current.jira_actual_id = issue["key"]
         current.jira_title = issue["fields"]["summary"]
         current.jira_description = issue["fields"]["description"]
         current.jira_status = issue["fields"]["status"]["name"]
@@ -157,16 +159,23 @@ class PrTrackingFixer:
 
         # We might have an issue already, but in the wrong project.
         if self.current.jira_id is not None:
-            current_project = self.current.jira_id.partition("-")[0]
-            if current_project != self.desired.jira_project:
-                # Delete the existing issue and forget the current state.
-                delete_jira_issue(self.current.jira_id)
-                comment_kwargs["old_issue_key"] = self.current.jira_id
-                self.current.jira_id = None
-                self.current.jira_project = None
-                self.current.jira_title = None
-                self.current.jira_description = None
-                self.current.jira_status = None
+            mentioned_project = self.current.jira_id.partition("-")[0]
+            actual_project = self.current.jira_actual_id.partition("-")[0]
+            if mentioned_project != self.desired.jira_project:
+                if actual_project == self.desired.jira_project:
+                    # Looks like the issue already got moved to the right
+                    # project.
+                    self.current.jira_id = self.current.jira_actual_id
+                else:
+                    # Delete the existing issue and forget the current state.
+                    delete_jira_issue(self.current.jira_actual_id)
+                    comment_kwargs["deleted_issue_key"] = self.current.jira_id
+                    self.current.jira_id = None
+                    self.current.jira_actual_id = None
+                    self.current.jira_project = None
+                    self.current.jira_title = None
+                    self.current.jira_description = None
+                    self.current.jira_status = None
 
         # If needed, make a Jira issue.
         if self.desired.jira_project is not None:
@@ -186,6 +195,7 @@ class PrTrackingFixer:
                 self.current.jira_status = new_issue["fields"]["status"]["name"]
                 self.current.jira_title = new_issue["fields"]["summary"]
                 self.current.jira_description = new_issue["fields"]["description"]
+                self.current.jira_epic = self.desired.jira_epic
                 self.happened = True
 
         # Check the state of the Jira issue.
@@ -223,7 +233,12 @@ class PrTrackingFixer:
             needed_comments.remove(BotComment.CORE_COMMITTER)
 
         if BotComment.BLENDED in needed_comments:
-            comment_body += github_blended_pr_comment(self.pr, self.current.jira_id, self.desired.jira_epic, **comment_kwargs)
+            comment_body += github_blended_pr_comment(
+                self.pr,
+                self.current.jira_id,
+                self.current.jira_epic,
+                **comment_kwargs
+            )
             needed_comments.remove(BotComment.BLENDED)
 
         if BotComment.OK_TO_TEST in needed_comments:

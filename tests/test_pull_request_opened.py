@@ -435,6 +435,14 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
     # The original issue has been deleted.
     assert ospr_id not in fake_jira.issues
 
+    # The bot comment now mentions the new issue.
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    assert f"I've created [{issue_id}](" in body
+    assert f"The original issue {ospr_id} has been deleted." in body
+
+    # The new issue has all the Blended stuff.
     issue = fake_jira.issues[issue_id]
     prj = pr.as_json()
     assert issue.contributor_name == "Bertrand Marron"
@@ -448,6 +456,73 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
     assert issue.labels == ["blended"]
     assert issue.epic_link == epic.key
     assert issue.platform_map_1_2 == map_1_2
+
+    # Check that the Jira issue is in Needs Triage.
+    assert issue.status == "Needs Triage"
+
+    # The pull request has to be associated with the new issue.
+    assert get_jira_issue_key(prj) == issue_id
+
+
+def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
+    """
+    A blended developer opens a PR, but forgets to put "[BD]" in the title.
+    In the meantime, someone already moved the OSPR issue to BLENDED.
+    """
+    # The blended project exists:
+    epic = fake_jira.make_issue(
+        project="BLENDED",
+        blended_project_id="BD-34",
+        blended_project_status_page="https://thewiki/bd-34",
+    )
+
+    # The developer makes a pull request, but forgets the right syntax in the title.
+    pr = fake_github.make_pull_request(user="tusbar", title="This is for BD-34")
+
+    with reqctx:
+        ospr_id, anything_happened = pull_request_opened(pr.as_json())
+
+    # An OSPR issue was made.
+    assert ospr_id.startswith("OSPR-")
+    assert anything_happened is True
+    assert ospr_id in fake_jira.issues
+
+    # Someone moves the Jira issue.
+    issue = fake_jira.find_issue(ospr_id)
+    fake_jira.move_issue(issue, "BLENDED")
+
+    # The developer changes the title.
+    pr.title = "This is for [BD-34]."
+    with reqctx:
+        issue_id, anything_happened = pull_request_opened(pr.as_json())
+
+    assert anything_happened is True
+    assert issue_id.startswith("BLENDED-")
+
+    # The original issue is still available, but with a new key.
+    assert fake_jira.find_issue(ospr_id) is not None
+
+    # The bot comment now mentions the new issue.
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    assert f"I've created [{issue_id}](" in body
+    # but doesn't say the old issue is deleted.
+    assert "The original issue" not in body
+
+    issue = fake_jira.issues[issue_id]
+    prj = pr.as_json()
+    assert issue.contributor_name == "Bertrand Marron"
+    assert issue.customer == ["IONISx"]
+    assert issue.pr_number == prj["number"]
+    assert issue.repo == "an-org/a-repo"
+    assert issue.url == prj["html_url"]
+    assert issue.description == prj["body"]
+    assert issue.issuetype == "Pull Request Review"
+    assert issue.summary == prj["title"]
+    # Note: the bot won't update the moved issue:
+    # assert issue.labels == ["blended"]
+    # assert issue.epic_link == epic.key
 
     # Check that the Jira issue is in Needs Triage.
     assert issue.status == "Needs Triage"
