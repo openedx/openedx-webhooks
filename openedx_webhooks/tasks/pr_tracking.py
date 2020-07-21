@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
 from openedx_webhooks.bot_comments import (
     BOT_COMMENT_INDICATORS,
@@ -115,7 +115,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrTrackingInfo]:
             desired.jira_epic = blended_epic
             custom_fields = get_jira_custom_fields(get_jira_session())
             desired.jira_extra_fields.extend([
-                ("Epic Link", blended_epic["key"]),
                 ("Platform Map Area (Levels 1 & 2)",
                     blended_epic["fields"].get(custom_fields["Platform Map Area (Levels 1 & 2)"])),
             ])
@@ -159,6 +158,7 @@ class PrTrackingFixer:
 
         # We might have an issue already, but in the wrong project.
         if self.current.jira_id is not None:
+            assert self.current.jira_actual_id is not None
             mentioned_project = self.current.jira_id.partition("-")[0]
             actual_project = self.current.jira_actual_id.partition("-")[0]
             if mentioned_project != self.desired.jira_project:
@@ -193,8 +193,9 @@ class PrTrackingFixer:
                 )
                 self.current.jira_id = new_issue["key"]
                 self.current.jira_status = new_issue["fields"]["status"]["name"]
-                self.current.jira_title = new_issue["fields"]["summary"]
-                self.current.jira_description = new_issue["fields"]["description"]
+                self.current.jira_title = self.desired.jira_title
+                self.current.jira_description = self.desired.jira_description
+                self.current.jira_labels = self.desired.jira_labels
                 self.current.jira_epic = self.desired.jira_epic
                 self.happened = True
 
@@ -203,13 +204,22 @@ class PrTrackingFixer:
             transition_jira_issue(self.current.jira_id, self.desired.jira_status)
             self.happened = True
 
-        update_kwargs = {}
+        update_kwargs: Dict[str, Any] = {}
         if self.desired.jira_title != self.current.jira_title:
             update_kwargs["summary"] = self.desired.jira_title
         if self.desired.jira_description != self.current.jira_description:
             update_kwargs["description"] = self.desired.jira_description
+        if self.desired.jira_labels != self.current.jira_labels:
+            update_kwargs["labels"] = self.desired.jira_labels
+        if self.desired.jira_epic is not None:
+            if self.current.jira_epic is None or (self.desired.jira_epic["key"] != self.current.jira_epic["key"]):
+                update_kwargs["epic_link"] = self.desired.jira_epic["key"]
         if update_kwargs:
-            update_jira_issue(self.current.jira_id, **update_kwargs)
+            update_jira_issue(self.current.jira_id, extra_fields=self.desired.jira_extra_fields, **update_kwargs)
+            self.current.jira_title = self.desired.jira_title
+            self.current.jira_description = self.desired.jira_description
+            self.current.jira_labels = self.desired.jira_labels
+            self.current.jira_epic = self.desired.jira_epic
             self.happened = True
 
         # Check the GitHub labels.
@@ -221,7 +231,7 @@ class PrTrackingFixer:
         needed_comments = self.desired.bot_comments - self.current.bot_comments
         comment_body = ""
         if BotComment.WELCOME in needed_comments:
-            comment_body += github_community_pr_comment(self.pr, self.current.jira_id, **comment_kwargs)
+            comment_body += github_community_pr_comment(self.pr, cast(str, self.current.jira_id), **comment_kwargs)
             needed_comments.remove(BotComment.WELCOME)
 
         if BotComment.CONTRACTOR in needed_comments:
@@ -229,13 +239,13 @@ class PrTrackingFixer:
             needed_comments.remove(BotComment.CONTRACTOR)
 
         if BotComment.CORE_COMMITTER in needed_comments:
-            comment_body += github_committer_pr_comment(self.pr, self.current.jira_id, **comment_kwargs)
+            comment_body += github_committer_pr_comment(self.pr, cast(str, self.current.jira_id), **comment_kwargs)
             needed_comments.remove(BotComment.CORE_COMMITTER)
 
         if BotComment.BLENDED in needed_comments:
             comment_body += github_blended_pr_comment(
                 self.pr,
-                self.current.jira_id,
+                cast(str, self.current.jira_id),
                 self.current.jira_epic,
                 **comment_kwargs
             )

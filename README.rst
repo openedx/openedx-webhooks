@@ -190,8 +190,9 @@ Unreleased
 
 - Previously, if an OSPR issue had been manually moved to BLENDED, and then the
   title of the pull request amended to have "[BD-xx]", the bot would try and
-  fail to delete the moved issue.  Now it understands the move, and leaves the
-  moved issue alone.
+  fail to delete the moved issue.  Now it understands the move, and doesn't
+  try to delete the original issue.  It also updates the issue with Blended
+  information.
 
 
 2020-07-20

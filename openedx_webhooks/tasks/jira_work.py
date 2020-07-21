@@ -3,6 +3,7 @@ import requests
 from openedx_webhooks.oauth import get_jira_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.utils import (
+    get_jira_custom_fields,
     log_check_response,
     sentry_extra_context,
 )
@@ -80,15 +81,23 @@ def transition_jira_issue(issue_key, status_name):
     return True
 
 
-def update_jira_issue(issue_key, summary=None, description=None):
+def update_jira_issue(issue_key, summary=None, description=None, labels=None, epic_link=None, extra_fields=None):
     """
     Update some fields on a Jira issue.
     """
     fields = {}
+    custom_fields = get_jira_custom_fields(get_jira_session())
     if summary is not None:
         fields["summary"] = summary
     if description is not None:
         fields["description"] = description
+    if labels is not None:
+        fields["labels"] = list(labels)
+    if epic_link is not None:
+        fields[custom_fields["Epic Link"]] = epic_link
+    if extra_fields is not None:
+        for name, value in extra_fields:
+            fields[custom_fields[name]] = value
     assert fields
     url = f"/rest/api/2/issue/{issue_key}"
     resp = get_jira_session().put(url, json={"fields": fields})

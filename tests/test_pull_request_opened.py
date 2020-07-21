@@ -61,7 +61,7 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     assert issue.description == prj["body"]
     assert issue.issuetype == "Pull Request Review"
     assert issue.summary == prj["title"]
-    assert issue.labels == []
+    assert issue.labels == set()
 
     # Check that the Jira issue was moved to Community Manager Review.
     assert issue.status == "Community Manager Review"
@@ -107,7 +107,7 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
     assert issue.description == prj["body"]
     assert issue.issuetype == "Pull Request Review"
     assert issue.summary == prj["title"]
-    assert issue.labels == []
+    assert issue.labels == set()
 
     # Check that the Jira issue is in Needs Triage.
     assert issue.status == "Needs Triage"
@@ -153,7 +153,7 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     assert issue.description == prj["body"]
     assert issue.issuetype == "Pull Request Review"
     assert issue.summary == prj["title"]
-    assert issue.labels == ["core-committer"]
+    assert issue.labels == {"core-committer"}
 
     # Check that the Jira issue was moved to Open edX Community Review.
     assert issue.status == "Open edX Community Review"
@@ -219,7 +219,7 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
     assert issue.description == prj["body"]
     assert issue.issuetype == "Pull Request Review"
     assert issue.summary == prj["title"]
-    assert issue.labels == ["blended"]
+    assert issue.labels == {"blended"}
     if with_epic:
         assert issue.epic_link == epic.key
         assert issue.platform_map_1_2 == map_1_2
@@ -453,7 +453,7 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
     assert issue.description == prj["body"]
     assert issue.issuetype == "Pull Request Review"
     assert issue.summary == prj["title"]
-    assert issue.labels == ["blended"]
+    assert issue.labels == {"blended"}
     assert issue.epic_link == epic.key
     assert issue.platform_map_1_2 == map_1_2
 
@@ -509,6 +509,7 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
     assert f"I've created [{issue_id}](" in body
     # but doesn't say the old issue is deleted.
     assert "The original issue" not in body
+    assert "More details are on" in body
 
     issue = fake_jira.issues[issue_id]
     prj = pr.as_json()
@@ -519,10 +520,9 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
     assert issue.url == prj["html_url"]
     assert issue.description == prj["body"]
     assert issue.issuetype == "Pull Request Review"
-    assert issue.summary == prj["title"]
-    # Note: the bot won't update the moved issue:
-    # assert issue.labels == ["blended"]
-    # assert issue.epic_link == epic.key
+    assert issue.summary == prj["title"] == "This is for [BD-34]."
+    assert issue.labels == {"blended"}
+    assert issue.epic_link == epic.key
 
     # Check that the Jira issue is in Needs Triage.
     assert issue.status == "Needs Triage"

@@ -175,7 +175,7 @@ class FakeJira(faker.Faker):
             issuetype=fields["issuetype"]["name"],
             summary=fields.get("summary"),
             description=fields.get("description"),
-            labels=fields.get("labels"),
+            labels=set(fields.get("labels")),
             epic_link=fields.get(FakeJira.EPIC_LINK),
             contributor_name=fields.get(FakeJira.CONTRIBUTOR_NAME),
             customer=fields.get(FakeJira.CUSTOMER),
@@ -202,9 +202,16 @@ class FakeJira(faker.Faker):
             fields = changes["fields"]
             kwargs = {}
             if "summary" in fields:
-                kwargs["summary"] = fields["summary"]
+                kwargs["summary"] = fields.pop("summary")
             if "description" in fields:
-                kwargs["description"] = fields["description"]
+                kwargs["description"] = fields.pop("description")
+            if "labels" in fields:
+                kwargs["labels"] = set(fields.pop("labels"))
+            if FakeJira.EPIC_LINK in fields:
+                kwargs["epic_link"] = fields.pop(FakeJira.EPIC_LINK)
+            if FakeJira.PLATFORM_MAP_1_2 in fields:
+                kwargs["platform_map_1_2"] = fields.pop(FakeJira.PLATFORM_MAP_1_2)
+            assert fields == {}, f"Didn't handle requested changes: {fields=}"
             issue = dataclasses.replace(issue, **kwargs)
             self.issues[issue.key] = issue
             context.status_code = 204
