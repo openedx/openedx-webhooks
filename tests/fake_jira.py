@@ -11,6 +11,12 @@ from . import faker
 
 issue_ids = itertools.count(start=101, step=13)
 
+def _make_issue_key(project: str) -> str:
+    """Generate the next issue key for a project."""
+    num = next(issue_ids)
+    return f"{project}-{num}"
+
+
 @dataclass
 class Issue:
     """A Jira issue."""
@@ -99,7 +105,10 @@ class FakeJira(faker.Faker):
 
     def __init__(self):
         super().__init__(host="https://openedx.atlassian.net")
-        self.issues = {}
+        # Map from issue keys to Issue objects.
+        self.issues: Dict[str, Issue] = {}
+        # Map from old keys to new keys for moved issues.
+        self.moves: Dict[str, str] = {}
 
     @faker.route(r"/rest/api/2/field")
     def _get_field(self, _match, _request, _context) -> List[Dict]:
@@ -117,20 +126,40 @@ class FakeJira(faker.Faker):
             (self.BLENDED_PROJECT_ID, "Blended Project ID"),
         ]]
 
-    def make_issue(self, key=None, project="OSPR", **kwargs):
+    def make_issue(self, key: Optional[str] = None, project: str = "OSPR", **kwargs) -> Issue:
         """Make fake issue data."""
         if key is None:
-            key = "{}-{}".format(project, next(issue_ids))
+            key = _make_issue_key(project)
         issue = Issue(key=key, status=self.INITIAL_STATE, **kwargs)
         self.issues[key] = issue
         return issue
 
+    def find_issue(self, key: str) -> Optional[Issue]:
+        """
+        Find an issue, even across moves.
+
+        Returns None if the issue doesn't exist.
+        """
+        while key in self.moves:
+            key = self.moves[key]
+        return self.issues.get(key)
+
+    def move_issue(self, issue: Issue, project: str) -> Issue:
+        """Move an issue to a new project."""
+        the_issue = self.find_issue(issue.key)
+        assert self.issues[issue.key] is the_issue
+        new_key = _make_issue_key(project)
+        self.moves[issue.key] = new_key
+        del self.issues[issue.key]
+        the_issue.key = new_key
+        self.issues[new_key] = the_issue
+        return the_issue
+
     @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)")
     def _get_issue(self, match, _request, context) -> Dict:
         """Implement the GET issue endpoint."""
-        key = match["key"]
-        if key in self.issues:
-            return self.issues[key].as_json()
+        if (issue := self.find_issue(match["key"])) is not None:
+            return issue.as_json()
         else:
             context.status_code = 404
             return {"errorMessages": ["Issue does not exist or you do not have permission to see it."], "errors": {}}
@@ -141,7 +170,7 @@ class FakeJira(faker.Faker):
         issue_data = request.json()
         fields = issue_data["fields"]
         project = fields["project"]["key"]
-        key = "{}-{}".format(project, next(issue_ids))
+        key = _make_issue_key(project)
         kwargs = dict(
             issuetype=fields["issuetype"]["name"],
             summary=fields.get("summary"),
@@ -168,8 +197,7 @@ class FakeJira(faker.Faker):
         """
         Implement the issue PUT endpoint for updating issues.
         """
-        key = match["key"]
-        if issue := self.issues.get(key):
+        if (issue := self.find_issue(match["key"])) is not None:
             changes = request.json()
             fields = changes["fields"]
             kwargs = {}
@@ -178,7 +206,7 @@ class FakeJira(faker.Faker):
             if "description" in fields:
                 kwargs["description"] = fields["description"]
             issue = dataclasses.replace(issue, **kwargs)
-            self.issues[key] = issue
+            self.issues[issue.key] = issue
             context.status_code = 204
         else:
             context.status_code = 404
@@ -188,9 +216,8 @@ class FakeJira(faker.Faker):
         """
         Implement the endpoint for deleting issues.
         """
-        key = match["key"]
-        if key in self.issues:
-            del self.issues[key]
+        if (issue := self.find_issue(match["key"])) is not None:
+            del self.issues[issue.key]
             context.status_code = 204
         else:
             context.status_code = 404
@@ -198,11 +225,8 @@ class FakeJira(faker.Faker):
     @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)/transitions")
     def _get_issue_transitions(self, match, _request, context) -> Dict:
         """Responds to the API endpoint for listing transitions between issue states."""
-        key = match["key"]
-        if key in self.issues:
+        if (issue := self.find_issue(match["key"])) is not None:
             # The transitions don't include the transitions to the current state.
-            issue = self.issues[key]
-
             return {
                 "transitions": [
                     {"id": id, "to": {"name": name}}
@@ -220,10 +244,10 @@ class FakeJira(faker.Faker):
         """
         Implement the POST to transition an issue to a new status.
         """
-        key = match["key"]
-        assert key in self.issues
+        issue = self.find_issue(match["key"])
+        assert issue is not None
         transition_id = request.json()["transition"]["id"]
-        self.issues[key].status = self.TRANSITION_IDS[transition_id]
+        issue.status = self.TRANSITION_IDS[transition_id]
 
     @faker.route(r"/rest/api/2/search", "GET")
     def _get_search(self, _match, request, _context):

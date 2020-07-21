@@ -43,3 +43,24 @@ class TestIssues:
         resp = requests.get("https://openedx.atlassian.net/rest/api/2/issue/HELLO-123")
         assert resp.status_code == 404
         assert "HELLO-123" not in fake_jira.issues
+
+    def test_move_issue(self, fake_jira):
+        issue1 = fake_jira.make_issue(project="HELLO", summary="This is a bad bug!")
+        key1 = issue1.key
+        issue2 = fake_jira.move_issue(issue1, "BLENDED")
+        key2 = issue2.key
+        assert key2.startswith("BLENDED-")
+
+        # Look it up under the old key.
+        resp = requests.get(f"https://openedx.atlassian.net/rest/api/2/issue/{key1}")
+        assert resp.status_code == 200
+        jissue1 = resp.json()
+        assert jissue1["key"] == key2   # it has the new key.
+        assert jissue1["fields"]["summary"] == "This is a bad bug!"
+
+        # Look it up under the new key.
+        resp = requests.get(f"https://openedx.atlassian.net/rest/api/2/issue/{key2}")
+        assert resp.status_code == 200
+        jissue2 = resp.json()
+        assert jissue2["key"] == key2
+        assert jissue2["fields"]["summary"] == "This is a bad bug!"
