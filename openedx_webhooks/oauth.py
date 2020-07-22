@@ -23,6 +23,9 @@ jira_bp = make_jira_blueprint(
 
 
 def get_jira_session():
+    """
+    Get the Jira session to use, in an easily test-patchable way.
+    """
     return jira_bp.session
 
 @oauth_authorized.connect_via(jira_bp)
@@ -47,6 +50,9 @@ github_bp = make_github_blueprint(
 
 
 def get_github_session():
+    """
+    Get the GitHub session to use, in an easily test-patchable way.
+    """
     return github_bp.session
 
 @oauth_authorized.connect_via(github_bp)

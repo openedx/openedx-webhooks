@@ -207,10 +207,35 @@ class Repo:
             raise DoesNotExist(f"Label {self.owner}/{self.repo} {name!r} does not exist")
 
 
+class Flaky404:
+    """
+    A middleware to emulate flaky behavior of GitHub's.
+    """
+    def __init__(self, fraction_404):
+        self.fraction_404 = fraction_404
+        self.paths = set()
+
+    def middleware(self, request, context):
+        """
+        For GET requests, maybe return a 404 the first time it's requested.
+        """
+        if request.method != "GET":
+            return None
+        if request.path in self.paths:
+            return None
+        self.paths.add(request.path)
+        if random.random() < self.fraction_404:
+            context.status_code = 404
+            return {"message": "Not Found"}
+        return None
+
+
 class FakeGitHub(faker.Faker):
 
-    def __init__(self, login: str = "some-user"):
+    def __init__(self, login: str = "some-user", fraction_404=0):
         super().__init__(host="https://api.github.com")
+        if fraction_404:
+            self.add_middleware(Flaky404(fraction_404).middleware)
 
         self.login = login
         self.users: Dict[str, User] = {}

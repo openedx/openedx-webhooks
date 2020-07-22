@@ -15,6 +15,7 @@ from openedx_webhooks.utils import (
     memoize,
     memoize_timed,
     paginated_get,
+    retry_get,
 )
 
 
@@ -182,7 +183,7 @@ def get_blended_project_id(pull_request: PrDict) -> Optional[int]:
 
 @memoize
 def github_whoami():
-    self_resp = get_github_session().get("/user")
+    self_resp = retry_get(get_github_session(), "/user")
     self_resp.raise_for_status()
     return self_resp.json()
 

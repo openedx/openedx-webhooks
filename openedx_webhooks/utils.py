@@ -9,6 +9,7 @@ import sys
 import time
 from functools import wraps
 from hashlib import sha1
+from time import sleep as retry_sleep   # so that we can patch it for tests.
 
 import cachetools.func
 import requests
@@ -108,6 +109,29 @@ def text_summary(text, length=40):
         return text[:start] + "..." + text[-end:]
 
 
+def retry_get(session, url, **kwargs):
+    """
+    Get a URL, but retry if it returns a 404.
+
+    GitHub has been known to send us a pull request event, and then return a
+    404 when we ask for the comments on the pull request.  This will retry
+    with a pause to get the real answer.
+
+    """
+    tries = 10
+    while True:
+        resp = session.get(url, **kwargs)
+        if resp.status_code == 404:
+            tries -= 1
+            if tries == 0:
+                break
+            retry_sleep(.5)
+            continue
+        else:
+            break
+    return resp
+
+
 def paginated_get(url, session=None, limit=None, per_page=100, callback=None, **kwargs):
     """
     Retrieve all objects from a paginated API.
@@ -126,7 +150,7 @@ def paginated_get(url, session=None, limit=None, per_page=100, callback=None, **
     session = session or requests.Session()
     returned = 0
     while url:
-        resp = session.get(url, **kwargs)
+        resp = retry_get(session, url, **kwargs)
         if callable(callback):
             callback(resp)
         result = resp.json()

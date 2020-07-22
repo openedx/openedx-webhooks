@@ -79,10 +79,22 @@ def mock_github_bp(mocker):
     mocker.patch("openedx_webhooks.oauth.github_bp", mock_bp)
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--percent-404",
+        action="store",
+        help="What percent of HTTP requests should fail with a 404",
+        default="0",
+    )
+
 @pytest.fixture
-def fake_github(requests_mocker, mock_github_bp, fake_repo_data):
-    the_fake_github = FakeGitHub(login="webhook-bot")
+def fake_github(pytestconfig, mocker, requests_mocker, mock_github_bp, fake_repo_data):
+    fraction_404 = float(pytestconfig.getoption("percent_404")) / 100.0
+    the_fake_github = FakeGitHub(login="webhook-bot", fraction_404=fraction_404)
     the_fake_github.install_mocks(requests_mocker)
+    if fraction_404:
+        # Make the retry sleep a no-op so it won't slow the tests.
+        mocker.patch("openedx_webhooks.utils.retry_sleep", lambda x: None)
     return the_fake_github
 
 

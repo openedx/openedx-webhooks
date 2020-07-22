@@ -13,7 +13,11 @@ from openedx_webhooks.info import (
 )
 
 
-pytestmark = pytest.mark.usefixtures("fake_repo_data", "mock_github_bp")
+# These tests should run when we want to test flaky GitHub behavior.
+pytestmark = [
+    pytest.mark.flaky_github,
+    pytest.mark.usefixtures("fake_repo_data", "mock_github_bp"),
+]
 
 
 @pytest.fixture
@@ -29,8 +33,9 @@ def make_pull_request(fake_github):
     return _fn
 
 
-def test_internal_orgs():
-    orgs = get_orgs("internal")
+def test_internal_orgs(reqctx):
+    with reqctx:
+        orgs = get_orgs("internal")
     assert isinstance(orgs, set)
     assert "edX" in orgs
 

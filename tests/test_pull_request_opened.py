@@ -12,6 +12,10 @@ from openedx_webhooks.tasks.github import pull_request_opened
 from .helpers import is_good_markdown
 
 
+# These tests should run when we want to test flaky GitHub behavior.
+pytestmark = pytest.mark.flaky_github
+
+
 @pytest.fixture
 def sync_labels_fn(mocker):
     """A patch on synchronize_labels"""

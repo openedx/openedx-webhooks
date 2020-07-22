@@ -4,7 +4,7 @@ import pytest
 import requests
 from glom import glom
 
-from .fake_github import DoesNotExist
+from .fake_github import DoesNotExist, FakeGitHub
 
 
 class TestUsers:
@@ -280,3 +280,28 @@ class TestComments:
         # List the comments, and see the body of the first comment has changed.
         resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments")
         assert resp.json()[0]["body"] == "I've changed my mind about my comment."
+
+
+@pytest.fixture
+def flaky_github(requests_mocker, mock_github_bp, fake_repo_data):
+    the_fake_github = FakeGitHub(login="webhook-bot", fraction_404=1)
+    the_fake_github.install_mocks(requests_mocker)
+    return the_fake_github
+
+class TestFlakyGitHub:
+    def test_get(self, flaky_github):
+        # The first time we request something, it's 404, and then it's OK after that.
+        resp = requests.get("https://api.github.com/user")
+        assert resp.status_code == 404
+        resp = requests.get("https://api.github.com/user")
+        assert resp.status_code == 200
+        resp = requests.get("https://api.github.com/user")
+        assert resp.status_code == 200
+
+    def test_post(self, flaky_github):
+        repo = flaky_github.make_repo("an-org", "a-repo")
+        resp = requests.post(
+            "https://api.github.com/repos/an-org/a-repo/labels",
+            json={"name": "nice", "color": "ff0000"},
+        )
+        assert resp.status_code == 201

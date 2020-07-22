@@ -185,6 +185,14 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
+Unreleased
+~~~~~~~~~~
+
+- GitHub very occasionally sends us a pull request event, but then serves us a
+  404 error when we ask it about the pull request.  Now the bot will retry GET
+  requests that return 404, to give GitHub a chance to get its act together.
+
+
 2020-07-21
 ~~~~~~~~~~
 

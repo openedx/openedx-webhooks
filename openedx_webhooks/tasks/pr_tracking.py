@@ -33,6 +33,7 @@ from openedx_webhooks.utils import (
     get_jira_issue,
     jira_paginated_get,
     log_check_response,
+    retry_get,
     sentry_extra_context,
     text_summary,
 )
@@ -309,7 +310,7 @@ def get_name_and_institution_for_pr(pr: PrDict) -> Tuple[str, Optional[str]]:
     if user in people:
         user_name = people[user].get("name", "")
     if not user_name:
-        resp = github.get(pr["user"]["url"])
+        resp = retry_get(github, pr["user"]["url"])
         if resp.ok:
             user_name = resp.json().get("name", user)
         else:

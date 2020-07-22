@@ -8,5 +8,6 @@ glom
 pytest
 pytest-cov
 pytest-mock
+pytest-repeat
 pytz
 requests-mock

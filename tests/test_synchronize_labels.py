@@ -4,6 +4,12 @@ from openedx_webhooks.tasks.github import synchronize_labels
 
 from .fake_github import Label
 
+import pytest
+
+
+# These tests should run when we want to test flaky GitHub behavior.
+pytestmark = pytest.mark.flaky_github
+
 
 DESIRED_LABELS = [
     Label(name='basic label', color='bfe5bf', description=None),
