@@ -192,6 +192,9 @@ Unreleased
   404 error when we ask it about the pull request.  Now the bot will retry GET
   requests that return 404, to give GitHub a chance to get its act together.
 
+- BUG: when a pull request was edited, the associated Jira issue would be reset
+  to its initial status.  This is now fixed: the Jira status is unchanged.
+
 
 2020-07-21
 ~~~~~~~~~~

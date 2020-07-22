@@ -352,6 +352,10 @@ def test_changing_pr_title(reqctx, fake_github, fake_jira):
     # The bot made one comment on the PR.
     assert len(pr.list_comments()) == 1
 
+    # Someone transitions the issue to a new state.
+    issue.status = "Blocked by Other Work"
+
+    # Author updates the title.
     pr.title = "This is the best!"
     with reqctx:
         issue_id2, _ = pull_request_opened(pr.as_json())
@@ -362,6 +366,8 @@ def test_changing_pr_title(reqctx, fake_github, fake_jira):
     assert issue.summary == "This is the best!"
     # The bot didn't make another comment.
     assert len(pr.list_comments()) == 1
+    # The issue shouldn't have changed status.
+    assert issue.status == "Blocked by Other Work"
 
 
 def test_changing_pr_description(reqctx, fake_github, fake_jira):

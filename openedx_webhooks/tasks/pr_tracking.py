@@ -157,6 +157,11 @@ class PrTrackingFixer:
     def fix(self) -> None:
         comment_kwargs = {}
 
+        # Jira information that is the source of truth needs to be taken from
+        # the current state if there is already an issue.
+        if self.current.jira_id is not None:
+            self.desired.jira_status = self.current.jira_status
+
         # We might have an issue already, but in the wrong project.
         if self.current.jira_id is not None:
             assert self.current.jira_actual_id is not None
