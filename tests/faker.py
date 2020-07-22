@@ -97,6 +97,7 @@ class Faker:
         If no method is provided, all methods are returned.
         """
         reqs = []
+        assert self.requests_mocker is not None
         for req in self.requests_mocker.request_history:
             if f"{req.scheme}://{req.hostname}" != self.host:
                 continue

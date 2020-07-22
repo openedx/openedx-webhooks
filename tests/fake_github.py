@@ -60,7 +60,7 @@ class Label:
     description: Optional[str] = None
 
     def __post_init__(self):
-        if not re.fullmatch(r"[0-9a-fA-F]{6}", self.color):
+        if self.color is not None and not re.fullmatch(r"[0-9a-fA-F]{6}", self.color):
             raise ValidationError(resource="Label", code="invalid", field="color")
 
     def as_json(self):

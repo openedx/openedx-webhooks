@@ -430,6 +430,7 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
         ospr_id, anything_happened = pull_request_opened(pr.as_json())
 
     # An OSPR issue was made.
+    assert ospr_id is not None
     assert ospr_id.startswith("OSPR-")
     assert anything_happened is True
     assert ospr_id in fake_jira.issues
@@ -440,6 +441,7 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
         issue_id, anything_happened = pull_request_opened(pr.as_json())
 
     assert anything_happened is True
+    assert issue_id is not None
     assert issue_id.startswith("BLENDED-")
 
     # The original issue has been deleted.
@@ -493,6 +495,7 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
         ospr_id, anything_happened = pull_request_opened(pr.as_json())
 
     # An OSPR issue was made.
+    assert ospr_id is not None
     assert ospr_id.startswith("OSPR-")
     assert anything_happened is True
     assert ospr_id in fake_jira.issues
@@ -507,6 +510,7 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
         issue_id, anything_happened = pull_request_opened(pr.as_json())
 
     assert anything_happened is True
+    assert issue_id is not None
     assert issue_id.startswith("BLENDED-")
 
     # The original issue is still available, but with a new key.

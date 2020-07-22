@@ -2,6 +2,7 @@ import os
 import os.path
 import re
 import unittest.mock as mock
+from typing import Dict
 
 import pytest
 import requests_mock
@@ -48,7 +49,7 @@ def hard_cache_repotools_yaml_files(session_mocker):
     Read them once per test run, and re-use the data.
     """
     real_read_repotools_yaml_file = openedx_webhooks.info._read_repotools_yaml_file
-    repotools_files = {}
+    repotools_files: Dict[str, Dict] = {}
     def new_read_repotools_yaml_file(filename):
         data = repotools_files.get(filename)
         if data is None:
