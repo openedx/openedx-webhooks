@@ -17,6 +17,19 @@ class MyFake(faker.Faker):
     """
     Our Faker-derived fake API for these tests.
     """
+    def __init__(self, host):
+        super().__init__(host)
+        self.add_middleware(self.no_foo_middleware)
+
+    def no_foo_middleware(self, request, context):
+        """
+        Middleware that fails a request if "foo" is in the query string.
+        """
+        if "foo" in request.query:
+            context.status_code = 789
+            return {}
+        return None
+
     @faker.route(r"/api/something/(?P<id>.*)")
     def _get_something(self, match, _request, _context):
         return {"hello": "there", "id": match["id"]}
@@ -75,6 +88,12 @@ def test_query_and_status(my_fake):
     resp = requests.get("https://myapi.com/api/status?code=477")
     assert resp.status_code == 477
     assert resp.text == ""
+
+def test_middleware(my_fake):
+    """Middleware can interrupt handler execution."""
+    resp = requests.get("https://myapi.com/api/status?code=477&foo")
+    assert resp.status_code == 789
+
 
 @pytest.mark.parametrize("method, url", [
     ("GET", "https://myapi.com/nothing"),

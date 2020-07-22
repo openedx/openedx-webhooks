@@ -48,6 +48,10 @@ def route(path_regex, http_method="GET", data_type="json"):
         func.callback_spec = (path_regex, http_method.upper(), data_type)
         @functools.wraps(func)
         def _decorated(self, request, context) -> Any:
+            for fn in self.middleware:
+                result = fn(request, context)
+                if context.status_code != 200 or result is not None:
+                    return result
             match = re.match(path_regex, request.path)
             try:
                 return func(self, match, request, context)
@@ -62,6 +66,18 @@ class Faker:
     def __init__(self, host):
         self.host = host
         self.requests_mocker = None
+        self.middleware = []
+
+    def add_middleware(self, middleware_func):
+        """
+        Add a middleware function to be invoked on all requests.
+
+        The function receives `request` and `context` just as route handlers
+        do.  If the function returns non-None, or the context.status_code is
+        set to something other than 200, then the request is ended, and the
+        route handler is not called.
+        """
+        self.middleware.append(middleware_func)
 
     def install_mocks(self, requests_mocker) -> None:
         self.requests_mocker = requests_mocker
