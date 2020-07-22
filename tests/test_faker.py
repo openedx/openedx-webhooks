@@ -45,6 +45,9 @@ def my_fake():
     """
     mocker = requests_mock.Mocker(real_http=False, case_sensitive=True)
     mocker.start()
+    # Add another host so we can include tests that hit other sites.
+    mocker.get("https://some.other.host/", text="")
+
     try:
         the_fake = MyFake(host="https://myapi.com")
         the_fake.install_mocks(mocker)
@@ -89,6 +92,7 @@ def test_requests_made(my_fake):
     requests.get("https://myapi.com/api/something/1234")
     requests.post("https://myapi.com/api/something/labels")
     requests.delete("https://myapi.com/api/something/bug123")
+    requests.get("https://some.other.host/")
     assert my_fake.requests_made() == [
         ("/api/something/1", "GET"),
         ("/api/something/1234", "GET"),
