@@ -2,10 +2,16 @@
 Tasks that update JIRA in some way.
 """
 
+import logging
+
+from jira import JIRAError
+
 from ..lib.jira.decorators import inject_jira
 from ..lib.jira.utils import (
     convert_to_jira_datetime_string, find_allowed_values, make_fields_lookup
 )
+
+logger = logging.getLogger(__name__)
 
 LAST_UPDATED_AT = 'Github PR Last Updated At'
 LAST_UPDATED_BY = 'Github PR Last Updated By'
@@ -69,4 +75,8 @@ def update_latest_github_activity(
 
     fields = {field_ids[k]: v for k, v in field_map.items()}
 
-    jira.issue(issue_id).update(fields)
+    try:
+        jira.issue(issue_id).update(fields)
+    except JIRAError as err:
+        # We made our best attempt. It's OK for the update to fail.
+        logger.info(f"Couldn't update Jira issue {issue_id} with latest GitHub activity: {err}")
