@@ -185,7 +185,7 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
-Unreleased
+2020-07-23
 ~~~~~~~~~~
 
 - GitHub very occasionally sends us a pull request event, but then serves us a
