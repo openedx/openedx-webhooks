@@ -2,20 +2,17 @@
 These are the views that process webhook events coming from Github.
 """
 
-import json
 import logging
 
 from celery import group
 from flask import current_app as app
 from flask import (
-    Blueprint, jsonify, make_response, render_template, request, url_for
+    Blueprint, jsonify, render_template, request, url_for
 )
 from flask_dance.contrib.github import github
 
 from openedx_webhooks.debug import is_debug, print_long_json
-from openedx_webhooks.info import get_repos_file
 from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
-from openedx_webhooks.lib.github.utils import create_or_update_webhook
 from openedx_webhooks.lib.rq import q
 from openedx_webhooks.tasks.github import (
     pull_request_closed_task, pull_request_opened_task, rescan_repository
@@ -229,51 +226,6 @@ def process_pr():
     resp = jsonify({"message": "queued", "status_url": status_url})
     resp.status_code = 202
     resp.headers["Location"] = status_url
-    return resp
-
-
-@github_bp.route("/install", methods=("GET",))
-def install_get():
-    """
-    Display a friendly HTML form for installing GitHub webhooks
-    into a repo.
-    """
-    return render_template("install.html")
-
-
-@github_bp.route("/install", methods=("POST",))
-def install():
-    """
-    Install GitHub webhooks for a repo.
-    """
-    # Import here because reverse URL lookup (which is used in `webhook_confs`)
-    # relies on Flask app environment being bootstrapped already.
-    from openedx_webhooks.webhook_confs import WEBHOOK_CONFS
-
-    repo = request.form.get("repo", "")
-    if repo:
-        repos = [repo]
-    else:
-        repos = get_repos_file().keys()
-
-    success = []
-    failed = []
-    for repo, conf in ((r, c) for r in repos for c in WEBHOOK_CONFS):
-        sentry_extra_context({'repo': repo, 'config': conf})
-
-        payload_url = conf['config']['url']
-
-        try:
-            create_or_update_webhook(repo, conf['config'], conf['events'])  # pylint: disable=no-value-for-parameter
-            success.append((repo, payload_url))
-        except Exception as e:      # pylint: disable=broad-except
-            failed.append((repo, payload_url, str(e)))
-
-    if failed:
-        resp = make_response(json.dumps(failed), 502)
-    else:
-        resp = make_response(json.dumps(success), 200)
-    resp.headers["Content-Type"] = "application/json"
     return resp
 
 

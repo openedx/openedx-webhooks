@@ -31,12 +31,3 @@ at the Jira issue, and prefer to keep all their activity on GitHub. As a result,
 any time an issue is transitioned from one state to another, the bot checks
 to see if the issue is an OSPR issue. If so, it modifies the labels on GitHub
 to reflect the state of the OSPR issue on Jira.
-
-Install GitHub webhooks
------------------------
-
-GitHub will not inform the bot of events happening in a repository unless a
-webhook exists for the bot on that repository. The bot has the ability to
-install this webhook automatically for a given repository, but the GitHub user
-that the bot runs under needs admin permissions to that repository for this
-to work. These permissions are managed from within GitHub.

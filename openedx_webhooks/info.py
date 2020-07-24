@@ -36,9 +36,6 @@ def _read_repotools_file(filename):
 def get_people_file():
     return _read_repotools_yaml_file("people.yaml")
 
-def get_repos_file():
-    return _read_repotools_yaml_file("repos.yaml")
-
 def get_orgs_file():
     return _read_repotools_yaml_file("orgs.yaml")
 
