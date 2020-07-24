@@ -185,6 +185,13 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
+2020-07-24
+~~~~~~~~~~
+
+- BUG: previously, the bot might change GitHub labels and incorrectly drop
+  ad-hoc labels that people had put on the pull request.  This is now fixed.
+
+
 2020-07-23
 ~~~~~~~~~~
 

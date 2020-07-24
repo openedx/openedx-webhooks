@@ -20,6 +20,7 @@ from openedx_webhooks.info import (
     is_internal_pull_request,
     pull_request_has_cla,
 )
+from openedx_webhooks.labels import CATEGORY_LABELS, STATUS_LABELS
 from openedx_webhooks.oauth import get_github_session, get_jira_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.jira_work import (
@@ -40,13 +41,30 @@ from openedx_webhooks.utils import (
 
 
 @dataclass
-class PrTrackingInfo:
+class PrCurrentInfo:
+    """
+    The current information we have for a pull request.
+    """
+    bot_comments: Set[BotComment] = field(default_factory=set)
+    jira_id: Optional[str] = None
+    # Can differ from jira_id if the issue was moved.
+    jira_actual_id: Optional[str] = None
+    jira_title: Optional[str] = None
+    jira_description: Optional[str] = None
+    jira_status: Optional[str] = None
+    jira_labels: Set[str] = field(default_factory=set)
+    jira_epic: Optional[JiraDict] = None
+    jira_extra_fields: List[Tuple[str, str]] = field(default_factory=list)
+    # The actual set of labels on the pull request.
+    github_labels: Set[str] = field(default_factory=set)
+
+
+@dataclass
+class PrDesiredInfo:
     """
     The information we want to have for a pull request.
     """
     bot_comments: Set[BotComment] = field(default_factory=set)
-    jira_id: Optional[str] = None
-    jira_actual_id: Optional[str] = None    # Can differ if the issue was moved.
     jira_project: Optional[str] = None
     jira_title: Optional[str] = None
     jira_description: Optional[str] = None
@@ -54,6 +72,8 @@ class PrTrackingInfo:
     jira_labels: Set[str] = field(default_factory=set)
     jira_epic: Optional[JiraDict] = None
     jira_extra_fields: List[Tuple[str, str]] = field(default_factory=list)
+    # The bot-controlled labels we want to on the pull request.
+    # See labels.py:CATEGORY_LABELS
     github_labels: Set[str] = field(default_factory=set)
 
 
@@ -67,8 +87,8 @@ def existing_bot_comments(pr: PrDict) -> Set[BotComment]:
     return comment_ids
 
 
-def current_support_state(pr: PrDict) -> PrTrackingInfo:
-    current = PrTrackingInfo()
+def current_support_state(pr: PrDict) -> PrCurrentInfo:
+    current = PrCurrentInfo()
     current.bot_comments = existing_bot_comments(pr)
     current.jira_id = get_jira_issue_key(pr)
     if current.jira_id:
@@ -81,7 +101,7 @@ def current_support_state(pr: PrDict) -> PrTrackingInfo:
     return current
 
 
-def desired_support_state(pr: PrDict) -> Optional[PrTrackingInfo]:
+def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
@@ -94,7 +114,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrTrackingInfo]:
         logger.info(f"@{user} opened PR {repo} #{num} (internal PR)")
         return None
 
-    desired = PrTrackingInfo()
+    desired = PrDesiredInfo()
 
     if is_contractor_pull_request(pr):
         desired.bot_comments.add(BotComment.CONTRACTOR)
@@ -139,13 +159,12 @@ def desired_support_state(pr: PrDict) -> Optional[PrTrackingInfo]:
         desired.bot_comments.add(BotComment.OK_TO_TEST)
 
     desired.bot_comments.add(comment)
-    desired.github_labels.add(desired.jira_status.lower())
 
     return desired
 
 
 class PrTrackingFixer:
-    def __init__(self, pr: PrDict, current: PrTrackingInfo, desired: PrTrackingInfo):
+    def __init__(self, pr: PrDict, current: PrCurrentInfo, desired: PrDesiredInfo):
         self.pr = pr
         self.current = current
         self.desired = desired
@@ -178,7 +197,6 @@ class PrTrackingFixer:
                     comment_kwargs["deleted_issue_key"] = self.current.jira_id
                     self.current.jira_id = None
                     self.current.jira_actual_id = None
-                    self.current.jira_project = None
                     self.current.jira_title = None
                     self.current.jira_description = None
                     self.current.jira_status = None
@@ -229,9 +247,7 @@ class PrTrackingFixer:
             self.happened = True
 
         # Check the GitHub labels.
-        if self.desired.github_labels != self.current.github_labels:
-            update_labels_on_pull_request(self.pr, list(self.desired.github_labels))
-            self.happened = True
+        self.fix_github_labels()
 
         # Check the bot comments.
         needed_comments = self.desired.bot_comments - self.current.bot_comments
@@ -276,6 +292,21 @@ class PrTrackingFixer:
             self.happened = True
 
         assert needed_comments == set(), "Couldn't make comments: {}".format(needed_comments)
+
+    def fix_github_labels(self) -> None:
+        """
+        Reconcile the desired bot labels with the actual labels on GitHub.
+        Take care to preserve any label we've never heard of.
+        """
+        desired_labels = set(self.desired.github_labels)
+        if self.desired.jira_status is not None:
+            desired_labels.add(self.desired.jira_status.lower())
+        ad_hoc_labels = self.current.github_labels - CATEGORY_LABELS - STATUS_LABELS
+        desired_labels.update(ad_hoc_labels)
+
+        if desired_labels != self.current.github_labels:
+            update_labels_on_pull_request(self.pr, list(desired_labels))
+            self.happened = True
 
 
 def find_blended_epic(project_id: int) -> Optional[JiraDict]:
