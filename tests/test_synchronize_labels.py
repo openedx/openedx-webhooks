@@ -1,10 +1,10 @@
 """Tests of task/github.py:synchronize_labels."""
 
+import pytest
+
 from openedx_webhooks.tasks.github import synchronize_labels
 
 from .fake_github import Label
-
-import pytest
 
 
 # These tests should run when we want to test flaky GitHub behavior.
