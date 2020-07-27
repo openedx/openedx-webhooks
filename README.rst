@@ -164,9 +164,6 @@ again in the future.
 Configuring a webhook
 ---------------------
 
-To install the webhook, use the ``/github/install`` page in the application
-itself, or do it manually:
-
 On GitHub, visit the repo webhooks
 (``https://github.com/<ORG>/<REPO>/settings/hooks``) or organization webhooks
 (``https://github.com/organizations/<ORG>/settings/hooks``) page.
