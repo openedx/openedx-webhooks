@@ -182,6 +182,12 @@ https://openedx-webhooks.herokuapp.com/github/hook-receiver
 Changelog
 ---------
 
+Unreleased
+~~~~~~~~~~
+
+- Removed the code that managed webhooks in repos.
+
+
 2020-07-24
 ~~~~~~~~~~
 
