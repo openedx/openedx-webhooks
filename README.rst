@@ -170,8 +170,10 @@ On GitHub, visit the repo webhooks
 
 Create or edit a webhook.
 
-https://openedx-webhooks.herokuapp.com/github/hook-receiver
-    content type: application/json
+- Payload URL: https://openedx-webhooks.herokuapp.com/github/hook-receiver
+- Content type: application/json
+- Secret: same as setting GITHUB_WEBHOOK_SECRET in Heroku
+- Events:
     - Issue comments
     - Pull requests
     - Pull request reviews
