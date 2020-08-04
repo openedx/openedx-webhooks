@@ -8,4 +8,5 @@ mypy
 isort
 pip-tools                 # Requirements file management
 python-dotenv
+scriv                     # Changelog management
 rq-dashboard

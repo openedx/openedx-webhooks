@@ -187,8 +187,9 @@ Changelog
 Unreleased
 ~~~~~~~~~~
 
-- Removed the code that managed webhooks in repos.
+See the fragment files (if any) in the changelog.d directory.
 
+.. scriv-insert-here
 
 2020-07-24
 ~~~~~~~~~~
