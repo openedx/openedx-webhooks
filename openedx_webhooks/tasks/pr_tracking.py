@@ -250,6 +250,29 @@ class PrTrackingFixer:
         self.fix_github_labels()
 
         # Check the bot comments.
+        self.fix_bot_comments(comment_kwargs)
+
+    def fix_github_labels(self) -> None:
+        """
+        Reconcile the desired bot labels with the actual labels on GitHub.
+        Take care to preserve any label we've never heard of.
+        """
+        desired_labels = set(self.desired.github_labels)
+        if self.desired.jira_status is not None:
+            desired_labels.add(self.desired.jira_status.lower())
+        ad_hoc_labels = self.current.github_labels - CATEGORY_LABELS - STATUS_LABELS
+        desired_labels.update(ad_hoc_labels)
+
+        if desired_labels != self.current.github_labels:
+            update_labels_on_pull_request(self.pr, list(desired_labels))
+            self.happened = True
+
+    def fix_bot_comments(self, comment_kwargs: Dict) -> None:
+        """
+        Reconcile the desired comments from the bot with what the bot has said.
+
+        This usually amounts to adding a bot comment, if anything.
+        """
         needed_comments = self.desired.bot_comments - self.current.bot_comments
         comment_body = ""
         if BotComment.WELCOME in needed_comments:
@@ -292,21 +315,6 @@ class PrTrackingFixer:
             self.happened = True
 
         assert needed_comments == set(), "Couldn't make comments: {}".format(needed_comments)
-
-    def fix_github_labels(self) -> None:
-        """
-        Reconcile the desired bot labels with the actual labels on GitHub.
-        Take care to preserve any label we've never heard of.
-        """
-        desired_labels = set(self.desired.github_labels)
-        if self.desired.jira_status is not None:
-            desired_labels.add(self.desired.jira_status.lower())
-        ad_hoc_labels = self.current.github_labels - CATEGORY_LABELS - STATUS_LABELS
-        desired_labels.update(ad_hoc_labels)
-
-        if desired_labels != self.current.github_labels:
-            update_labels_on_pull_request(self.pr, list(desired_labels))
-            self.happened = True
 
 
 def find_blended_epic(project_id: int) -> Optional[JiraDict]:
