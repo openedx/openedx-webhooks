@@ -10,6 +10,7 @@ import time
 from functools import wraps
 from hashlib import sha1
 from time import sleep as retry_sleep   # so that we can patch it for tests.
+from typing import Optional
 
 import cachetools.func
 import requests
@@ -279,11 +280,22 @@ def get_jira_custom_fields(session=None):
     }
 
 
-def get_jira_issue(key: str) -> JiraDict:
+def get_jira_issue(key: str, missing_ok: bool = False) -> Optional[JiraDict]:
     """
     Get the dictionary for a Jira issue, from its key.
+
+    Args:
+        key: the Jira id of the issue to find.
+        missing_ok: True if this function should return None for missing issue.
+
+    Returns:
+        A dict of Jira information, or None if missing_ok is True, and the issue
+        is missing.
+
     """
     resp = jira_get("/rest/api/2/issue/{key}".format(key=key))
+    if resp.status_code == 404 and missing_ok:
+        return None
     log_check_response(resp)
     return resp.json()
 

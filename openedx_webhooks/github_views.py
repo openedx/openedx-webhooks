@@ -14,9 +14,7 @@ from flask_dance.contrib.github import github
 from openedx_webhooks.debug import is_debug, print_long_json
 from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
 from openedx_webhooks.lib.rq import q
-from openedx_webhooks.tasks.github import (
-    pull_request_closed_task, pull_request_opened_task, rescan_repository
-)
+from openedx_webhooks.tasks.github import pull_request_changed_task, rescan_repository
 from openedx_webhooks.utils import (
     is_valid_payload, minimal_wsgi_environ, paginated_get,
     sentry_extra_context
@@ -86,12 +84,9 @@ def hook_receiver():
     action = event["action"]
 
     pr_activity = f"{repo} #{pr_number} {action!r}"
-    if action in ["opened", "edited"]:
+    if action in ["opened", "edited", "closed"]:
         logger.info(f"{pr_activity}, processing...")
-        result = pull_request_opened_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
-    elif action == "closed":
-        logger.info(f"{pr_activity}, processing...")
-        result = pull_request_closed_task.delay(pr)
+        result = pull_request_changed_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
     else:
         logger.info(f"{pr_activity}, ignoring...")
         return "Nothing for me to do", 200
@@ -138,7 +133,7 @@ def rescan():
     just as though the pull request was newly created.
 
     Note that this rescan functionality is the reason why
-    :func:`~openedx_webhooks.tasks.github.pull_request_opened`
+    :func:`~openedx_webhooks.tasks.github.pull_request_changed`
     must be idempotent. It could run many times over the same pull request.
     """
     repo = request.form.get("repo") or "edx/edx-platform"
@@ -221,7 +216,7 @@ def process_pr():
         return resp
 
     pr = pr_resp.json()
-    result = pull_request_opened_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
+    result = pull_request_changed_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
     status_url = url_for("tasks.status", task_id=result.id, _external=True)
     resp = jsonify({"message": "queued", "status_url": status_url})
     resp.status_code = 202

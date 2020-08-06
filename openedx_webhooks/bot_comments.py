@@ -50,6 +50,8 @@ BOT_COMMENT_INDICATORS = {
     ],
 }
 
+# These are bot comments that include the Jira issue id.
+BOT_COMMENTS_WITH_ISSUE_ID = {BotComment.WELCOME, BotComment.BLENDED}
 
 def is_comment_kind(kind: BotComment, text: str) -> bool:
     """

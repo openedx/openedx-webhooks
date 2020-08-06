@@ -1,8 +1,13 @@
+"""
+State-based updating of the information surrounding pull requests.
+"""
+
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
 from openedx_webhooks.bot_comments import (
     BOT_COMMENT_INDICATORS,
+    BOT_COMMENTS_WITH_ISSUE_ID,
     BotComment,
     github_community_pr_comment,
     github_contractor_pr_comment,
@@ -46,15 +51,21 @@ class PrCurrentInfo:
     The current information we have for a pull request.
     """
     bot_comments: Set[BotComment] = field(default_factory=set)
+
+    # The Jira issue id mentioned on the PR if any.
+    jira_mentioned_id: Optional[str] = None
+
+    # The actual Jira issue id.  Can differ from jira__mentioned_id if the
+    # issue was moved, or can be None if the issue has been deleted.
     jira_id: Optional[str] = None
-    # Can differ from jira_id if the issue was moved.
-    jira_actual_id: Optional[str] = None
+
     jira_title: Optional[str] = None
     jira_description: Optional[str] = None
     jira_status: Optional[str] = None
     jira_labels: Set[str] = field(default_factory=set)
     jira_epic: Optional[JiraDict] = None
     jira_extra_fields: List[Tuple[str, str]] = field(default_factory=list)
+
     # The actual set of labels on the pull request.
     github_labels: Set[str] = field(default_factory=set)
 
@@ -68,16 +79,27 @@ class PrDesiredInfo:
     jira_project: Optional[str] = None
     jira_title: Optional[str] = None
     jira_description: Optional[str] = None
+
+    # The Jira status to start a new issue at.
+    jira_initial_status: Optional[str] = None
+
+    # The Jira status we want to set on an existing issue. Can be None if we
+    # don't need to force a new status, but can leave the existing status.
     jira_status: Optional[str] = None
+
     jira_labels: Set[str] = field(default_factory=set)
     jira_epic: Optional[JiraDict] = None
     jira_extra_fields: List[Tuple[str, str]] = field(default_factory=list)
+
     # The bot-controlled labels we want to on the pull request.
     # See labels.py:CATEGORY_LABELS
     github_labels: Set[str] = field(default_factory=set)
 
 
 def existing_bot_comments(pr: PrDict) -> Set[BotComment]:
+    """
+    Get the set of bot comments already on the pull request.
+    """
     comment_ids = set()
     for comment in get_bot_comments(pr):
         body = comment["body"]
@@ -88,23 +110,39 @@ def existing_bot_comments(pr: PrDict) -> Set[BotComment]:
 
 
 def current_support_state(pr: PrDict) -> PrCurrentInfo:
+    """
+    Examine the world to determine what the current support state is.
+    """
     current = PrCurrentInfo()
     current.bot_comments = existing_bot_comments(pr)
-    current.jira_id = get_jira_issue_key(pr)
+    current.jira_id = current.jira_mentioned_id = get_jira_issue_key(pr)
     if current.jira_id:
-        issue = get_jira_issue(current.jira_id)
-        current.jira_actual_id = issue["key"]
-        current.jira_title = issue["fields"]["summary"]
-        current.jira_description = issue["fields"]["description"]
-        current.jira_status = issue["fields"]["status"]["name"]
+        issue = get_jira_issue(current.jira_id, missing_ok=True)
+        if issue is None:
+            # Issue has been deleted. Forget about it, and we'll make a new one.
+            current.jira_id = None
+        else:
+            current.jira_id = issue["key"]
+            current.jira_title = issue["fields"]["summary"]
+            current.jira_description = issue["fields"]["description"]
+            current.jira_status = issue["fields"]["status"]["name"]
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
     return current
 
 
 def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
+    """
+    Examine a pull request to decide what state we want the world to be in.
+    """
     user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
+    if pr["state"] == "open":
+        state = "open"
+    elif pr["merged"]:
+        state = "merged"
+    else:
+        state = "closed"
 
     if is_bot_pull_request(pr):
         logger.info(f"@{user} is a bot, ignored.")
@@ -120,7 +158,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         desired.bot_comments.add(BotComment.CONTRACTOR)
         return desired
 
-    desired.jira_status = "Needs Triage"
+    desired.jira_initial_status = "Needs Triage"
     desired.jira_title = pr["title"]
     desired.jira_description = pr["body"]
 
@@ -147,13 +185,19 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         if committer:
             comment = BotComment.CORE_COMMITTER
             desired.jira_labels.add("core-committer")
-            desired.jira_status = "Open edX Community Review"
+            desired.jira_initial_status = "Open edX Community Review"
             desired.bot_comments.add(BotComment.CORE_COMMITTER)
             desired.github_labels.add("core committer")
         else:
             if not has_signed_agreement:
                 desired.bot_comments.add(BotComment.NEED_CLA)
-                desired.jira_status = "Community Manager Review"
+                desired.jira_initial_status = "Community Manager Review"
+
+    # Some PR states mean we want to insist on a Jira status.
+    if state == "closed":
+        desired.jira_status = "Rejected"
+    elif state == "merged":
+        desired.jira_status = "Merged"
 
     if has_signed_agreement:
         desired.bot_comments.add(BotComment.OK_TO_TEST)
@@ -164,6 +208,10 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
 
 
 class PrTrackingFixer:
+    """
+    Complex logic to compare the current and desired states and make needed changes.
+    """
+
     def __init__(self, pr: PrDict, current: PrCurrentInfo, desired: PrDesiredInfo):
         self.pr = pr
         self.current = current
@@ -174,29 +222,25 @@ class PrTrackingFixer:
         return self.current.jira_id, self.happened
 
     def fix(self) -> None:
+        """
+        The main routine for making needed changes.
+        """
         comment_kwargs = {}
-
-        # Jira information that is the source of truth needs to be taken from
-        # the current state if there is already an issue.
-        if self.current.jira_id is not None:
-            self.desired.jira_status = self.current.jira_status
 
         # We might have an issue already, but in the wrong project.
         if self.current.jira_id is not None:
-            assert self.current.jira_actual_id is not None
-            mentioned_project = self.current.jira_id.partition("-")[0]
-            actual_project = self.current.jira_actual_id.partition("-")[0]
+            assert self.current.jira_mentioned_id is not None
+            mentioned_project = self.current.jira_mentioned_id.partition("-")[0]
+            actual_project = self.current.jira_id.partition("-")[0]
             if mentioned_project != self.desired.jira_project:
                 if actual_project == self.desired.jira_project:
-                    # Looks like the issue already got moved to the right
-                    # project.
-                    self.current.jira_id = self.current.jira_actual_id
+                    # Looks like the issue already got moved to the right project.
+                    pass
                 else:
                     # Delete the existing issue and forget the current state.
-                    delete_jira_issue(self.current.jira_actual_id)
-                    comment_kwargs["deleted_issue_key"] = self.current.jira_id
+                    delete_jira_issue(self.current.jira_id)
+                    comment_kwargs["deleted_issue_key"] = self.current.jira_mentioned_id
                     self.current.jira_id = None
-                    self.current.jira_actual_id = None
                     self.current.jira_title = None
                     self.current.jira_description = None
                     self.current.jira_status = None
@@ -221,10 +265,15 @@ class PrTrackingFixer:
                 self.current.jira_description = self.desired.jira_description
                 self.current.jira_labels = self.desired.jira_labels
                 self.current.jira_epic = self.desired.jira_epic
+
+                if self.desired.jira_initial_status != self.current.jira_status:
+                    transition_jira_issue(self.current.jira_id, self.desired.jira_initial_status)
+                    self.current.jira_status = self.desired.jira_initial_status
+
                 self.happened = True
 
         # Check the state of the Jira issue.
-        if self.desired.jira_status != self.current.jira_status:
+        if self.desired.jira_status is not None and self.desired.jira_status != self.current.jira_status:
             transition_jira_issue(self.current.jira_id, self.desired.jira_status)
             self.happened = True
 
@@ -258,8 +307,8 @@ class PrTrackingFixer:
         Take care to preserve any label we've never heard of.
         """
         desired_labels = set(self.desired.github_labels)
-        if self.desired.jira_status is not None:
-            desired_labels.add(self.desired.jira_status.lower())
+        if self.desired.jira_initial_status is not None:
+            desired_labels.add(self.desired.jira_initial_status.lower())
         ad_hoc_labels = self.current.github_labels - CATEGORY_LABELS - STATUS_LABELS
         desired_labels.update(ad_hoc_labels)
 
@@ -273,6 +322,13 @@ class PrTrackingFixer:
 
         This usually amounts to adding a bot comment, if anything.
         """
+        has_bot_comments = bool(self.current.bot_comments)
+        if self.current.jira_mentioned_id != self.current.jira_id:
+            # The issue we mentioned in the comment is now wrong. Even if we
+            # already wrote a welcome message, we need to do it again, so
+            # forget that we wrote one before.
+            self.current.bot_comments -= BOT_COMMENTS_WITH_ISSUE_ID
+
         needed_comments = self.desired.bot_comments - self.current.bot_comments
         comment_body = ""
         if BotComment.WELCOME in needed_comments:
@@ -308,7 +364,7 @@ class PrTrackingFixer:
         if comment_body:
             # If there are current-state comments, then we need to edit the
             # comment, otherwise create one.
-            if self.current.bot_comments:
+            if has_bot_comments:
                 edit_comment_on_pull_request(self.pr, comment_body)
             else:
                 add_comment_to_pull_request(self.pr, comment_body)

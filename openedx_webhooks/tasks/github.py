@@ -25,16 +25,16 @@ from openedx_webhooks.utils import (
 
 
 @celery.task(bind=True)
-def pull_request_opened_task(_, pull_request):
-    """A bound Celery task to call pull_request_opened."""
-    return pull_request_opened(pull_request)
+def pull_request_changed_task(_, pull_request):
+    """A bound Celery task to call pull_request_changed."""
+    return pull_request_changed(pull_request)
 
-def pull_request_opened(pr: PrDict) -> Tuple[Optional[str], bool]:
+def pull_request_changed(pr: PrDict) -> Tuple[Optional[str], bool]:
     """
     Process a pull request.
 
-    This is called when a pull request is opened, or when the pull requests of
-    a repo are re-scanned. This function will ignore internal pull requests,
+    This is called when a pull request is opened, edited, or closed, or when
+    pull requests are re-scanned.  This function will ignore internal pull requests,
     and will add a comment to pull requests made by contractors (if if has not
     yet added a comment).
 
@@ -64,43 +64,6 @@ def pull_request_opened(pr: PrDict) -> Tuple[Optional[str], bool]:
         return fixer.result()
     else:
         return None, False
-
-
-@celery.task(bind=True)
-def pull_request_closed_task(_, pull_request):
-    """A bound Celery task to call pull_request_closed."""
-    return pull_request_closed(pull_request)
-
-
-def pull_request_closed(pull_request):
-    """
-    A GitHub pull request has been merged or closed. Synchronize the JIRA issue
-    to also be in the "merged" or "closed" state. Returns a boolean: True
-    if the JIRA issue was correctly synchronized, False otherwise. (However,
-    these booleans are ignored.)
-    """
-    pr = pull_request
-    repo = pr["base"]["repo"]["full_name"]
-    num = pr["number"]
-    merged = pr["merged"]
-
-    issue_key = get_jira_issue_key(pr)
-    if not issue_key:
-        logger.info(f"Couldn't find Jira issue for PR {repo} #{num}")
-        return "no JIRA issue :("
-    sentry_extra_context({"jira_key": issue_key})
-
-    # close the issue on JIRA
-    new_status = "Merged" if merged else "Rejected"
-    logger.info(f"Closing Jira issue {issue_key} as {new_status}...")
-    if not transition_jira_issue(issue_key, new_status):
-        return False
-
-    action = "merged" if merged else "closed"
-    logger.info(
-        f"PR {repo} #{num} was {action}, moved {issue_key} to status {new_status}"
-    )
-    return True
 
 
 @celery.task(bind=True)
@@ -138,7 +101,7 @@ def rescan_repository(self, repo):
         issue_key = get_jira_issue_key(pull_request)
         is_internal = is_internal_pull_request(pull_request)
         if not issue_key and not is_internal:
-            issue_key, issue_created = pull_request_opened(pull_request)
+            issue_key, issue_created = pull_request_changed(pull_request)
             if issue_created:
                 created[pull_request["number"]] = issue_key
 

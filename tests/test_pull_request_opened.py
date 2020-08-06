@@ -1,4 +1,4 @@
-"""Tests of task/github.py:pull_request_opened."""
+"""Tests of task/github.py:pull_request_changed for opening pull requests."""
 
 import pytest
 
@@ -7,7 +7,7 @@ from openedx_webhooks.bot_comments import (
     is_comment_kind,
 )
 from openedx_webhooks.info import get_jira_issue_key
-from openedx_webhooks.tasks.github import pull_request_opened
+from openedx_webhooks.tasks.github import pull_request_changed
 
 from .helpers import is_good_markdown
 
@@ -25,7 +25,7 @@ def sync_labels_fn(mocker):
 def test_internal_pr_opened(reqctx, fake_github):
     pr = fake_github.make_pull_request(user="nedbat")
     with reqctx:
-        key, anything_happened = pull_request_opened(pr.as_json())
+        key, anything_happened = pull_request_changed(pr.as_json())
     assert key is None
     assert anything_happened is False
     assert len(pr.list_comments()) == 0
@@ -35,7 +35,7 @@ def test_pr_opened_by_bot(reqctx, fake_github):
     fake_github.make_user(login="some_bot", type="Bot")
     pr = fake_github.make_pull_request(user="some_bot")
     with reqctx:
-        key, anything_happened = pull_request_opened(pr.as_json())
+        key, anything_happened = pull_request_changed(pr.as_json())
     assert key is None
     assert anything_happened is False
     assert len(pr.list_comments()) == 0
@@ -48,7 +48,7 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     prj = pr.as_json()
 
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(prj)
+        issue_id, anything_happened = pull_request_changed(prj)
 
     assert issue_id is not None
     assert issue_id.startswith("OSPR-")
@@ -94,7 +94,7 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
     prj = pr.as_json()
 
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(prj)
+        issue_id, anything_happened = pull_request_changed(prj)
 
     assert issue_id is not None
     assert issue_id.startswith("OSPR-")
@@ -140,7 +140,7 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     prj = pr.as_json()
 
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(prj)
+        issue_id, anything_happened = pull_request_changed(prj)
 
     assert issue_id is not None
     assert issue_id.startswith("OSPR-")
@@ -206,7 +206,7 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
         total_issues += 1
 
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(prj)
+        issue_id, anything_happened = pull_request_changed(prj)
 
     assert issue_id is not None
     assert issue_id.startswith("BLENDED-")
@@ -261,14 +261,14 @@ def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
     # Make a pull request and process it.
     pr = fake_github.make_pull_request(user="tusbar")
     with reqctx:
-        issue_id1, anything_happened1 = pull_request_opened(pr.as_json())
+        issue_id1, anything_happened1 = pull_request_changed(pr.as_json())
 
     assert anything_happened1 is True
     assert len(pr.list_comments()) == 1
 
     # Rescan the pull request.
     with reqctx:
-        issue_id2, anything_happened2 = pull_request_opened(pr.as_json())
+        issue_id2, anything_happened2 = pull_request_changed(pr.as_json())
 
     assert issue_id2 == issue_id1
     assert anything_happened2 is False
@@ -285,7 +285,7 @@ def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
     prj = pr.as_json()
 
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(prj)
+        issue_id, anything_happened = pull_request_changed(prj)
 
     assert issue_id is None
     assert anything_happened is True
@@ -311,7 +311,7 @@ def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
 def test_contractor_pr_rescanned(reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="joecontractor")
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(pr.as_json())
+        issue_id, anything_happened = pull_request_changed(pr.as_json())
 
     assert issue_id is None
     assert anything_happened is True
@@ -324,7 +324,7 @@ def test_contractor_pr_rescanned(reqctx, fake_github, fake_jira):
 
     # Rescan it.  Nothing should happen.
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(pr.as_json())
+        issue_id, anything_happened = pull_request_changed(pr.as_json())
 
     assert issue_id is None
     assert anything_happened is False
@@ -345,7 +345,7 @@ def test_changing_pr_title(reqctx, fake_github, fake_jira):
     )
 
     with reqctx:
-        issue_id1, _ = pull_request_opened(pr.as_json())
+        issue_id1, _ = pull_request_changed(pr.as_json())
 
     issue = fake_jira.issues[issue_id1]
     assert issue.summary == "These are my changes, please take them."
@@ -358,7 +358,7 @@ def test_changing_pr_title(reqctx, fake_github, fake_jira):
     # Author updates the title.
     pr.title = "This is the best!"
     with reqctx:
-        issue_id2, _ = pull_request_opened(pr.as_json())
+        issue_id2, _ = pull_request_changed(pr.as_json())
 
     assert issue_id2 == issue_id1
     issue = fake_jira.issues[issue_id2]
@@ -380,7 +380,7 @@ def test_changing_pr_description(reqctx, fake_github, fake_jira):
     )
 
     with reqctx:
-        issue_id1, _ = pull_request_opened(pr.as_json())
+        issue_id1, _ = pull_request_changed(pr.as_json())
 
     issue = fake_jira.issues[issue_id1]
     assert issue.summary == "These are my changes, please take them."
@@ -390,7 +390,7 @@ def test_changing_pr_description(reqctx, fake_github, fake_jira):
 
     pr.body = "OK, now I am really describing things."
     with reqctx:
-        issue_id2, _ = pull_request_opened(pr.as_json())
+        issue_id2, _ = pull_request_changed(pr.as_json())
 
     assert issue_id2 == issue_id1
     issue = fake_jira.issues[issue_id2]
@@ -427,7 +427,7 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="tusbar", title="This is for BD-34")
 
     with reqctx:
-        ospr_id, anything_happened = pull_request_opened(pr.as_json())
+        ospr_id, anything_happened = pull_request_changed(pr.as_json())
 
     # An OSPR issue was made.
     assert ospr_id is not None
@@ -442,7 +442,7 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
     # The developer changes the title.
     pr.title = "This is for [BD-34]."
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(pr.as_json())
+        issue_id, anything_happened = pull_request_changed(pr.as_json())
 
     assert anything_happened is True
     assert issue_id is not None
@@ -499,7 +499,7 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="tusbar", title="This is for BD-34")
 
     with reqctx:
-        ospr_id, anything_happened = pull_request_opened(pr.as_json())
+        ospr_id, anything_happened = pull_request_changed(pr.as_json())
 
     # An OSPR issue was made.
     assert ospr_id is not None
@@ -514,7 +514,7 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
     # The developer changes the title.
     pr.title = "This is for [BD-34]."
     with reqctx:
-        issue_id, anything_happened = pull_request_opened(pr.as_json())
+        issue_id, anything_happened = pull_request_changed(pr.as_json())
 
     assert anything_happened is True
     assert issue_id is not None
