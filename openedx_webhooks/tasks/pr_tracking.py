@@ -277,6 +277,19 @@ class PrTrackingFixer:
             transition_jira_issue(self.current.jira_id, self.desired.jira_status)
             self.happened = True
 
+        # Update the Jira issue information.
+        self._fix_jira_information()
+
+        # Check the GitHub labels.
+        self._fix_github_labels()
+
+        # Check the bot comments.
+        self._fix_bot_comments(comment_kwargs)
+
+    def _fix_jira_information(self) -> None:
+        """
+        Update the information on the Jira issue.
+        """
         update_kwargs: Dict[str, Any] = {}
         if self.desired.jira_title != self.current.jira_title:
             update_kwargs["summary"] = self.desired.jira_title
@@ -295,13 +308,7 @@ class PrTrackingFixer:
             self.current.jira_epic = self.desired.jira_epic
             self.happened = True
 
-        # Check the GitHub labels.
-        self.fix_github_labels()
-
-        # Check the bot comments.
-        self.fix_bot_comments(comment_kwargs)
-
-    def fix_github_labels(self) -> None:
+    def _fix_github_labels(self) -> None:
         """
         Reconcile the desired bot labels with the actual labels on GitHub.
         Take care to preserve any label we've never heard of.
@@ -316,7 +323,7 @@ class PrTrackingFixer:
             update_labels_on_pull_request(self.pr, list(desired_labels))
             self.happened = True
 
-    def fix_bot_comments(self, comment_kwargs: Dict) -> None:
+    def _fix_bot_comments(self, comment_kwargs: Dict) -> None:
         """
         Reconcile the desired comments from the bot with what the bot has said.
 
