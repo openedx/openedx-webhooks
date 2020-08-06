@@ -6,7 +6,7 @@ by which authority. This is that information.
 # These are labels that correspond to Jira statuses.  Only one of them should
 # be used at a time.
 
-STATUS_LABELS = {
+GITHUB_STATUS_LABELS = {
     "architecture review",
     "awaiting prioritization",
     "blocked by other work",
@@ -23,8 +23,15 @@ STATUS_LABELS = {
 
 # These are categorization labels the bot assigns based on other information.
 
-CATEGORY_LABELS = {
+GITHUB_CATEGORY_LABELS = {
     "blended",
     "core committer",
     "open-source-contribution",
+}
+
+# These are categorization labels the bot assigns.
+
+JIRA_CATEGORY_LABELS = {
+    "blended",
+    "core-committer",
 }

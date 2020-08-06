@@ -352,8 +352,9 @@ def test_changing_pr_title(reqctx, fake_github, fake_jira):
     # The bot made one comment on the PR.
     assert len(pr.list_comments()) == 1
 
-    # Someone transitions the issue to a new state.
+    # Someone transitions the issue to a new state, and adds a label.
     issue.status = "Blocked by Other Work"
+    issue.labels.add("my-label")
 
     # Author updates the title.
     pr.title = "This is the best!"
@@ -368,6 +369,8 @@ def test_changing_pr_title(reqctx, fake_github, fake_jira):
     assert len(pr.list_comments()) == 1
     # The issue shouldn't have changed status.
     assert issue.status == "Blocked by Other Work"
+    # The issue should still have the ad-hoc label.
+    assert "my-label" in issue.labels
 
 
 def test_changing_pr_description(reqctx, fake_github, fake_jira):
@@ -388,6 +391,7 @@ def test_changing_pr_description(reqctx, fake_github, fake_jira):
     # The bot made one comment on the PR.
     assert len(pr.list_comments()) == 1
 
+    # Author updates the description of the PR.
     pr.body = "OK, now I am really describing things."
     with reqctx:
         issue_id2, _ = pull_request_changed(pr.as_json())

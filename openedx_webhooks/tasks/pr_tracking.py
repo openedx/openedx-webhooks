@@ -25,7 +25,11 @@ from openedx_webhooks.info import (
     is_internal_pull_request,
     pull_request_has_cla,
 )
-from openedx_webhooks.labels import CATEGORY_LABELS, STATUS_LABELS
+from openedx_webhooks.labels import (
+    GITHUB_CATEGORY_LABELS,
+    GITHUB_STATUS_LABELS,
+    JIRA_CATEGORY_LABELS,
+)
 from openedx_webhooks.oauth import get_github_session, get_jira_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.jira_work import (
@@ -126,6 +130,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
             current.jira_title = issue["fields"]["summary"]
             current.jira_description = issue["fields"]["description"]
             current.jira_status = issue["fields"]["status"]["name"]
+            current.jira_labels = set(issue["fields"]["labels"])
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
     return current
 
@@ -291,15 +296,22 @@ class PrTrackingFixer:
         Update the information on the Jira issue.
         """
         update_kwargs: Dict[str, Any] = {}
+
         if self.desired.jira_title != self.current.jira_title:
             update_kwargs["summary"] = self.desired.jira_title
         if self.desired.jira_description != self.current.jira_description:
             update_kwargs["description"] = self.desired.jira_description
-        if self.desired.jira_labels != self.current.jira_labels:
+
+        desired_labels = set(self.desired.jira_labels)
+        ad_hoc_labels = self.current.jira_labels - JIRA_CATEGORY_LABELS
+        desired_labels.update(ad_hoc_labels)
+        if desired_labels != self.current.jira_labels:
             update_kwargs["labels"] = self.desired.jira_labels
+
         if self.desired.jira_epic is not None:
             if self.current.jira_epic is None or (self.desired.jira_epic["key"] != self.current.jira_epic["key"]):
                 update_kwargs["epic_link"] = self.desired.jira_epic["key"]
+
         if update_kwargs:
             update_jira_issue(self.current.jira_id, extra_fields=self.desired.jira_extra_fields, **update_kwargs)
             self.current.jira_title = self.desired.jira_title
@@ -316,7 +328,7 @@ class PrTrackingFixer:
         desired_labels = set(self.desired.github_labels)
         if self.desired.jira_initial_status is not None:
             desired_labels.add(self.desired.jira_initial_status.lower())
-        ad_hoc_labels = self.current.github_labels - CATEGORY_LABELS - STATUS_LABELS
+        ad_hoc_labels = self.current.github_labels - GITHUB_CATEGORY_LABELS - GITHUB_STATUS_LABELS
         desired_labels.update(ad_hoc_labels)
 
         if desired_labels != self.current.github_labels:
