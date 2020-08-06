@@ -1,1 +1,0 @@
-../openedx_webhooks/lib/github/bin/create_or_update_webhooks.py
