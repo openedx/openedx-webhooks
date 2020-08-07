@@ -194,6 +194,14 @@ See the fragment files (if any) in the changelog.d directory.
 2020-08-07
 ~~~~~~~~~~
 
+- When a core committer merges a pull request, the bot will add a comment
+  pinging the committer's edX champions to let them know the merge has
+  happened.
+
+- BUG: previously the bot could clobber ad-hoc labels on Jira issues when it
+  set its own labels.  This is now fixed.  The bot will preserve any labels it
+  didn't make.
+
 - Removed the code that managed webhooks in repos.
 
 - Refactored some code that handles pull requests being closed, so now it
@@ -201,10 +209,6 @@ See the fragment files (if any) in the changelog.d directory.
   except now if a pull request is closed or merged after the Jira issue has
   been manually deleted, the bot will create a new issue so that it can mark it
   Rejected or Merged.
-
-- BUG: previously the bot could clobber ad-hoc labels on Jira issues when it
-  set its own labels.  This is now fixed.  The bot will preserve any labels it
-  didn't make.
 
 
 2020-07-24
