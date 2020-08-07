@@ -121,3 +121,13 @@ project get updated.
 If the change is a status change, the bot finds the pull request based on
 fields in the issue. It removes the GitHub label for the old Jira status, and
 adds the GitHub label for the new Jira status.
+
+
+When a pull request is closed
+-----------------------------
+
+The bot leaves a comment asking the author to complete a survey about the pull
+request.
+
+If the pull request was a core committer PR, the bot leaves a comment pinging
+the committer's edX champions, to help them stay current.
