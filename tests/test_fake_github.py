@@ -299,7 +299,7 @@ class TestFlakyGitHub:
         assert resp.status_code == 200
 
     def test_post(self, flaky_github):
-        repo = flaky_github.make_repo("an-org", "a-repo")
+        flaky_github.make_repo("an-org", "a-repo")
         resp = requests.post(
             "https://api.github.com/repos/an-org/a-repo/labels",
             json={"name": "nice", "color": "ff0000"},
