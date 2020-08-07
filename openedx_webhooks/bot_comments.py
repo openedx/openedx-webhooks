@@ -3,7 +3,7 @@ The bot makes comments on pull requests. This is stuff needed to do it well.
 """
 
 from enum import Enum, auto
-from typing import Optional
+from typing import List, Optional
 
 from flask import render_template
 
@@ -23,8 +23,7 @@ class BotComment(Enum):
     CORE_COMMITTER = auto()
     BLENDED = auto()
     OK_TO_TEST = auto()
-    CLOSED = auto()
-    MERGED = auto()
+    CHAMPION_MERGE_PING = auto()
 
 BOT_COMMENT_INDICATORS = {
     BotComment.WELCOME: [
@@ -47,6 +46,9 @@ BOT_COMMENT_INDICATORS = {
     ],
     BotComment.OK_TO_TEST: [
         "<!-- jenkins ok to test -->",
+    ],
+    BotComment.CHAMPION_MERGE_PING: [
+        "<!-- comment:champion_merge_ping -->",
     ],
 }
 
@@ -71,7 +73,8 @@ def github_community_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) 
     """
     # does the user have a valid, signed contributor agreement?
     has_signed_agreement = pull_request_has_cla(pull_request)
-    return render_template("github_community_pr_comment.md.j2",
+    return render_template(
+        "github_community_pr_comment.md.j2",
         user=pull_request["user"]["login"],
         issue_key=issue_key,
         has_signed_agreement=has_signed_agreement,
@@ -87,7 +90,8 @@ def github_contractor_pr_comment(pull_request: PrDict, **kwargs) -> str:
     * Help the author determine if the work is paid for by edX or not
     * If not, show the author how to trigger the creation of an OSPR issue
     """
-    return render_template("github_contractor_pr_comment.md.j2",
+    return render_template(
+        "github_contractor_pr_comment.md.j2",
         user=pull_request["user"]["login"],
         repo=pull_request["base"]["repo"]["full_name"],
         number=pull_request["number"],
@@ -99,9 +103,22 @@ def github_committer_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) 
     """
     Create the body of the comment for new pull requests from core committers.
     """
-    return render_template("github_committer_pr_comment.md.j2",
+    return render_template(
+        "github_committer_pr_comment.md.j2",
         user=pull_request["user"]["login"],
         issue_key=issue_key,
+        **kwargs
+    )
+
+
+def github_committer_merge_ping_comment(pull_request: PrDict, champions: List[str], **kwargs) -> str:
+    """
+    Create the body of the comment saying, "Hey champion: a core committer merged something!"
+    """
+    return render_template(
+        "github_committer_merge_ping_comment.md.j2",
+        user=pull_request["user"]["login"],
+        champions=champions,
         **kwargs
     )
 

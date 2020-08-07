@@ -5,14 +5,17 @@ State-based updating of the information surrounding pull requests.
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
+from glom import glom
+
 from openedx_webhooks.bot_comments import (
     BOT_COMMENT_INDICATORS,
     BOT_COMMENTS_WITH_ISSUE_ID,
     BotComment,
-    github_community_pr_comment,
-    github_contractor_pr_comment,
     github_blended_pr_comment,
     github_committer_pr_comment,
+    github_committer_merge_ping_comment,
+    github_community_pr_comment,
+    github_contractor_pr_comment,
 )
 from openedx_webhooks.info import (
     get_blended_project_id,
@@ -193,6 +196,8 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             desired.jira_initial_status = "Open edX Community Review"
             desired.bot_comments.add(BotComment.CORE_COMMITTER)
             desired.github_labels.add("core committer")
+            if state == "merged":
+                desired.bot_comments.add(BotComment.CHAMPION_MERGE_PING)
         else:
             if not has_signed_agreement:
                 desired.bot_comments.add(BotComment.NEED_CLA)
@@ -342,6 +347,10 @@ class PrTrackingFixer:
         This usually amounts to adding a bot comment, if anything.
         """
         has_bot_comments = bool(self.current.bot_comments)
+
+        # Deal with the comments that are all part of the initial welcome
+        # comment.
+
         if self.current.jira_mentioned_id != self.current.jira_id:
             # The issue we mentioned in the comment is now wrong. Even if we
             # already wrote a welcome message, we need to do it again, so
@@ -389,6 +398,14 @@ class PrTrackingFixer:
                 add_comment_to_pull_request(self.pr, comment_body)
             self.happened = True
 
+        # More comments can be added as subsequent comments.
+
+        if BotComment.CHAMPION_MERGE_PING in needed_comments:
+            champions = get_champions_for_pr(self.pr)
+            body = github_committer_merge_ping_comment(self.pr, champions)
+            add_comment_to_pull_request(self.pr, body)
+            needed_comments.remove(BotComment.CHAMPION_MERGE_PING)
+
         assert needed_comments == set(), "Couldn't make comments: {}".format(needed_comments)
 
 
@@ -421,7 +438,6 @@ def get_name_and_institution_for_pr(pr: PrDict) -> Tuple[str, Optional[str]]:
     Returns:
         name, institution
     """
-    github = get_github_session()
     user = pr["user"]["login"]
     people = get_people_file()
 
@@ -429,7 +445,7 @@ def get_name_and_institution_for_pr(pr: PrDict) -> Tuple[str, Optional[str]]:
     if user in people:
         user_name = people[user].get("name", "")
     if not user_name:
-        resp = retry_get(github, pr["user"]["url"])
+        resp = retry_get(get_github_session(), pr["user"]["url"])
         if resp.ok:
             user_name = resp.json().get("name", user)
         else:
@@ -438,6 +454,17 @@ def get_name_and_institution_for_pr(pr: PrDict) -> Tuple[str, Optional[str]]:
     institution = people.get(user, {}).get("institution", None)
 
     return user_name, institution
+
+
+def get_champions_for_pr(pr: PrDict) -> List[str]:
+    """
+    Get a list of GitHub nicks for the edX champions for this core committer
+    pull request.
+    """
+    user = pr["user"]["login"]
+    people = get_people_file()
+    user_data = people.get(user, {})
+    return glom(user_data, "committer.champions", default=[])
 
 
 def create_ospr_issue(pr, project, summary, description, labels, extra_fields=None):

@@ -6,6 +6,10 @@ from openedx_webhooks.bot_comments import github_community_pr_comment
 from openedx_webhooks.tasks.github import pull_request_changed
 
 
+# These tests should run when we want to test flaky GitHub behavior.
+pytestmark = pytest.mark.flaky_github
+
+
 @pytest.fixture(params=[False, True])
 def merged(request):
     """Makes tests try both merged and closed pull requests."""
@@ -106,3 +110,34 @@ def test_external_pr_merged_but_issue_cant_transition(reqctx, fake_jira, closed_
 
     # No valid transition, so nothing was transitioned.
     assert fake_jira.requests_made(method="POST") == []
+
+
+def test_cc_pr_closed(reqctx, fake_github, fake_jira, merged):
+    # When a core committer merges a pull request, ping the champions.
+    # But when it's closed without merging, no ping.
+    pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform")
+
+    with reqctx:
+        pull_request_changed(pr.as_json())
+
+    pr.close(merge=merged)
+
+    with reqctx:
+        pull_request_changed(pr.as_json())
+
+    pr_comments = pr.list_comments()
+    if merged:
+        assert len(pr_comments) == 2
+        assert "@nedbat, @feanil: thought you might like to know" in pr_comments[1].body
+    else:
+        assert len(pr_comments) == 1
+
+    # Processing it again won't change anything.
+    with reqctx:
+        pull_request_changed(pr.as_json())
+
+    pr_comments = pr.list_comments()
+    if merged:
+        assert len(pr_comments) == 2
+    else:
+        assert len(pr_comments) == 1

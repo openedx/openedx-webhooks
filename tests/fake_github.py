@@ -132,6 +132,13 @@ class PullRequest:
     def list_comments(self) -> List[Comment]:
         return [self.repo.comments[cid] for cid in self.comments]
 
+    def close(self, merge=False):
+        """
+        Close a pull request, maybe merging it.
+        """
+        self.state = "closed"
+        self.merged = merge
+
 
 @dataclass
 class Repo:
