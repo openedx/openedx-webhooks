@@ -191,6 +191,22 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2020-08-07
+~~~~~~~~~~
+
+- Removed the code that managed webhooks in repos.
+
+- Refactored some code that handles pull requests being closed, so now it
+  operates on any change to the pull request.  The behavior should be the same,
+  except now if a pull request is closed or merged after the Jira issue has
+  been manually deleted, the bot will create a new issue so that it can mark it
+  Rejected or Merged.
+
+- BUG: previously the bot could clobber ad-hoc labels on Jira issues when it
+  set its own labels.  This is now fixed.  The bot will preserve any labels it
+  didn't make.
+
+
 2020-07-24
 ~~~~~~~~~~
 
