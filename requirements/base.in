@@ -17,6 +17,7 @@ blinker
 cachetools
 click
 cryptography
+glom
 gunicorn
 iso8601
 jira
