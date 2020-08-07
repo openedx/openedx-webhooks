@@ -3,8 +3,22 @@
 # These are details about organizations helping edX with Open edX, so that we
 # can automate some of our contribution processes.
 
-edX:
-    internal: true
+EduNEXT:
+    contractor: false
+    agreement: institution
+    contact:
+        name: Luis Felipe Montoya
+        email: contact@edunext.co
+MIT:
+    contractor: false
+    agreement: institution
+    contact:
+        name: Lita Nelsen
+        email: lita@mit.edu
 OpenCraft:
     internal: false
     contractor: true
+    agreement: institution
+edX:
+    agreement: institution
+    internal: true

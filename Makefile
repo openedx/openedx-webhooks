@@ -10,6 +10,10 @@ check-setup.py: ## Check setup
 clean: ## Clean cache, test, and build directories
 	-rm -rf .cache build dist *.egg-info .coverage htmlcov docs/_build prof
 
+testschema: ## Install a schema under test.
+	# Get the version of repo-tools-data-schema that corresponds to our branch.
+	pip install -U git+https://github.com/edx/repo-tools-data-schema.git@$$(git rev-parse --abbrev-ref HEAD)
+
 test: ## Run tests
 	py.test -rxefs --cov=openedx_webhooks --cov=tests --cov-context=test --cov-report=
 	coverage html --show-contexts

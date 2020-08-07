@@ -11,3 +11,6 @@ pytest-mock
 pytest-repeat
 pytz
 requests-mock
+
+# Our repo-tools-data schema checkers
+git+https://github.com/edx/repo-tools-data-schema.git

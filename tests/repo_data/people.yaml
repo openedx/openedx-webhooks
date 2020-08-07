@@ -4,6 +4,15 @@ antoviaque:
     agreement: institution
     institution: OpenCraft
     jira: XavierAntoviaque
+feanil:
+    name: Feanil Patel
+    email: feanil@edx.org
+    agreement: institution
+    institution: edX
+    jira: feanil
+    other_emails:
+    - feanil.patel@edx.org
+    - fpatel@edx.org
 felipemontoya:
     name: Felipe Montoya
     email: felipe.montoya@edunext.co
@@ -12,6 +21,9 @@ felipemontoya:
     committer:
         orgs:
             - edx
+        champions:
+            - nedbat
+            - feanil
     jira: felipemontoya
     comments:
     - also signed individual agreement (CLA)
@@ -62,6 +74,8 @@ pdpinch:
     committer:
         repos:
             - edx/ccx-keys
+        champions:
+            - feanil
     other_emails:
     - github@hawklake.com
     comments:
