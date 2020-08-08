@@ -14,4 +14,4 @@ def test_make_edx_action_choices(mocker):
     )
     expected = {True: RESULT1, False: RESULT2}
     choices = _make_edx_action_choices(jira)
-    assert expected == choices
+    assert choices == expected
