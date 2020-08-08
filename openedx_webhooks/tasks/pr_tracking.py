@@ -226,6 +226,7 @@ class PrTrackingFixer:
         self.pr = pr
         self.current = current
         self.desired = desired
+        self.created_jira_issue = False
         self.happened = False
 
     def result(self) -> Tuple[Optional[str], bool]:
@@ -280,6 +281,7 @@ class PrTrackingFixer:
                     transition_jira_issue(self.current.jira_id, self.desired.jira_initial_status)
                     self.current.jira_status = self.desired.jira_initial_status
 
+                self.created_jira_issue = True
                 self.happened = True
 
         # Check the state of the Jira issue.
@@ -331,8 +333,11 @@ class PrTrackingFixer:
         Take care to preserve any label we've never heard of.
         """
         desired_labels = set(self.desired.github_labels)
-        if self.desired.jira_initial_status is not None:
-            desired_labels.add(self.desired.jira_initial_status.lower())
+        if self.created_jira_issue:
+            if self.desired.jira_initial_status is not None:
+                desired_labels.add(self.desired.jira_initial_status.lower())
+        elif self.current.jira_status:
+            desired_labels.add(self.current.jira_status.lower())
         ad_hoc_labels = self.current.github_labels - GITHUB_CATEGORY_LABELS - GITHUB_STATUS_LABELS
         desired_labels.update(ad_hoc_labels)
 

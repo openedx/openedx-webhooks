@@ -391,6 +391,16 @@ def test_changing_pr_description(reqctx, fake_github, fake_jira):
     # The bot made one comment on the PR.
     assert len(pr.list_comments()) == 1
 
+    # The issue is in the correct initial state.
+    assert issue.status == "Needs Triage"
+
+    # Someone changes the issue status.
+    issue.status = "Blocked by Other Work"
+    labels = pr.labels
+    labels.remove("needs triage")
+    labels.add("blocked by other work")
+    pr.set_labels(labels)
+
     # Author updates the description of the PR.
     pr.body = "OK, now I am really describing things."
     with reqctx:
@@ -403,6 +413,11 @@ def test_changing_pr_description(reqctx, fake_github, fake_jira):
     assert issue.description == "OK, now I am really describing things."
     # The bot didn't make another comment.
     assert len(pr.list_comments()) == 1
+
+    # The issue should still be in the changed status, and the PR labels should
+    # still be right.
+    assert issue.status == "Blocked by Other Work"
+    assert pr.labels == {"blocked by other work", "open-source-contribution"}
 
 
 def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
