@@ -191,6 +191,12 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2020-08-08
+~~~~~~~~~~
+
+- BUG: if the PR description was edited, the Jira issue status would be
+  incorrectly reset to its initial value [OPENEDX-424].  This is now fixed.
+
 2020-08-07
 ~~~~~~~~~~
 
