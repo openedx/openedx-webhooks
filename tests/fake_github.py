@@ -10,7 +10,7 @@ import itertools
 import random
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set
+from typing import Dict, Iterable, List, Optional, Set
 from urllib.parse import unquote
 
 from . import faker
@@ -124,6 +124,13 @@ class PullRequest:
             "html_url": f"https://github.com/{self.repo.owner}/{self.repo.repo}/pull/{self.number}",
         }
 
+    def close(self, merge=False):
+        """
+        Close a pull request, maybe merging it.
+        """
+        self.state = "closed"
+        self.merged = merge
+
     def add_comment(self, user="someone", **kwargs) -> Comment:
         comment = self.repo.make_comment(user, **kwargs)
         self.comments.append(comment.id)
@@ -132,12 +139,15 @@ class PullRequest:
     def list_comments(self) -> List[Comment]:
         return [self.repo.comments[cid] for cid in self.comments]
 
-    def close(self, merge=False):
+    def set_labels(self, labels: Iterable[str]) -> None:
         """
-        Close a pull request, maybe merging it.
+        Set the labels on this pull request.
         """
-        self.state = "closed"
-        self.merged = merge
+        labels = set(labels)
+        for label in labels:
+            if not self.repo.has_label(label):
+                self.repo.add_label(name=label)
+        self.labels = labels
 
 
 @dataclass
@@ -306,10 +316,7 @@ class FakeGitHub(faker.Faker):
         pr = r.get_pull_request(int(match["number"]))
         patch = request.json()
         if "labels" in patch:
-            for label in patch["labels"]:
-                if not r.has_label(label):
-                    r.add_label(name=label)
-            pr.labels = set(patch["labels"])
+            pr.set_labels(patch["labels"])
         return pr.as_json()
 
     # Repo labels

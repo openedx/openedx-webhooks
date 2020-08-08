@@ -190,7 +190,7 @@ class TestPullRequests:
 
 
 class TestPullRequestLabels:
-    def test_updating_labels(self, fake_github):
+    def test_updating_labels_with_api(self, fake_github):
         repo = fake_github.make_repo("an-org", "a-repo")
         pr = repo.make_pull_request(
             title="Here is a pull request",
@@ -203,6 +203,34 @@ class TestPullRequestLabels:
             json={"labels": ["new label", "bug", "another label"]},
         )
         assert resp.status_code == 200
+        assert pr.labels == {"new label", "bug", "another label"}
+        assert repo.get_label("new label").color == "ededed"
+        assert repo.get_label("bug").color == "d73a4a"
+        assert repo.get_label("another label").color == "ededed"
+
+        resp = requests.get(
+            f"https://api.github.com/repos/an-org/a-repo/pulls/{pr.number}"
+        )
+        assert resp.status_code == 200
+        prj = resp.json()
+        assert prj["title"] == "Here is a pull request"
+        label_summary = [(l["name"], l["color"]) for l in prj["labels"]]
+        assert label_summary == [
+            ("another label", "ededed"),
+            ("bug", "d73a4a"),
+            ("new label", "ededed"),
+        ]
+
+    def test_updating_labels_elsewhere(self, fake_github):
+        repo = fake_github.make_repo("an-org", "a-repo")
+        pr = repo.make_pull_request(
+            title="Here is a pull request",
+            body="It's a good pull request, you should merge it.",
+        )
+        assert pr.labels == set()
+
+        pr.set_labels(["new label", "bug", "another label"])
+
         assert pr.labels == {"new label", "bug", "another label"}
         assert repo.get_label("new label").color == "ededed"
         assert repo.get_label("bug").color == "d73a4a"
