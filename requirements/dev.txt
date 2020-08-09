@@ -89,12 +89,12 @@ requests==2.24.0          # via -r requirements/base.in, codecov, flask-dance, g
 rq-dashboard==0.6.1       # via -r requirements/dev.in
 rq==1.5.0                 # via -r requirements/base.in, rq-dashboard
 schema==0.7.2             # via repo-tools-data-schema
-scriv==0.8.0              # via -r requirements/dev.in
+scriv==0.8.1              # via -r requirements/dev.in
 sentry-sdk[flask]==0.16.3  # via -r requirements/base.in
 six==1.15.0               # via astroid, bleach, cryptography, edx-lint, flask-dance, freezegun, jira, packaging, pip-tools, python-dateutil, readme-renderer, requests-mock, sphinxcontrib-httpdomain, sqlalchemy-utils
 snowballstemmer==2.0.0    # via sphinx
 sphinx-rtd-theme==0.5.0   # via -r requirements/doc.in
-sphinx==3.1.2             # via -r requirements/doc.in, sphinx-rtd-theme, sphinxcontrib-httpdomain
+sphinx==3.2.0             # via -r requirements/doc.in, sphinx-rtd-theme, sphinxcontrib-httpdomain
 sphinxcontrib-applehelp==1.0.2  # via sphinx
 sphinxcontrib-devhelp==1.0.2  # via sphinx
 sphinxcontrib-htmlhelp==1.0.3  # via sphinx
