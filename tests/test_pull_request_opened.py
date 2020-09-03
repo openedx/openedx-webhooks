@@ -1,5 +1,7 @@
 """Tests of task/github.py:pull_request_changed for opening pull requests."""
 
+import itertools
+
 import pytest
 
 from openedx_webhooks.bot_comments import (
@@ -185,18 +187,18 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
 def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_github, fake_jira):
     pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", title="[BD-34] Something good")
     prj = pr.as_json()
-    map_1_2 = {
-        "child": {
-            "id": "14522",
-            "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14522",
-            "value": "Course Level Insights"
-        },
-        "id": "14209",
-        "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
-        "value": "Researcher & Data Experiences"
-    }
     total_issues = 0
     if with_epic:
+        map_1_2 = {
+            "child": {
+                "id": "14522",
+                "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14522",
+                "value": "Course Level Insights"
+            },
+            "id": "14209",
+            "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
+            "value": "Researcher & Data Experiences"
+        }
         epic = fake_jira.make_issue(
             project="BLENDED",
             blended_project_id="BD-34",
@@ -569,3 +571,121 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
 
     # The pull request has to be associated with the new issue.
     assert get_jira_issue_key(prj) == issue_id
+
+
+@pytest.mark.parametrize(
+    "pr_type, jira_got_fiddled",
+    itertools.product(
+        ["normal", "blended", "committer", "nocla"],
+        [False, True],
+    )
+)
+def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, sync_labels_fn, fake_github, fake_jira):
+    # Open a WIP pull request.
+    title1 = "WIP: broken"
+    title2 = "Fixed and done"
+    if pr_type == "normal":
+        initial_status = "Needs Triage"
+        pr = fake_github.make_pull_request(user="tusbar", title=title1)
+    elif pr_type == "blended":
+        title1 = "[BD-34] Something good (WIP)"
+        title2 = "[BD-34] Something good"
+        initial_status = "Needs Triage"
+        pr = fake_github.make_pull_request(user="tusbar", title=title1)
+    elif pr_type == "committer":
+        initial_status = "Open edX Community Review"
+        pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform", title=title1)
+    elif pr_type == "nocla":
+        initial_status = "Community Manager Review"
+        fake_github.make_user(login="new_contributor", name="Newb Contributor")
+        pr = fake_github.make_pull_request(owner="edx", repo="edx-platform", user="new_contributor", title=title1)
+
+    prj = pr.as_json()
+
+    with reqctx:
+        issue_id, anything_happened = pull_request_changed(prj)
+
+    assert issue_id is not None
+    assert issue_id.startswith("BLENDED-" if pr_type == "blended" else "OSPR-")
+    assert anything_happened is True
+
+    # Check the Jira issue that was created.
+    assert len(fake_jira.issues) == 1
+    issue = fake_jira.issues[issue_id]
+    assert issue.issuetype == "Pull Request Review"
+    assert issue.summary == prj["title"]
+    if pr_type == "normal":
+        assert issue.labels == set()
+    elif pr_type == "blended":
+        assert issue.labels == {"blended"}
+    elif pr_type == "committer":
+        assert issue.labels == {"core-committer"}
+    elif pr_type == "nocla":
+        assert issue.labels == set()
+
+    # Because of "WIP", the Jira issue is in "Waiting on Author", unless
+    # there's no CLA.
+    if pr_type == "nocla":
+        assert issue.status == "Community Manager Review"
+    else:
+        assert issue.status == "Waiting on Author"
+
+    # Check the GitHub comment that was created.
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    assert is_good_markdown(body)
+    assert 'This is currently a draft pull request' in body
+    assert 'click "Ready for Review"' in body
+    if pr_type == "normal":
+        assert is_comment_kind(BotComment.WELCOME, body)
+        assert pr.labels == {"waiting on author", "open-source-contribution"}
+    elif pr_type == "blended":
+        assert is_comment_kind(BotComment.BLENDED, body)
+        assert pr.labels == {"waiting on author", "blended"}
+    elif pr_type == "committer":
+        assert is_comment_kind(BotComment.CORE_COMMITTER, body)
+        assert pr.labels == {"waiting on author", "core committer", "open-source-contribution"}
+    elif pr_type == "nocla":
+        assert is_comment_kind(BotComment.NEED_CLA, body)
+        assert pr.labels == {"community manager review", "open-source-contribution"}
+
+    if jira_got_fiddled:
+        # Someone changes the status from "Waiting on Author" manually.
+        issue.status = "Architecture Review"
+
+    # The author updates the PR, no longer draft.
+    pr.title = title2
+    with reqctx:
+        issue_id2, _ = pull_request_changed(pr.as_json())
+
+    assert issue_id2 == issue_id
+    issue = fake_jira.issues[issue_id]
+    assert issue.summary == title2
+
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    assert is_good_markdown(body)
+    assert 'This is currently a draft pull request' not in body
+    assert 'click "Ready for Review"' not in body
+
+    if jira_got_fiddled:
+        assert issue.status == "Architecture Review"
+        assert "architecture review" in pr.labels
+        assert initial_status.lower() not in pr.labels
+    else:
+        assert issue.status == initial_status
+        assert initial_status.lower() in pr.labels
+
+    # Oops, it goes back to draft!
+    pr.title = title1
+    with reqctx:
+        issue_id3, _ = pull_request_changed(pr.as_json())
+
+    assert issue_id3 == issue_id
+    issue = fake_jira.issues[issue_id]
+    assert issue.summary == title1
+
+    assert issue.status == initial_status
+    assert initial_status.lower() in pr.labels

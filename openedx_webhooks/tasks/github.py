@@ -10,7 +10,6 @@ from openedx_webhooks.info import (
 )
 from openedx_webhooks.oauth import get_github_session
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.tasks.jira_work import transition_jira_issue
 from openedx_webhooks.tasks.pr_tracking import (
     current_support_state,
     desired_support_state,

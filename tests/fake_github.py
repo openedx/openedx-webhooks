@@ -109,12 +109,14 @@ class PullRequest:
     labels: Set[str] = field(default_factory=set)
     state: str = "open"
     merged: bool = False
+    draft: bool = False
 
     def as_json(self) -> Dict:
         return {
             "number": self.number,
             "state": self.state,
             "merged": self.merged,
+            "draft": self.draft,
             "title": self.title,
             "user": self.user.as_json(),
             "body": self.body,

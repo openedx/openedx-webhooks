@@ -2,6 +2,8 @@
 State-based updating of the information surrounding pull requests.
 """
 
+import copy
+
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
@@ -11,6 +13,8 @@ from openedx_webhooks.bot_comments import (
     BOT_COMMENT_INDICATORS,
     BOT_COMMENTS_FIRST,
     BotComment,
+    extract_data_from_comment,
+    format_data_for_comment,
     github_blended_pr_comment,
     github_committer_pr_comment,
     github_committer_merge_ping_comment,
@@ -25,6 +29,7 @@ from openedx_webhooks.info import (
     is_bot_pull_request,
     is_committer_pull_request,
     is_contractor_pull_request,
+    is_draft_pull_request,
     is_internal_pull_request,
     pull_request_has_cla,
 )
@@ -62,6 +67,9 @@ class PrCurrentInfo:
     # The text of the first bot comment.
     bot_comment0_text: Optional[str] = None
 
+    # The last-seen state stored in the first bot comment.
+    last_seen_state: Dict = field(default_factory=dict)
+
     # The Jira issue id mentioned on the PR if any.
     jira_mentioned_id: Optional[str] = None
 
@@ -78,6 +86,10 @@ class PrCurrentInfo:
 
     # The actual set of labels on the pull request.
     github_labels: Set[str] = field(default_factory=set)
+
+    # Did the author make a change that could move us out of "Waiting on
+    # Author"?
+    author_acted: bool = False
 
 
 @dataclass
@@ -106,9 +118,13 @@ class PrDesiredInfo:
     github_labels: Set[str] = field(default_factory=set)
 
 
-def existing_bot_comments(pr: PrDict) -> Set[BotComment]:
+def existing_bot_comments(pr: PrDict) -> Tuple[Optional[str], Set[BotComment]]:
     """
     Get the set of bot comments already on the pull request.
+
+    Returns a tuple:
+        comment0: the text of the first (most important) bot comment.
+        comment_ids: set of bot comment ids.
     """
     comment0 = None
     comment_ids = set()
@@ -128,6 +144,8 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
     """
     current = PrCurrentInfo()
     current.bot_comment0_text, current.bot_comments = existing_bot_comments(pr)
+    if current.bot_comment0_text is not None:
+        current.last_seen_state = extract_data_from_comment(current.bot_comment0_text)
     current.jira_id = current.jira_mentioned_id = get_jira_issue_key(pr)
     if current.jira_id:
         issue = get_jira_issue(current.jira_id, missing_ok=True)
@@ -141,6 +159,11 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
             current.jira_status = issue["fields"]["status"]["name"]
             current.jira_labels = set(issue["fields"]["labels"])
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
+
+    if current.last_seen_state.get("draft", False) and not is_draft_pull_request(pr):
+        # It was a draft, but now isn't.  The author acted.
+        current.author_acted = True
+
     return current
 
 
@@ -204,12 +227,16 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             desired.github_labels.add("core committer")
             if state == "merged":
                 desired.bot_comments.add(BotComment.CHAMPION_MERGE_PING)
-        else:
-            if not has_signed_agreement:
-                desired.bot_comments.add(BotComment.NEED_CLA)
-                desired.jira_initial_status = "Community Manager Review"
 
     # Some PR states mean we want to insist on a Jira status.
+    if is_draft_pull_request(pr):
+        desired.jira_initial_status = "Waiting on Author"
+        desired.bot_comments.add(BotComment.END_OF_WIP)
+
+    if not has_signed_agreement:
+        desired.bot_comments.add(BotComment.NEED_CLA)
+        desired.jira_initial_status = "Community Manager Review"
+
     if state == "closed":
         desired.jira_status = "Rejected"
     elif state == "merged":
@@ -232,6 +259,7 @@ class PrTrackingFixer:
         self.pr = pr
         self.current = current
         self.desired = desired
+        self.last_seen_state = copy.deepcopy(current.last_seen_state)
         self.created_jira_issue = False
         self.happened = False
 
@@ -290,9 +318,18 @@ class PrTrackingFixer:
                 self.created_jira_issue = True
                 self.happened = True
 
+        # Draftiness
+        self.last_seen_state["draft"] = is_draft_pull_request(self.pr)
+
+        # If the author acted, and we were waiting on the author, then we
+        # should set the status to this PR's usual initial status.
+        if self.current.author_acted and self.current.jira_status == "Waiting on Author":
+            self.desired.jira_status = self.desired.jira_initial_status
+
         # Check the state of the Jira issue.
         if self.desired.jira_status is not None and self.desired.jira_status != self.current.jira_status:
             transition_jira_issue(self.current.jira_id, self.desired.jira_status)
+            self.current.jira_status = self.desired.jira_status
             self.happened = True
 
         # Update the Jira issue information.
@@ -339,10 +376,7 @@ class PrTrackingFixer:
         Take care to preserve any label we've never heard of.
         """
         desired_labels = set(self.desired.github_labels)
-        if self.created_jira_issue:
-            if self.desired.jira_initial_status is not None:
-                desired_labels.add(self.desired.jira_initial_status.lower())
-        elif self.current.jira_status:
+        if self.current.jira_status:
             desired_labels.add(self.current.jira_status.lower())
         ad_hoc_labels = self.current.github_labels - GITHUB_CATEGORY_LABELS - GITHUB_STATUS_LABELS
         desired_labels.update(ad_hoc_labels)
@@ -392,9 +426,13 @@ class PrTrackingFixer:
                 comment_body += "\n<!-- jenkins ok to test -->"
             needed_comments.remove(BotComment.OK_TO_TEST)
 
+        # These are handled in github_community_pr_comment and github_blended_pr_comment.
         if BotComment.NEED_CLA in needed_comments:
-            # This is handled in github_community_pr_comment.
             needed_comments.remove(BotComment.NEED_CLA)
+        if BotComment.END_OF_WIP in needed_comments:
+            needed_comments.remove(BotComment.END_OF_WIP)
+
+        comment_body += format_data_for_comment(self.last_seen_state)
 
         if comment_body != self.current.bot_comment0_text:
             # If there are current-state comments, then we need to edit the

@@ -87,6 +87,13 @@ def is_bot_pull_request(pull_request: PrDict) -> bool:
     return pull_request["user"]["type"] == "Bot"
 
 
+def is_draft_pull_request(pull_request: PrDict) -> bool:
+    """
+    Is this a draft (or WIP) pull request?
+    """
+    return pull_request.get("draft", False) or bool(re.search(r"\b(WIP|wip)\b", pull_request["title"]))
+
+
 def _pr_author_data(pull_request: PrDict) -> Optional[Dict]:
     """
     Get data about the author of the pull request, as of the

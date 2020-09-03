@@ -7,7 +7,7 @@ import pytest
 
 from openedx_webhooks.info import (
     get_orgs, get_people_file, get_person_certain_time,
-    is_committer_pull_request, is_internal_pull_request,
+    is_committer_pull_request, is_internal_pull_request, is_draft_pull_request,
     pull_request_has_cla,
     get_blended_project_id,
 )
@@ -144,3 +144,26 @@ def test_get_blended_project_id(fake_github, title, number):
     pr = fake_github.make_pull_request(title=title)
     num = get_blended_project_id(pr.as_json())
     assert number == num
+
+
+TITLES_WIP = [
+    ("My awesome pull request", False),
+    ("WIP: not ready yet", True),
+    ("[WIP] hare-brained idea", True),
+    ("Still working it out (WIP)", True),
+    ("(wip) working on it", True),
+    ("Swipe left if you like it", False),
+    ("This is wip, not ready yet", True),
+]
+
+@pytest.mark.parametrize("title, is_wip", TITLES_WIP)
+def test_is_wip_pull_request(fake_github, title, is_wip):
+    # A PR is draft if it has a WIP title.
+    pr = fake_github.make_pull_request(title=title)
+    assert is_draft_pull_request(pr.as_json()) == is_wip
+
+@pytest.mark.parametrize("title", [p[0] for p in TITLES_WIP])
+def test_is_draft_pull_request(fake_github, title):
+    # No matter what the title, a pr is Draft if it says it is.
+    pr = fake_github.make_pull_request(title=title, draft=True)
+    assert is_draft_pull_request(pr.as_json())

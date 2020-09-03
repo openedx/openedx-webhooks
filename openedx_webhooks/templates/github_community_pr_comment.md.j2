@@ -18,9 +18,16 @@ GitHub pull request interface. As a reminder,
 [our process documentation is here](http://edx-developer-guide.readthedocs.org/en/latest/process/overview.html).
 {% endfilter %}
 
+{% if is_draft %}
 {% filter replace("\n", " ")|trim %}
-Please let us know once your PR is ready for our review and all tests are green.
+This is currently a draft pull request. When it is ready for our review and all tests are green,
+click "Ready for Review", or remove "WIP" from the title, as appropriate.
 {% endfilter %}
+
+<!-- comment:end_of_wip -->
+{% else %}
+Please let us know once your PR is ready for our review and all tests are green.
+{% endif %}
 
 {% if not has_signed_agreement %}
     {%- filter replace("\n", " ")|trim %}

@@ -37,10 +37,13 @@ handled:
 - If the title of the pull request indicates this is a blended project (with
   "[BD-XXX]" in the title), then this is a blended pull request.
 
-- Otherwise, the author is checked for core committer status in the repo.  If
-  so, this is a core commiter pull request.
+- The author is checked for core committer status in the repo.  If so, this is
+  a core commiter pull request.
 
 - Otherwise, this is a regular pull request.
+
+Additionally, if the pull request is in draft status, or has "WIP" in the
+title, it is a draft pull request.
 
 Now we can decide what to do:
 
@@ -74,6 +77,10 @@ Now we can decide what to do:
   - For regular pull requests, if the author doesn't have a signed CLA, the
     initial status is "Community Manager Review".  If they do have a signed
     CLA, it is "Needs Triage".
+
+Draft pull requests start with a status of "Waiting on Author".  The initial
+Jira status determined above will be set once the pull request is no longer a
+draft, so long as the Jira issue is still in "Waiting for Author".
 
 - Labels:
 

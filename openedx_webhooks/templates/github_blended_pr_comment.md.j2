@@ -10,6 +10,15 @@ More details are on the [{{ project_name }}]({{ project_page }}) project page.
 {% endif %}
 {% endfilter %}
 
+{% if is_draft %}
+{% filter replace("\n", " ")|trim %}
+This is currently a draft pull request. When it is ready for our review and all tests are green,
+click "Ready for Review", or remove "WIP" from the title, as appropriate.
+{% endfilter %}
+
+<!-- comment:end_of_wip -->
+{% else %}
 When this pull request is ready, tag your edX technical lead.
+{% endif %}
 
 <!-- comment:welcome-blended -->

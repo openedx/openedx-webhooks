@@ -11,7 +11,10 @@ from typing import Dict, List, Optional
 
 from flask import render_template
 
-from openedx_webhooks.info import pull_request_has_cla
+from openedx_webhooks.info import (
+    is_draft_pull_request,
+    pull_request_has_cla,
+)
 from openedx_webhooks.oauth import get_jira_session
 from openedx_webhooks.types import JiraDict, PrDict
 from openedx_webhooks.utils import get_jira_custom_fields
@@ -28,6 +31,7 @@ class BotComment(Enum):
     BLENDED = auto()
     OK_TO_TEST = auto()
     CHAMPION_MERGE_PING = auto()
+    END_OF_WIP = auto()
 
 BOT_COMMENT_INDICATORS = {
     BotComment.WELCOME: [
@@ -53,6 +57,9 @@ BOT_COMMENT_INDICATORS = {
     ],
     BotComment.CHAMPION_MERGE_PING: [
         "<!-- comment:champion_merge_ping -->",
+    ],
+    BotComment.END_OF_WIP: [
+        "<!-- comment:end_of_wip -->",
     ],
 }
 
@@ -81,13 +88,12 @@ def github_community_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) 
     * check for contributor agreement
     * contain a link to our process documentation
     """
-    # does the user have a valid, signed contributor agreement?
-    has_signed_agreement = pull_request_has_cla(pull_request)
     return render_template(
         "github_community_pr_comment.md.j2",
         user=pull_request["user"]["login"],
         issue_key=issue_key,
-        has_signed_agreement=has_signed_agreement,
+        has_signed_agreement=pull_request_has_cla(pull_request),
+        is_draft=is_draft_pull_request(pull_request),
         **kwargs
     )
 
@@ -105,6 +111,7 @@ def github_contractor_pr_comment(pull_request: PrDict, **kwargs) -> str:
         user=pull_request["user"]["login"],
         repo=pull_request["base"]["repo"]["full_name"],
         number=pull_request["number"],
+        is_draft=is_draft_pull_request(pull_request),
         **kwargs
     )
 
@@ -117,6 +124,7 @@ def github_committer_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) 
         "github_committer_pr_comment.md.j2",
         user=pull_request["user"]["login"],
         issue_key=issue_key,
+        is_draft=is_draft_pull_request(pull_request),
         **kwargs
     )
 
@@ -148,11 +156,13 @@ def github_blended_pr_comment(
         project_page = blended_epic["fields"].get(custom_fields["Blended Project Status Page"])
     else:
         project_name = project_page = None
+
     return render_template("github_blended_pr_comment.md.j2",
         user=pull_request["user"]["login"],
         issue_key=issue_key,
         project_name=project_name,
         project_page=project_page,
+        is_draft=is_draft_pull_request(pull_request),
         **kwargs
     )
 
