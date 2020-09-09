@@ -9,7 +9,7 @@ from glom import glom
 
 from openedx_webhooks.bot_comments import (
     BOT_COMMENT_INDICATORS,
-    BOT_COMMENTS_WITH_ISSUE_ID,
+    BOT_COMMENTS_FIRST,
     BotComment,
     github_blended_pr_comment,
     github_committer_pr_comment,
@@ -59,6 +59,9 @@ class PrCurrentInfo:
     """
     bot_comments: Set[BotComment] = field(default_factory=set)
 
+    # The text of the first bot comment.
+    bot_comment0_text: Optional[str] = None
+
     # The Jira issue id mentioned on the PR if any.
     jira_mentioned_id: Optional[str] = None
 
@@ -107,13 +110,16 @@ def existing_bot_comments(pr: PrDict) -> Set[BotComment]:
     """
     Get the set of bot comments already on the pull request.
     """
+    comment0 = None
     comment_ids = set()
-    for comment in get_bot_comments(pr):
+    for i, comment in enumerate(get_bot_comments(pr)):
         body = comment["body"]
+        if i == 0:
+            comment0 = body
         for comment_id, snips in BOT_COMMENT_INDICATORS.items():
             if any(snip in body for snip in snips):
                 comment_ids.add(comment_id)
-    return comment_ids
+    return comment0, comment_ids
 
 
 def current_support_state(pr: PrDict) -> PrCurrentInfo:
@@ -121,7 +127,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
     Examine the world to determine what the current support state is.
     """
     current = PrCurrentInfo()
-    current.bot_comments = existing_bot_comments(pr)
+    current.bot_comment0_text, current.bot_comments = existing_bot_comments(pr)
     current.jira_id = current.jira_mentioned_id = get_jira_issue_key(pr)
     if current.jira_id:
         issue = get_jira_issue(current.jira_id, missing_ok=True)
@@ -354,13 +360,9 @@ class PrTrackingFixer:
         has_bot_comments = bool(self.current.bot_comments)
 
         # Deal with the comments that are all part of the initial welcome
-        # comment.
-
-        if self.current.jira_mentioned_id != self.current.jira_id:
-            # The issue we mentioned in the comment is now wrong. Even if we
-            # already wrote a welcome message, we need to do it again, so
-            # forget that we wrote one before.
-            self.current.bot_comments -= BOT_COMMENTS_WITH_ISSUE_ID
+        # comment. We'll remake the entire comment, and post it if it has
+        # changed.
+        self.current.bot_comments -= BOT_COMMENTS_FIRST
 
         needed_comments = self.desired.bot_comments - self.current.bot_comments
         comment_body = ""
@@ -394,7 +396,7 @@ class PrTrackingFixer:
             # This is handled in github_community_pr_comment.
             needed_comments.remove(BotComment.NEED_CLA)
 
-        if comment_body:
+        if comment_body != self.current.bot_comment0_text:
             # If there are current-state comments, then we need to edit the
             # comment, otherwise create one.
             if has_bot_comments:

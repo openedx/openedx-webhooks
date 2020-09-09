@@ -56,8 +56,14 @@ BOT_COMMENT_INDICATORS = {
     ],
 }
 
-# These are bot comments that include the Jira issue id.
-BOT_COMMENTS_WITH_ISSUE_ID = {BotComment.WELCOME, BotComment.BLENDED}
+# These are bot comments in the very first bot comment.
+BOT_COMMENTS_FIRST = {
+    BotComment.WELCOME,
+    BotComment.BLENDED,
+    BotComment.CONTRACTOR,
+    BotComment.CORE_COMMITTER,
+    BotComment.OK_TO_TEST,
+}
 
 def is_comment_kind(kind: BotComment, text: str) -> bool:
     """
