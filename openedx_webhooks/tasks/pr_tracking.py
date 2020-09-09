@@ -538,9 +538,11 @@ def edit_comment_on_pull_request(pr: PrDict, comment_body: str) -> None:
     Edit the bot-authored comment on this pull request.
     """
     repo = pr["base"]["repo"]["full_name"]
+    num = pr["number"]
     bot_comments = list(get_bot_comments(pr))
     comment_id = bot_comments[0]["id"]
     url = f"/repos/{repo}/issues/comments/{comment_id}"
+    logger.info(f"Updating comment on PR {repo} #{num}: {text_summary(comment_body, 90)!r}")
     resp = get_github_session().patch(url, json={"body": comment_body})
     log_check_response(resp)
 
