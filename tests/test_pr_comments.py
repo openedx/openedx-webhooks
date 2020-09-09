@@ -1,10 +1,14 @@
-"""Tests of the comment creation functions in tasks/github.py."""
+"""Tests of the comment creation functions in bot_comments.py."""
+
+import re
 
 from openedx_webhooks.bot_comments import (
     BotComment,
     is_comment_kind,
     github_community_pr_comment,
     github_contractor_pr_comment,
+    extract_data_from_comment,
+    format_data_for_comment,
 )
 
 from .helpers import is_good_markdown
@@ -49,3 +53,30 @@ def test_contractor_pr_comment(reqctx, fake_github):
     assert href in comment
     assert 'Create an OSPR issue for this pull request' in comment
     assert is_good_markdown(comment)
+
+
+COMMENT_DATA = {
+    "hello": 1,
+    "what": "-- that's what --\nbye.",
+    "non-ascii": "ИФИ-ДSCII ΓΞЖΓ",
+    "lists": [1, 2, 3, [4, 5, 6]],
+}
+
+def test_data_in_comments():
+    comment = "blah blah" + format_data_for_comment(COMMENT_DATA)
+    assert is_good_markdown(comment)
+    data = extract_data_from_comment(comment)
+    assert data == COMMENT_DATA
+
+
+def test_no_data_in_comments():
+    comment = "I have no data at all."
+    assert extract_data_from_comment(comment) == {}
+
+
+def test_corrupted_data_in_comments():
+    # If the data island is tampered with, don't let that break the bot.
+    comment = "blah blah" + format_data_for_comment(COMMENT_DATA)
+    comment = re.sub(r"\d", "xyz", comment)
+    data = extract_data_from_comment(comment)
+    assert data == {}

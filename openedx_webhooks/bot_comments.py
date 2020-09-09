@@ -2,8 +2,12 @@
 The bot makes comments on pull requests. This is stuff needed to do it well.
 """
 
+import binascii
+import json
+import re
+
 from enum import Enum, auto
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from flask import render_template
 
@@ -145,3 +149,23 @@ def github_blended_pr_comment(
         project_page=project_page,
         **kwargs
     )
+
+
+def extract_data_from_comment(text: str) -> Dict:
+    """
+    Extract the data from a data HTML comment in the comment text.
+    """
+    if match := re.search("<!-- data: ([^ ]+) -->", text):
+        try:
+            return json.loads(binascii.a2b_base64(match[1]).decode("utf8"))
+        except Exception:  # pylint: disable=broad-except
+            return {}
+    return {}
+
+
+def format_data_for_comment(data: Dict) -> str:
+    """
+    Format a data dictionary for appending to a comment.
+    """
+    b64 = binascii.b2a_base64(json.dumps(data).encode("utf8")).strip().decode("ascii")
+    return f"\n<!-- data: {b64} -->\n"
