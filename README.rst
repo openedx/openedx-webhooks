@@ -191,6 +191,13 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2020-09-23
+~~~~~~~~~~
+
+- Draft pull requests start with a status of "Waiting on Author".  Once the
+  pull request is no longer a draft, the status is set to the initial status it
+  would have originally had.
+
 2020-08-08
 ~~~~~~~~~~
 
