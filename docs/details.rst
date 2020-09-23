@@ -80,7 +80,9 @@ Now we can decide what to do:
 
 Draft pull requests start with a status of "Waiting on Author".  The initial
 Jira status determined above will be set once the pull request is no longer a
-draft, so long as the Jira issue is still in "Waiting for Author".
+draft, so long as the Jira issue is still in "Waiting for Author".  Note that
+if a pull request is later turned back into a draft, the Jira status will not
+be changed.
 
 - Labels:
 

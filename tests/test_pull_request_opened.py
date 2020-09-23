@@ -687,5 +687,18 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, sync_labels_fn, fake
     issue = fake_jira.issues[issue_id]
     assert issue.summary == title1
 
-    assert issue.status == initial_status
-    assert initial_status.lower() in pr.labels
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    assert is_good_markdown(body)
+    assert 'This is currently a draft pull request' in body
+    assert 'click "Ready for Review"' in body
+
+    if jira_got_fiddled:
+        # We don't change the Jira status again if the PR goes back to draft.
+        assert issue.status == "Architecture Review"
+        assert "architecture review" in pr.labels
+        assert initial_status.lower() not in pr.labels
+    else:
+        assert issue.status == initial_status
+        assert initial_status.lower() in pr.labels
