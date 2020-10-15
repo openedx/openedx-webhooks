@@ -191,6 +191,12 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2020-10-15
+~~~~~~~~~~
+
+- Core Committer pull requests now start with a Jira status of "Waiting on
+  Author" rather than "Open edX Community Review".
+
 2020-09-23
 ~~~~~~~~~~
 
