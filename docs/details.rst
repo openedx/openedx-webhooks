@@ -70,7 +70,7 @@ Now we can decide what to do:
 
 - Initial Jira status:
 
-  - Core committer pull requests get "Open edX Community Review".
+  - Core committer pull requests get "Waiting on Author".
 
   - Blended pull requests get "Needs Triage".
 
