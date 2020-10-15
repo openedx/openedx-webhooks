@@ -222,7 +222,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         if committer:
             comment = BotComment.CORE_COMMITTER
             desired.jira_labels.add("core-committer")
-            desired.jira_initial_status = "Open edX Community Review"
+            desired.jira_initial_status = "Waiting on Author"
             desired.bot_comments.add(BotComment.CORE_COMMITTER)
             desired.github_labels.add("core committer")
             if state == "merged":

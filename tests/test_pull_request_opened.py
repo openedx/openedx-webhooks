@@ -161,8 +161,8 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     assert issue.summary == prj["title"]
     assert issue.labels == {"core-committer"}
 
-    # Check that the Jira issue was moved to Open edX Community Review.
-    assert issue.status == "Open edX Community Review"
+    # Check that the Jira issue was moved to Waiting on Author
+    assert issue.status == "Waiting on Author"
 
     # Check that we synchronized labels.
     sync_labels_fn.assert_called_once_with("edx/edx-platform")
@@ -180,7 +180,7 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     assert "jenkins ok to test" in body
 
     # Check the GitHub labels that got applied.
-    assert pr.labels == {"open edx community review", "open-source-contribution", "core committer"}
+    assert pr.labels == {"waiting on author", "open-source-contribution", "core committer"}
 
 
 @pytest.mark.parametrize("with_epic", [False, True])
@@ -593,7 +593,7 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, sync_labels_fn, fake
         initial_status = "Needs Triage"
         pr = fake_github.make_pull_request(user="tusbar", title=title1)
     elif pr_type == "committer":
-        initial_status = "Open edX Community Review"
+        initial_status = "Waiting on Author"
         pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform", title=title1)
     elif pr_type == "nocla":
         initial_status = "Community Manager Review"
