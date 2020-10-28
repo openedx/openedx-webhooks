@@ -110,6 +110,8 @@ class PullRequest:
     state: str = "open"
     merged: bool = False
     draft: bool = False
+    additions: int = 1
+    deletions: int = 0
 
     def as_json(self) -> Dict:
         return {
@@ -124,6 +126,8 @@ class PullRequest:
             "base": self.repo.as_json(),
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "html_url": f"https://github.com/{self.repo.owner}/{self.repo.repo}/pull/{self.number}",
+            "additions": self.additions,
+            "deletions": self.deletions,
         }
 
     def close(self, merge=False):

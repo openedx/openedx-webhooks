@@ -36,6 +36,8 @@ class Issue:
     platform_map_3_4: Optional[str] = None
     blended_project_status_page: Optional[str] = None
     blended_project_id: Optional[str] = None
+    lines_added: Optional[int] = None
+    lines_deleted: Optional[int] = None
 
     def as_json(self) -> Dict:
         return {
@@ -57,6 +59,8 @@ class Issue:
                 FakeJira.PLATFORM_MAP_3_4: self.platform_map_3_4,
                 FakeJira.BLENDED_PROJECT_STATUS_PAGE: self.blended_project_status_page,
                 FakeJira.BLENDED_PROJECT_ID: self.blended_project_id,
+                FakeJira.LINES_ADDED: self.lines_added,
+                FakeJira.LINES_DELETED: self.lines_deleted,
             },
         }
 
@@ -77,6 +81,8 @@ class FakeJira(faker.Faker):
     PLATFORM_MAP_3_4 = "custom_106"
     BLENDED_PROJECT_STATUS_PAGE = "custom_107"
     BLENDED_PROJECT_ID = "custom_108"
+    LINES_ADDED = "custom_280"
+    LINES_DELETED = "custom_281"
 
     # Issue states and transitions for OSPR.
     INITIAL_STATE = "Needs Triage"
@@ -124,6 +130,8 @@ class FakeJira(faker.Faker):
             (self.PLATFORM_MAP_3_4, "Platform Map Area (Levels 3 & 4)"),
             (self.BLENDED_PROJECT_STATUS_PAGE, "Blended Project Status Page"),
             (self.BLENDED_PROJECT_ID, "Blended Project ID"),
+            (self.LINES_ADDED, "Github Lines Added"),
+            (self.LINES_DELETED, "Github Lines Deleted"),
         ]]
 
     def make_issue(self, key: Optional[str] = None, project: str = "OSPR", **kwargs) -> Issue:
@@ -184,6 +192,8 @@ class FakeJira(faker.Faker):
             url=fields.get(FakeJira.URL),
             platform_map_1_2=fields.get(FakeJira.PLATFORM_MAP_1_2),
             platform_map_3_4=fields.get(FakeJira.PLATFORM_MAP_3_4),
+            lines_added=fields.get(FakeJira.LINES_ADDED),
+            lines_deleted=fields.get(FakeJira.LINES_DELETED),
         )
         self.make_issue(key, **kwargs)
         # Response is only some information:
@@ -211,6 +221,10 @@ class FakeJira(faker.Faker):
                 kwargs["epic_link"] = fields.pop(FakeJira.EPIC_LINK)
             if FakeJira.PLATFORM_MAP_1_2 in fields:
                 kwargs["platform_map_1_2"] = fields.pop(FakeJira.PLATFORM_MAP_1_2)
+            if FakeJira.LINES_ADDED in fields:
+                kwargs["lines_added"] = fields.pop(FakeJira.LINES_ADDED)
+            if FakeJira.LINES_DELETED in fields:
+                kwargs["lines_deleted"] = fields.pop(FakeJira.LINES_DELETED)
             assert fields == {}, f"Didn't handle requested changes: {fields=}"
             issue = dataclasses.replace(issue, **kwargs)
             self.issues[issue.key] = issue

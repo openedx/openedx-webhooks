@@ -62,6 +62,8 @@ JIRA_EXTRA_FIELDS = [
     "Platform Map Area (Levels 3 & 4)",
     "Blended Project Status Page",
     "Blended Project ID",
+    "Github Lines Added",
+    "Github Lines Deleted",
 ]
 
 
@@ -261,6 +263,11 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         desired.bot_comments.add(BotComment.OK_TO_TEST)
 
     desired.bot_comments.add(comment)
+
+    desired.jira_extra_fields.extend([
+        ("Github Lines Added", pr["additions"]),
+        ("Github Lines Deleted", pr["deletions"]),
+    ])
 
     return desired
 

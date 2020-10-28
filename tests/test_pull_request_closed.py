@@ -141,3 +141,24 @@ def test_cc_pr_closed(reqctx, fake_github, fake_jira, merged):
         assert len(pr_comments) == 2
     else:
         assert len(pr_comments) == 1
+
+
+def test_track_additions_deletions(reqctx, fake_github, fake_jira, merged):
+    pr = fake_github.make_pull_request(user="tusbar", additions=17, deletions=42)
+    with reqctx:
+        issue_id, _ = pull_request_changed(pr.as_json())
+
+    issue = fake_jira.issues[issue_id]
+    assert issue.lines_added == 17
+    assert issue.lines_deleted == 42
+
+    pr.additions = 34
+    pr.deletions = 1001
+    pr.close(merge=merged)
+
+    with reqctx:
+        pull_request_changed(pr.as_json())
+
+    issue = fake_jira.issues[issue_id]
+    assert issue.lines_added == 34
+    assert issue.lines_deleted == 1001

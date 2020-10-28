@@ -107,12 +107,18 @@ be changed.
   - If the user has a signed CLA, the bot adds an invisible "ok to test" to get
     the tests started.
 
+- Other information:
+
+  - The number of lines added and deleted in the pull request are recorded in
+    the "Github Lines Added" and "Github Lines Deleted" fields.
+
 
 Updating Jira issue when pull requests change
 ---------------------------------------------
 
 Changes to pull requests are reflected in the Jira issue.  The titles and
 descriptions are copied over to the Jira issue if they are changed in GitHub.
+The number of lines added and deleted are updated if they have changed.
 
 If a change to a pull request means that a different Jira issue is needed, the
 old issue will be deleted, and a new one created.  For example, if a blended
