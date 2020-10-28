@@ -57,6 +57,14 @@ from openedx_webhooks.utils import (
 )
 
 
+JIRA_EXTRA_FIELDS = [
+    "Platform Map Area (Levels 1 & 2)",
+    "Platform Map Area (Levels 3 & 4)",
+    "Blended Project Status Page",
+    "Blended Project ID",
+]
+
+
 @dataclass
 class PrCurrentInfo:
     """
@@ -158,6 +166,13 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
             current.jira_description = issue["fields"]["description"]
             current.jira_status = issue["fields"]["status"]["name"]
             current.jira_labels = set(issue["fields"]["labels"])
+
+            custom_fields = get_jira_custom_fields(get_jira_session())
+            current.jira_extra_fields = [
+                (name, value)
+                for name in JIRA_EXTRA_FIELDS
+                if (value := issue["fields"][custom_fields[name]]) is not None
+            ]
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
 
     if current.last_seen_state.get("draft", False) and not is_draft_pull_request(pr):
@@ -362,12 +377,16 @@ class PrTrackingFixer:
             if self.current.jira_epic is None or (self.desired.jira_epic["key"] != self.current.jira_epic["key"]):
                 update_kwargs["epic_link"] = self.desired.jira_epic["key"]
 
+        if sorted(self.desired.jira_extra_fields) != sorted(self.current.jira_extra_fields):
+            update_kwargs["extra_fields"] = self.desired.jira_extra_fields
+
         if update_kwargs:
-            update_jira_issue(self.current.jira_id, extra_fields=self.desired.jira_extra_fields, **update_kwargs)
+            update_jira_issue(self.current.jira_id, **update_kwargs)
             self.current.jira_title = self.desired.jira_title
             self.current.jira_description = self.desired.jira_description
             self.current.jira_labels = self.desired.jira_labels
             self.current.jira_epic = self.desired.jira_epic
+            self.current.jira_extra_fields = self.desired.jira_extra_fields
             self.happened = True
 
     def _fix_github_labels(self) -> None:
