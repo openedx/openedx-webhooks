@@ -264,10 +264,10 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
 
     desired.bot_comments.add(comment)
 
-    desired.jira_extra_fields.extend([
-        ("Github Lines Added", pr["additions"]),
-        ("Github Lines Deleted", pr["deletions"]),
-    ])
+    if "additions" in pr:
+        desired.jira_extra_fields.append(("Github Lines Added", pr["additions"]))
+    if "deletions" in pr:
+        desired.jira_extra_fields.append(("Github Lines Deleted", pr["deletions"]))
 
     return desired
 
