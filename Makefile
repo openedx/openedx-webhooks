@@ -14,12 +14,16 @@ testschema: ## Install a schema under test.
 	# Get the version of repo-tools-data-schema that corresponds to our branch.
 	pip install -U git+https://github.com/edx/repo-tools-data-schema.git@$$(git rev-parse --abbrev-ref HEAD)
 
+TEST_FLAGS = -rxefs --cov=openedx_webhooks --cov=tests --cov-report=
+
 test: ## Run tests
-	py.test -rxefs --cov=openedx_webhooks --cov=tests --cov-context=test --cov-report=
+	py.test $(TEST_FLAGS) --cov-context=test
 	coverage html --show-contexts
 
-fulltest: test		## Run tests with randomness to emulate flaky GitHub
-	py.test -rxefs -m flaky_github --disable-warnings --percent-404=1 --count=100
+fulltest: ## Run tests with randomness to emulate flaky GitHub
+	py.test $(TEST_FLAGS)
+	py.test $(TEST_FLAGS) --cov-append -m flaky_github --disable-warnings --percent-404=1 --count=100
+	coverage html
 
 test-html-coverage-report: test ## Run tests and show coverage report in browser
 	open htmlcov/index.html
