@@ -191,6 +191,12 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2020-10-29
+~~~~~~~~~~
+
+- The number of lines added and deleted by a pull request are recorded in
+  custom Jira fields.
+
 2020-10-15
 ~~~~~~~~~~
 
