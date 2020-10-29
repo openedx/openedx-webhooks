@@ -595,7 +595,8 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, sync_labels_fn, fake
     elif pr_type == "committer":
         initial_status = "Waiting on Author"
         pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform", title=title1)
-    elif pr_type == "nocla":
+    else:
+        assert pr_type == "nocla"
         initial_status = "Community Manager Review"
         fake_github.make_user(login="new_contributor", name="Newb Contributor")
         pr = fake_github.make_pull_request(owner="edx", repo="edx-platform", user="new_contributor", title=title1)
@@ -620,7 +621,8 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, sync_labels_fn, fake
         assert issue.labels == {"blended"}
     elif pr_type == "committer":
         assert issue.labels == {"core-committer"}
-    elif pr_type == "nocla":
+    else:
+        assert pr_type == "nocla"
         assert issue.labels == set()
 
     # Because of "WIP", the Jira issue is in "Waiting on Author", unless
@@ -646,7 +648,8 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, sync_labels_fn, fake
     elif pr_type == "committer":
         assert is_comment_kind(BotComment.CORE_COMMITTER, body)
         assert pr.labels == {"waiting on author", "core committer", "open-source-contribution"}
-    elif pr_type == "nocla":
+    else:
+        assert pr_type == "nocla"
         assert is_comment_kind(BotComment.NEED_CLA, body)
         assert pr.labels == {"community manager review", "open-source-contribution"}
 
