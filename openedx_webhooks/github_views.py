@@ -100,22 +100,6 @@ def hook_receiver():
     return resp
 
 
-@github_bp.route("/pr", methods=("POST",))
-def pull_request():
-    """
-    An obsolete GitHub webhook endpoint.  If this gets traffic,
-    a GitHub webhook can be removed.
-    """
-    event = request.get_json()
-    pr = event["pull_request"]
-    pr_number = pr["number"]
-    repo = pr["base"]["repo"]["full_name"]
-    action = event["action"]
-
-    logger.info(f"Obsolete endpoint /github/pr fired from: {repo} #{pr_number} {action!r}")
-    return "This is obsolete", 410
-
-
 @github_bp.route("/rescan", methods=("GET",))
 def rescan_get():
     """
