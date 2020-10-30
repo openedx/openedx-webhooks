@@ -180,18 +180,6 @@ def process_pr():
         resp.status_code = 400
         return resp
 
-    repo_resp = github.get("/repos/{repo}".format(repo=repo))
-    repo_json = repo_resp.json()
-    if not repo_json["permissions"]["admin"]:
-        resp = jsonify({
-            "error": (
-                "This bot does not have permissions for repo {!r}.\n\n".format(repo) +
-                "Please manually make an OSPR ticket on JIRA."
-            )
-        })
-        resp.status_code = 400
-        return resp
-
     pr = pr_resp.json()
     result = pull_request_changed_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
     status_url = url_for("tasks.status", task_id=result.id, _external=True)
