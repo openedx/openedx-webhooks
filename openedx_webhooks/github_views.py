@@ -162,13 +162,6 @@ def process_pr_get():
 def process_pr():
     """
     Process (or re-process) a pull request.
-
-    Normally, when a pull request is opened, we check to see if the author is
-    an edX employee, or a contractor working for edX. If so, we don't process
-    the pull request normally -- either it is skipped, or we add an informative
-    comment without making a JIRA ticket. Using this endpoint will skip those
-    checks. We will make a JIRA ticket if one doesn't already exist, without
-    checking to see if the author is special.
     """
     repo = request.form.get("repo", "")
     if not repo:
