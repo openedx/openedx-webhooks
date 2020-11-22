@@ -16,7 +16,7 @@ def merged(request):
     return request.param
 
 
-def test_internal_pr_merged(merged, reqctx, fake_github, fake_jira):
+def test_internal_pr_closed(merged, reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="nedbat", state="closed", merged=merged)
     pr.add_comment(user="nedbat", body="This is great")
     pr.add_comment(user="feanil", body="Eh, it's ok")
@@ -45,7 +45,7 @@ def closed_pull_request(merged, reqctx, fake_github, fake_jira):
     return pr, issue
 
 
-def test_external_pr_merged(merged, reqctx, fake_jira, closed_pull_request):
+def test_external_pr_closed(merged, reqctx, fake_jira, closed_pull_request):
     pr, issue = closed_pull_request
 
     with reqctx:
@@ -56,7 +56,7 @@ def test_external_pr_merged(merged, reqctx, fake_jira, closed_pull_request):
     assert fake_jira.issues[issue.key].status == expected_status
 
 
-def test_external_pr_merged_but_issue_deleted(merged, reqctx, fake_jira, closed_pull_request):
+def test_external_pr_closed_but_issue_deleted(merged, reqctx, fake_jira, closed_pull_request):
     # A closing pull request, but its Jira issue has been deleted.
     pr, issue = closed_pull_request
     old_issue_key = issue.key
@@ -81,7 +81,7 @@ def test_external_pr_merged_but_issue_deleted(merged, reqctx, fake_jira, closed_
     assert fake_jira.issues[issue_id].status == expected_status
 
 
-def test_external_pr_merged_but_issue_in_status(merged, reqctx, fake_jira, closed_pull_request):
+def test_external_pr_closed_but_issue_in_status(merged, reqctx, fake_jira, closed_pull_request):
     # The Jira issue associated with a closing pull request is already in the
     # status we want to move it to.
     pr, issue = closed_pull_request
