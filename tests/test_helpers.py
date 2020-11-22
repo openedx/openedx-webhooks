@@ -2,7 +2,7 @@
 
 import pytest
 
-from .helpers import is_good_markdown
+from .helpers import is_good_markdown, random_text
 
 
 @pytest.mark.parametrize("text, ok", [
@@ -19,3 +19,9 @@ def test_is_good_markdown(text, ok):
     else:
         with pytest.raises(ValueError):
             is_good_markdown(text)
+
+
+def test_random_text():
+    texts = set(random_text() for _ in range(10))
+    assert len(texts) == 10
+    assert "" not in texts

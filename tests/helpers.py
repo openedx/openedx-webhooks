@@ -1,5 +1,6 @@
 """Helpers for tests."""
 
+import random
 import re
 
 
@@ -24,3 +25,14 @@ def is_good_markdown(text: str) -> bool:
         raise ValueError(f"Markdown shouldn't have an HTML comment with following text: {text!r}")
 
     return True
+
+
+def random_text() -> str:
+    """
+    Generate a random text string.
+    """
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
+    words = []
+    for _ in range(random.randint(4, 10)):
+        words.append("".join(random.choice(alphabet) for _ in range(random.randrange(1, 6))))
+    return " ".join(words)
