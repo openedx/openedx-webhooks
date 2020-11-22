@@ -12,6 +12,9 @@ from .helpers import is_good_markdown, random_text
     ("<!-- ok -->\nA paragraph", True),
     ("<!-- bad -->A paragraph", False),
     ("Trailing comment<!-- bad -->\n", False),
+    ("Look here: [None](https://foo.com).", False),
+    ("Look here: [foo](https://foo.com/api/id/None).", False),
+    ("Look here: [foo](https://foo.com/api/id/None/comments).", False),
 ])
 def test_is_good_markdown(text, ok):
     if ok:

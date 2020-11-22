@@ -24,6 +24,14 @@ def is_good_markdown(text: str) -> bool:
     if re.search("-->.", text):
         raise ValueError(f"Markdown shouldn't have an HTML comment with following text: {text!r}")
 
+    # We should never link to something called "None".
+    if re.search(r"\[None\]\(", text):
+        raise ValueError(f"Markdown has a link to None: {text!r}")
+
+    # We should never link to a url with None as a component.
+    if re.search(r"\]\([^)]*/None[/)]", text):
+        raise ValueError(f"Markdown has a link to a None url: {text!r}")
+
     return True
 
 
