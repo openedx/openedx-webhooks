@@ -282,7 +282,6 @@ class PrTrackingFixer:
         self.current = current
         self.desired = desired
         self.last_seen_state = copy.deepcopy(current.last_seen_state)
-        self.created_jira_issue = False
         self.happened = False
 
     def result(self) -> Tuple[Optional[str], bool]:
@@ -293,6 +292,8 @@ class PrTrackingFixer:
         The main routine for making needed changes.
         """
         comment_kwargs = {}
+
+        make_issue = False
 
         # We might have an issue already, but in the wrong project.
         if self.current.jira_id is not None:
@@ -306,62 +307,73 @@ class PrTrackingFixer:
                 else:
                     # Delete the existing issue and forget the current state.
                     delete_jira_issue(self.current.jira_id)
+                    make_issue = True
                     comment_kwargs["deleted_issue_key"] = self.current.jira_mentioned_id
                     self.current.jira_id = None
                     self.current.jira_title = None
                     self.current.jira_description = None
                     self.current.jira_status = None
 
-        # If needed, make a Jira issue.
+        # If we want an issue and none is mentioned yet, we need to make one.
         if self.desired.jira_project is not None:
-            if self.current.jira_id is None:
-                extra_fields = self.desired.jira_extra_fields
-                if self.desired.jira_epic:
-                    extra_fields.append(("Epic Link", self.desired.jira_epic["key"]))
-                new_issue = create_ospr_issue(
-                    self.pr,
-                    project=self.desired.jira_project,
-                    summary=self.desired.jira_title,
-                    description=self.desired.jira_description,
-                    labels=self.desired.jira_labels,
-                    extra_fields=extra_fields,
-                )
-                self.current.jira_id = new_issue["key"]
-                self.current.jira_status = new_issue["fields"]["status"]["name"]
-                self.current.jira_title = self.desired.jira_title
-                self.current.jira_description = self.desired.jira_description
-                self.current.jira_labels = self.desired.jira_labels
-                self.current.jira_epic = self.desired.jira_epic
+            if self.current.jira_mentioned_id is None:
+                make_issue = True
 
-                if self.desired.jira_initial_status != self.current.jira_status:
-                    transition_jira_issue(self.current.jira_id, self.desired.jira_initial_status)
-                    self.current.jira_status = self.desired.jira_initial_status
-
-                self.created_jira_issue = True
-                self.happened = True
+        # If needed, make a Jira issue.
+        if make_issue:
+            self._make_jira_issue()
 
         # Draftiness
         self.last_seen_state["draft"] = is_draft_pull_request(self.pr)
 
-        # If the author acted, and we were waiting on the author, then we
-        # should set the status to this PR's usual initial status.
-        if self.current.author_acted and self.current.jira_status == "Waiting on Author":
-            self.desired.jira_status = self.desired.jira_initial_status
+        if self.current.jira_id:
+            # If the author acted, and we were waiting on the author, then we
+            # should set the status to this PR's usual initial status.
+            if self.current.author_acted and self.current.jira_status == "Waiting on Author":
+                self.desired.jira_status = self.desired.jira_initial_status
 
-        # Check the state of the Jira issue.
-        if self.desired.jira_status is not None and self.desired.jira_status != self.current.jira_status:
-            transition_jira_issue(self.current.jira_id, self.desired.jira_status)
-            self.current.jira_status = self.desired.jira_status
-            self.happened = True
+            # Check the state of the Jira issue.
+            if self.desired.jira_status is not None and self.desired.jira_status != self.current.jira_status:
+                transition_jira_issue(self.current.jira_id, self.desired.jira_status)
+                self.current.jira_status = self.desired.jira_status
+                self.happened = True
 
-        # Update the Jira issue information.
-        self._fix_jira_information()
+            # Update the Jira issue information.
+            self._fix_jira_information()
 
         # Check the GitHub labels.
         self._fix_github_labels()
 
         # Check the bot comments.
         self._fix_bot_comments(comment_kwargs)
+
+    def _make_jira_issue(self) -> None:
+        """
+        Make our desired Jira issue.
+        """
+        extra_fields = self.desired.jira_extra_fields
+        if self.desired.jira_epic:
+            extra_fields.append(("Epic Link", self.desired.jira_epic["key"]))
+        new_issue = create_ospr_issue(
+            self.pr,
+            project=self.desired.jira_project,
+            summary=self.desired.jira_title,
+            description=self.desired.jira_description,
+            labels=self.desired.jira_labels,
+            extra_fields=extra_fields,
+        )
+        self.current.jira_id = new_issue["key"]
+        self.current.jira_status = new_issue["fields"]["status"]["name"]
+        self.current.jira_title = self.desired.jira_title
+        self.current.jira_description = self.desired.jira_description
+        self.current.jira_labels = self.desired.jira_labels
+        self.current.jira_epic = self.desired.jira_epic
+
+        if self.desired.jira_initial_status != self.current.jira_status:
+            transition_jira_issue(self.current.jira_id, self.desired.jira_initial_status)
+            self.current.jira_status = self.desired.jira_initial_status
+
+        self.happened = True
 
     def _fix_jira_information(self) -> None:
         """
@@ -426,8 +438,12 @@ class PrTrackingFixer:
 
         needed_comments = self.desired.bot_comments - self.current.bot_comments
         comment_body = ""
+
+        # The issue could have been deleted, we'll continue to talk about the
+        # now-gone issue. it's better than nothing.
+        jira_id = cast(str, self.current.jira_id or self.current.jira_mentioned_id)
         if BotComment.WELCOME in needed_comments:
-            comment_body += github_community_pr_comment(self.pr, cast(str, self.current.jira_id), **comment_kwargs)
+            comment_body += github_community_pr_comment(self.pr, cast(str, jira_id), **comment_kwargs)
             needed_comments.remove(BotComment.WELCOME)
 
         if BotComment.CONTRACTOR in needed_comments:
@@ -435,13 +451,13 @@ class PrTrackingFixer:
             needed_comments.remove(BotComment.CONTRACTOR)
 
         if BotComment.CORE_COMMITTER in needed_comments:
-            comment_body += github_committer_pr_comment(self.pr, cast(str, self.current.jira_id), **comment_kwargs)
+            comment_body += github_committer_pr_comment(self.pr, jira_id, **comment_kwargs)
             needed_comments.remove(BotComment.CORE_COMMITTER)
 
         if BotComment.BLENDED in needed_comments:
             comment_body += github_blended_pr_comment(
                 self.pr,
-                cast(str, self.current.jira_id),
+                jira_id,
                 self.current.jira_epic,
                 **comment_kwargs
             )

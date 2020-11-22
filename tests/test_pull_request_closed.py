@@ -69,20 +69,15 @@ def test_external_pr_closed_but_issue_deleted(merged, reqctx, fake_jira, closed_
     with reqctx:
         issue_id, anything_happened = pull_request_changed(pr.as_json())
 
-    assert issue_id is not None
-    assert issue_id != old_issue_key
+    assert issue_id is None
     assert anything_happened
 
     pr_comments = pr.list_comments()
-    print(pr_comments)
     assert len(pr_comments) == 3    # closed_pull_request makes two
+    # We leave the old issue id in the comment.
     body = pr_comments[0].body
-    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
+    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=old_issue_key)
     assert jira_link in body
-
-    # The new Jira issue is in the correct state.
-    expected_status = "Merged" if merged else "Rejected"
-    assert fake_jira.issues[issue_id].status == expected_status
 
 
 def test_external_pr_closed_but_issue_in_status(merged, reqctx, fake_jira, closed_pull_request):
