@@ -3,7 +3,7 @@
 import pytest
 
 from openedx_webhooks.tasks.github import pull_request_changed
-
+from .helpers import random_text
 
 # These tests should run when we want to test flaky GitHub behavior.
 pytestmark = pytest.mark.flaky_github
@@ -30,36 +30,41 @@ def test_internal_pr_closed(merged, reqctx, fake_github, fake_jira):
 @pytest.fixture
 def closed_pull_request(merged, reqctx, fake_github, fake_jira):
     """
-    Create a closed pull request.
+    Create a closed pull request and an issue key for it.
 
-    Returns (pr, issue)
+    Returns (pr, issue_key)
     """
-    pr = fake_github.make_pull_request(user="tusbar", state="closed", merged=merged)
-    issue = fake_jira.make_issue()
+    pr = fake_github.make_pull_request(
+        user="tusbar",
+        title=random_text(),
+        )
     with reqctx:
-        bot_comment = github_community_pr_comment(pr.as_json(), issue.key)
-    pr.add_comment(user=fake_github.login, body=bot_comment)
+        issue_key, _ = pull_request_changed(pr.as_json())
+
     pr.add_comment(user="nedbat", body="Please make some changes")
     pr.add_comment(user="tusbar", body="OK, I made the changes")
-    return pr, issue
+    pr.close(merge=merged)
+
+    fake_jira.reset_mock()
+
+    return pr, issue_key
 
 
 def test_external_pr_closed(merged, reqctx, fake_jira, closed_pull_request):
-    pr, issue = closed_pull_request
+    pr, issue_key = closed_pull_request
 
     with reqctx:
         pull_request_changed(pr.as_json())
 
     # We moved the Jira issue to Merged or Rejected.
     expected_status = "Merged" if merged else "Rejected"
-    assert fake_jira.issues[issue.key].status == expected_status
+    assert fake_jira.issues[issue_key].status == expected_status
 
 
 def test_external_pr_closed_but_issue_deleted(merged, reqctx, fake_jira, closed_pull_request):
     # A closing pull request, but its Jira issue has been deleted.
-    pr, issue = closed_pull_request
-    old_issue_key = issue.key
-    del fake_jira.issues[issue.key]
+    pr, old_issue_key = closed_pull_request
+    del fake_jira.issues[old_issue_key]
 
     with reqctx:
         issue_id, anything_happened = pull_request_changed(pr.as_json())
@@ -83,8 +88,8 @@ def test_external_pr_closed_but_issue_deleted(merged, reqctx, fake_jira, closed_
 def test_external_pr_closed_but_issue_in_status(merged, reqctx, fake_jira, closed_pull_request):
     # The Jira issue associated with a closing pull request is already in the
     # status we want to move it to.
-    pr, issue = closed_pull_request
-    fake_jira.issues[issue.key].status = ("Merged" if merged else "Rejected")
+    pr, issue_key = closed_pull_request
+    fake_jira.issues[issue_key].status = ("Merged" if merged else "Rejected")
 
     with reqctx:
         pull_request_changed(pr.as_json())
