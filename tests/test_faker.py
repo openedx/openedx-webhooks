@@ -129,3 +129,15 @@ def test_requests_made(my_fake):
     assert my_fake.requests_made(r"123", "GET") == [
         ("/api/something/1234", "GET"),
     ]
+
+def test_reset_mock(my_fake):
+    requests.get("https://myapi.com/api/something/1")
+    requests.get("https://myapi.com/api/something/1234")
+    my_fake.reset_mock()
+    requests.post("https://myapi.com/api/something/labels")
+    requests.delete("https://myapi.com/api/something/bug123")
+    requests.get("https://some.other.host/")
+    assert my_fake.requests_made() == [
+        ("/api/something/labels", "POST"),
+        ("/api/something/bug123", "DELETE"),
+    ]

@@ -107,3 +107,9 @@ class Faker:
                 continue
             reqs.append((req.path, req.method))
         return reqs
+
+    def reset_mock(self) -> None:
+        """
+        Clear the `requests_made` history.
+        """
+        self.requests_mocker.reset_mock()
