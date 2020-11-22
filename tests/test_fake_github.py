@@ -309,6 +309,34 @@ class TestComments:
         resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments")
         assert resp.json()[0]["body"] == "I've changed my mind about my comment."
 
+    def test_posting_bad_comments(self, fake_github):
+        repo = fake_github.make_repo("an-org", "a-repo")
+        pr = repo.make_pull_request()
+
+        with pytest.raises(ValueError, match="Markdown has a link to None"):
+            requests.post(
+                f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments",
+                json={"body": "Look: [None](https://foo.com)"},
+            )
+
+    def test_editing_bad_comments(self, fake_github):
+        repo = fake_github.make_repo("an-org", "a-repo")
+        pr = repo.make_pull_request()
+
+        pr.add_comment(user="tusbar", body="This is my comment")
+        pr.add_comment(user="feanil", body="I love this change!")
+
+        # List the comments, and get the id of the first one.
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments")
+        comment_id = resp.json()[0]["id"]
+
+        # Update the first comment.
+        with pytest.raises(ValueError, match="Markdown has a link to None"):
+            requests.patch(
+                f"https://api.github.com/repos/an-org/a-repo/issues/comments/{comment_id}",
+                json={"body": "Look: [None](https://foo.com)"},
+            )
+
 
 @pytest.fixture
 def flaky_github(requests_mocker, mock_github_bp, fake_repo_data):

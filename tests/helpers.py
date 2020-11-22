@@ -4,14 +4,14 @@ import random
 import re
 
 
-def is_good_markdown(text: str) -> bool:
+def check_good_markdown(text: str) -> None:
     """
     Make some checks of Markdown text.
 
-    These are meant to catch mistakes in templates producing Markdown.
+    These are meant to catch mistakes in templates or code producing Markdown.
 
     Returns:
-        True.  Will raise an exception with a failure message if something
+        Nothing.  Will raise an exception with a failure message if something
         is wrong.
     """
     if text.startswith((" ", "\n", "\t")):
@@ -31,8 +31,6 @@ def is_good_markdown(text: str) -> bool:
     # We should never link to a url with None as a component.
     if re.search(r"\]\([^)]*/None[/)]", text):
         raise ValueError(f"Markdown has a link to a None url: {text!r}")
-
-    return True
 
 
 def random_text() -> str:

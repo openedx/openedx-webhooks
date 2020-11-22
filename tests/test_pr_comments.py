@@ -11,7 +11,7 @@ from openedx_webhooks.bot_comments import (
     format_data_for_comment,
 )
 
-from .helpers import is_good_markdown
+from .helpers import check_good_markdown
 
 
 def test_community_pr_comment(reqctx, fake_github, fake_jira):
@@ -22,7 +22,7 @@ def test_community_pr_comment(reqctx, fake_github, fake_jira):
         comment = github_community_pr_comment(pr.as_json(), jira.key)
     assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
     assert not is_comment_kind(BotComment.NEED_CLA, comment)
-    assert is_good_markdown(comment)
+    check_good_markdown(comment)
 
 
 def test_community_pr_comment_no_author(reqctx, fake_github, fake_jira):
@@ -36,7 +36,7 @@ def test_community_pr_comment_no_author(reqctx, fake_github, fake_jira):
         "[signed contributor agreement]" +
         "(https://open.edx.org/wp-content/uploads/2019/01/individual-contributor-agreement.pdf)"
     ) in comment
-    assert is_good_markdown(comment)
+    check_good_markdown(comment)
 
 
 def test_contractor_pr_comment(reqctx, fake_github):
@@ -52,7 +52,7 @@ def test_contractor_pr_comment(reqctx, fake_github):
     )
     assert href in comment
     assert 'Create an OSPR issue for this pull request' in comment
-    assert is_good_markdown(comment)
+    check_good_markdown(comment)
 
 
 COMMENT_DATA = {
@@ -64,7 +64,7 @@ COMMENT_DATA = {
 
 def test_data_in_comments():
     comment = "blah blah" + format_data_for_comment(COMMENT_DATA)
-    assert is_good_markdown(comment)
+    check_good_markdown(comment)
     data = extract_data_from_comment(comment)
     assert data == COMMENT_DATA
 

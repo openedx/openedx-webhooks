@@ -14,6 +14,7 @@ from typing import Dict, Iterable, List, Optional, Set
 from urllib.parse import unquote
 
 from . import faker
+from .helpers import check_good_markdown
 
 
 class FakeGitHubException(faker.FakerException):
@@ -88,6 +89,12 @@ class Comment:
     id: int = field(init=False, default_factory=comment_ids.__next__)
     user: User
     body: str
+
+    def __post_init__(self):
+        self.validate()
+
+    def validate(self):
+        check_good_markdown(self.body)
 
     def as_json(self) -> Dict:
         return {
@@ -384,4 +391,5 @@ class FakeGitHub(faker.Faker):
         r = self.get_repo(match["owner"], match["repo"])
         comment = r.comments[int(match["comment_id"])]
         comment.body = request.json()["body"]
+        comment.validate()
         return comment.as_json()

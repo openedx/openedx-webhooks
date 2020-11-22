@@ -11,8 +11,6 @@ from openedx_webhooks.bot_comments import (
 from openedx_webhooks.info import get_jira_issue_key
 from openedx_webhooks.tasks.github import pull_request_changed
 
-from .helpers import is_good_markdown
-
 
 # These tests should run when we want to test flaky GitHub behavior.
 pytestmark = pytest.mark.flaky_github
@@ -79,7 +77,6 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @new_contributor!" in body
@@ -125,7 +122,6 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @tusbar!" in body
@@ -171,7 +167,6 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @felipemontoya!" in body
@@ -243,7 +238,6 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert is_good_markdown(body)
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @tusbar!" in body
@@ -299,7 +293,6 @@ def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert is_good_markdown(body)
     assert is_comment_kind(BotComment.CONTRACTOR, body)
     href = (
         'href="https://openedx-webhooks.herokuapp.com/github/process_pr' +
@@ -636,7 +629,6 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, sync_labels_fn, fake
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert is_good_markdown(body)
     assert 'This is currently a draft pull request' in body
     assert 'click "Ready for Review"' in body
     if pr_type == "normal":
@@ -669,7 +661,6 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, sync_labels_fn, fake
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert is_good_markdown(body)
     assert 'This is currently a draft pull request' not in body
     assert 'click "Ready for Review"' not in body
 
@@ -693,7 +684,6 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, sync_labels_fn, fake
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert is_good_markdown(body)
     assert 'This is currently a draft pull request' in body
     assert 'click "Ready for Review"' in body
 

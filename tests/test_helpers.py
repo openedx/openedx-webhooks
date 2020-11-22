@@ -2,7 +2,7 @@
 
 import pytest
 
-from .helpers import is_good_markdown, random_text
+from .helpers import check_good_markdown, random_text
 
 
 @pytest.mark.parametrize("text, ok", [
@@ -16,12 +16,12 @@ from .helpers import is_good_markdown, random_text
     ("Look here: [foo](https://foo.com/api/id/None).", False),
     ("Look here: [foo](https://foo.com/api/id/None/comments).", False),
 ])
-def test_is_good_markdown(text, ok):
+def test_check_good_markdown(text, ok):
     if ok:
-        assert is_good_markdown(text)
+        check_good_markdown(text)
     else:
         with pytest.raises(ValueError):
-            is_good_markdown(text)
+            check_good_markdown(text)
 
 
 def test_random_text():
