@@ -397,9 +397,11 @@ class PrTrackingFixer:
                 update_kwargs["epic_link"] = self.desired.jira_epic["key"]
 
         if sorted(self.desired.jira_extra_fields) != sorted(self.current.jira_extra_fields):
+            logger.info(f"Updating extra_fields: {self.desired.jira_extra_fields=!r}, {self.current.jira_extra_fields=!r}")
             update_kwargs["extra_fields"] = self.desired.jira_extra_fields
 
         if update_kwargs:
+            logger.info(f"update_jira_issue: ({self.current.jira_id=!r}, {update_kwargs=!r})")
             update_jira_issue(self.current.jira_id, **update_kwargs)
             self.current.jira_title = self.desired.jira_title
             self.current.jira_description = self.desired.jira_description
