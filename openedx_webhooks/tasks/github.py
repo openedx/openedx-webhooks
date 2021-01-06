@@ -66,13 +66,19 @@ def pull_request_changed(pr: PrDict) -> Tuple[Optional[str], bool]:
 
 
 @celery.task(bind=True)
-def rescan_repository(self, repo):
+def rescan_repository(self, repo, allpr):
     """
-    rescans a single repo for new prs
+    Re-scans a single repo for pull requests.
+
+    If `allpr` is False, then only external pull requests with no Jira issue
+    are re-scanned.  If `allpr` is True, then every pull request is re-scanned.
     """
     github = get_github_session()
     sentry_extra_context({"repo": repo})
-    url = "/repos/{repo}/pulls".format(repo=repo)
+    url = f"/repos/{repo}/pulls"
+    if allpr:
+        url += "?state=all"
+
     created = {}
     if not self.request.called_directly:
         self.update_state(state='STARTED', meta={'repo': repo})
@@ -99,7 +105,11 @@ def rescan_repository(self, repo):
         sentry_extra_context({"pull_request": pull_request})
         issue_key = get_jira_issue_key(pull_request)
         is_internal = is_internal_pull_request(pull_request)
-        if not issue_key and not is_internal:
+        if allpr:
+            should_scan = True
+        else:
+            should_scan = not issue_key and not is_internal
+        if should_scan:
             issue_key, issue_created = pull_request_changed(pull_request)
             if issue_created:
                 created[pull_request["number"]] = issue_key
