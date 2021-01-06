@@ -11,8 +11,8 @@ from openedx_webhooks.debug import print_long
 logger = get_task_logger(__name__)
 logger.setLevel(log_level)
 
-# Always show the logging configuration.
-print_long("logging_tree output", logging_tree.format.build_description())
+# Use this to show the logging configuration if you need to debug it.
+# print_long("logging_tree output", logging_tree.format.build_description())
 
 # create a Flask blueprint for getting task status info
 tasks = Blueprint('tasks', __name__)
