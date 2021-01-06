@@ -4,35 +4,40 @@
         <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
     </head>
     <body>
-        <h1>Rescan GitHub Pull Requests</h1>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class="flashes">
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
+    <h1>Rescan GitHub Pull Requests</h1>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flashes">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
     <form id="rescan-form" action="{{ url_for("github_views.rescan") }}" method="POST">
     <p>
-      Clicking this button will rescan all the open pull requests for the
-      repo you specify.
-    </p><p>
-      Depending on the number of open pull requests, it may
-      take awhile. Do you want to do this?
+        Clicking this button will rescan all the open pull requests for the
+        repo you specify.
+    </p>
+    <p>
+        Depending on the number of open pull requests, it may
+        take awhile. Do you want to do this?
     </p>
     <p>Special values this form accepts are:</p>
     <ul>
-      <li>"all:[org]": scans all repos in the specific Github org. i.e. "all:edx"</li>
+        <li>"all:[org]": scans all repos in the specific Github org. i.e. "all:edx"</li>
     </ul>
-    <label for="repo">Repo to scan</label>
-    <input type="text" name="repo" id="repo" value="edx/edx-platform" />
-    <br>
-    <label for="inline">Scan inline (not recommended)</label>
-    <input type="checkbox" name="inline" id="inline" value="1" />
-    <br>
-    <input type="submit" value="Rescan" />
+    <p>
+        <label for="repo">Repo to scan</label>
+        <input type="text" name="repo" id="repo" value="edx/edx-platform" />
+    </p>
+    <p>
+        <label for="inline">Scan inline (not recommended)</label>
+        <input type="checkbox" name="inline" id="inline" value="1" />
+    </p>
+    <p>
+        <input type="submit" value="Rescan" />
+    </p>
     </form>
     </body>
 </html>
