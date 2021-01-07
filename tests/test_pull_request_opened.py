@@ -1,4 +1,4 @@
-"""Tests of task/github.py:pull_request_changed for opening pull requests."""
+"""Tests of tasks/github.py:pull_request_changed for opening pull requests."""
 
 import itertools
 
@@ -573,7 +573,7 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
         [False, True],
     )
 )
-def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, sync_labels_fn, fake_github, fake_jira):
+def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, fake_github, fake_jira):
     # Open a WIP pull request.
     title1 = "WIP: broken"
     title2 = "Fixed and done"
