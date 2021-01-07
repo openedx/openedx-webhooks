@@ -131,7 +131,7 @@ class PullRequest:
             "labels": [self.repo.get_label(l).as_json() for l in sorted(self.labels)],
             "base": self.repo.as_json(),
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "html_url": f"https://github.com/{self.repo.owner}/{self.repo.repo}/pull/{self.number}",
+            "html_url": f"https://github.com/{self.repo.full_name}/pull/{self.number}",
         }
         if not brief:
             j["merged"] = self.merged
@@ -176,10 +176,14 @@ class Repo:
     pull_requests: Dict[int, PullRequest] = field(default_factory=dict)
     comments: Dict[int, Comment] = field(default_factory=dict)
 
+    @property
+    def full_name(self):
+        return f"{self.owner}/{self.repo}"
+
     def as_json(self) -> Dict:
         return {
             "repo": {
-                "full_name": f"{self.owner}/{self.repo}",
+                "full_name": self.full_name,
             },
         }
 
@@ -199,7 +203,7 @@ class Repo:
         try:
             return self.pull_requests[number]
         except KeyError:
-            raise DoesNotExist(f"Pull request {self.owner}/{self.repo} #{number} does not exist")
+            raise DoesNotExist(f"Pull request {self.full_name} #{number} does not exist")
 
     def make_comment(self, user, **kwargs) -> Comment:
         user = self.github.get_user(user, create=True)
@@ -211,7 +215,7 @@ class Repo:
         try:
             return self.labels[name]
         except KeyError:
-            raise DoesNotExist(f"Label {self.owner}/{self.repo} {name!r} does not exist")
+            raise DoesNotExist(f"Label {self.full_name} {name!r} does not exist")
 
     def has_label(self, name: str) -> bool:
         return name in self.labels
@@ -241,7 +245,7 @@ class Repo:
         try:
             del self.labels[name]
         except KeyError:
-            raise DoesNotExist(f"Label {self.owner}/{self.repo} {name!r} does not exist")
+            raise DoesNotExist(f"Label {self.full_name} {name!r} does not exist")
 
 
 class Flaky404:
