@@ -131,6 +131,7 @@ class PullRequest:
             "labels": [self.repo.get_label(l).as_json() for l in sorted(self.labels)],
             "base": self.repo.as_json(),
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "url": f"{self.repo.github.host}/repos/{self.repo.full_name}/pulls/{self.number}",
             "html_url": f"https://github.com/{self.repo.full_name}/pull/{self.number}",
         }
         if not brief:

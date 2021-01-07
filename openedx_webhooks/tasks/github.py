@@ -19,6 +19,7 @@ from openedx_webhooks.types import PrDict
 from openedx_webhooks.utils import (
     log_check_response,
     paginated_get,
+    retry_get,
     sentry_extra_context,
 )
 
@@ -75,16 +76,13 @@ def rescan_repository(repo, allpr, task=None):
     """
     Re-scans a single repo for external pull requests.
 
-    If `allpr` is False, then only pull requests with no Jira issue are
-    re-scanned.  If `allpr` is True, then every external pull request is
-    re-scanned.
+    If `allpr` is False, then only open pull requests are considered.
+    If `allpr` is True, then all external pull requests are re-scanned.
 
     """
-    github = get_github_session()
     sentry_extra_context({"repo": repo})
-    url = f"/repos/{repo}/pulls"
-    if allpr:
-        url += "?state=all"
+    state = "all" if allpr else "open"
+    url = f"/repos/{repo}/pulls?state={state}"
 
     created = {}
     if task is not None:
@@ -107,22 +105,29 @@ def rescan_repository(repo, allpr, task=None):
             }
             task.update_state(state='STARTED', meta=state_meta)
 
-    for pull_request in paginated_get(url, session=github, callback=page_callback):
+    for pull_request in paginated_get(url, session=get_github_session(), callback=page_callback):
         sentry_extra_context({"pull_request": pull_request})
-        issue_key = get_jira_issue_key(pull_request)
         is_internal = is_internal_pull_request(pull_request)
-        if allpr:
-            should_scan = not is_internal
-        else:
-            should_scan = not issue_key and not is_internal
+        if is_internal:
+            continue
+        should_scan = True
+        if not allpr:
+            issue_key = get_jira_issue_key(pull_request)
+            should_scan = not issue_key
         if should_scan:
-            issue_key, issue_created = pull_request_changed(pull_request)
-            if issue_created:
+            # Listed pull requests don't have all the information we need,
+            # so get the full description.
+            resp = retry_get(get_github_session(), pull_request["url"])
+            resp.raise_for_status()
+            pull_request = resp.json()
+
+            issue_key, anything_happened = pull_request_changed(pull_request)
+            if anything_happened:
                 created[pull_request["number"]] = issue_key
 
     logger.info(
         "Created {num} JIRA issues on repo {repo}. PRs are {prs}".format(
-            num=len(created), repo=repo, prs=created.keys(),
+            num=len(created), repo=repo, prs=list(created.keys()),
         ),
     )
     info = {"repo": repo}
