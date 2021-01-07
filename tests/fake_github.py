@@ -120,11 +120,10 @@ class PullRequest:
     additions: Optional[int] = None
     deletions: Optional[int] = None
 
-    def as_json(self) -> Dict:
+    def as_json(self, brief=False) -> Dict:
         j = {
             "number": self.number,
             "state": self.state,
-            "merged": self.merged,
             "draft": self.draft,
             "title": self.title,
             "user": self.user.as_json(),
@@ -134,10 +133,12 @@ class PullRequest:
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "html_url": f"https://github.com/{self.repo.owner}/{self.repo.repo}/pull/{self.number}",
         }
-        if self.additions is not None:
-            j["additions"] = self.additions
-        if self.deletions is not None:
-            j["deletions"] = self.deletions
+        if not brief:
+            j["merged"] = self.merged
+            if self.additions is not None:
+                j["additions"] = self.additions
+            if self.deletions is not None:
+                j["deletions"] = self.deletions
         return j
 
     def close(self, merge=False):
@@ -190,6 +191,9 @@ class Repo:
         pr = PullRequest(self, number, user, **kwargs)
         self.pull_requests[number] = pr
         return pr
+
+    def list_pull_requests(self, state: str) -> List[PullRequest]:
+        return [pr for pr in self.pull_requests.values() if (state == "all") or (pr.state == state)]
 
     def get_pull_request(self, number: int) -> PullRequest:
         try:
@@ -318,8 +322,15 @@ class FakeGitHub(faker.Faker):
 
     # Pull requests
 
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pulls")
+    def _get_pulls(self, match, request, _context) -> List[Dict]:
+        # https://developer.github.com/v3/pulls/#list-pull-requests
+        r = self.get_repo(match["owner"], match["repo"])
+        state = request.qs.get("state", ["open"])[0]
+        return [pr.as_json(brief=True) for pr in r.list_pull_requests(state)]
+
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pulls/(?P<number>\d+)")
-    def _get_pulls(self, match, _request, _context) -> Dict:
+    def _get_pull(self, match, _request, _context) -> Dict:
         # https://developer.github.com/v3/pulls/#get-a-pull-request
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))

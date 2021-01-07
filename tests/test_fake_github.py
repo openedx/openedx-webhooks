@@ -189,6 +189,38 @@ class TestPullRequests:
         assert resp.json()["message"] == "Repo some-user/another-repo does not exist"
 
 
+@pytest.fixture
+def pull_requests_to_list(fake_github):
+    repo = fake_github.make_repo("an-org", "a-repo")
+    repo.make_pull_request(user="user1", title="Title 1", body="Boo")
+    repo.make_pull_request(user="user2", title="Title 2", body="Boo", state="closed")
+    repo.make_pull_request(user="user1", title="Title 3", body="Boo hoo")
+    repo.make_pull_request(user="user2", title="Title 4", body="Boo hoo", draft=True)
+    repo.make_pull_request(user="user3", title="Title 5", body="Boo hoo", state="closed")
+
+
+class TestPullRequestList:
+    def test_list_pull_requests(self, pull_requests_to_list):
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/pulls")
+        prjs = resp.json()
+        # By default, only open pull requests are listed.
+        assert len(prjs) == 3
+        # When listing pull requests, not all fields are returned.
+        assert not any(k in prj for prj in prjs for k in ["merged", "additions", "deletions"])
+
+    @pytest.mark.parametrize("state, number, specific", [
+        ("open", 3, True),
+        ("closed", 2, True),
+        ("all", 5, False),
+    ])
+    def test_list_pull_requests_count(self, pull_requests_to_list, state, number, specific):
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/pulls?state={state}")
+        prjs = resp.json()
+        assert len(prjs) == number
+        if specific:
+            assert all(prj["state"] == state for prj in prjs)
+
+
 class TestPullRequestLabels:
     def test_updating_labels_with_api(self, fake_github):
         repo = fake_github.make_repo("an-org", "a-repo")

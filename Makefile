@@ -14,7 +14,7 @@ testschema: ## Install a schema under test.
 	# Get the version of repo-tools-data-schema that corresponds to our branch.
 	pip install -U git+https://github.com/edx/repo-tools-data-schema.git@$$(git rev-parse --abbrev-ref HEAD)
 
-TEST_FLAGS = -rxefs --cov=openedx_webhooks --cov=tests --cov-report=
+TEST_FLAGS = $(TEST_ARGS) -rxefs --cov=openedx_webhooks --cov=tests --cov-report=
 
 test: ## Run tests
 	py.test $(TEST_FLAGS) --cov-context=test
