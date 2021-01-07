@@ -66,12 +66,19 @@ def pull_request_changed(pr: PrDict) -> Tuple[Optional[str], bool]:
 
 
 @celery.task(bind=True)
-def rescan_repository(self, repo, allpr):
-    """
-    Re-scans a single repo for pull requests.
+def rescan_repository_task(self, repo, allpr):
+    """A bound Celery task to call rescan_repository."""
+    return rescan_repository(repo, allpr, task=self)
 
-    If `allpr` is False, then only external pull requests with no Jira issue
-    are re-scanned.  If `allpr` is True, then every pull request is re-scanned.
+
+def rescan_repository(repo, allpr, task=None):
+    """
+    Re-scans a single repo for external pull requests.
+
+    If `allpr` is False, then only pull requests with no Jira issue are
+    re-scanned.  If `allpr` is True, then every external pull request is
+    re-scanned.
+
     """
     github = get_github_session()
     sentry_extra_context({"repo": repo})
@@ -80,33 +87,32 @@ def rescan_repository(self, repo, allpr):
         url += "?state=all"
 
     created = {}
-    if not self.request.called_directly:
-        self.update_state(state='STARTED', meta={'repo': repo})
+    if task is not None:
+        task.update_state(state='STARTED', meta={'repo': repo})
 
     def page_callback(response):
-        if not response.ok or self.request.called_directly:
-            return
-        current_url = URLObject(response.url)
-        current_page = int(current_url.query_dict.get("page", 1))
-        link_last = response.links.get("last")
-        if link_last:
-            last_url = URLObject(link_last['url'])
-            last_page = int(last_url.query_dict["page"])
-        else:
-            last_page = current_page
-        state_meta = {
-            "repo": repo,
-            "current_page": current_page,
-            "last_page": last_page
-        }
-        self.update_state(state='STARTED', meta=state_meta)
+        if task is not None and response.ok:
+            current_url = URLObject(response.url)
+            current_page = int(current_url.query_dict.get("page", 1))
+            link_last = response.links.get("last")
+            if link_last:
+                last_url = URLObject(link_last['url'])
+                last_page = int(last_url.query_dict["page"])
+            else:
+                last_page = current_page
+            state_meta = {
+                "repo": repo,
+                "current_page": current_page,
+                "last_page": last_page
+            }
+            task.update_state(state='STARTED', meta=state_meta)
 
     for pull_request in paginated_get(url, session=github, callback=page_callback):
         sentry_extra_context({"pull_request": pull_request})
         issue_key = get_jira_issue_key(pull_request)
         is_internal = is_internal_pull_request(pull_request)
         if allpr:
-            should_scan = True
+            should_scan = not is_internal
         else:
             should_scan = not issue_key and not is_internal
         if should_scan:
