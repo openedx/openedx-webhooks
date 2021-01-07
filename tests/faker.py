@@ -105,7 +105,10 @@ class Faker:
                 continue
             if path_regex is not None and not re.search(path_regex, req.path):
                 continue
-            reqs.append((req.path, req.method))
+            url = req.path
+            if req.query:
+                url += "?" + req.query
+            reqs.append((url, req.method))
         return reqs
 
     def reset_mock(self) -> None:
