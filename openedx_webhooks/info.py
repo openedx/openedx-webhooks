@@ -192,10 +192,15 @@ def github_whoami():
     return self_resp.json()
 
 
+def get_bot_username() -> str:
+    """What is the username of the bot?"""
+    me = github_whoami()
+    return me["login"]
+
+
 def get_bot_comments(pull_request: PrDict) -> Iterable[PrCommentDict]:
     """Find all the comments the bot has made on a pull request."""
-    me = github_whoami()
-    my_username = me["login"]
+    my_username = get_bot_username()
     comment_url = "/repos/{repo}/issues/{num}/comments".format(
         repo=pull_request["base"]["repo"]["full_name"],
         num=pull_request["number"],
