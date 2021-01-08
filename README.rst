@@ -191,6 +191,16 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2021-01-08
+~~~~~~~~~~
+
+- Rescanning changes:
+
+  - Now you have the option to include closed pull requests.
+
+  - Pull requests are fetched in full to ensure all the needed fields will be
+    available.
+
 2020-11-24
 ~~~~~~~~~~
 
