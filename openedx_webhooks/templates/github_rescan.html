@@ -16,12 +16,10 @@
     {% endwith %}
     <form id="rescan-form" action="{{ url_for("github_views.rescan") }}" method="POST">
     <p>
-        Clicking this button will rescan all the open pull requests for the
-        repo you specify.
+        Clicking this button will rescan all the pull requests for the repo you specify.
     </p>
     <p>
-        Depending on the number of open pull requests, it may
-        take awhile. Do you want to do this?
+        Depending on the number of pull requests, it may take awhile. Do you want to do this?
     </p>
     <p>Special values this form accepts are:</p>
     <ul>
@@ -32,7 +30,7 @@
         <input type="text" name="repo" id="repo" value="edx/edx-platform" />
     </p>
     <p>
-        <label for="allpr">Rescan all pull requests</label>
+        <label for="allpr">Include closed pull requests</label>
         <input type="checkbox" name="allpr" id="allpr" value="1" />
     </p>
     <p>
