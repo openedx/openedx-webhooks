@@ -105,15 +105,26 @@ def rescan_repository(repo, allpr, task=None):
             }
             task.update_state(state='STARTED', meta=state_meta)
 
+    # Pull requests before this will not be rescanned. Contractor messages
+    # are hard to rescan, and in other ways the early pull requests are
+    # different enough that it's hard to do it right.  Our last contractor
+    # message was in December 2017.
+    earliest = "2018-01-01"
+
     for pull_request in paginated_get(url, session=get_github_session(), callback=page_callback):
         sentry_extra_context({"pull_request": pull_request})
-        is_internal = is_internal_pull_request(pull_request)
-        if is_internal:
+        if is_internal_pull_request(pull_request):
+            # Never rescan internal pull requests.
             continue
+
+        if pull_request["created_at"] < earliest:
+            continue
+
         should_scan = True
         if not allpr:
             issue_key = get_jira_issue_key(pull_request)
             should_scan = not issue_key
+
         if should_scan:
             # Listed pull requests don't have all the information we need,
             # so get the full description.

@@ -1,5 +1,7 @@
 """Tests of tasks/github.py:rescan_repository """
 
+from datetime import datetime
+
 import pytest
 
 from openedx_webhooks.info import get_bot_username
@@ -28,6 +30,10 @@ def test_rescan_repository(reqctx, fake_github, fake_jira, pull_request_changed_
     pr = repo.make_pull_request(user="tusbar", number=110, state="closed", merged=True)
     pr.add_comment(user=get_bot_username(), body=f"A ticket: OSPR-1234!\n<!-- comment:external_pr -->")
     fake_jira.make_issue(key="OSPR-1234", summary="An issue")
+
+    # Issues before 2018 should not be rescanned.
+    repo.make_pull_request(user="tusbar", number=98, created_at=datetime(2017, 12, 15))
+    repo.make_pull_request(user="nedbat", number=97, created_at=datetime(2012, 10, 1))
 
     with reqctx:
         ret = rescan_repository(repo.full_name, allpr=allpr)

@@ -1,0 +1,12 @@
+.. A new scriv changelog fragment.
+
+- Rescanning never considers pull requests created before 2018.  This is a
+  quick fix to deal with contractor comments.
+
+  Because we don't track when companies started and stopped being contractors,
+  we can't decide now if a pull request should have had a contractor comment
+  when it was created.
+
+  The latest contractor comment on one of our pull requests was in December
+  2017.  So don't consider pull requests that old.  Later we can implement a
+  better solution if we need to rescan those old pull requests.

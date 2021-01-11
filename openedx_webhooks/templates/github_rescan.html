@@ -16,10 +16,9 @@
     {% endwith %}
     <form id="rescan-form" action="{{ url_for("github_views.rescan") }}" method="POST">
     <p>
-        Clicking this button will rescan all the pull requests for the repo you specify.
-    </p>
-    <p>
-        Depending on the number of pull requests, it may take awhile. Do you want to do this?
+        This form will rescan all the pull requests for the repo you specify.
+        No pull requests before 2018 will be rescanned.
+        Note: depending on the number of pull requests, it may take awhile. Be careful.
     </p>
     <p>Special values this form accepts are:</p>
     <ul>
