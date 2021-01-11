@@ -191,12 +191,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
-    if pr["state"] == "open":
-        state = "open"
-    elif pr["merged"]:
-        state = "merged"
-    else:
-        state = "closed"
 
     if is_bot_pull_request(pr):
         logger.info(f"@{user} is a bot, ignored.")
@@ -211,6 +205,13 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     if is_contractor_pull_request(pr):
         desired.bot_comments.add(BotComment.CONTRACTOR)
         return desired
+
+    if pr["state"] == "open":
+        state = "open"
+    elif pr["merged"]:
+        state = "merged"
+    else:
+        state = "closed"
 
     desired.jira_initial_status = "Needs Triage"
     desired.jira_title = pr["title"]
