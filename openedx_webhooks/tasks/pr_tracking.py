@@ -175,7 +175,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
                 for name in JIRA_EXTRA_FIELDS
                 if (value := issue["fields"][custom_fields[name]]) is not None
             ]
-    current.github_labels = set(lbl["name"] for lbl in pr["labels"])
+    current.github_labels = {lbl["name"] for lbl in pr["labels"]}
 
     if current.last_seen_state.get("draft", False) and not is_draft_pull_request(pr):
         # It was a draft, but now isn't.  The author acted.
@@ -495,7 +495,7 @@ class PrTrackingFixer:
             add_comment_to_pull_request(self.pr, body)
             needed_comments.remove(BotComment.CHAMPION_MERGE_PING)
 
-        assert needed_comments == set(), "Couldn't make comments: {}".format(needed_comments)
+        assert needed_comments == set(), f"Couldn't make comments: {needed_comments}"
 
 
 def find_blended_epic(project_id: int) -> Optional[JiraDict]:

@@ -37,7 +37,7 @@ class JiraFields:
         results = [f for f in self._data if f['name'] == name]
 
         if not results:
-            raise NotFoundError("{} could not be found".format(name))
+            raise NotFoundError(f"{name} could not be found")
 
         return JiraField(results[0])
 

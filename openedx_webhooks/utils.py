@@ -202,8 +202,7 @@ def jira_paginated_get(url, session=None,
             objs = result[obj_name]
         else:
             objs = result
-        for obj in objs:
-            yield obj
+        yield from objs
         # are we done yet?
         if isinstance(result, dict):
             returned = len(objs)
@@ -224,7 +223,7 @@ _memoized_functions = []
 
 def memoize(func):
     """Cache the value returned by a function call forever."""
-    func = functools.lru_cache()(func)
+    func = functools.lru_cache(func)
     _memoized_functions.append(func)
     return func
 
@@ -293,7 +292,7 @@ def get_jira_issue(key: str, missing_ok: bool = False) -> Optional[JiraDict]:
         is missing.
 
     """
-    resp = jira_get("/rest/api/2/issue/{key}".format(key=key))
+    resp = jira_get(f"/rest/api/2/issue/{key}")
     if resp.status_code == 404 and missing_ok:
         return None
     log_check_response(resp)
@@ -332,6 +331,6 @@ def github_pr_url(issue):
     pr_num = github_pr_num(issue)
     if not pr_repo or not pr_num:
         issue_key = issue["key"]
-        fail_msg = '{key} is missing "Repo" or "PR Number" fields'.format(key=issue_key)
+        fail_msg = f'{issue_key} is missing "Repo" or "PR Number" fields'
         raise Exception(fail_msg)
-    return "/repos/{repo}/pulls/{num}".format(repo=pr_repo, num=pr_num)
+    return f"/repos/{pr_repo}/pulls/{pr_num}"

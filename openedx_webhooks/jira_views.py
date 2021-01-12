@@ -69,7 +69,7 @@ def issue_created():
     try:
         event = request.get_json()
     except ValueError:
-        raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
+        raise ValueError(f"Invalid JSON from JIRA: {request.data}")
     sentry_extra_context({"event": event})
 
     logger.info("Jira issue created: {}".format(event["issue"]["key"]))
@@ -172,7 +172,7 @@ def issue_opened(issue):
         for state_name in ["Open", "Design Backlog", "To Do"]:
             if state_name in transitions:
                 new_status = state_name
-                action = "Transitioned to '{}'".format(state_name)
+                action = f"Transitioned to '{state_name}'"
 
         if not new_status:
             # If it's an OSPR subtask (used by teams to manage reviews), transition to team backlog
@@ -180,7 +180,7 @@ def issue_opened(issue):
                 new_status = "To Backlog"
                 action = "Transitioned to 'To Backlog'"
             else:
-                raise ValueError("No valid transition! Possibilities are {}".format(transitions.keys()))
+                raise ValueError(f"No valid transition! Possibilities are {transitions.keys()}")
 
         # This creates a new API request to tell JIRA to move the issue from
         # one status to another using the specified transition. We have to
@@ -219,7 +219,7 @@ def issue_updated():
     try:
         event = request.get_json()
     except ValueError:
-        raise ValueError("Invalid JSON from JIRA: {data}".format(data=request.data))
+        raise ValueError(f"Invalid JSON from JIRA: {request.data}")
     sentry_extra_context({"event": event})
 
     logger.info("Jira issue updated: {}".format(event["issue"]["key"]))
@@ -261,13 +261,13 @@ def issue_updated():
     pr_repo = github_pr_repo(event["issue"])
     if not pr_repo:
         issue_key = event["issue"]["key"]
-        fail_msg = '{key} is missing "Repo" field'.format(key=issue_key)
-        fail_msg += ' {0}'.format(event["issue"]["fields"]["issuetype"])
+        fail_msg = f'{issue_key} is missing "Repo" field'
+        fail_msg += ' {}'.format(event["issue"]["fields"]["issuetype"])
         raise Exception(fail_msg)
 
     synchronize_labels(pr_repo)
 
-    repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
+    repo_labels_resp = github.get(f"/repos/{pr_repo}/labels")
     repo_labels_resp.raise_for_status()
     # map of label name to label URL
     repo_labels = {l["name"]: l["url"] for l in repo_labels_resp.json()}
@@ -323,7 +323,7 @@ def jira_issue_rejected(issue):
     close_resp = github.patch(pr_url, json={"state": "closed"})
     close_resp.raise_for_status()
 
-    return "Closed PR #{num}".format(num=pr_num)
+    return f"Closed PR #{pr_num}"
 
 
 def jira_issue_status_changed(issue, changelog):
@@ -342,7 +342,7 @@ def jira_issue_status_changed(issue, changelog):
     gh_issue = gh_issue_resp.json()
 
     # get repo labels
-    repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
+    repo_labels_resp = github.get(f"/repos/{pr_repo}/labels")
     repo_labels_resp.raise_for_status()
     # map of label name to label URL
     repo_labels = {l["name"]: l["url"] for l in repo_labels_resp.json()}
@@ -370,4 +370,4 @@ def jira_issue_status_changed(issue, changelog):
     # Update labels on github
     update_label_resp = github.patch(issue_url, json={"labels": pr_labels})
     update_label_resp.raise_for_status()
-    return "Changed labels of PR #{num} to {labels}".format(num=pr_num, labels=pr_labels)
+    return f"Changed labels of PR #{pr_num} to {pr_labels}"

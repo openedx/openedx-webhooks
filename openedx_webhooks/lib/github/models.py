@@ -64,7 +64,7 @@ class GithubWebHookEvent:
         """
         keys = ('pull_request', 'issue')
         try:
-            return next((k for k in keys if self.event_type.startswith(k)))
+            return next(k for k in keys if self.event_type.startswith(k))
         except StopIteration:
             return self.event_type
 
@@ -84,7 +84,7 @@ class GithubWebHookEvent:
         """
         str: Description of the event.
         """
-        return "{}: {}".format(self.event_type, self.action)
+        return f"{self.event_type}: {self.action}"
 
     @property
     def html_url(self):

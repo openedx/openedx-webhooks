@@ -25,7 +25,7 @@ def get_requirements(path):
 
 
 version = ''
-with open('openedx_webhooks/__init__.py', 'r') as fd:
+with open('openedx_webhooks/__init__.py') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 

@@ -25,6 +25,6 @@ def test_check_good_markdown(text, ok):
 
 
 def test_random_text():
-    texts = set(random_text() for _ in range(10))
+    texts = {random_text() for _ in range(10)}
     assert len(texts) == 10
     assert "" not in texts

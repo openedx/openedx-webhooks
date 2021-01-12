@@ -133,7 +133,7 @@ def rescan():
 
     if repo.startswith('all:'):
         org = repo[4:]
-        org_url = "https://api.github.com/orgs/{org}/repos".format(org=org)
+        org_url = f"https://api.github.com/orgs/{org}/repos"
         repo_names = [repo_name['full_name'] for repo_name in paginated_get(org_url)]
         workflow = group(
             rescan_repository_task.s(repository, allpr, wsgi_environ=minimal_wsgi_environ())
@@ -176,7 +176,7 @@ def process_pr():
         resp.status_code = 400
         return resp
     num = int(num)
-    pr_resp = github.get("/repos/{repo}/pulls/{num}".format(repo=repo, num=num))
+    pr_resp = github.get(f"/repos/{repo}/pulls/{num}")
     if not pr_resp.ok:
         resp = jsonify({"error": pr_resp.text})
         resp.status_code = 400

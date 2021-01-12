@@ -17,7 +17,7 @@ click.disable_unicode_literals_warning = True
 EXCLUDED = ['Merged', 'Rejected']
 
 
-@lru_cache()
+@lru_cache
 def _get_people(gh):
     return get_people(gh)
 
@@ -96,7 +96,7 @@ def retrieve_issues_by_keys(jira, issue_keys):
         try:
             issues.append(jira.issue(k))
         except JIRAError:
-            raise Exception('"{}" is not a valid issue.'.format(k))
+            raise Exception(f'"{k}" is not a valid issue.')
     return issues
 
 
@@ -112,8 +112,8 @@ def retrieve_osprs(jira):
     """
     issues = []
     start_at = 0
-    statuses = ','.join(['"{}"'.format(s) for s in EXCLUDED])
-    jql = "project=OSPR AND status NOT IN ({})".format(statuses)
+    statuses = ','.join([f'"{s}"' for s in EXCLUDED])
+    jql = f"project=OSPR AND status NOT IN ({statuses})"
     results = jira.search_issues(jql)
 
     while results:
@@ -152,7 +152,7 @@ def cli(issue, dry_run):
     by using the `--issue` option multiple times.
     """
     if issue:
-        issue_keys = ["OSPR-{}".format(i) for i in issue]
+        issue_keys = [f"OSPR-{i}" for i in issue]
         issues = retrieve_issues_by_keys(jira, issue_keys)
     else:
         issues = retrieve_osprs(jira)
@@ -164,7 +164,7 @@ def cli(issue, dry_run):
     click.echo("Updating {} JIRA issues:".format(len(issues)))
     for issue in issues:
         update_info = get_update_info(gh, jira, issue)
-        click.echo("Updating {} with {}.".format(issue.key, update_info))
+        click.echo(f"Updating {issue.key} with {update_info}.")
         if not dry_run:
             update_latest_github_activity(jira, issue.id, **update_info)
 

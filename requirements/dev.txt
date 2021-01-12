@@ -5,96 +5,99 @@
 #    make upgrade
 #
 alabaster==0.7.12         # via sphinx
-amqp==2.6.1               # via kombu
-arrow==0.15.8             # via -r requirements/base.in, rq-dashboard
-astroid==2.3.3            # via pylint, pylint-celery
-attrs==19.3.0             # via glom, pytest, scriv
-babel==2.8.0              # via sphinx
+amqp==5.0.2               # via kombu
+arrow==0.17.0             # via -r requirements/base.in, rq-dashboard
+astroid==2.4.2            # via pylint, pylint-celery
+attrs==20.3.0             # via glom, pytest, scriv
+babel==2.9.0              # via sphinx
 billiard==3.6.3.0         # via celery
-bleach==3.1.5             # via readme-renderer
+bleach==3.2.1             # via readme-renderer
 blinker==1.4              # via -r requirements/base.in, sentry-sdk
-boltons==20.2.0           # via face, glom
-cachetools==4.1.1         # via -r requirements/base.in
-celery==4.4.7             # via -r requirements/base.in
-certifi==2020.6.20        # via requests, sentry-sdk
-cffi==1.14.1              # via cryptography
-chardet==3.0.4            # via requests
+boltons==20.2.1           # via face, glom
+cachetools==4.2.0         # via -r requirements/base.in
+celery==5.0.5             # via -r requirements/base.in
+certifi==2020.12.5        # via requests, sentry-sdk
+cffi==1.14.4              # via cryptography
+chardet==4.0.0            # via requests
+click-didyoumean==0.0.3   # via celery
 click-log==0.3.2          # via edx-lint, scriv
-click==7.1.2              # via -r requirements/base.in, click-log, edx-lint, flask, pip-tools, rq, scriv
+click-plugins==1.1.1      # via celery
+click-repl==0.1.6         # via celery
+click==7.1.2              # via -r requirements/base.in, celery, click-didyoumean, click-log, click-plugins, click-repl, edx-lint, flask, pip-tools, rq, scriv
 codecov==2.1.5            # via -c requirements/constraints.txt, -r requirements/test.in
 contextlib2==0.6.0.post1  # via schema
-coverage==5.2.1           # via codecov, pytest-cov
-cryptography==3.0         # via -r requirements/base.in, jwcrypto, oauthlib
+coverage==5.3.1           # via codecov, pytest-cov
+cryptography==3.3.1       # via -r requirements/base.in, jwcrypto, oauthlib
 defusedxml==0.6.0         # via jira
 docutils==0.16            # via readme-renderer, sphinx
-edx-lint==1.5.0           # via -r requirements/dev.in
+edx-lint==1.6             # via -r requirements/dev.in
 face==20.1.1              # via glom
-flask-dance[sqla]==3.0.0  # via -r requirements/base.in
+flask-dance[sqla]==3.2.0  # via -r requirements/base.in
 flask-script==2.0.6       # via -r requirements/base.in
 flask-sqlalchemy==2.4.4   # via -r requirements/base.in
 flask-sslify==0.1.5       # via -r requirements/base.in
 flask==1.1.2              # via -r requirements/base.in, flask-dance, flask-script, flask-sqlalchemy, flask-sslify, rq-dashboard, sentry-sdk
-freezegun==0.3.15         # via -r requirements/test.in
+freezegun==1.0.0          # via -r requirements/test.in
 github3.py==1.3.0         # via -r requirements/base.in
-glom==20.7.0              # via -r requirements/base.in
+glom==20.11.0             # via -r requirements/base.in
 gunicorn==20.0.4          # via -r requirements/base.in
 idna==2.10                # via requests
 imagesize==1.2.0          # via sphinx
-iniconfig==1.0.1          # via pytest
-iso8601==0.1.12           # via -r requirements/base.in
-isort==4.3.21             # via -r requirements/dev.in, pylint
+iniconfig==1.1.1          # via pytest
+iso8601==0.1.13           # via -r requirements/base.in
+isort==5.7.0              # via -r requirements/dev.in, pylint
 itsdangerous==1.1.0       # via flask
 jinja2==2.11.2            # via flask, scriv, sphinx
 jira==2.0.0               # via -r requirements/base.in
-jwcrypto==0.7             # via github3.py
-kombu==4.6.11             # via celery
+jwcrypto==0.8             # via github3.py
+kombu==5.0.2              # via celery
 lazy-object-proxy==1.4.3  # via astroid
 logging-tree==1.8.1       # via -r requirements/base.in
 markupsafe==1.1.1         # via jinja2
 mccabe==0.6.1             # via pylint
-more-itertools==8.4.0     # via pytest
 mypy-extensions==0.4.3    # via mypy
-mypy==0.782               # via -r requirements/dev.in
+mypy==0.790               # via -r requirements/dev.in
 oauthlib[signedtoken]==3.1.0  # via -r requirements/base.in, flask-dance, jira, requests-oauthlib
-packaging==20.4           # via bleach, pytest, sphinx
-pbr==5.4.5                # via jira
-pip-tools==5.3.1          # via -r requirements/dev.in
+packaging==20.8           # via bleach, pytest, sphinx
+pbr==5.5.1                # via jira
+pip-tools==5.5.0          # via -r requirements/dev.in
 pluggy==0.13.1            # via pytest
-psycopg2==2.8.5           # via -r requirements/base.in
-py==1.9.0                 # via pytest
+prompt-toolkit==3.0.10    # via click-repl
+psycopg2==2.8.6           # via -r requirements/base.in
+py==1.10.0                # via pytest
 pycparser==2.20           # via cffi
-pygments==2.6.1           # via readme-renderer, sphinx
-pyjwt==1.7.1              # via oauthlib
+pygments==2.7.4           # via readme-renderer, sphinx
+pyjwt==2.0.0              # via oauthlib
 pylint-celery==0.3        # via edx-lint
-pylint-django==2.0.11     # via edx-lint
+pylint-django==2.3.0      # via edx-lint
 pylint-plugin-utils==0.6  # via pylint-celery, pylint-django
-pylint-pytest==0.2.0      # via -r requirements/dev.in
-pylint==2.4.4             # via edx-lint, pylint-celery, pylint-django, pylint-plugin-utils, pylint-pytest
+pylint-pytest==0.3.0      # via -r requirements/dev.in
+pylint==2.6.0             # via edx-lint, pylint-celery, pylint-django, pylint-plugin-utils, pylint-pytest
 pyparsing==2.4.7          # via packaging
-pytest-cov==2.10.0        # via -r requirements/test.in
-pytest-mock==3.2.0        # via -r requirements/test.in
-pytest-repeat==0.8.0      # via -r requirements/test.in
-pytest==6.0.1             # via -r requirements/test.in, pylint-pytest, pytest-cov, pytest-mock, pytest-repeat
+pytest-cov==2.10.1        # via -r requirements/test.in
+pytest-mock==3.5.1        # via -r requirements/test.in
+pytest-repeat==0.9.1      # via -r requirements/test.in
+pytest==6.2.1             # via -r requirements/test.in, pylint-pytest, pytest-cov, pytest-mock, pytest-repeat
 python-dateutil==2.8.1    # via arrow, freezegun, github3.py
-python-dotenv==0.14.0     # via -r requirements/dev.in
-pytz==2020.1              # via -r requirements/test.in, babel, celery
+python-dotenv==0.15.0     # via -r requirements/dev.in
+pytz==2020.5              # via -r requirements/test.in, babel, celery
 pyyaml==5.3.1             # via -r requirements/base.in, repo-tools-data-schema
-readme-renderer==26.0     # via -r requirements/doc.in
+readme-renderer==28.0     # via -r requirements/doc.in
 redis==3.5.3              # via -r requirements/base.in, rq, rq-dashboard
 git+https://github.com/edx/repo-tools-data-schema.git  # via -r requirements/test.in
 requests-mock==1.8.0      # via -r requirements/test.in
 requests-oauthlib==1.3.0  # via -r requirements/base.in, flask-dance, jira
 requests-toolbelt==0.9.1  # via jira
-requests==2.24.0          # via -r requirements/base.in, codecov, flask-dance, github3.py, jira, requests-mock, requests-oauthlib, requests-toolbelt, sphinx
+requests==2.25.1          # via -r requirements/base.in, codecov, flask-dance, github3.py, jira, requests-mock, requests-oauthlib, requests-toolbelt, sphinx
 rq-dashboard==0.6.1       # via -r requirements/dev.in
-rq==1.5.0                 # via -r requirements/base.in, rq-dashboard
+rq==1.7.0                 # via -r requirements/base.in, rq-dashboard
 schema==0.7.2             # via repo-tools-data-schema
-scriv==0.8.1              # via -r requirements/dev.in
-sentry-sdk[flask]==0.16.3  # via -r requirements/base.in
-six==1.15.0               # via astroid, bleach, cryptography, edx-lint, flask-dance, freezegun, jira, packaging, pip-tools, python-dateutil, readme-renderer, requests-mock, sphinxcontrib-httpdomain, sqlalchemy-utils
+scriv==0.10.0             # via -r requirements/dev.in
+sentry-sdk[flask]==0.19.5  # via -r requirements/base.in
+six==1.15.0               # via astroid, bleach, click-repl, cryptography, edx-lint, flask-dance, jira, python-dateutil, readme-renderer, requests-mock, sphinxcontrib-httpdomain, sqlalchemy-utils
 snowballstemmer==2.0.0    # via sphinx
-sphinx-rtd-theme==0.5.0   # via -r requirements/doc.in
-sphinx==3.2.0             # via -r requirements/doc.in, sphinx-rtd-theme, sphinxcontrib-httpdomain
+sphinx-rtd-theme==0.5.1   # via -r requirements/doc.in
+sphinx==3.4.3             # via -r requirements/doc.in, sphinx-rtd-theme, sphinxcontrib-httpdomain
 sphinxcontrib-applehelp==1.0.2  # via sphinx
 sphinxcontrib-devhelp==1.0.2  # via sphinx
 sphinxcontrib-htmlhelp==1.0.3  # via sphinx
@@ -103,17 +106,18 @@ sphinxcontrib-jsmath==1.0.1  # via sphinx
 sphinxcontrib-qthelp==1.0.3  # via sphinx
 sphinxcontrib-serializinghtml==1.1.4  # via sphinx
 sqlalchemy-utils==0.36.8  # via flask-dance
-sqlalchemy==1.3.18        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
-toml==0.10.1              # via pytest
-typed-ast==1.4.1          # via mypy
-typing-extensions==3.7.4.2  # via mypy
+sqlalchemy==1.3.22        # via flask-dance, flask-sqlalchemy, sqlalchemy-utils
+toml==0.10.2              # via pylint, pytest
+typed-ast==1.4.2          # via mypy
+typing-extensions==3.7.4.3  # via mypy
 uritemplate==3.0.1        # via github3.py
-urllib3==1.25.10          # via requests, sentry-sdk
+urllib3==1.26.2           # via requests, sentry-sdk
 urlobject==2.4.3          # via -r requirements/base.in, flask-dance
-vine==1.3.0               # via amqp, celery
+vine==5.0.0               # via amqp, celery
+wcwidth==0.2.5            # via prompt-toolkit
 webencodings==0.5.1       # via bleach
 werkzeug==1.0.1           # via flask
-wrapt==1.11.2             # via astroid
+wrapt==1.12.1             # via astroid
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

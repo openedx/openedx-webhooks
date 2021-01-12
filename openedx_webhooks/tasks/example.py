@@ -25,6 +25,6 @@ def add(self, num1, num2):
         int: Sum
     """
     result = num1 + num2
-    msg = "Results for `{}`: {}".format(self.name, result)
+    msg = f"Results for `{self.name}`: {result}"
     logger.info(msg)
     return result

@@ -8,7 +8,7 @@ from ..lib.edx_repo_tools_data.utils import get_people as _get_people
 from ..lib.exceptions import NotFoundError
 from ..lib.github.models import GithubWebHookEvent
 
-get_people = lru_cache()(_get_people)
+get_people = lru_cache(_get_people)
 
 
 class GithubEvent(GithubWebHookEvent):
@@ -30,7 +30,7 @@ class GithubEvent(GithubWebHookEvent):
             event_type (str): GitHub event type
             event (Dict[str, Any]): The parsed event payload
         """
-        super(GithubEvent, self).__init__(event_type, event)
+        super().__init__(event_type, event)
         self.gh = gh
 
     @property

@@ -49,7 +49,7 @@ class People:
         person = self._data.get(key)
 
         if not person:
-            raise NotFoundError("{} could not be found".format(key))
+            raise NotFoundError(f"{key} could not be found")
 
         return Person(key, person)
 

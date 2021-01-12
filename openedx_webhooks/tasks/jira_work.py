@@ -48,7 +48,7 @@ def transition_jira_issue(issue_key, status_name):
 
     if not transition_id:
         # maybe the issue is *already* in the right status?
-        issue_url = "/rest/api/2/issue/{key}".format(key=issue_key)
+        issue_url = f"/rest/api/2/issue/{issue_key}"
         issue_resp = get_jira_session().get(issue_url)
         issue_resp.raise_for_status()
         issue = issue_resp.json()
