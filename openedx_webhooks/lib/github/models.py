@@ -2,8 +2,13 @@
 Generic GitHub domain models.
 """
 
+from __future__ import annotations
+
+import dataclasses
+
 import arrow
 
+from openedx_webhooks.types import PrDict
 
 class GithubWebHookRequestHeader:
     """
@@ -128,3 +133,17 @@ class GithubWebHookEvent:
         """
         dt = self.event_resource['updated_at']
         return arrow.get(dt).datetime
+
+
+@dataclasses.dataclass(frozen=True)
+class PrId:
+    """An id of a pull request, with three parts used by GitHub."""
+    full_name: str
+    number: int
+
+    @classmethod
+    def from_pr_dict(cls, pr: PrDict) -> PrId:
+        return cls(pr["base"]["repo"]["full_name"], pr["number"])
+
+    def __str__(self):
+        return f"{self.full_name}#{self.number}"

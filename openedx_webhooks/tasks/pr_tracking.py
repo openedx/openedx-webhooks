@@ -2,8 +2,9 @@
 State-based updating of the information surrounding pull requests.
 """
 
-import copy
+from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
@@ -38,6 +39,7 @@ from openedx_webhooks.labels import (
     GITHUB_STATUS_LABELS,
     JIRA_CATEGORY_LABELS,
 )
+from openedx_webhooks.lib.github.models import PrId
 from openedx_webhooks.oauth import get_github_session, get_jira_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.jira_work import (
@@ -128,7 +130,7 @@ class PrDesiredInfo:
     github_labels: Set[str] = field(default_factory=set)
 
 
-def existing_bot_comments(pr: PrDict) -> Tuple[Optional[str], Set[BotComment]]:
+def existing_bot_comments(prid: PrId) -> Tuple[Optional[str], Set[BotComment]]:
     """
     Get the set of bot comments already on the pull request.
 
@@ -138,7 +140,7 @@ def existing_bot_comments(pr: PrDict) -> Tuple[Optional[str], Set[BotComment]]:
     """
     comment0 = None
     comment_ids = set()
-    for i, comment in enumerate(get_bot_comments(pr)):
+    for i, comment in enumerate(get_bot_comments(prid)):
         body = comment["body"]
         if i == 0:
             comment0 = body
@@ -152,11 +154,12 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
     """
     Examine the world to determine what the current support state is.
     """
+    prid = PrId.from_pr_dict(pr)
     current = PrCurrentInfo()
-    current.bot_comment0_text, current.bot_comments = existing_bot_comments(pr)
+    current.bot_comment0_text, current.bot_comments = existing_bot_comments(prid)
     if current.bot_comment0_text is not None:
         current.last_seen_state = extract_data_from_comment(current.bot_comment0_text)
-    current.jira_id = current.jira_mentioned_id = get_jira_issue_key(pr)
+    current.jira_id = current.jira_mentioned_id = get_jira_issue_key(prid)
     if current.jira_id:
         issue = get_jira_issue(current.jira_id, missing_ok=True)
         if issue is None:
@@ -197,7 +200,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         return None
 
     if is_internal_pull_request(pr):
-        logger.info(f"@{user} opened PR {repo} #{num} (internal PR)")
+        logger.info(f"@{user} opened PR {repo}#{num} (internal PR)")
         return None
 
     desired = PrDesiredInfo()
@@ -278,10 +281,13 @@ class PrTrackingFixer:
     Complex logic to compare the current and desired states and make needed changes.
     """
 
-    def __init__(self, pr: PrDict, current: PrCurrentInfo, desired: PrDesiredInfo):
+    def __init__(self, pr: PrDict, current: PrCurrentInfo, desired: PrDesiredInfo, actions: FixingActions = None):
         self.pr = pr
         self.current = current
         self.desired = desired
+        self.prid = PrId.from_pr_dict(self.pr)
+        self.actions = actions or FixingActions(self.prid)
+
         self.last_seen_state = copy.deepcopy(current.last_seen_state)
         self.happened = False
 
@@ -307,7 +313,7 @@ class PrTrackingFixer:
                     pass
                 else:
                     # Delete the existing issue and forget the current state.
-                    delete_jira_issue(self.current.jira_id)
+                    self.actions.delete_jira_issue(self.current.jira_id)
                     make_issue = True
                     comment_kwargs["deleted_issue_key"] = self.current.jira_mentioned_id
                     self.current.jira_id = None
@@ -335,7 +341,7 @@ class PrTrackingFixer:
 
             # Check the state of the Jira issue.
             if self.desired.jira_status is not None and self.desired.jira_status != self.current.jira_status:
-                transition_jira_issue(self.current.jira_id, self.desired.jira_status)
+                self.actions.transition_jira_issue(self.current.jira_id, self.desired.jira_status)
                 self.current.jira_status = self.desired.jira_status
                 self.happened = True
 
@@ -355,15 +361,19 @@ class PrTrackingFixer:
         extra_fields = self.desired.jira_extra_fields
         if self.desired.jira_epic:
             extra_fields.append(("Epic Link", self.desired.jira_epic["key"]))
-        new_issue = create_ospr_issue(
-            self.pr,
+        user_name, institution = get_name_and_institution_for_pr(self.pr)
+        new_issue = self.actions.create_ospr_issue(
+            pr_url=self.pr["html_url"],
             project=self.desired.jira_project,
             summary=self.desired.jira_title,
             description=self.desired.jira_description,
             labels=self.desired.jira_labels,
+            user_name=user_name,
+            institution=institution,
             extra_fields=extra_fields,
         )
         self.current.jira_id = new_issue["key"]
+        assert self.current.jira_id is not None
         self.current.jira_status = new_issue["fields"]["status"]["name"]
         self.current.jira_title = self.desired.jira_title
         self.current.jira_description = self.desired.jira_description
@@ -371,7 +381,8 @@ class PrTrackingFixer:
         self.current.jira_epic = self.desired.jira_epic
 
         if self.desired.jira_initial_status != self.current.jira_status:
-            transition_jira_issue(self.current.jira_id, self.desired.jira_initial_status)
+            assert self.desired.jira_initial_status is not None
+            self.actions.transition_jira_issue(self.current.jira_id, self.desired.jira_initial_status)
             self.current.jira_status = self.desired.jira_initial_status
 
         self.happened = True
@@ -398,12 +409,11 @@ class PrTrackingFixer:
                 update_kwargs["epic_link"] = self.desired.jira_epic["key"]
 
         if sorted(self.desired.jira_extra_fields) != sorted(self.current.jira_extra_fields):
-            logger.info(f"Updating extra_fields: {self.desired.jira_extra_fields=!r}, {self.current.jira_extra_fields=!r}")
             update_kwargs["extra_fields"] = self.desired.jira_extra_fields
 
         if update_kwargs:
-            logger.info(f"update_jira_issue: ({self.current.jira_id=!r}, {update_kwargs=!r})")
-            update_jira_issue(self.current.jira_id, **update_kwargs)
+            assert self.current.jira_id is not None
+            self.actions.update_jira_issue(self.current.jira_id, **update_kwargs)
             self.current.jira_title = self.desired.jira_title
             self.current.jira_description = self.desired.jira_description
             self.current.jira_labels = self.desired.jira_labels
@@ -423,7 +433,9 @@ class PrTrackingFixer:
         desired_labels.update(ad_hoc_labels)
 
         if desired_labels != self.current.github_labels:
-            update_labels_on_pull_request(self.pr, list(desired_labels))
+            self.actions.update_labels_on_pull_request(
+                labels=list(desired_labels),
+            )
             self.happened = True
 
     def _fix_bot_comments(self, comment_kwargs: Dict) -> None:
@@ -483,9 +495,9 @@ class PrTrackingFixer:
             # If there are current-state comments, then we need to edit the
             # comment, otherwise create one.
             if has_bot_comments:
-                edit_comment_on_pull_request(self.pr, comment_body)
+                self.actions.edit_comment_on_pull_request(comment_body)
             else:
-                add_comment_to_pull_request(self.pr, comment_body)
+                self.actions.add_comment_to_pull_request(comment_body)
             self.happened = True
 
         # More comments can be added as subsequent comments.
@@ -493,7 +505,7 @@ class PrTrackingFixer:
         if BotComment.CHAMPION_MERGE_PING in needed_comments:
             champions = get_champions_for_pr(self.pr)
             body = github_committer_merge_ping_comment(self.pr, champions)
-            add_comment_to_pull_request(self.pr, body)
+            self.actions.add_comment_to_pull_request(body)
             needed_comments.remove(BotComment.CHAMPION_MERGE_PING)
 
         assert needed_comments == set(), "Couldn't make comments: {}".format(needed_comments)
@@ -557,92 +569,107 @@ def get_champions_for_pr(pr: PrDict) -> List[str]:
     return glom(user_data, "committer.champions", default=[])
 
 
-def create_ospr_issue(pr, project, summary, description, labels, extra_fields=None):
+class FixingActions:
     """
-    Create a new OSPR or OSPR-like issue for a pull request.
+    Implementation for actions needed by the pull request fixer.
 
-    Returns the JSON describing the issue.
+    These actions actually make the changes needed.
     """
-    num = pr["number"]
-    repo = pr["base"]["repo"]["full_name"]
 
-    user_name, institution = get_name_and_institution_for_pr(pr)
+    def __init__(self, prid: PrId):
+        self.prid = prid
 
-    custom_fields = get_jira_custom_fields(get_jira_session())
-    new_issue = {
-        "fields": {
-            "project": {
-                "key": project,
-            },
-            "issuetype": {
-                "name": "Pull Request Review",
-            },
-            "summary": summary,
-            "description": description,
-            "labels": list(labels),
-            "customfield_10904": pr["html_url"],        # "URL" is ambiguous, use the internal name.
-            custom_fields["PR Number"]: num,
-            custom_fields["Repo"]: repo,
-            custom_fields["Contributor Name"]: user_name,
+    def create_ospr_issue(
+        self,
+        pr_url,
+        project,
+        summary,
+        description,
+        labels,
+        user_name,
+        institution,
+        extra_fields
+    ) -> Dict:
+        """
+        Create a new OSPR or OSPR-like issue for a pull request.
+
+        Returns the JSON describing the issue.
+        """
+
+        custom_fields = get_jira_custom_fields(get_jira_session())
+        new_issue = {
+            "fields": {
+                "project": {
+                    "key": project,
+                },
+                "issuetype": {
+                    "name": "Pull Request Review",
+                },
+                "summary": summary,
+                "description": description,
+                "labels": list(labels),
+                "customfield_10904": pr_url,            # "URL" is ambiguous, use the internal name.
+                custom_fields["PR Number"]: self.prid.number,
+                custom_fields["Repo"]: self.prid.full_name,
+                custom_fields["Contributor Name"]: user_name,
+            }
         }
-    }
-    if institution:
-        new_issue["fields"][custom_fields["Customer"]] = [institution]
-    if extra_fields:
-        for name, value in extra_fields:
-            new_issue["fields"][custom_fields[name]] = value
-    sentry_extra_context({"new_issue": new_issue})
+        if institution:
+            new_issue["fields"][custom_fields["Customer"]] = [institution]
+        if extra_fields:
+            for name, value in extra_fields:
+                new_issue["fields"][custom_fields[name]] = value
+        sentry_extra_context({"new_issue": new_issue})
 
-    logger.info(f"Creating new JIRA issue for PR {repo} #{num}...")
-    resp = get_jira_session().post("/rest/api/2/issue", json=new_issue)
-    log_check_response(resp)
+        logger.info(f"Creating new JIRA issue for PR {self.prid}...")
+        resp = get_jira_session().post("/rest/api/2/issue", json=new_issue)
+        log_check_response(resp)
 
-    # Jira only sends the key.  Put it into the JSON we started with, and
-    # return it as the state of the issue.
-    new_issue_body = resp.json()
-    new_issue["key"] = new_issue_body["key"]
-    # Our issues all start as "Needs Triage".
-    new_issue["fields"]["status"] = {"name": "Needs Triage"}
-    return new_issue
+        # Jira only sends the key.  Put it into the JSON we started with, and
+        # return it as the state of the issue.
+        new_issue_body = resp.json()
+        new_issue["key"] = new_issue_body["key"]
+        # Our issues all start as "Needs Triage".
+        new_issue["fields"]["status"] = {"name": "Needs Triage"}
+        return new_issue
 
+    def delete_jira_issue(self, jira_id: str) -> None:
+        delete_jira_issue(jira_id)
 
-def add_comment_to_pull_request(pr: PrDict, comment_body: str) -> None:
-    """
-    Add a comment to a pull request.
-    """
-    repo = pr["base"]["repo"]["full_name"]
-    num = pr["number"]
-    url = f"/repos/{repo}/issues/{num}/comments"
-    logger.info(f"Commenting on PR {repo} #{num}: {text_summary(comment_body, 90)!r}")
-    resp = get_github_session().post(url, json={"body": comment_body})
-    log_check_response(resp)
+    def transition_jira_issue(self, jira_id: str, jira_initial_status: str) -> None:
+        transition_jira_issue(jira_id, jira_initial_status)
 
+    def update_jira_issue(self, jira_id: str, **update_kwargs) -> None:
+        update_jira_issue(jira_id, **update_kwargs)
 
-def edit_comment_on_pull_request(pr: PrDict, comment_body: str) -> None:
-    """
-    Edit the bot-authored comment on this pull request.
-    """
-    repo = pr["base"]["repo"]["full_name"]
-    num = pr["number"]
-    bot_comments = list(get_bot_comments(pr))
-    comment_id = bot_comments[0]["id"]
-    url = f"/repos/{repo}/issues/comments/{comment_id}"
-    logger.info(f"Updating comment on PR {repo} #{num}: {text_summary(comment_body, 90)!r}")
-    resp = get_github_session().patch(url, json={"body": comment_body})
-    log_check_response(resp)
+    def add_comment_to_pull_request(self, comment_body: str) -> None:
+        """
+        Add a comment to a pull request.
+        """
+        url = f"/repos/{self.prid.full_name}/issues/{self.prid.number}/comments"
+        logger.info(f"Commenting on PR {self.prid}: {text_summary(comment_body, 90)!r}")
+        resp = get_github_session().post(url, json={"body": comment_body})
+        log_check_response(resp)
 
+    def edit_comment_on_pull_request(self, comment_body: str) -> None:
+        """
+        Edit the bot-authored comment on this pull request.
+        """
+        bot_comments = list(get_bot_comments(self.prid))
+        comment_id = bot_comments[0]["id"]
+        url = f"/repos/{self.prid.full_name}/issues/comments/{comment_id}"
+        logger.info(f"Updating comment on PR {self.prid}: {text_summary(comment_body, 90)!r}")
+        resp = get_github_session().patch(url, json={"body": comment_body})
+        log_check_response(resp)
 
-def update_labels_on_pull_request(pr, labels):
-    """
-    Change the labels on a pull request.
+    def update_labels_on_pull_request(self, labels: List[str]) -> None:
+        """
+        Change the labels on a pull request.
 
-    Arguments:
-        pr: a dict of pull request info.
-        labels: a list of strings.
-    """
-    repo = pr["base"]["repo"]["full_name"]
-    num = pr["number"]
-    url = f"/repos/{repo}/issues/{num}"
-    logger.info(f"Patching labels on PR {repo} #{num}: {labels}")
-    resp = get_github_session().patch(url, json={"labels": labels})
-    log_check_response(resp)
+        Arguments:
+            labels: a list of strings.
+        """
+        url = f"/repos/{self.prid.full_name}/issues/{self.prid.number}"
+        logger.info(f"Patching labels on PR {self.prid}: {labels}")
+        resp = get_github_session().patch(url, json={"labels": labels})
+        log_check_response(resp)

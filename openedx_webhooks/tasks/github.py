@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from urlobject import URLObject
 
@@ -53,7 +53,7 @@ def pull_request_changed(pr: PrDict) -> Tuple[Optional[str], bool]:
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
 
-    logger.info(f"Processing PR {repo} #{num} by @{user}...")
+    logger.info(f"Processing PR {repo}#{num} by @{user}...")
 
     desired = desired_support_state(pr)
     if desired is not None:
@@ -72,7 +72,7 @@ def rescan_repository_task(self, repo, allpr):
     return rescan_repository(repo, allpr, task=self)
 
 
-def rescan_repository(repo, allpr, task=None):
+def rescan_repository(repo: str, allpr: bool, task=None) -> Dict:
     """
     Re-scans a single repo for external pull requests.
 
@@ -111,6 +111,7 @@ def rescan_repository(repo, allpr, task=None):
     # message was in December 2017.
     earliest = "2018-01-01"
 
+    pull_request: PrDict
     for pull_request in paginated_get(url, session=get_github_session(), callback=page_callback):
         sentry_extra_context({"pull_request": pull_request})
         if is_internal_pull_request(pull_request):
@@ -141,7 +142,7 @@ def rescan_repository(repo, allpr, task=None):
             num=len(created), repo=repo, prs=list(created.keys()),
         ),
     )
-    info = {"repo": repo}
+    info: Dict = {"repo": repo}
     if created:
         info["created"] = created
     return info
