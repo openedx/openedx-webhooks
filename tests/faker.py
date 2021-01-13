@@ -25,7 +25,7 @@ class FakerException(Exception):
 
 def route(path_regex, http_method="GET", data_type="json"):
     """
-    Decorator to associate a method with a particular HTTP route.
+    Decorator to associate a method with a particular mocked HTTP route.
 
     The decorated function should have this signature:
 
@@ -63,6 +63,15 @@ def route(path_regex, http_method="GET", data_type="json"):
 
 
 class Faker:
+    """
+    A Fake implementation of a web service, with mocked requests.
+
+    Subclass this and implement handlers decorated with `faker.route` to
+    handle mock requests.  Use `install_mocks` to install this Faker's mock
+    handlers on a `requests_mocker`.
+
+    """
+
     def __init__(self, host):
         self.host = host
         self.requests_mocker = None
@@ -80,6 +89,9 @@ class Faker:
         self.middleware.append(middleware_func)
 
     def install_mocks(self, requests_mocker) -> None:
+        """
+        Install mock requests for all of this Faker's handlers.
+        """
         self.requests_mocker = requests_mocker
         for _, method in inspect.getmembers(self, inspect.ismethod):
             if hasattr(method, "callback_spec"):
