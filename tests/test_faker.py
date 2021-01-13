@@ -141,3 +141,18 @@ def test_reset_mock(my_fake):
         ("/api/something/labels", "POST"),
         ("/api/something/bug123", "DELETE"),
     ]
+
+def test_readonly(my_fake):
+    requests.get("https://myapi.com/api/something/1")
+    requests.get("https://myapi.com/api/something/1234")
+    requests.get("https://some.other.host/")
+    my_fake.assert_readonly()
+
+def test_not_readonly(my_fake):
+    requests.get("https://myapi.com/api/something/1")
+    requests.get("https://myapi.com/api/something/1234")
+    requests.post("https://myapi.com/api/something/labels")
+    requests.delete("https://myapi.com/api/something/bug123")
+    requests.get("https://some.other.host/")
+    with pytest.raises(AssertionError):
+        my_fake.assert_readonly()

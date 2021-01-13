@@ -116,3 +116,10 @@ class Faker:
         Clear the `requests_made` history.
         """
         self.requests_mocker.reset_mock()
+
+    def assert_readonly(self) -> None:
+        """
+        Assert that no changes were made, only GET requests.
+        """
+        writing_requests = [(url, method) for url, method in self.requests_made() if method != "GET"]
+        assert writing_requests == [], f"Found writing requests: {writing_requests}"
