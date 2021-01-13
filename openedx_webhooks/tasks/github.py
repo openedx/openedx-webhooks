@@ -57,7 +57,6 @@ def pull_request_changed(pr: PrDict) -> Tuple[Optional[str], bool]:
 
     desired = desired_support_state(pr)
     if desired is not None:
-        synchronize_labels(repo)
         current = current_support_state(pr)
         fixer = PrTrackingFixer(pr, current, desired)
         fixer.fix()

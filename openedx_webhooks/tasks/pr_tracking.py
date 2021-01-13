@@ -298,6 +298,8 @@ class PrTrackingFixer:
         """
         The main routine for making needed changes.
         """
+        self.actions.synchronize_labels(self.prid.full_name)
+
         comment_kwargs = {}
 
         make_issue = False
@@ -578,6 +580,10 @@ class FixingActions:
 
     def __init__(self, prid: PrId):
         self.prid = prid
+
+    def synchronize_labels(self, repo: str) -> None:
+        from openedx_webhooks.tasks.github import synchronize_labels
+        synchronize_labels(repo)
 
     def create_ospr_issue(
         self,
