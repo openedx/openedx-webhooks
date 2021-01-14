@@ -298,7 +298,7 @@ class PrTrackingFixer:
         """
         The main routine for making needed changes.
         """
-        self.actions.synchronize_labels(self.prid.full_name)
+        self.actions.synchronize_labels(repo=self.prid.full_name)
 
         comment_kwargs = {}
 
@@ -315,7 +315,7 @@ class PrTrackingFixer:
                     pass
                 else:
                     # Delete the existing issue and forget the current state.
-                    self.actions.delete_jira_issue(self.current.jira_id)
+                    self.actions.delete_jira_issue(jira_id=self.current.jira_id)
                     make_issue = True
                     comment_kwargs["deleted_issue_key"] = self.current.jira_mentioned_id
                     self.current.jira_id = None
@@ -343,7 +343,7 @@ class PrTrackingFixer:
 
             # Check the state of the Jira issue.
             if self.desired.jira_status is not None and self.desired.jira_status != self.current.jira_status:
-                self.actions.transition_jira_issue(self.current.jira_id, self.desired.jira_status)
+                self.actions.transition_jira_issue(jira_id=self.current.jira_id, jira_status=self.desired.jira_status)
                 self.current.jira_status = self.desired.jira_status
                 self.happened = True
 
@@ -384,7 +384,10 @@ class PrTrackingFixer:
 
         if self.desired.jira_initial_status != self.current.jira_status:
             assert self.desired.jira_initial_status is not None
-            self.actions.transition_jira_issue(self.current.jira_id, self.desired.jira_initial_status)
+            self.actions.transition_jira_issue(
+                jira_id=self.current.jira_id,
+                jira_status=self.desired.jira_initial_status,
+            )
             self.current.jira_status = self.desired.jira_initial_status
 
         self.happened = True
@@ -415,7 +418,7 @@ class PrTrackingFixer:
 
         if update_kwargs:
             assert self.current.jira_id is not None
-            self.actions.update_jira_issue(self.current.jira_id, **update_kwargs)
+            self.actions.update_jira_issue(jira_id=self.current.jira_id, **update_kwargs)
             self.current.jira_title = self.desired.jira_title
             self.current.jira_description = self.desired.jira_description
             self.current.jira_labels = self.desired.jira_labels
@@ -497,9 +500,9 @@ class PrTrackingFixer:
             # If there are current-state comments, then we need to edit the
             # comment, otherwise create one.
             if has_bot_comments:
-                self.actions.edit_comment_on_pull_request(comment_body)
+                self.actions.edit_comment_on_pull_request(comment_body=comment_body)
             else:
-                self.actions.add_comment_to_pull_request(comment_body)
+                self.actions.add_comment_to_pull_request(comment_body=comment_body)
             self.happened = True
 
         # More comments can be added as subsequent comments.
@@ -507,7 +510,7 @@ class PrTrackingFixer:
         if BotComment.CHAMPION_MERGE_PING in needed_comments:
             champions = get_champions_for_pr(self.pr)
             body = github_committer_merge_ping_comment(self.pr, champions)
-            self.actions.add_comment_to_pull_request(body)
+            self.actions.add_comment_to_pull_request(comment_body=body)
             needed_comments.remove(BotComment.CHAMPION_MERGE_PING)
 
         assert needed_comments == set(), "Couldn't make comments: {}".format(needed_comments)
@@ -581,12 +584,12 @@ class FixingActions:
     def __init__(self, prid: PrId):
         self.prid = prid
 
-    def synchronize_labels(self, repo: str) -> None:
+    def synchronize_labels(self, *, repo: str) -> None:
         from openedx_webhooks.tasks.github import synchronize_labels
         synchronize_labels(repo)
 
     def create_ospr_issue(
-        self,
+        self, *,
         pr_url,
         project,
         summary,
@@ -639,16 +642,16 @@ class FixingActions:
         new_issue["fields"]["status"] = {"name": "Needs Triage"}
         return new_issue
 
-    def delete_jira_issue(self, jira_id: str) -> None:
+    def delete_jira_issue(self, *, jira_id: str) -> None:
         delete_jira_issue(jira_id)
 
-    def transition_jira_issue(self, jira_id: str, jira_initial_status: str) -> None:
-        transition_jira_issue(jira_id, jira_initial_status)
+    def transition_jira_issue(self, *, jira_id: str, jira_status: str) -> None:
+        transition_jira_issue(jira_id, jira_status)
 
-    def update_jira_issue(self, jira_id: str, **update_kwargs) -> None:
+    def update_jira_issue(self, *, jira_id: str, **update_kwargs) -> None:
         update_jira_issue(jira_id, **update_kwargs)
 
-    def add_comment_to_pull_request(self, comment_body: str) -> None:
+    def add_comment_to_pull_request(self, *, comment_body: str) -> None:
         """
         Add a comment to a pull request.
         """
@@ -657,7 +660,7 @@ class FixingActions:
         resp = get_github_session().post(url, json={"body": comment_body})
         log_check_response(resp)
 
-    def edit_comment_on_pull_request(self, comment_body: str) -> None:
+    def edit_comment_on_pull_request(self, *, comment_body: str) -> None:
         """
         Edit the bot-authored comment on this pull request.
         """
@@ -668,7 +671,7 @@ class FixingActions:
         resp = get_github_session().patch(url, json={"body": comment_body})
         log_check_response(resp)
 
-    def update_labels_on_pull_request(self, labels: List[str]) -> None:
+    def update_labels_on_pull_request(self, *, labels: List[str]) -> None:
         """
         Change the labels on a pull request.
 

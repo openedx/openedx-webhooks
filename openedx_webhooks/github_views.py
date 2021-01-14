@@ -125,25 +125,27 @@ def rescan():
     repo = request.form.get("repo") or "edx/edx-platform"
     inline = request.form.get("inline", False)
     allpr = request.form.get("allpr", False)
+    dry_run = request.form.get("dry_run", False)
+
     if repo == 'all' and inline:
         return "Don't be silly."
 
     if inline:
-        return jsonify(rescan_repository(repo, allpr))
+        return jsonify(rescan_repository(repo, allpr, dry_run))
 
     if repo.startswith('all:'):
         org = repo[4:]
         org_url = "https://api.github.com/orgs/{org}/repos".format(org=org)
         repo_names = [repo_name['full_name'] for repo_name in paginated_get(org_url)]
         workflow = group(
-            rescan_repository_task.s(repository, allpr, wsgi_environ=minimal_wsgi_environ())
+            rescan_repository_task.s(repository, allpr, dry_run, wsgi_environ=minimal_wsgi_environ())
             for repository in repo_names
         )
         group_result = workflow.delay()
         group_result.save()  # this is necessary for groups, for some reason
         status_url = url_for("tasks.group_status", group_id=group_result.id, _external=True)
     else:
-        result = rescan_repository_task.delay(repo, allpr, wsgi_environ=minimal_wsgi_environ())
+        result = rescan_repository_task.delay(repo, allpr, dry_run, wsgi_environ=minimal_wsgi_environ())
         status_url = url_for("tasks.status", task_id=result.id, _external=True)
 
     resp = jsonify({"message": "queued", "status_url": status_url})

@@ -20,17 +20,18 @@
         No pull requests before 2018 will be rescanned.
         Note: depending on the number of pull requests, it may take awhile. Be careful.
     </p>
-    <p>Special values this form accepts are:</p>
-    <ul>
-        <li>"all:[org]": scans all repos in the specific Github org. i.e. "all:edx"</li>
-    </ul>
     <p>
         <label for="repo">Repo to scan</label>
         <input type="text" name="repo" id="repo" value="edx/edx-platform" />
+        "all:[org]" scans all repos in the specific GitHub organization. For example, "all:edx"
     </p>
     <p>
         <label for="allpr">Include closed pull requests</label>
         <input type="checkbox" name="allpr" id="allpr" value="1" />
+    </p>
+    <p>
+        <label for="dry_run">Dry run: don't make any changes to GitHub or Jira</label>
+        <input type="checkbox" name="dry_run" id="dry_run" value="1" />
     </p>
     <p>
         <label for="inline">Scan inline (not recommended)</label>

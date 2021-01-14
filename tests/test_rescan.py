@@ -16,8 +16,11 @@ def pull_request_changed_fn(mocker):
     )
 
 
-@pytest.mark.parametrize("allpr", [False, True])
-def test_rescan_repository(reqctx, fake_github, fake_jira, pull_request_changed_fn, allpr):
+@pytest.fixture
+def rescannable_repo(fake_github, fake_jira):
+    """
+    Make a fake repo full of pull requests to rescan.
+    """
     repo = fake_github.make_repo("an-org", "a-repo")
     # Numbers of internal pull requsts are odd, external are even.
     repo.make_pull_request(user="nedbat", number=101)
@@ -35,8 +38,12 @@ def test_rescan_repository(reqctx, fake_github, fake_jira, pull_request_changed_
     repo.make_pull_request(user="tusbar", number=98, created_at=datetime(2017, 12, 15))
     repo.make_pull_request(user="nedbat", number=97, created_at=datetime(2012, 10, 1))
 
+    return repo
+
+@pytest.mark.parametrize("allpr", [False, True])
+def test_rescan_repository(rescannable_repo, reqctx, pull_request_changed_fn, allpr):
     with reqctx:
-        ret = rescan_repository(repo.full_name, allpr=allpr)
+        ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
     created = ret["created"]
 
     # Look at the pull request numbers passed to pull_request_changed. Only the
@@ -52,5 +59,55 @@ def test_rescan_repository(reqctx, fake_github, fake_jira, pull_request_changed_
 
     # If we rescan again, nothing should happen.
     with reqctx:
-        ret = rescan_repository(repo.full_name, allpr=allpr)
+        ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
     assert "created" not in ret
+
+
+def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_jira, pull_request_changed_fn):
+    # Rescan as a dry run.
+    with reqctx:
+        ret = rescan_repository(rescannable_repo.full_name, allpr=True, dry_run=True)
+
+    # We shouldn't have made any writes to GitHub or Jira.
+    fake_github.assert_readonly()
+    fake_jira.assert_readonly()
+
+    # These are the OSPR tickets for the pull requests.
+    assert ret["created"] == {
+        102: "OSPR-9000",
+        106: "OSPR-9001",
+        108: "OSPR-9002",
+        110: "OSPR-1234",
+    }
+
+    # Get the names of the actions. We won't worry about the details, those
+    # are tested in the non-dry-run tests of rescanning pull requests.
+    actions = {k: [name for name, kwargs in actions] for k, actions in ret["dry_run_actions"].items()}
+    assert actions == {
+        102: [
+            "synchronize_labels",
+            "create_ospr_issue",
+            "update_labels_on_pull_request",
+            "add_comment_to_pull_request",
+        ],
+        106: [
+            "synchronize_labels",
+            "create_ospr_issue",
+            "update_labels_on_pull_request",
+            "add_comment_to_pull_request",
+        ],
+        108: [
+            "synchronize_labels",
+            "create_ospr_issue",
+            "transition_jira_issue",
+            "update_labels_on_pull_request",
+            "add_comment_to_pull_request",
+        ],
+        110: [
+            "synchronize_labels",
+            "transition_jira_issue",
+            "update_jira_issue",
+            "update_labels_on_pull_request",
+            "edit_comment_on_pull_request",
+        ],
+    }

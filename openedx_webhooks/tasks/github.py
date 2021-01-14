@@ -1,3 +1,4 @@
+import itertools
 from typing import Dict, Optional, Tuple
 
 from urlobject import URLObject
@@ -29,7 +30,7 @@ def pull_request_changed_task(_, pull_request):
     """A bound Celery task to call pull_request_changed."""
     return pull_request_changed(pull_request)
 
-def pull_request_changed(pr: PrDict) -> Tuple[Optional[str], bool]:
+def pull_request_changed(pr: PrDict, actions=None) -> Tuple[Optional[str], bool]:
     """
     Process a pull request.
 
@@ -58,7 +59,7 @@ def pull_request_changed(pr: PrDict) -> Tuple[Optional[str], bool]:
     desired = desired_support_state(pr)
     if desired is not None:
         current = current_support_state(pr)
-        fixer = PrTrackingFixer(pr, current, desired)
+        fixer = PrTrackingFixer(pr, current, desired, actions=actions)
         fixer.fix()
         return fixer.result()
     else:
@@ -66,12 +67,12 @@ def pull_request_changed(pr: PrDict) -> Tuple[Optional[str], bool]:
 
 
 @celery.task(bind=True)
-def rescan_repository_task(self, repo, allpr):
+def rescan_repository_task(self, repo, allpr, dry_run):
     """A bound Celery task to call rescan_repository."""
-    return rescan_repository(repo, allpr, task=self)
+    return rescan_repository(repo, allpr, dry_run, task=self)
 
 
-def rescan_repository(repo: str, allpr: bool, task=None) -> Dict:
+def rescan_repository(repo: str, allpr: bool, dry_run=False, task=None) -> Dict:
     """
     Re-scans a single repo for external pull requests.
 
@@ -84,6 +85,7 @@ def rescan_repository(repo: str, allpr: bool, task=None) -> Dict:
     url = f"/repos/{repo}/pulls?state={state}"
 
     created = {}
+    dry_run_actions = {}
     if task is not None:
         task.update_state(state='STARTED', meta={'repo': repo})
 
@@ -132,9 +134,13 @@ def rescan_repository(repo: str, allpr: bool, task=None) -> Dict:
             resp.raise_for_status()
             pull_request = resp.json()
 
-            issue_key, anything_happened = pull_request_changed(pull_request)
+            actions = DryRunFixingActions() if dry_run else None
+            issue_key, anything_happened = pull_request_changed(pull_request, actions=actions)
             if anything_happened:
                 created[pull_request["number"]] = issue_key
+                if dry_run:
+                    assert actions is not None
+                    dry_run_actions[pull_request["number"]] = actions.action_calls
 
     logger.info(
         "Created {num} JIRA issues on repo {repo}. PRs are {prs}".format(
@@ -144,7 +150,32 @@ def rescan_repository(repo: str, allpr: bool, task=None) -> Dict:
     info: Dict = {"repo": repo}
     if created:
         info["created"] = created
+    if dry_run_actions:
+        info["dry_run_actions"] = dry_run_actions
     return info
+
+
+class DryRunFixingActions:
+    jira_ids = itertools.count(start=9000)
+
+    def __init__(self):
+        self.action_calls = []
+
+    def create_ospr_issue(self, **kwargs):
+        self.action_calls.append(("create_ospr_issue", kwargs))
+        return {
+            "key": f"OSPR-{next(self.jira_ids)}",
+            "fields": {
+                "status": {
+                    "name": "Needs Triage",
+                },
+            },
+        }
+
+    def __getattr__(self, name):
+        def fn(**kwargs):
+            self.action_calls.append((name, kwargs))
+        return fn
 
 
 def synchronize_labels(repo: str) -> None:
