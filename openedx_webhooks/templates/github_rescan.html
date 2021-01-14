@@ -16,7 +16,7 @@
     {% endwith %}
     <form id="rescan-form" action="{{ url_for("github_views.rescan") }}" method="POST">
     <p>
-        This form will rescan all the pull requests for the repo you specify.
+        This form will rescan all the pull requests for the repo or organization you specify.
         No pull requests before 2018 will be rescanned.
         Note: depending on the number of pull requests, it may take awhile. Be careful.
     </p>
@@ -26,16 +26,25 @@
         "all:[org]" scans all repos in the specific GitHub organization. For example, "all:edx"
     </p>
     <p>
-        <label for="allpr">Include closed pull requests</label>
         <input type="checkbox" name="allpr" id="allpr" value="1" />
+        <label for="allpr">Include closed pull requests</label>
     </p>
     <p>
-        <label for="dry_run">Dry run: don't make any changes to GitHub or Jira</label>
         <input type="checkbox" name="dry_run" id="dry_run" value="1" />
+        <label for="dry_run">Dry run: don't make any changes to GitHub or Jira</label>
     </p>
     <p>
-        <label for="inline">Scan inline (not recommended)</label>
+        <label for="earliest">Earliest date:</label>
+        <input type="text" name="earliest" id="earliest" />
+        <br>
+        <label for="latest">Latest date:</label>
+        <input type="text" name="latest" id="latest" />
+        <br>Format: YYYY-MM-DD
+        <br>(Nothing before 2018 will be rescanned.)
+    </p>
+    <p>
         <input type="checkbox" name="inline" id="inline" value="1" />
+        <label for="inline">Scan inline (not recommended)</label>
     </p>
     <p>
         <input type="submit" value="Rescan" />

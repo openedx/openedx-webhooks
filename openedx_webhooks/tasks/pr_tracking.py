@@ -369,7 +369,7 @@ class PrTrackingFixer:
             project=self.desired.jira_project,
             summary=self.desired.jira_title,
             description=self.desired.jira_description,
-            labels=self.desired.jira_labels,
+            labels=list(self.desired.jira_labels),
             user_name=user_name,
             institution=institution,
             extra_fields=extra_fields,
@@ -407,7 +407,7 @@ class PrTrackingFixer:
         ad_hoc_labels = self.current.jira_labels - JIRA_CATEGORY_LABELS
         desired_labels.update(ad_hoc_labels)
         if desired_labels != self.current.jira_labels:
-            update_kwargs["labels"] = self.desired.jira_labels
+            update_kwargs["labels"] = list(self.desired.jira_labels)
 
         if self.desired.jira_epic is not None:
             if self.current.jira_epic is None or (self.desired.jira_epic["key"] != self.current.jira_epic["key"]):
@@ -578,7 +578,10 @@ class FixingActions:
     """
     Implementation for actions needed by the pull request fixer.
 
-    These actions actually make the changes needed.
+    These actions actually make the changes needed. All arguments
+    must be JSON-serializable so that dry-runs can report on the
+    actions.
+
     """
 
     def __init__(self, prid: PrId):
@@ -616,7 +619,7 @@ class FixingActions:
                 },
                 "summary": summary,
                 "description": description,
-                "labels": list(labels),
+                "labels": labels,
                 "customfield_10904": pr_url,            # "URL" is ambiguous, use the internal name.
                 custom_fields["PR Number"]: self.prid.number,
                 custom_fields["Repo"]: self.prid.full_name,

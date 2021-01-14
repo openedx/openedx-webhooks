@@ -5,7 +5,6 @@ from urlobject import URLObject
 
 from openedx_webhooks import celery
 from openedx_webhooks.info import (
-    get_jira_issue_key,
     get_labels_file,
     is_internal_pull_request,
 )
@@ -67,30 +66,11 @@ def pull_request_changed(pr: PrDict, actions=None) -> Tuple[Optional[str], bool]
 
 
 @celery.task(bind=True)
-def rescan_repository_task(self, repo, allpr, dry_run):
+def rescan_repository_task(self, repo, allpr, dry_run, earliest, latest):
     """A bound Celery task to call rescan_repository."""
-    return rescan_repository(repo, allpr, dry_run, task=self)
-
-
-def rescan_repository(repo: str, allpr: bool, dry_run=False, task=None) -> Dict:
-    """
-    Re-scans a single repo for external pull requests.
-
-    If `allpr` is False, then only open pull requests are considered.
-    If `allpr` is True, then all external pull requests are re-scanned.
-
-    """
-    sentry_extra_context({"repo": repo})
-    state = "all" if allpr else "open"
-    url = f"/repos/{repo}/pulls?state={state}"
-
-    created = {}
-    dry_run_actions = {}
-    if task is not None:
-        task.update_state(state='STARTED', meta={'repo': repo})
 
     def page_callback(response):
-        if task is not None and response.ok:
+        if response.ok:
             current_url = URLObject(response.url)
             current_page = int(current_url.query_dict.get("page", 1))
             link_last = response.links.get("last")
@@ -104,13 +84,48 @@ def rescan_repository(repo: str, allpr: bool, dry_run=False, task=None) -> Dict:
                 "current_page": current_page,
                 "last_page": last_page
             }
-            task.update_state(state='STARTED', meta=state_meta)
+            self.update_state(state='STARTED', meta=state_meta)
+
+    self.update_state(state='STARTED', meta={'repo': repo})
+    return rescan_repository(repo, allpr, dry_run, earliest, latest, page_callback=page_callback)
+
+
+def rescan_repository(
+        repo: str,
+        allpr: bool,
+        dry_run: bool = False,
+        earliest: str = "",
+        latest: str = "",
+        page_callback=None,
+    ) -> Dict:
+    """
+    Re-scans a single repo for external pull requests.
+
+    Arguments:
+        allpr (bool): if False, then only open pull requests are considered.
+            If True, then all external pull requests are re-scanned.
+        dry_run (bool): if True, don't write to GitHub or Jira. Put names of
+            action methods and their arguments into the "dry_run_actions" key
+            of the return value.
+        earliest (str): An ISO8401-formatted date string ("2019-06-28") of the
+            earliest pull requests (by creation date) to be rescanned.  Nothing
+            before 2018 will be rescanned regardless of this argument.
+        latest (str): An ISO8401-formatted date string ("2019-12-25") of the
+            latest pull requests (by creation date) to be rescanned.
+
+    """
+    sentry_extra_context({"repo": repo})
+    state = "all" if allpr else "open"
+    url = f"/repos/{repo}/pulls?state={state}"
+
+    created = {}
+    dry_run_actions = {}
 
     # Pull requests before this will not be rescanned. Contractor messages
     # are hard to rescan, and in other ways the early pull requests are
     # different enough that it's hard to do it right.  Our last contractor
     # message was in December 2017.
-    earliest = "2018-01-01"
+    earliest = max("2018-01-01", earliest)
 
     pull_request: PrDict
     for pull_request in paginated_get(url, session=get_github_session(), callback=page_callback):
@@ -122,31 +137,30 @@ def rescan_repository(repo: str, allpr: bool, dry_run=False, task=None) -> Dict:
         if pull_request["created_at"] < earliest:
             continue
 
-        should_scan = True
-        if not allpr:
-            issue_key = get_jira_issue_key(pull_request)
-            should_scan = not issue_key
+        if latest and pull_request["created_at"] > latest:
+            continue
 
-        if should_scan:
-            # Listed pull requests don't have all the information we need,
-            # so get the full description.
-            resp = retry_get(get_github_session(), pull_request["url"])
-            resp.raise_for_status()
-            pull_request = resp.json()
+        # Listed pull requests don't have all the information we need,
+        # so get the full description.
+        resp = retry_get(get_github_session(), pull_request["url"])
+        resp.raise_for_status()
+        pull_request = resp.json()
 
-            actions = DryRunFixingActions() if dry_run else None
-            issue_key, anything_happened = pull_request_changed(pull_request, actions=actions)
-            if anything_happened:
-                created[pull_request["number"]] = issue_key
-                if dry_run:
-                    assert actions is not None
-                    dry_run_actions[pull_request["number"]] = actions.action_calls
+        actions = DryRunFixingActions() if dry_run else None
+        issue_key, anything_happened = pull_request_changed(pull_request, actions=actions)
+        if anything_happened:
+            created[pull_request["number"]] = issue_key
+            if dry_run:
+                assert actions is not None
+                dry_run_actions[pull_request["number"]] = actions.action_calls
 
-    logger.info(
-        "Created {num} JIRA issues on repo {repo}. PRs are {prs}".format(
-            num=len(created), repo=repo, prs=list(created.keys()),
-        ),
-    )
+    if not dry_run:
+        logger.info(
+            "Created {num} JIRA issues on repo {repo}. PRs are {prs}".format(
+                num=len(created), repo=repo, prs=list(created.keys()),
+            ),
+        )
+
     info: Dict = {"repo": repo}
     if created:
         info["created"] = created

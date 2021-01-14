@@ -1,5 +1,6 @@
 """Tests of tasks/github.py:rescan_repository """
 
+import json
 from datetime import datetime
 
 import pytest
@@ -23,14 +24,14 @@ def rescannable_repo(fake_github, fake_jira):
     """
     repo = fake_github.make_repo("an-org", "a-repo")
     # Numbers of internal pull requsts are odd, external are even.
-    repo.make_pull_request(user="nedbat", number=101)
-    repo.make_pull_request(user="tusbar", number=102)
-    repo.make_pull_request(user="nedbat", number=103, state="closed")
-    repo.make_pull_request(user="feanil", number=105)
-    repo.make_pull_request(user="tusbar", number=106)
-    repo.make_pull_request(user="tusbar", number=108, state="closed")
+    repo.make_pull_request(user="nedbat", number=101, created_at=datetime(2019, 1, 1))
+    repo.make_pull_request(user="tusbar", number=102, created_at=datetime(2019, 2, 1))
+    repo.make_pull_request(user="nedbat", number=103, state="closed", created_at=datetime(2019, 3, 1))
+    repo.make_pull_request(user="feanil", number=105, created_at=datetime(2019, 4, 1))
+    repo.make_pull_request(user="tusbar", number=106, created_at=datetime(2019, 5, 1))
+    repo.make_pull_request(user="tusbar", number=108, state="closed", created_at=datetime(2019, 6, 1))
     # One of the PRs already has a bot comment with a Jira issue.
-    pr = repo.make_pull_request(user="tusbar", number=110, state="closed", merged=True)
+    pr = repo.make_pull_request(user="tusbar", number=110, state="closed", merged=True, created_at=datetime(2019, 7, 1))
     pr.add_comment(user=get_bot_username(), body=f"A ticket: OSPR-1234!\n<!-- comment:external_pr -->")
     fake_jira.make_issue(key="OSPR-1234", summary="An issue")
 
@@ -111,3 +112,22 @@ def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_j
             "edit_comment_on_pull_request",
         ],
     }
+
+    # The value returned should be json-encodable.
+    import pprint; pprint.pprint(ret)
+    json.dumps(ret)
+
+
+@pytest.mark.parametrize("earliest, latest, nums", [
+    ("", "", [102, 106, 108, 110]),
+    ("2019-06-01", "", [108, 110]),
+    ("2019-06-01", "2019-06-30", [108]),
+])
+def test_rescan_repository_date_limits(rescannable_repo, reqctx, pull_request_changed_fn, earliest, latest, nums):
+    with reqctx:
+        rescan_repository(rescannable_repo.full_name, allpr=True, earliest=earliest, latest=latest)
+
+    # Look at the pull request numbers passed to pull_request_changed. Only the
+    # external (even) numbers should be there.
+    prnums = [c.args[0]["number"] for c in pull_request_changed_fn.call_args_list]
+    assert prnums == nums

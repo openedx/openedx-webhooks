@@ -122,30 +122,34 @@ def rescan():
     :func:`~openedx_webhooks.tasks.github.pull_request_changed`
     must be idempotent. It could run many times over the same pull request.
     """
-    repo = request.form.get("repo") or "edx/edx-platform"
-    inline = request.form.get("inline", False)
-    allpr = request.form.get("allpr", False)
-    dry_run = request.form.get("dry_run", False)
+    repo = request.form.get("repo")
+    inline = bool(request.form.get("inline", False))
 
-    if repo == 'all' and inline:
-        return "Don't be silly."
-
-    if inline:
-        return jsonify(rescan_repository(repo, allpr, dry_run))
+    rescan_kwargs = dict(
+        allpr=bool(request.form.get("allpr", False)),
+        dry_run=bool(request.form.get("dry_run", False)),
+        earliest=request.form.get("earliest", ""),
+        latest=request.form.get("latest", ""),
+    )
 
     if repo.startswith('all:'):
+        if inline:
+            return "Don't be silly."
+
         org = repo[4:]
         org_url = "https://api.github.com/orgs/{org}/repos".format(org=org)
         repo_names = [repo_name['full_name'] for repo_name in paginated_get(org_url)]
         workflow = group(
-            rescan_repository_task.s(repository, allpr, dry_run, wsgi_environ=minimal_wsgi_environ())
+            rescan_repository_task.s(repository, wsgi_environ=minimal_wsgi_environ(), **rescan_kwargs)
             for repository in repo_names
         )
         group_result = workflow.delay()
         group_result.save()  # this is necessary for groups, for some reason
         status_url = url_for("tasks.group_status", group_id=group_result.id, _external=True)
+    elif inline:
+        return jsonify(rescan_repository(repo, **rescan_kwargs))
     else:
-        result = rescan_repository_task.delay(repo, allpr, dry_run, wsgi_environ=minimal_wsgi_environ())
+        result = rescan_repository_task.delay(repo, wsgi_environ=minimal_wsgi_environ(), **rescan_kwargs)
         status_url = url_for("tasks.status", task_id=result.id, _external=True)
 
     resp = jsonify({"message": "queued", "status_url": status_url})
