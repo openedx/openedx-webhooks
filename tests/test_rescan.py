@@ -114,7 +114,6 @@ def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_j
     }
 
     # The value returned should be json-encodable.
-    import pprint; pprint.pprint(ret)
     json.dumps(ret)
 
 

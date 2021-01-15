@@ -25,6 +25,7 @@ class BotComment(Enum):
     Comments the bot can leave on pull requests.
     """
     WELCOME = auto()
+    WELCOME_CLOSED = auto()
     NEED_CLA = auto()
     CONTRACTOR = auto()
     CORE_COMMITTER = auto()
@@ -37,6 +38,9 @@ BOT_COMMENT_INDICATORS = {
     BotComment.WELCOME: [
         "<!-- comment:external_pr -->",
         "Feel free to add as much of the following information to the ticket:",
+    ],
+    BotComment.WELCOME_CLOSED: [
+        "<!-- comment:welcome_closed -->",
     ],
     BotComment.NEED_CLA: [
         "<!-- comment:no_cla -->",
@@ -88,12 +92,17 @@ def github_community_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) 
     * check for contributor agreement
     * contain a link to our process documentation
     """
+    if pull_request["state"] == "closed":
+        template = "github_community_pr_comment_closed.md.j2"
+    else:
+        template = "github_community_pr_comment.md.j2"
     return render_template(
-        "github_community_pr_comment.md.j2",
+        template,
         user=pull_request["user"]["login"],
         issue_key=issue_key,
         has_signed_agreement=pull_request_has_cla(pull_request),
         is_draft=is_draft_pull_request(pull_request),
+        is_merged=pull_request["merged"],
         **kwargs
     )
 

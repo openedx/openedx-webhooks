@@ -463,7 +463,7 @@ class PrTrackingFixer:
         # now-gone issue. it's better than nothing.
         jira_id = cast(str, self.current.jira_id or self.current.jira_mentioned_id)
         if BotComment.WELCOME in needed_comments:
-            comment_body += github_community_pr_comment(self.pr, cast(str, jira_id), **comment_kwargs)
+            comment_body += github_community_pr_comment(self.pr, jira_id, **comment_kwargs)
             needed_comments.remove(BotComment.WELCOME)
 
         if BotComment.CONTRACTOR in needed_comments:

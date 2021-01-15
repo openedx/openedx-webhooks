@@ -82,7 +82,7 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     assert "Thanks for the pull request, @new_contributor!" in body
     assert is_comment_kind(BotComment.NEED_CLA, body)
     assert is_comment_kind(BotComment.WELCOME, body)
-    assert "jenkins ok to test" not in body
+    assert not is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"community manager review", "open-source-contribution"}
@@ -127,7 +127,7 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
     assert "Thanks for the pull request, @tusbar!" in body
     assert is_comment_kind(BotComment.WELCOME, body)
     assert not is_comment_kind(BotComment.NEED_CLA, body)
-    assert "jenkins ok to test" in body
+    assert is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"needs triage", "open-source-contribution"}
@@ -172,7 +172,7 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     assert "Thanks for the pull request, @felipemontoya!" in body
     assert is_comment_kind(BotComment.CORE_COMMITTER, body)
     assert not is_comment_kind(BotComment.NEED_CLA, body)
-    assert "jenkins ok to test" in body
+    assert is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"waiting on author", "open-source-contribution", "core committer"}
@@ -695,3 +695,62 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, fake_github, fake_ji
     else:
         assert issue.status == initial_status
         assert initial_status.lower() in pr.labels
+
+
+@pytest.mark.parametrize("merged", [False, True])
+def test_handle_closed_pr(reqctx, sync_labels_fn, fake_github, fake_jira, merged):
+    pr = fake_github.make_pull_request(user="tusbar", number=11237, state="closed", merged=merged)
+    prj = pr.as_json()
+
+    with reqctx:
+        issue_id1, anything_happened = pull_request_changed(prj)
+
+    assert issue_id1 is not None
+    assert issue_id1.startswith("OSPR-")
+    assert anything_happened is True
+
+    # Check the Jira issue that was created.
+    assert len(fake_jira.issues) == 1
+    issue = fake_jira.issues[issue_id1]
+    assert issue.contributor_name == "Bertrand Marron"
+    assert issue.customer == ["IONISx"]
+    assert issue.pr_number == 11237
+    assert issue.url == prj["html_url"]
+    assert issue.description == prj["body"]
+    assert issue.issuetype == "Pull Request Review"
+    assert issue.summary == prj["title"]
+    assert issue.labels == set()
+
+    # Check that the Jira issue is in the right state.
+    assert issue.status == ("Merged" if merged else "Rejected")
+
+    # Check the GitHub comment that was created.
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id1)
+    assert jira_link in body
+    if merged:
+        assert "Although this pull request is already merged," in body
+    else:
+        assert "Although this pull request is already closed," in body
+    assert is_comment_kind(BotComment.WELCOME, body)
+    assert is_comment_kind(BotComment.WELCOME_CLOSED, body)
+    assert not is_comment_kind(BotComment.NEED_CLA, body)
+    assert is_comment_kind(BotComment.OK_TO_TEST, body)
+
+    # Check the GitHub labels that got applied.
+    assert pr.labels == {("merged" if merged else "rejected"), "open-source-contribution"}
+
+    # Rescan the pull request.
+    with reqctx:
+        issue_id2, anything_happened2 = pull_request_changed(pr.as_json())
+
+    assert issue_id2 == issue_id1
+    assert anything_happened2 is False
+
+    # No Jira issue was created.
+    assert len(fake_jira.issues) == 1
+
+    # No new GitHub comment was created.
+    assert len(pr.list_comments()) == 1
