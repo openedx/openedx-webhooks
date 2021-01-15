@@ -18,6 +18,7 @@ from openedx_webhooks.tasks.pr_tracking import (
 from openedx_webhooks.types import PrDict
 from openedx_webhooks.utils import (
     log_check_response,
+    memoize_timed,
     paginated_get,
     retry_get,
     sentry_extra_context,
@@ -192,6 +193,7 @@ class DryRunFixingActions:
         return fn
 
 
+@memoize_timed(minutes=15)
 def synchronize_labels(repo: str) -> None:
     """Ensure the labels in `repo` match the specs in repo-tools-data/labels.yaml"""
 
