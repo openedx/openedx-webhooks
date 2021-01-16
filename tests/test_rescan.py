@@ -32,7 +32,7 @@ def rescannable_repo(fake_github, fake_jira):
     repo.make_pull_request(user="tusbar", number=108, state="closed", created_at=datetime(2019, 6, 1))
     # One of the PRs already has a bot comment with a Jira issue.
     pr = repo.make_pull_request(user="tusbar", number=110, state="closed", merged=True, created_at=datetime(2019, 7, 1))
-    pr.add_comment(user=get_bot_username(), body=f"A ticket: OSPR-1234!\n<!-- comment:external_pr -->")
+    pr.add_comment(user=get_bot_username(), body="A ticket: OSPR-1234!\n<!-- comment:external_pr -->")
     fake_jira.make_issue(key="OSPR-1234", summary="An issue")
 
     # Issues before 2018 should not be rescanned.
@@ -113,7 +113,6 @@ def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_j
             "transition_jira_issue",
             "update_jira_issue",
             "update_labels_on_pull_request",
-            "edit_comment_on_pull_request",
         ],
     }
 

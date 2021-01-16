@@ -1,7 +1,10 @@
 """Tests of task/github.py:pull_request_changed for closing pull requests."""
 
+from datetime import datetime
+
 import pytest
 
+from openedx_webhooks.info import get_bot_username, pull_request_has_cla
 from openedx_webhooks.tasks.github import pull_request_changed
 from .helpers import random_text
 
@@ -161,3 +164,24 @@ def test_track_additions_deletions(reqctx, fake_github, fake_jira, merged):
     issue = fake_jira.issues[issue_id]
     assert issue.lines_added == 34
     assert issue.lines_deleted == 1001
+
+
+def test_rescan_closed_with_wrong_cla(reqctx, fake_github, fake_jira):
+    # No CLA, because this person had no agreement when the pr was made.
+    pr = fake_github.make_pull_request(
+        user="raisingarizona", created_at=datetime(2015, 6, 15), state="closed", merged=True,
+    )
+    assert not pull_request_has_cla(pr.as_json())
+    # But the bot comment doesn't indicate "no cla", because people.yaml is wrong.
+    body = "A ticket: OSPR-1234!\n<!-- comment:external_pr -->"
+    pr.add_comment(user=get_bot_username(), body=body)
+
+    with reqctx:
+        pull_request_changed(pr.as_json())
+
+    # The fixer will think, the bot comment needs to have no_cla added to it,
+    # and will want to edit the bot comment.  But we shouldn't change existing
+    # bot comments on closed pull requests.
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    assert pr_comments[0].body == body

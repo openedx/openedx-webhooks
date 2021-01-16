@@ -44,7 +44,7 @@ BOT_COMMENT_INDICATORS = {
     ],
     BotComment.NEED_CLA: [
         "<!-- comment:no_cla -->",
-        "We can't start reviewing your pull request until you've submimitted",
+        "We can't start reviewing your pull request until you've submitted",
     ],
     BotComment.CONTRACTOR: [
         "<!-- comment:contractor -->",
@@ -70,10 +70,13 @@ BOT_COMMENT_INDICATORS = {
 # These are bot comments in the very first bot comment.
 BOT_COMMENTS_FIRST = {
     BotComment.WELCOME,
+    BotComment.WELCOME_CLOSED,
+    BotComment.NEED_CLA,
     BotComment.BLENDED,
     BotComment.CONTRACTOR,
     BotComment.CORE_COMMITTER,
     BotComment.OK_TO_TEST,
+    BotComment.END_OF_WIP,
 }
 
 def is_comment_kind(kind: BotComment, text: str) -> bool:

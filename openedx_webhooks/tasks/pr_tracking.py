@@ -250,6 +250,8 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             if state == "merged":
                 desired.bot_comments.add(BotComment.CHAMPION_MERGE_PING)
 
+    desired.bot_comments.add(comment)
+
     # Some PR states mean we want to insist on a Jira status.
     if is_draft_pull_request(pr):
         desired.jira_initial_status = "Waiting on Author"
@@ -266,8 +268,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
 
     if has_signed_agreement:
         desired.bot_comments.add(BotComment.OK_TO_TEST)
-
-    desired.bot_comments.add(comment)
 
     if "additions" in pr:
         desired.jira_extra_fields.append(("Github Lines Added", pr["additions"]))
@@ -367,7 +367,14 @@ class PrTrackingFixer:
         self._fix_github_labels()
 
         # Check the bot comments.
-        self._fix_bot_comments(comment_kwargs)
+        fix_comment = True
+        if self.pr["state"] == "closed" and self.current.bot_comments:
+            # If the PR is closed and already has bot comments, then don't
+            # change the bot comment.
+            fix_comment = False
+        if fix_comment:
+            self._fix_bot_comment(comment_kwargs)
+        self._add_bot_comments()
 
     def _make_jira_issue(self) -> None:
         """
@@ -456,20 +463,19 @@ class PrTrackingFixer:
             )
             self.happened = True
 
-    def _fix_bot_comments(self, comment_kwargs: Dict) -> None:
+    def _fix_bot_comment(self, comment_kwargs: Dict) -> None:
         """
         Reconcile the desired comments from the bot with what the bot has said.
 
-        This usually amounts to adding a bot comment, if anything.
+        This only updates the first bot comment.
         """
         has_bot_comments = bool(self.current.bot_comments)
 
-        # Deal with the comments that are all part of the initial welcome
-        # comment. We'll remake the entire comment, and post it if it has
-        # changed.
-        self.current.bot_comments -= BOT_COMMENTS_FIRST
+        # The comments we need in the first bot comment. Because we reconstruct
+        # the full comment, we don't exclude the existing bot comments from the
+        # set.
+        needed_comments = self.desired.bot_comments & BOT_COMMENTS_FIRST
 
-        needed_comments = self.desired.bot_comments - self.current.bot_comments
         comment_body = ""
 
         # The issue could have been deleted, we'll continue to talk about the
@@ -506,6 +512,8 @@ class PrTrackingFixer:
             needed_comments.remove(BotComment.NEED_CLA)
         if BotComment.END_OF_WIP in needed_comments:
             needed_comments.remove(BotComment.END_OF_WIP)
+        if BotComment.WELCOME_CLOSED in needed_comments:
+            needed_comments.remove(BotComment.WELCOME_CLOSED)
 
         comment_body += format_data_for_comment(self.last_seen_state)
 
@@ -518,7 +526,17 @@ class PrTrackingFixer:
                 self.actions.add_comment_to_pull_request(comment_body=comment_body)
             self.happened = True
 
-        # More comments can be added as subsequent comments.
+        assert needed_comments == set(), f"Couldn't make first comments: {needed_comments}"
+
+    def _add_bot_comments(self):
+        """
+        Add any additional bot comments as needed.
+
+        More comments can be added as subsequent comments. We need anything
+        in desired.bot_comments that we don't already have and that aren't
+        first-comment parts.
+        """
+        needed_comments = self.desired.bot_comments - self.current.bot_comments - BOT_COMMENTS_FIRST
 
         if BotComment.CHAMPION_MERGE_PING in needed_comments:
             champions = get_champions_for_pr(self.pr)
@@ -526,7 +544,7 @@ class PrTrackingFixer:
             self.actions.add_comment_to_pull_request(comment_body=body)
             needed_comments.remove(BotComment.CHAMPION_MERGE_PING)
 
-        assert needed_comments == set(), "Couldn't make comments: {}".format(needed_comments)
+        assert needed_comments == set(), f"Couldn't make comments: {needed_comments}"
 
 
 def find_blended_epic(project_id: int) -> Optional[JiraDict]:
