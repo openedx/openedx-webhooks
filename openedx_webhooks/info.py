@@ -154,6 +154,8 @@ def is_committer_pull_request(pull_request: PrDict) -> bool:
     repo = pull_request["base"]["repo"]["full_name"]
     org = repo.partition("/")[0]
     commit_rights = person["committer"]
+    if not commit_rights:
+        return False
     if "orgs" in commit_rights:
         if org in commit_rights["orgs"]:
             return True

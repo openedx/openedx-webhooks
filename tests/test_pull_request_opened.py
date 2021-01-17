@@ -1,6 +1,7 @@
 """Tests of tasks/github.py:pull_request_changed for opening pull requests."""
 
 import itertools
+from datetime import datetime
 
 import pytest
 
@@ -176,6 +177,39 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"waiting on author", "open-source-contribution", "core committer"}
+
+
+def test_old_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira):
+    # No-one was a core committer before June 2020.
+    # This test only asserts the core-committer things, that they are not cc.
+    pr = fake_github.make_pull_request(
+        user="felipemontoya", owner="edx", repo="edx-platform", created_at=datetime(2020, 1, 1),
+    )
+    prj = pr.as_json()
+
+    with reqctx:
+        issue_id, _ = pull_request_changed(prj)
+
+    issue = fake_jira.issues[issue_id]
+    assert issue.labels == set()
+
+    # Check that the Jira issue was started in "Needs Triage"
+    assert issue.status == "Needs Triage"
+
+    # Check the GitHub comment that was created.
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
+    assert jira_link in body
+    assert "Thanks for the pull request, @felipemontoya!" in body
+    assert not is_comment_kind(BotComment.CORE_COMMITTER, body)
+    assert not is_comment_kind(BotComment.NEED_CLA, body)
+    assert is_comment_kind(BotComment.OK_TO_TEST, body)
+
+    # Check the GitHub labels that got applied.
+    assert pr.labels == {"needs triage", "open-source-contribution"}
+
 
 
 @pytest.mark.parametrize("with_epic", [False, True])
