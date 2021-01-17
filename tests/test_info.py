@@ -105,6 +105,7 @@ def test_updated_person_has_institution():
     assert updated_person["institution"] == "edX"
 
 def test_updated_person():
+    # This only works if "before" clauses are layered together properly.
     people = get_people_file()
     created_at = datetime(2014, 1, 1)
     updated_person = get_person_certain_time(people["raisingarizona"], created_at)
@@ -112,8 +113,9 @@ def test_updated_person():
 
 @pytest.mark.parametrize("who, when, cc", [
     ("raisingarizona", datetime(2020, 12, 31), False),
-    ("raisingarizona", datetime(2014, 12, 31), True),
     ("raisingarizona", datetime(2015, 12, 31), False),
+    ("raisingarizona", datetime(2014, 12, 31), True),
+    ("raisingarizona", datetime(2013, 12, 31), False),
     ("hollyhunter", datetime(2020, 12, 31), True),
     ("hollyhunter", datetime(2019, 12, 31), False),
 ])

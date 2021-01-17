@@ -57,14 +57,13 @@ def get_person_certain_time(person: Dict, certain_time: datetime.datetime) -> Di
         certain_time: datetime.datetime object used to determine the state of the person
 
     """
-    for before_date in sorted(person.get("before", {})):
-        if certain_time.date() <= before_date:
-            before_person = person["before"][before_date]
-            update_person = person.copy()
-            update_person.update(before_person)
-            return update_person
-    return person
-
+    # Layer together all of the applicable "before" clauses.
+    update_person = person.copy()
+    for before_date in sorted(person.get("before", {}), reverse=True):
+        if certain_time.date() > before_date:
+            break
+        update_person.update(person["before"][before_date])
+    return update_person
 
 def is_internal_pull_request(pull_request: PrDict) -> bool:
     """

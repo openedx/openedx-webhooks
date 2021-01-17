@@ -117,6 +117,8 @@ raisingarizona:
             committer:
                 repos:
                     - edx/edx-platform
+        2014-01-02:
+            committer: false
 theJohnnyBrown:
     email: johnnybrown7@gmail.com
     name: Johnny Brown
