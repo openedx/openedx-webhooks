@@ -232,10 +232,9 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         if blended_epic is not None:
             desired.jira_epic = blended_epic
             custom_fields = get_jira_custom_fields(get_jira_session())
-            desired.jira_extra_fields.extend([
-                ("Platform Map Area (Levels 1 & 2)",
-                    blended_epic["fields"].get(custom_fields["Platform Map Area (Levels 1 & 2)"])),
-            ])
+            map_1_2 = blended_epic["fields"].get(custom_fields["Platform Map Area (Levels 1 & 2)"])
+            if map_1_2 is not None:
+                desired.jira_extra_fields.append(("Platform Map Area (Levels 1 & 2)", map_1_2))
     else:
         comment = BotComment.WELCOME
         desired.jira_project = "OSPR"
