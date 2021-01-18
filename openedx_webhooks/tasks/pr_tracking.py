@@ -94,6 +94,7 @@ class PrCurrentInfo:
     jira_description: Optional[str] = None
     jira_status: Optional[str] = None
     jira_labels: Set[str] = field(default_factory=set)
+    jira_epic_key: Optional[str] = None
     jira_epic: Optional[JiraDict] = None
     jira_extra_fields: List[Tuple[str, str]] = field(default_factory=list)
 
@@ -174,6 +175,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
             current.jira_labels = set(issue["fields"]["labels"])
 
             custom_fields = get_jira_custom_fields(get_jira_session())
+            current.jira_epic_key = issue["fields"].get(custom_fields["Epic Link"])
             current.jira_extra_fields = [
                 (name, value)
                 for name in JIRA_EXTRA_FIELDS
@@ -343,6 +345,13 @@ class PrTrackingFixer:
         # If needed, make a Jira issue.
         if make_issue:
             self._make_jira_issue()
+        else:
+            # Epics are a bit odd: sometimes we have the full issue, sometimes
+            # just the key. Make sure the full issue is available where we need
+            # it.
+            if self.desired.jira_epic is not None:
+                if self.current.jira_epic_key == self.desired.jira_epic["key"]:
+                    self.current.jira_epic = self.desired.jira_epic
 
         # Draftiness
         self.last_seen_state["draft"] = is_draft_pull_request(self.pr)
@@ -400,6 +409,8 @@ class PrTrackingFixer:
         self.current.jira_description = self.desired.jira_description
         self.current.jira_labels = self.desired.jira_labels
         self.current.jira_epic = self.desired.jira_epic
+        if self.current.jira_epic is not None:
+            self.current.jira_epic_key = self.current.jira_epic["key"]
 
         if self.desired.jira_initial_status != self.current.jira_status:
             assert self.desired.jira_initial_status is not None

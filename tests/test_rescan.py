@@ -133,3 +133,53 @@ def test_rescan_repository_date_limits(rescannable_repo, reqctx, pull_request_ch
     # external (even) numbers should be there.
     prnums = [c.args[0]["number"] for c in pull_request_changed_fn.call_args_list]
     assert prnums == nums
+
+
+def test_rescan_blended(reqctx, fake_github, fake_jira):
+    # At one point, we weren't treating epic links right when rescanning, and
+    # kept updating the jira issue.
+    pr = fake_github.make_pull_request(user="tusbar", title="[BD-34] Something good")
+    prj = pr.as_json()
+    map_1_2 = {
+        "child": {
+            "id": "14522",
+            "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14522",
+            "value": "Course Level Insights"
+        },
+        "id": "14209",
+        "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
+        "value": "Researcher & Data Experiences"
+    }
+    epic = fake_jira.make_issue(
+        project="BLENDED",
+        blended_project_id="BD-34",
+        blended_project_status_page="https://thewiki/bd-34",
+        platform_map_1_2=map_1_2,
+    )
+
+    with reqctx:
+        issue_id, anything_happened = pull_request_changed(prj)
+
+    assert issue_id is not None
+    assert issue_id.startswith("BLENDED-")
+    assert anything_happened is True
+
+    # Check the Jira issue that was created.
+    assert len(fake_jira.issues) == 2
+    issue = fake_jira.issues[issue_id]
+    assert issue.epic_link == epic.key
+    assert issue.platform_map_1_2 == map_1_2
+
+    # Reset our fakers so we can isolate the effect of the rescan.
+    fake_github.reset_mock()
+    fake_jira.reset_mock()
+
+    # Rescan.
+    with reqctx:
+        ret = rescan_repository(pr.repo.full_name, allpr=True)
+
+    assert "created" not in ret
+
+    # We shouldn't have made any writes to GitHub or Jira.
+    fake_github.assert_readonly()
+    fake_jira.assert_readonly()
