@@ -100,12 +100,6 @@ def is_valid_payload(secret: str, signature: str, payload: bytes) -> bool:
     return hmac.compare_digest(digest.encode(), signature.encode())
 
 
-def pop_dict_id(d):
-    id = d["id"]
-    del d["id"]
-    return (id, d)
-
-
 def text_summary(text, length=40):
     """
     Make a summary of `text`, at most `length` chars long.
@@ -282,12 +276,8 @@ def get_jira_custom_fields(session=None):
     session = session or jira
     field_resp = session.get("/rest/api/2/field")
     field_resp.raise_for_status()
-    field_map = dict(pop_dict_id(f) for f in field_resp.json())
-    return {
-        value["name"]: id
-        for id, value in field_map.items()
-        if value["custom"]
-    }
+    fields = field_resp.json()
+    return {f["name"]: f["id"] for f in fields if f["custom"]}
 
 
 def get_jira_issue(key: str, missing_ok: bool = False) -> Optional[JiraDict]:
