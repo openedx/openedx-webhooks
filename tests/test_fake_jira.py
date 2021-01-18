@@ -68,6 +68,15 @@ class TestIssues:
         assert jissue2["key"] == key2
         assert jissue2["fields"]["summary"] == "This is a bad bug!"
 
+    def test_empty_values(self, fake_jira):
+        fake_jira.make_issue(key="HELLO-123", summary="", description="")
+        resp = requests.get("https://openedx.atlassian.net/rest/api/2/issue/HELLO-123")
+        assert resp.status_code == 200
+        issue = resp.json()
+        assert issue["key"] == "HELLO-123"
+        assert issue["fields"]["summary"] is None
+        assert issue["fields"]["description"] is None
+
 
 class TestBadRequests:
     """

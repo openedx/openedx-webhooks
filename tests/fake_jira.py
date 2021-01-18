@@ -17,6 +17,14 @@ def _make_issue_key(project: str) -> str:
     return f"{project}-{num}"
 
 
+def float_or_none(val) -> Optional[float]:
+    """Convert to float, or leave as None."""
+    if val is None:
+        return val
+    else:
+        return float(val)
+
+
 @dataclass
 class Issue:
     """A Jira issue."""
@@ -36,8 +44,8 @@ class Issue:
     platform_map_3_4: Optional[str] = None
     blended_project_status_page: Optional[str] = None
     blended_project_id: Optional[str] = None
-    lines_added: Optional[int] = None
-    lines_deleted: Optional[int] = None
+    lines_added: Optional[float] = None
+    lines_deleted: Optional[float] = None
 
     def as_json(self) -> Dict:
         return {
@@ -46,19 +54,19 @@ class Issue:
                 "project": {"key": self.key.partition("-")[0]},
                 "status": {"name": self.status},
                 "issuetype": {"name": self.issuetype},
-                "summary": self.summary,
-                "description": self.description,
+                "summary": self.summary or None,
+                "description": self.description or None,
                 "labels": sorted(self.labels),
                 FakeJira.EPIC_LINK: self.epic_link,
-                FakeJira.CONTRIBUTOR_NAME: self.contributor_name,
-                FakeJira.CUSTOMER: self.customer,
+                FakeJira.CONTRIBUTOR_NAME: self.contributor_name or None,
+                FakeJira.CUSTOMER: self.customer or None,
                 FakeJira.PR_NUMBER: self.pr_number,
-                FakeJira.REPO: self.repo,
-                FakeJira.URL: self.url,
-                FakeJira.PLATFORM_MAP_1_2: self.platform_map_1_2,
-                FakeJira.PLATFORM_MAP_3_4: self.platform_map_3_4,
-                FakeJira.BLENDED_PROJECT_STATUS_PAGE: self.blended_project_status_page,
-                FakeJira.BLENDED_PROJECT_ID: self.blended_project_id,
+                FakeJira.REPO: self.repo or None,
+                FakeJira.URL: self.url or None,
+                FakeJira.PLATFORM_MAP_1_2: self.platform_map_1_2 or None,
+                FakeJira.PLATFORM_MAP_3_4: self.platform_map_3_4 or None,
+                FakeJira.BLENDED_PROJECT_STATUS_PAGE: self.blended_project_status_page or None,
+                FakeJira.BLENDED_PROJECT_ID: self.blended_project_id or None,
                 FakeJira.LINES_ADDED: self.lines_added,
                 FakeJira.LINES_DELETED: self.lines_deleted,
             },
@@ -192,8 +200,8 @@ class FakeJira(faker.Faker):
             url=fields.get(FakeJira.URL),
             platform_map_1_2=fields.get(FakeJira.PLATFORM_MAP_1_2),
             platform_map_3_4=fields.get(FakeJira.PLATFORM_MAP_3_4),
-            lines_added=fields.get(FakeJira.LINES_ADDED),
-            lines_deleted=fields.get(FakeJira.LINES_DELETED),
+            lines_added=float_or_none(fields.get(FakeJira.LINES_ADDED)),
+            lines_deleted=float_or_none(fields.get(FakeJira.LINES_DELETED)),
         )
         self.make_issue(key, **kwargs)
         # Response is only some information:
@@ -222,9 +230,9 @@ class FakeJira(faker.Faker):
             if FakeJira.PLATFORM_MAP_1_2 in fields:
                 kwargs["platform_map_1_2"] = fields.pop(FakeJira.PLATFORM_MAP_1_2)
             if FakeJira.LINES_ADDED in fields:
-                kwargs["lines_added"] = fields.pop(FakeJira.LINES_ADDED)
+                kwargs["lines_added"] = float_or_none(fields.pop(FakeJira.LINES_ADDED))
             if FakeJira.LINES_DELETED in fields:
-                kwargs["lines_deleted"] = fields.pop(FakeJira.LINES_DELETED)
+                kwargs["lines_deleted"] = float_or_none(fields.pop(FakeJira.LINES_DELETED))
             assert fields == {}, f"Didn't handle requested changes: {fields=}"
             issue = dataclasses.replace(issue, **kwargs)
             self.issues[issue.key] = issue

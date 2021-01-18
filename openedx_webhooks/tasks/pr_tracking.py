@@ -169,8 +169,8 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
             current.jira_id = None
         else:
             current.jira_id = issue["key"]
-            current.jira_title = issue["fields"]["summary"]
-            current.jira_description = issue["fields"]["description"]
+            current.jira_title = issue["fields"]["summary"] or ""
+            current.jira_description = issue["fields"]["description"] or ""
             current.jira_status = issue["fields"]["status"]["name"]
             current.jira_labels = set(issue["fields"]["labels"])
 
