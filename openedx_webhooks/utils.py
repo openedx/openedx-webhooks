@@ -23,6 +23,16 @@ from openedx_webhooks.oauth import jira_get
 from openedx_webhooks.types import JiraDict
 
 
+def environ_get(name: str, default=None) -> str:
+    """
+    Get an environment variable, raising an error if it's missing.
+    """
+    val = os.environ.get(name, default)
+    if val is None:
+        raise Exception(f"Required environment variable {name!r} is missing")
+    return val
+
+
 def _check_auth(username, password):
     """
     Checks if a username / password combination is valid.
