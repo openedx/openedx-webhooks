@@ -5,6 +5,7 @@ State-based updating of the information surrounding pull requests.
 from __future__ import annotations
 
 import copy
+import dataclasses
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
@@ -276,6 +277,13 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     return desired
 
 
+def json_safe_dict(dc):
+    """
+    Make a JSON-safe dict from a dataclass, for recording info during dry runs.
+    """
+    return {k:repr(v) for k, v in dataclasses.asdict(dc).items()}
+
+
 class PrTrackingFixer:
     """
     Complex logic to compare the current and desired states and make needed changes.
@@ -298,6 +306,11 @@ class PrTrackingFixer:
         """
         The main routine for making needed changes.
         """
+        self.actions.initial_state(
+            current=json_safe_dict(self.current),
+            desired=json_safe_dict(self.desired),
+        )
+
         self.actions.synchronize_labels(repo=self.prid.full_name)
 
         comment_kwargs = {}
@@ -586,6 +599,11 @@ class FixingActions:
 
     def __init__(self, prid: PrId):
         self.prid = prid
+
+    def initial_state(self, *, current: Dict, desired: Dict) -> None:
+        """
+        Does nothing when really fixing, but captures information for dry runs.
+        """
 
     def synchronize_labels(self, *, repo: str) -> None:
         from openedx_webhooks.tasks.github import synchronize_labels

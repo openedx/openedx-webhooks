@@ -86,18 +86,21 @@ def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_j
     actions = {k: [name for name, kwargs in actions] for k, actions in ret["dry_run_actions"].items()}
     assert actions == {
         102: [
+            "initial_state",
             "synchronize_labels",
             "create_ospr_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
         ],
         106: [
+            "initial_state",
             "synchronize_labels",
             "create_ospr_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
         ],
         108: [
+            "initial_state",
             "synchronize_labels",
             "create_ospr_issue",
             "transition_jira_issue",
@@ -105,6 +108,7 @@ def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_j
             "add_comment_to_pull_request",
         ],
         110: [
+            "initial_state",
             "synchronize_labels",
             "transition_jira_issue",
             "update_jira_issue",
