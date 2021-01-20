@@ -1,4 +1,3 @@
-import itertools
 from typing import Dict, Optional, Tuple
 
 from urlobject import URLObject
@@ -10,6 +9,7 @@ from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.pr_tracking import (
     current_support_state,
     desired_support_state,
+    DryRunFixingActions,
     PrTrackingFixer,
 )
 from openedx_webhooks.types import PrDict
@@ -163,26 +163,3 @@ def rescan_repository(
     if dry_run_actions:
         info["dry_run_actions"] = dry_run_actions
     return info
-
-
-class DryRunFixingActions:
-    jira_ids = itertools.count(start=9000)
-
-    def __init__(self):
-        self.action_calls = []
-
-    def create_ospr_issue(self, **kwargs):
-        self.action_calls.append(("create_ospr_issue", kwargs))
-        return {
-            "key": f"OSPR-{next(self.jira_ids)}",
-            "fields": {
-                "status": {
-                    "name": "Needs Triage",
-                },
-            },
-        }
-
-    def __getattr__(self, name):
-        def fn(**kwargs):
-            self.action_calls.append((name, kwargs))
-        return fn

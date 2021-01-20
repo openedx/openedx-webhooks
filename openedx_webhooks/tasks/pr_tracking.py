@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import copy
 import dataclasses
+import itertools
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
@@ -614,6 +615,33 @@ def get_champions_for_pr(pr: PrDict) -> List[str]:
     people = get_people_file()
     user_data = people.get(user, {})
     return glom(user_data, "committer.champions", default=[])
+
+
+class DryRunFixingActions:
+    """
+    Implementation of actions for dry runs.
+    """
+    jira_ids = itertools.count(start=9000)
+
+    def __init__(self):
+        self.action_calls = []
+
+    def create_ospr_issue(self, **kwargs):
+        # This needs a special override because it has to return a Jira key.
+        self.action_calls.append(("create_ospr_issue", kwargs))
+        return {
+            "key": f"OSPR-{next(self.jira_ids)}",
+            "fields": {
+                "status": {
+                    "name": "Needs Triage",
+                },
+            },
+        }
+
+    def __getattr__(self, name):
+        def fn(**kwargs):
+            self.action_calls.append((name, kwargs))
+        return fn
 
 
 class FixingActions:
