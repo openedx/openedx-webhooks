@@ -1,3 +1,7 @@
+"""
+Queuable background tasks to do large work.
+"""
+
 from typing import Dict, Optional, Tuple
 
 from urlobject import URLObject
@@ -62,7 +66,7 @@ def pull_request_changed(pr: PrDict, actions=None) -> Tuple[Optional[str], bool]
 
 
 @celery.task(bind=True)
-def rescan_repository_task(self, repo, allpr, dry_run, earliest, latest):
+def rescan_repository_task(task, repo, allpr, dry_run, earliest, latest):
     """A bound Celery task to call rescan_repository."""
 
     def page_callback(response):
@@ -80,9 +84,9 @@ def rescan_repository_task(self, repo, allpr, dry_run, earliest, latest):
                 "current_page": current_page,
                 "last_page": last_page
             }
-            self.update_state(state='STARTED', meta=state_meta)
+            task.update_state(state='STARTED', meta=state_meta)
 
-    self.update_state(state='STARTED', meta={'repo': repo})
+    task.update_state(state='STARTED', meta={'repo': repo})
     return rescan_repository(repo, allpr, dry_run, earliest, latest, page_callback=page_callback)
 
 
