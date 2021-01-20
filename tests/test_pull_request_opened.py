@@ -20,7 +20,7 @@ pytestmark = pytest.mark.flaky_github
 @pytest.fixture
 def sync_labels_fn(mocker):
     """A patch on synchronize_labels"""
-    return mocker.patch("openedx_webhooks.tasks.github.synchronize_labels")
+    return mocker.patch("openedx_webhooks.tasks.github_work.synchronize_labels")
 
 
 def test_internal_pr_opened(reqctx, fake_github):

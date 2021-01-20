@@ -43,6 +43,7 @@ from openedx_webhooks.labels import (
 from openedx_webhooks.lib.github.models import PrId
 from openedx_webhooks.oauth import get_github_session, get_jira_session
 from openedx_webhooks.tasks import logger
+from openedx_webhooks.tasks import github_work
 from openedx_webhooks.tasks.jira_work import (
     delete_jira_issue,
     transition_jira_issue,
@@ -634,8 +635,7 @@ class FixingActions:
         """
 
     def synchronize_labels(self, *, repo: str) -> None:
-        from openedx_webhooks.tasks.github import synchronize_labels
-        synchronize_labels(repo)
+        github_work.synchronize_labels(repo)
 
     def create_ospr_issue(
         self, *,
