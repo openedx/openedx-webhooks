@@ -25,6 +25,15 @@ def status(task_id):
         "info": result.info,
     })
 
+@tasks.route('/statusrepr/<task_id>')
+def statusrepr(task_id):
+    """Get the status of a task, but repr() everything so we can see JSON failures from /status/<task_id>"""
+    result = celery.AsyncResult(task_id)
+    return jsonify({
+        "status": repr(result.state),
+        "info": repr(result.info),
+    })
+
 @tasks.route('/status/group:<group_id>')
 def group_status(group_id):
     # NOTE: This will only work if the GroupResult
