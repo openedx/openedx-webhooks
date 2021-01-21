@@ -4,7 +4,6 @@ These are the views that process webhook events coming from Github.
 
 import logging
 
-from celery import group
 from flask import current_app as app
 from flask import (
     Blueprint, jsonify, render_template, request, url_for
@@ -16,10 +15,10 @@ from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
 from openedx_webhooks.lib.rq import q
 from openedx_webhooks.tasks.github import (
     pull_request_changed_task, rescan_repository, rescan_repository_task,
+    rescan_organization_task,
 )
 from openedx_webhooks.utils import (
-    is_valid_payload, minimal_wsgi_environ, paginated_get,
-    sentry_extra_context
+    is_valid_payload, minimal_wsgi_environ, sentry_extra_context
 )
 
 github_bp = Blueprint('github_views', __name__)
@@ -137,21 +136,13 @@ def rescan():
             return "Don't be silly."
 
         org = repo[4:]
-        org_url = "https://api.github.com/orgs/{org}/repos".format(org=org)
-        repo_names = [repo_name['full_name'] for repo_name in paginated_get(org_url)]
-        workflow = group(
-            rescan_repository_task.s(repository, wsgi_environ=minimal_wsgi_environ(), **rescan_kwargs)
-            for repository in repo_names
-        )
-        group_result = workflow.delay()
-        group_result.save()  # this is necessary for groups, for some reason
-        status_url = url_for("tasks.group_status", group_id=group_result.id, _external=True)
+        result = rescan_organization_task.delay(org, wsgi_environ=minimal_wsgi_environ(), **rescan_kwargs)
     elif inline:
         return jsonify(rescan_repository(repo, **rescan_kwargs))
     else:
         result = rescan_repository_task.delay(repo, wsgi_environ=minimal_wsgi_environ(), **rescan_kwargs)
-        status_url = url_for("tasks.status", task_id=result.id, _external=True)
 
+    status_url = url_for("tasks.status", task_id=result.id, _external=True)
     resp = jsonify({"message": "queued", "status_url": status_url})
     resp.status_code = 202
     resp.headers["Location"] = status_url

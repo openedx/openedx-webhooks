@@ -65,11 +65,15 @@ def pull_request_changed(pr: PrDict, actions=None) -> Tuple[Optional[str], bool]
         return None, False
 
 
-@celery.task(bind=True)
-def rescan_repository_task(task, repo, allpr, dry_run, earliest, latest):
-    """A bound Celery task to call rescan_repository."""
+class PaginateCallback:
+    """
+    A callback for paginated_get which updates the celery task with URL progress.
+    """
+    def __init__(self, task, meta):
+        self.task = task
+        self.meta = meta
 
-    def page_callback(response):
+    def __call__(self, response):
         if response.ok:
             current_url = URLObject(response.url)
             current_page = int(current_url.query_dict.get("page", 1))
@@ -80,14 +84,20 @@ def rescan_repository_task(task, repo, allpr, dry_run, earliest, latest):
             else:
                 last_page = current_page
             state_meta = {
-                "repo": repo,
                 "current_page": current_page,
                 "last_page": last_page
             }
-            task.update_state(state='STARTED', meta=state_meta)
+            state_meta.update(self.meta)
+            self.task.update_state(state='STARTED', meta=state_meta)
 
-    task.update_state(state='STARTED', meta={'repo': repo})
-    return rescan_repository(repo, allpr, dry_run, earliest, latest, page_callback=page_callback)
+
+@celery.task(bind=True)
+def rescan_repository_task(task, repo, allpr, dry_run, earliest, latest):
+    """A bound Celery task to call rescan_repository."""
+    meta = {"repo": repo}
+    task.update_state(state="STARTED", meta=meta)
+    callback = PaginateCallback(task, meta=meta)
+    return rescan_repository(repo, allpr, dry_run, earliest, latest, page_callback=callback)
 
 
 def rescan_repository(
@@ -167,3 +177,37 @@ def rescan_repository(
     if dry_run_actions:
         info["dry_run_actions"] = dry_run_actions
     return info
+
+
+@celery.task(bind=True)
+def rescan_organization_task(task, org, allpr, dry_run, earliest, latest):
+    """A bound Celery task to call rescan_organization."""
+    meta = {"org": org}
+    task.update_state(state="STARTED", meta=meta)
+    callback = PaginateCallback(task, meta)
+    return rescan_organization(org, allpr, dry_run, earliest, latest, page_callback=callback)
+
+def rescan_organization(
+        org: str,
+        allpr: bool = False,
+        dry_run: bool = False,
+        earliest: str = "",
+        latest: str = "",
+        page_callback=None,
+    ) -> Dict:
+    """
+    Re-scan an entire organization.
+
+    See rescan_repository for details of the arguments.
+    """
+    infos = {}
+    org_url = f"https://api.github.com/orgs/{org}/repos"
+    repos = list(paginated_get(org_url, callback=page_callback))
+    for irepo, repo in enumerate(repos):
+        repo_name = repo["full_name"]
+        if page_callback is not None:
+            page_callback.meta = {"repo": repo_name, "repo_num": f"{irepo+1}/{len(repos)}"}
+        info = rescan_repository(repo_name, allpr, dry_run, earliest, latest, page_callback=page_callback)
+        if list(info) != ["repo"]:
+            infos[repo_name] = info
+    return infos

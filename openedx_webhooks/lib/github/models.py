@@ -147,3 +147,8 @@ class PrId:
 
     def __str__(self):
         return f"{self.full_name}#{self.number}"
+
+    @property
+    def org(self):
+        org, _, _ = self.full_name.partition("/")
+        return org

@@ -1,4 +1,4 @@
-"""Tests of tasks/github.py:rescan_repository """
+"""Tests of tasks/github.py:rescan_repository and rescan_organization"""
 
 import json
 from datetime import datetime
@@ -6,7 +6,13 @@ from datetime import datetime
 import pytest
 
 from openedx_webhooks.info import get_bot_username
-from openedx_webhooks.tasks.github import rescan_repository, pull_request_changed
+from openedx_webhooks.lib.github.models import PrId
+from openedx_webhooks.tasks.github import (
+    pull_request_changed,
+    rescan_organization,
+    rescan_repository,
+)
+
 
 @pytest.fixture
 def pull_request_changed_fn(mocker):
@@ -19,10 +25,15 @@ def pull_request_changed_fn(mocker):
 
 @pytest.fixture
 def rescannable_repo(fake_github, fake_jira):
+    """Get the rescannable repo."""
+    return make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="a-repo")
+
+
+def make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="a-repo"):
     """
     Make a fake repo full of pull requests to rescan.
     """
-    repo = fake_github.make_repo("an-org", "a-repo")
+    repo = fake_github.make_repo(org_name, repo_name)
     # Numbers of internal pull requsts are odd, external are even.
     repo.make_pull_request(user="nedbat", number=101, created_at=datetime(2019, 1, 1))
     repo.make_pull_request(user="tusbar", number=102, created_at=datetime(2019, 2, 1))
@@ -40,6 +51,7 @@ def rescannable_repo(fake_github, fake_jira):
     repo.make_pull_request(user="nedbat", number=97, created_at=datetime(2012, 10, 1))
 
     return repo
+
 
 @pytest.mark.parametrize("allpr", [False, True])
 def test_rescan_repository(rescannable_repo, reqctx, pull_request_changed_fn, allpr):
@@ -183,3 +195,27 @@ def test_rescan_blended(reqctx, fake_github, fake_jira):
     # We shouldn't have made any writes to GitHub or Jira.
     fake_github.assert_readonly()
     fake_jira.assert_readonly()
+
+
+@pytest.fixture
+def rescannable_org(fake_github, fake_jira):
+    """
+    Make two orgs with two repos each full of pull requests.
+    """
+    for org_name in ["org1", "org2"]:
+        for repo_name in ["rep1", "rep2"]:
+            make_rescannable_repo(fake_github, fake_jira, org_name, repo_name)
+
+
+@pytest.mark.parametrize("allpr, earliest, latest, nums", [
+    (False, "", "", [102, 106]),
+    (True, "", "", [102, 106, 108, 110]),
+    (True, "2019-06-01", "", [108, 110]),
+    (True, "2019-06-01", "2019-06-30", [108]),
+])
+def test_rescan_organization(rescannable_org, reqctx, pull_request_changed_fn, allpr, earliest, latest, nums):
+    with reqctx:
+        rescan_organization("org1", allpr=allpr, earliest=earliest, latest=latest)
+    prs = [PrId.from_pr_dict(c.args[0]) for c in pull_request_changed_fn.call_args_list]
+    assert all(prid.org == "org1" for prid in prs)
+    assert prs == [PrId(f"org1/{r}", num) for r in ["rep1", "rep2"] for num in nums]

@@ -129,7 +129,9 @@ class PullRequest:
             "user": self.user.as_json(),
             "body": self.body,
             "labels": [self.repo.get_label(l).as_json() for l in sorted(self.labels)],
-            "base": self.repo.as_json(),
+            "base": {
+                "repo": self.repo.as_json(),
+            },
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "url": f"{self.repo.github.host}/repos/{self.repo.full_name}/pulls/{self.number}",
             "html_url": f"https://github.com/{self.repo.full_name}/pull/{self.number}",
@@ -183,9 +185,7 @@ class Repo:
 
     def as_json(self) -> Dict:
         return {
-            "repo": {
-                "full_name": self.full_name,
-            },
+            "full_name": self.full_name,
         }
 
     def make_pull_request(self, user="someone", number=None, **kwargs) -> PullRequest:
@@ -324,6 +324,14 @@ class FakeGitHub(faker.Faker):
     def _get_users(self, match, _request, _context) -> Dict:
         # https://developer.github.com/v3/users/#get-a-user
         return self.users[match["login"]].as_json()
+
+    # Organization repos
+
+    @faker.route(r"/orgs/(?P<org>[^/]+)/repos")
+    def _get_org_repos(self, match, _request, _context) -> List[Dict]:
+        org_prefix = match["org"] + "/"
+        repos = [repo for name, repo in self.repos.items() if name.startswith(org_prefix)]
+        return [repo.as_json() for repo in repos]
 
     # Pull requests
 
