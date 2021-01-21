@@ -191,6 +191,29 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2021-01-21
+~~~~~~~~~~
+
+- Rescanning never considers pull requests created before 2018.  This is a
+  quick fix to deal with contractor comments.
+
+  Because we don't track when companies started and stopped being contractors,
+  we can't decide now if a pull request should have had a contractor comment
+  when it was created.
+
+  The latest contractor comment on one of our pull requests was in December
+  2017.  So don't consider pull requests that old.  Later we can implement a
+  better solution if we need to rescan those old pull requests.
+
+- Rescanning now has a dry-run mode which record what would have been done, but
+  takes no action.
+
+- Before-clauses in people.yaml are now handled differently.  Previously, only
+  one before clause was found, the earliest one that applied to the date we're
+  interested in.  Now, all before clauses that apply (with dates after the date
+  we are interested in) are layered together starting with now and working
+  back in time to build a dict of data.
+
 2021-01-08
 ~~~~~~~~~~
 
