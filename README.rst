@@ -214,6 +214,9 @@ See the fragment files (if any) in the changelog.d directory.
   we are interested in) are layered together starting with now and working
   back in time to build a dict of data.
 
+- Updates to Jira tickets will try not to notify users unless the title or body
+  (summary or description) change.
+
 2021-01-08
 ~~~~~~~~~~
 

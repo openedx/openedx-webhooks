@@ -1,4 +1,0 @@
-.. A new scriv changelog fragment.
-
-- Updates to Jira tickets will try not to notify users unless the title or body
-  (summary or description) change.
