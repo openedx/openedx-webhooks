@@ -2,6 +2,8 @@
 Queuable background tasks to do large work.
 """
 
+import traceback
+
 from typing import Dict, Optional, Tuple
 
 from urlobject import URLObject
@@ -157,12 +159,16 @@ def rescan_repository(
         pull_request = resp.json()
 
         actions = DryRunFixingActions() if dry_run else None
-        issue_key, anything_happened = pull_request_changed(pull_request, actions=actions)
-        if anything_happened:
-            created[pull_request["number"]] = issue_key
-            if dry_run:
-                assert actions is not None
-                dry_run_actions[pull_request["number"]] = actions.action_calls
+        try:
+            issue_key, anything_happened = pull_request_changed(pull_request, actions=actions)
+        except Exception:
+            created[pull_request["number"]] = traceback.format_exc()
+        else:
+            if anything_happened:
+                created[pull_request["number"]] = issue_key
+                if dry_run:
+                    assert actions is not None
+                    dry_run_actions[pull_request["number"]] = actions.action_calls
 
     if not dry_run:
         logger.info(

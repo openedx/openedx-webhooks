@@ -219,3 +219,22 @@ def test_rescan_organization(rescannable_org, reqctx, pull_request_changed_fn, a
     prs = [PrId.from_pr_dict(c.args[0]) for c in pull_request_changed_fn.call_args_list]
     assert all(prid.org == "org1" for prid in prs)
     assert prs == [PrId(f"org1/{r}", num) for r in ["rep1", "rep2"] for num in nums]
+
+
+def test_rescan_failure(mocker, rescannable_repo, reqctx):
+    def flaky_pull_request_changed(pr, actions):
+        if pr["number"] == 108:
+            1/0 # BOOM
+        else:
+            return pull_request_changed(pr, actions)
+
+    mocker.patch("openedx_webhooks.tasks.github.pull_request_changed", flaky_pull_request_changed)
+    with reqctx:
+        ret = rescan_repository(rescannable_repo.full_name, allpr=True)
+
+    assert list(ret["created"]) == [102, 106, 108, 110]
+    err = ret["created"][108]
+    assert err.startswith("Traceback (most recent call last):\n")
+    assert " in flaky_pull_request_changed\n" in err
+    assert "1/0 # BOOM" in err
+    assert "ZeroDivisionError: division by zero" in err
