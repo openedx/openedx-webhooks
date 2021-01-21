@@ -152,14 +152,14 @@ def rescan_repository(
         if latest and pull_request["created_at"] > latest:
             continue
 
-        # Listed pull requests don't have all the information we need,
-        # so get the full description.
-        resp = retry_get(get_github_session(), pull_request["url"])
-        resp.raise_for_status()
-        pull_request = resp.json()
-
         actions = DryRunFixingActions() if dry_run else None
         try:
+            # Listed pull requests don't have all the information we need,
+            # so get the full description.
+            resp = retry_get(get_github_session(), pull_request["url"])
+            resp.raise_for_status()
+            pull_request = resp.json()
+
             issue_key, anything_happened = pull_request_changed(pull_request, actions=actions)
         except Exception:
             created[pull_request["number"]] = traceback.format_exc()
