@@ -23,6 +23,16 @@ from openedx_webhooks.oauth import jira_get
 from openedx_webhooks.types import JiraDict
 
 
+def environ_get(name: str, default=None) -> str:
+    """
+    Get an environment variable, raising an error if it's missing.
+    """
+    val = os.environ.get(name, default)
+    if val is None:
+        raise Exception(f"Required environment variable {name!r} is missing")
+    return val
+
+
 def _check_auth(username, password):
     """
     Checks if a username / password combination is valid.
@@ -88,12 +98,6 @@ def is_valid_payload(secret: str, signature: str, payload: bytes) -> bool:
     mac = hmac.new(secret.encode(), msg=payload, digestmod=sha1)
     digest = 'sha1=' + mac.hexdigest()
     return hmac.compare_digest(digest.encode(), signature.encode())
-
-
-def pop_dict_id(d):
-    id = d["id"]
-    del d["id"]
-    return (id, d)
 
 
 def text_summary(text, length=40):
@@ -272,12 +276,8 @@ def get_jira_custom_fields(session=None):
     session = session or jira
     field_resp = session.get("/rest/api/2/field")
     field_resp.raise_for_status()
-    field_map = dict(pop_dict_id(f) for f in field_resp.json())
-    return {
-        value["name"]: id
-        for id, value in field_map.items()
-        if value["custom"]
-    }
+    fields = field_resp.json()
+    return {f["name"]: f["id"] for f in fields if f["custom"]}
 
 
 def get_jira_issue(key: str, missing_ok: bool = False) -> Optional[JiraDict]:

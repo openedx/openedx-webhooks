@@ -4,11 +4,12 @@ Get information about people, repos, orgs, pull requests, etc.
 
 import datetime
 import re
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Optional, Union
 
 import yaml
 from iso8601 import parse_date
 
+from openedx_webhooks.lib.github.models import PrId
 from openedx_webhooks.oauth import get_github_session
 from openedx_webhooks.types import PrDict, PrCommentDict
 from openedx_webhooks.utils import (
@@ -56,14 +57,13 @@ def get_person_certain_time(person: Dict, certain_time: datetime.datetime) -> Di
         certain_time: datetime.datetime object used to determine the state of the person
 
     """
-    for before_date in sorted(person.get("before", {})):
-        if certain_time.date() <= before_date:
-            before_person = person["before"][before_date]
-            update_person = person.copy()
-            update_person.update(before_person)
-            return update_person
-    return person
-
+    # Layer together all of the applicable "before" clauses.
+    update_person = person.copy()
+    for before_date in sorted(person.get("before", {}), reverse=True):
+        if certain_time.date() > before_date:
+            break
+        update_person.update(person["before"][before_date])
+    return update_person
 
 def is_internal_pull_request(pull_request: PrDict) -> bool:
     """
@@ -153,6 +153,8 @@ def is_committer_pull_request(pull_request: PrDict) -> bool:
     repo = pull_request["base"]["repo"]["full_name"]
     org = repo.partition("/")[0]
     commit_rights = person["committer"]
+    if not commit_rights:
+        return False
     if "orgs" in commit_rights:
         if org in commit_rights["orgs"]:
             return True
@@ -198,22 +200,23 @@ def get_bot_username() -> str:
     return me["login"]
 
 
-def get_bot_comments(pull_request: PrDict) -> Iterable[PrCommentDict]:
+def get_bot_comments(prid: PrId) -> Iterable[PrCommentDict]:
     """Find all the comments the bot has made on a pull request."""
     my_username = get_bot_username()
-    comment_url = "/repos/{repo}/issues/{num}/comments".format(
-        repo=pull_request["base"]["repo"]["full_name"],
-        num=pull_request["number"],
-    )
+    comment_url = f"/repos/{prid.full_name}/issues/{prid.number}/comments"
     for comment in paginated_get(comment_url, session=get_github_session()):
         # I only care about comments I made
         if comment["user"]["login"] == my_username:
             yield comment
 
 
-def get_jira_issue_key(pull_request: PrDict) -> Optional[str]:
+def get_jira_issue_key(pr: Union[PrId, PrDict]) -> Optional[str]:
     """Find mention of a Jira issue number in bot-authored comments."""
-    for comment in get_bot_comments(pull_request):
+    if isinstance(pr, PrDict):
+        prid = PrId.from_pr_dict(pr)
+    else:
+        prid = pr
+    for comment in get_bot_comments(prid):
         # search for the first occurrence of a JIRA ticket key in the comment body
         match = re.search(r"\b([A-Z]{2,}-\d+)\b", comment["body"])
         if match:

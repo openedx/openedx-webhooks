@@ -92,7 +92,7 @@ def update_jira_issue(issue_key, summary=None, description=None, labels=None, ep
     if description is not None:
         fields["description"] = description
     if labels is not None:
-        fields["labels"] = list(labels)
+        fields["labels"] = labels
     if epic_link is not None:
         fields[custom_fields["Epic Link"]] = epic_link
     if extra_fields is not None:

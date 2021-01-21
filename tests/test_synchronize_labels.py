@@ -2,7 +2,7 @@
 
 import pytest
 
-from openedx_webhooks.tasks.github import synchronize_labels
+from openedx_webhooks.tasks.github_work import synchronize_labels
 
 from .fake_github import Label
 

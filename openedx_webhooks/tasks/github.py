@@ -1,23 +1,23 @@
-from typing import Optional, Tuple
+"""
+Queuable background tasks to do large work.
+"""
+
+from typing import Dict, Optional, Tuple
 
 from urlobject import URLObject
 
 from openedx_webhooks import celery
-from openedx_webhooks.info import (
-    get_jira_issue_key,
-    get_labels_file,
-    is_internal_pull_request,
-)
+from openedx_webhooks.info import is_internal_pull_request
 from openedx_webhooks.oauth import get_github_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.pr_tracking import (
     current_support_state,
     desired_support_state,
+    DryRunFixingActions,
     PrTrackingFixer,
 )
 from openedx_webhooks.types import PrDict
 from openedx_webhooks.utils import (
-    log_check_response,
     paginated_get,
     retry_get,
     sentry_extra_context,
@@ -29,7 +29,7 @@ def pull_request_changed_task(_, pull_request):
     """A bound Celery task to call pull_request_changed."""
     return pull_request_changed(pull_request)
 
-def pull_request_changed(pr: PrDict) -> Tuple[Optional[str], bool]:
+def pull_request_changed(pr: PrDict, actions=None) -> Tuple[Optional[str], bool]:
     """
     Process a pull request.
 
@@ -53,43 +53,28 @@ def pull_request_changed(pr: PrDict) -> Tuple[Optional[str], bool]:
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
 
-    logger.info(f"Processing PR {repo} #{num} by @{user}...")
+    logger.info(f"Processing PR {repo}#{num} by @{user}...")
 
     desired = desired_support_state(pr)
     if desired is not None:
-        synchronize_labels(repo)
         current = current_support_state(pr)
-        fixer = PrTrackingFixer(pr, current, desired)
+        fixer = PrTrackingFixer(pr, current, desired, actions=actions)
         fixer.fix()
         return fixer.result()
     else:
         return None, False
 
 
-@celery.task(bind=True)
-def rescan_repository_task(self, repo, allpr):
-    """A bound Celery task to call rescan_repository."""
-    return rescan_repository(repo, allpr, task=self)
-
-
-def rescan_repository(repo, allpr, task=None):
+class PaginateCallback:
     """
-    Re-scans a single repo for external pull requests.
-
-    If `allpr` is False, then only open pull requests are considered.
-    If `allpr` is True, then all external pull requests are re-scanned.
-
+    A callback for paginated_get which updates the celery task with URL progress.
     """
-    sentry_extra_context({"repo": repo})
-    state = "all" if allpr else "open"
-    url = f"/repos/{repo}/pulls?state={state}"
+    def __init__(self, task, meta):
+        self.task = task
+        self.meta = meta
 
-    created = {}
-    if task is not None:
-        task.update_state(state='STARTED', meta={'repo': repo})
-
-    def page_callback(response):
-        if task is not None and response.ok:
+    def __call__(self, response):
+        if response.ok:
             current_url = URLObject(response.url)
             current_page = int(current_url.query_dict.get("page", 1))
             link_last = response.links.get("last")
@@ -99,70 +84,130 @@ def rescan_repository(repo, allpr, task=None):
             else:
                 last_page = current_page
             state_meta = {
-                "repo": repo,
                 "current_page": current_page,
                 "last_page": last_page
             }
-            task.update_state(state='STARTED', meta=state_meta)
+            state_meta.update(self.meta)
+            self.task.update_state(state='STARTED', meta=state_meta)
 
+
+@celery.task(bind=True)
+def rescan_repository_task(task, repo, allpr, dry_run, earliest, latest):
+    """A bound Celery task to call rescan_repository."""
+    meta = {"repo": repo}
+    task.update_state(state="STARTED", meta=meta)
+    callback = PaginateCallback(task, meta=meta)
+    return rescan_repository(repo, allpr, dry_run, earliest, latest, page_callback=callback)
+
+
+def rescan_repository(
+        repo: str,
+        allpr: bool,
+        dry_run: bool = False,
+        earliest: str = "",
+        latest: str = "",
+        page_callback=None,
+    ) -> Dict:
+    """
+    Re-scans a single repo for external pull requests.
+
+    Arguments:
+        allpr (bool): if False, then only open pull requests are considered.
+            If True, then all external pull requests are re-scanned.
+        dry_run (bool): if True, don't write to GitHub or Jira. Put names of
+            action methods and their arguments into the "dry_run_actions" key
+            of the return value.
+        earliest (str): An ISO8401-formatted date string ("2019-06-28") of the
+            earliest pull requests (by creation date) to be rescanned.  Nothing
+            before 2018 will be rescanned regardless of this argument.
+        latest (str): An ISO8401-formatted date string ("2019-12-25") of the
+            latest pull requests (by creation date) to be rescanned.
+
+    """
+    sentry_extra_context({"repo": repo})
+    state = "all" if allpr else "open"
+    url = f"/repos/{repo}/pulls?state={state}"
+
+    created = {}
+    dry_run_actions = {}
+
+    # Pull requests before this will not be rescanned. Contractor messages
+    # are hard to rescan, and in other ways the early pull requests are
+    # different enough that it's hard to do it right.  Our last contractor
+    # message was in December 2017.
+    earliest = max("2018-01-01", earliest)
+
+    pull_request: PrDict
     for pull_request in paginated_get(url, session=get_github_session(), callback=page_callback):
         sentry_extra_context({"pull_request": pull_request})
-        is_internal = is_internal_pull_request(pull_request)
-        if is_internal:
+        if is_internal_pull_request(pull_request):
+            # Never rescan internal pull requests.
             continue
-        should_scan = True
-        if not allpr:
-            issue_key = get_jira_issue_key(pull_request)
-            should_scan = not issue_key
-        if should_scan:
-            # Listed pull requests don't have all the information we need,
-            # so get the full description.
-            resp = retry_get(get_github_session(), pull_request["url"])
-            resp.raise_for_status()
-            pull_request = resp.json()
 
-            issue_key, anything_happened = pull_request_changed(pull_request)
-            if anything_happened:
-                created[pull_request["number"]] = issue_key
+        if pull_request["created_at"] < earliest:
+            continue
 
-    logger.info(
-        "Created {num} JIRA issues on repo {repo}. PRs are {prs}".format(
-            num=len(created), repo=repo, prs=list(created.keys()),
-        ),
-    )
-    info = {"repo": repo}
+        if latest and pull_request["created_at"] > latest:
+            continue
+
+        # Listed pull requests don't have all the information we need,
+        # so get the full description.
+        resp = retry_get(get_github_session(), pull_request["url"])
+        resp.raise_for_status()
+        pull_request = resp.json()
+
+        actions = DryRunFixingActions() if dry_run else None
+        issue_key, anything_happened = pull_request_changed(pull_request, actions=actions)
+        if anything_happened:
+            created[pull_request["number"]] = issue_key
+            if dry_run:
+                assert actions is not None
+                dry_run_actions[pull_request["number"]] = actions.action_calls
+
+    if not dry_run:
+        logger.info(
+            "Created {num} JIRA issues on repo {repo}. PRs are {prs}".format(
+                num=len(created), repo=repo, prs=list(created.keys()),
+            ),
+        )
+
+    info: Dict = {"repo": repo}
     if created:
         info["created"] = created
+    if dry_run_actions:
+        info["dry_run_actions"] = dry_run_actions
     return info
 
 
-def synchronize_labels(repo: str) -> None:
-    """Ensure the labels in `repo` match the specs in repo-tools-data/labels.yaml"""
+@celery.task(bind=True)
+def rescan_organization_task(task, org, allpr, dry_run, earliest, latest):
+    """A bound Celery task to call rescan_organization."""
+    meta = {"org": org}
+    task.update_state(state="STARTED", meta=meta)
+    callback = PaginateCallback(task, meta)
+    return rescan_organization(org, allpr, dry_run, earliest, latest, page_callback=callback)
 
-    url = f"/repos/{repo}/labels"
-    repo_labels = {lbl["name"]: lbl for lbl in paginated_get(url, session=get_github_session())}
-    desired_labels = get_labels_file()
-    for name, label_data in desired_labels.items():
-        if label_data.get("delete", False):
-            # A label that should not exist in the repo.
-            if name in repo_labels:
-                logger.info(f"Deleting label {name} from {repo}")
-                resp = get_github_session().delete(f"{url}/{name}")
-                log_check_response(resp)
-        else:
-            # A label that should exist in the repo.
-            label_data["name"] = name
-            if name in repo_labels:
-                repo_label = repo_labels[name]
-                color_differs = repo_label["color"] != label_data["color"]
-                repo_desc = repo_label.get("description", "") or ""
-                desired_desc = label_data.get("description", "") or ""
-                desc_differs = repo_desc != desired_desc
-                if color_differs or desc_differs:
-                    logger.info(f"Updating label {name} in {repo}")
-                    resp = get_github_session().patch(f"{url}/{name}", json=label_data)
-                    log_check_response(resp)
-            else:
-                logger.info(f"Adding label {name} to {repo}")
-                resp = get_github_session().post(url, json=label_data)
-                log_check_response(resp)
+def rescan_organization(
+        org: str,
+        allpr: bool = False,
+        dry_run: bool = False,
+        earliest: str = "",
+        latest: str = "",
+        page_callback=None,
+    ) -> Dict:
+    """
+    Re-scan an entire organization.
+
+    See rescan_repository for details of the arguments.
+    """
+    infos = {}
+    org_url = f"https://api.github.com/orgs/{org}/repos"
+    repos = list(paginated_get(org_url, callback=page_callback))
+    for irepo, repo in enumerate(repos):
+        repo_name = repo["full_name"]
+        if page_callback is not None:
+            page_callback.meta = {"repo": repo_name, "repo_num": f"{irepo+1}/{len(repos)}"}
+        info = rescan_repository(repo_name, allpr, dry_run, earliest, latest, page_callback=page_callback)
+        if list(info) != ["repo"]:
+            infos[repo_name] = info
+    return infos

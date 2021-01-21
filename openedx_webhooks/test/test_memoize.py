@@ -37,14 +37,18 @@ def test_memoize_timed():
         assert vals == [10]
         assert add_to_vals_timed(10) == 20
         assert vals == [10]
+        assert add_to_vals_timed(15) == 30
+        assert vals == [10, 15]
 
     with freeze_time("2020-05-14 09:05:00"):
         assert add_to_vals_timed(10) == 20
-        assert vals == [10]
+        assert vals == [10, 15]
+        assert add_to_vals_timed(20) == 40
+        assert vals == [10, 15, 20]
 
     with freeze_time("2020-05-14 09:11:00"):
         assert add_to_vals_timed(10) == 20
-        assert vals == [10, 10]
+        assert vals == [10, 15, 20, 10]
 
 def test_clear_memoized_values():
     vals = []

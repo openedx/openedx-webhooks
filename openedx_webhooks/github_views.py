@@ -4,7 +4,6 @@ These are the views that process webhook events coming from Github.
 
 import logging
 
-from celery import group
 from flask import current_app as app
 from flask import (
     Blueprint, jsonify, render_template, request, url_for
@@ -16,10 +15,10 @@ from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
 from openedx_webhooks.lib.rq import q
 from openedx_webhooks.tasks.github import (
     pull_request_changed_task, rescan_repository, rescan_repository_task,
+    rescan_organization_task,
 )
 from openedx_webhooks.utils import (
-    is_valid_payload, minimal_wsgi_environ, paginated_get,
-    sentry_extra_context
+    is_valid_payload, minimal_wsgi_environ, sentry_extra_context
 )
 
 github_bp = Blueprint('github_views', __name__)
@@ -122,30 +121,28 @@ def rescan():
     :func:`~openedx_webhooks.tasks.github.pull_request_changed`
     must be idempotent. It could run many times over the same pull request.
     """
-    repo = request.form.get("repo") or "edx/edx-platform"
-    inline = request.form.get("inline", False)
-    allpr = request.form.get("allpr", False)
-    if repo == 'all' and inline:
-        return "Don't be silly."
+    repo = request.form.get("repo")
+    inline = bool(request.form.get("inline", False))
 
-    if inline:
-        return jsonify(rescan_repository(repo, allpr))
+    rescan_kwargs = dict(
+        allpr=bool(request.form.get("allpr", False)),
+        dry_run=bool(request.form.get("dry_run", False)),
+        earliest=request.form.get("earliest", ""),
+        latest=request.form.get("latest", ""),
+    )
 
     if repo.startswith('all:'):
-        org = repo[4:]
-        org_url = "https://api.github.com/orgs/{org}/repos".format(org=org)
-        repo_names = [repo_name['full_name'] for repo_name in paginated_get(org_url)]
-        workflow = group(
-            rescan_repository_task.s(repository, allpr, wsgi_environ=minimal_wsgi_environ())
-            for repository in repo_names
-        )
-        group_result = workflow.delay()
-        group_result.save()  # this is necessary for groups, for some reason
-        status_url = url_for("tasks.group_status", group_id=group_result.id, _external=True)
-    else:
-        result = rescan_repository_task.delay(repo, allpr, wsgi_environ=minimal_wsgi_environ())
-        status_url = url_for("tasks.status", task_id=result.id, _external=True)
+        if inline:
+            return "Don't be silly."
 
+        org = repo[4:]
+        result = rescan_organization_task.delay(org, wsgi_environ=minimal_wsgi_environ(), **rescan_kwargs)
+    elif inline:
+        return jsonify(rescan_repository(repo, **rescan_kwargs))
+    else:
+        result = rescan_repository_task.delay(repo, wsgi_environ=minimal_wsgi_environ(), **rescan_kwargs)
+
+    status_url = url_for("tasks.status", task_id=result.id, _external=True)
     resp = jsonify({"message": "queued", "status_url": status_url})
     resp.status_code = 202
     resp.headers["Location"] = status_url

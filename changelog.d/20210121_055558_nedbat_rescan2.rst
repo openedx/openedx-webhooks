@@ -1,0 +1,5 @@
+.. A new scriv changelog fragment.
+
+- Rescanning now has a dry-run mode which record what would have been done, but
+  takes no action.
+

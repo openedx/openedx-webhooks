@@ -27,6 +27,22 @@ felipemontoya:
     jira: felipemontoya
     comments:
     - also signed individual agreement (CLA)
+    before:
+        2020-06-20:
+            committer: false
+hollyhunter:
+    # Is a committer now, but wasn't in the past.
+    email: holly@hunter.com
+    name: Holly Hunter
+    agreement: individual
+    committer:
+        repos:
+            - edx/edx-platform
+        champions:
+            - nedbat
+    before:
+        2020-01-02:
+            committer: false
 jarv:
     email: jarv@edx.org
     name: John Jarvis
@@ -94,13 +110,15 @@ raisingarizona:
         2017-01-02:
             agreement: institution
             institution: edX
+        2016-01-02:
+            agreement: none
         2015-01-02:
             agreement: individual
             committer:
                 repos:
                     - edx/edx-platform
-        2016-01-02:
-            agreement: none
+        2014-01-02:
+            committer: false
 theJohnnyBrown:
     email: johnnybrown7@gmail.com
     name: Johnny Brown

@@ -105,18 +105,23 @@ def test_updated_person_has_institution():
     assert updated_person["institution"] == "edX"
 
 def test_updated_person():
+    # This only works if "before" clauses are layered together properly.
     people = get_people_file()
     created_at = datetime(2014, 1, 1)
     updated_person = get_person_certain_time(people["raisingarizona"], created_at)
     assert updated_person["agreement"] == "individual"
 
-def test_old_committer(make_pull_request):
-    pr = make_pull_request("raisingarizona")
-    assert not is_committer_pull_request(pr)
-    pr = make_pull_request("raisingarizona", created_at=datetime(2014, 12, 31))
-    assert is_committer_pull_request(pr)
-    pr = make_pull_request("raisingarizona", created_at=datetime(2015, 12, 31))
-    assert not is_committer_pull_request(pr)
+@pytest.mark.parametrize("who, when, cc", [
+    ("raisingarizona", datetime(2020, 12, 31), False),
+    ("raisingarizona", datetime(2015, 12, 31), False),
+    ("raisingarizona", datetime(2014, 12, 31), True),
+    ("raisingarizona", datetime(2013, 12, 31), False),
+    ("hollyhunter", datetime(2020, 12, 31), True),
+    ("hollyhunter", datetime(2019, 12, 31), False),
+])
+def test_old_committer(make_pull_request, who, when, cc):
+    pr = make_pull_request(who, created_at=when)
+    assert is_committer_pull_request(pr) == cc
 
 @pytest.mark.parametrize("user, created_at_args, has_cla", [
     ("nedbat", (2020, 7, 2), True),
