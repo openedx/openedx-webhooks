@@ -86,11 +86,14 @@ def update_jira_issue(issue_key, summary=None, description=None, labels=None, ep
     Update some fields on a Jira issue.
     """
     fields = {}
+    notify = "false"
     custom_fields = get_jira_custom_fields(get_jira_session())
     if summary is not None:
         fields["summary"] = summary
+        notify = "true"
     if description is not None:
         fields["description"] = description
+        notify = "true"
     if labels is not None:
         fields["labels"] = labels
     if epic_link is not None:
@@ -99,6 +102,6 @@ def update_jira_issue(issue_key, summary=None, description=None, labels=None, ep
         for name, value in extra_fields:
             fields[custom_fields[name]] = value
     assert fields
-    url = f"/rest/api/2/issue/{issue_key}"
+    url = f"/rest/api/2/issue/{issue_key}?notifyUsers={notify}"
     resp = get_jira_session().put(url, json={"fields": fields})
     log_check_response(resp)
