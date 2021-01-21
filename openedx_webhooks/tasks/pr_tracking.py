@@ -564,16 +564,20 @@ def find_blended_epic(project_id: int) -> Optional[JiraDict]:
     Find the blended epic for a blended project.
     """
     jql = (
-        '"Blended Project ID" ~ "BD-00{id}" or ' +
-        '"Blended Project ID" ~ "BD-0{id}" or ' +
-        '"Blended Project ID" ~ "BD-{id}"'
+        '(' +
+        '"Blended Project ID" ~ "BD-00{id}" OR ' +
+        '"Blended Project ID" ~ "BD-0{id}" OR ' +
+        '"Blended Project ID" ~ "BD-{id}"' +
+        ')' +
+        ' AND project = Blended AND type = Epic'
     ).format(id=project_id)
     issues = list(jira_paginated_get("/rest/api/2/search", jql=jql, obj_name="issues", session=get_jira_session()))
     issue = None
     if not issues:
         logger.info(f"Couldn't find a blended epic for {project_id}")
     elif len(issues) > 1:
-        logger.info(f"Found {len(issues)} blended epics for {project_id}")
+        keys = [iss["key"] for iss in issues]
+        logger.error(f"Found more than one blended epic for {project_id}: {keys}")
     else:
         issue = issues[0]
     return issue
