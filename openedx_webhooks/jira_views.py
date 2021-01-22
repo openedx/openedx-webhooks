@@ -281,7 +281,6 @@ def issue_updated():
         change = jira_issue_rejected(event["issue"])
         changes.append(change)
 
-    logger.info(f"Comparing labels: {new_status=}, {repo_labels_lower=}")
     if new_status.lower() in repo_labels_lower:
         change = jira_issue_status_changed(event["issue"], event["changelog"])
         changes.append(change)
