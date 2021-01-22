@@ -102,6 +102,9 @@ def update_jira_issue(issue_key, summary=None, description=None, labels=None, ep
         for name, value in extra_fields:
             fields[custom_fields[name]] = value
     assert fields
+    # Note: notifyUsers=false only works if the bot is an admin in the project.
+    # Contrary to the docs, if the bot is not an admin, the setting isn't ignored,
+    # the request fails.
     url = f"/rest/api/2/issue/{issue_key}?notifyUsers={notify}"
     resp = get_jira_session().put(url, json={"fields": fields})
     log_check_response(resp)
