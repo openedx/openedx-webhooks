@@ -778,3 +778,40 @@ def test_handle_closed_pr(reqctx, sync_labels_fn, fake_github, fake_jira, merged
 
     # No new GitHub comment was created.
     assert len(pr.list_comments()) == 1
+
+
+def test_extra_fields_are_ok(reqctx, fake_github, fake_jira):
+    # If someone adds platform map information to the Jira issue, it won't
+    # trigger an update.
+    pr = fake_github.make_pull_request(
+        user="tusbar",
+        title="These are my changes, please take them.",
+        additions=1776,
+        deletions=1492,
+    )
+
+    with reqctx:
+        issue_id1, _ = pull_request_changed(pr.as_json())
+
+    issue = fake_jira.issues[issue_id1]
+    assert issue.summary == "These are my changes, please take them."
+    # The bot made one comment on the PR.
+    assert len(pr.list_comments()) == 1
+
+    # Someone adds platform map and label to the Jira.
+    issue.platform_map_1_2 = EXAMPLE_PLATFORM_MAP_1_2
+    issue.labels.add("my-label")
+
+    # PR gets rescanned.
+    with reqctx:
+        print("GOING AGAIN")
+        issue_id2, happened = pull_request_changed(pr.as_json())
+
+    assert not happened
+    assert issue_id2 == issue_id1
+    issue = fake_jira.issues[issue_id2]
+    # The bot didn't make another comment.
+    assert len(pr.list_comments()) == 1
+    # The issue should still have the ad-hoc label.
+    assert "my-label" in issue.labels
+    1/0

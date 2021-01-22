@@ -191,6 +191,14 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2021-01-22
+~~~~~~~~~~
+
+- When considering a pull request, we won't update the Jira extra fields if
+  none of our desired fields are different.  We used to update a Jira issue if
+  (for example) it had platform map info, but we didn't want to add platform
+  map info.
+
 2021-01-21
 ~~~~~~~~~~
 

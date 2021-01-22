@@ -446,7 +446,12 @@ class PrTrackingFixer:
             if self.current.jira_epic is None or (self.desired.jira_epic["key"] != self.current.jira_epic["key"]):
                 update_kwargs["epic_link"] = self.desired.jira_epic["key"]
 
-        if self.desired.jira_extra_fields != self.current.jira_extra_fields:
+        # Only update extra fields if the fields we want have changed.
+        current_extra_fields = {
+            k: v for k, v in self.current.jira_extra_fields.items()
+            if k in self.desired.jira_extra_fields
+        }
+        if self.desired.jira_extra_fields != current_extra_fields:
             update_kwargs["extra_fields"] = self.desired.jira_extra_fields
 
         if update_kwargs:
