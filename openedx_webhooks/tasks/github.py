@@ -130,7 +130,7 @@ def rescan_repository(
     state = "all" if allpr else "open"
     url = f"/repos/{repo}/pulls?state={state}"
 
-    created = {}
+    changed = {}
     dry_run_actions = {}
 
     # Pull requests before this will not be rescanned. Contractor messages
@@ -162,24 +162,24 @@ def rescan_repository(
 
             issue_key, anything_happened = pull_request_changed(pull_request, actions=actions)
         except Exception:
-            created[pull_request["number"]] = traceback.format_exc()
+            changed[pull_request["number"]] = traceback.format_exc()
         else:
             if anything_happened:
-                created[pull_request["number"]] = issue_key
+                changed[pull_request["number"]] = issue_key
                 if dry_run:
                     assert actions is not None
                     dry_run_actions[pull_request["number"]] = actions.action_calls
 
     if not dry_run:
         logger.info(
-            "Created {num} JIRA issues on repo {repo}. PRs are {prs}".format(
-                num=len(created), repo=repo, prs=list(created.keys()),
+            "Changed {num} JIRA issues on repo {repo}. PRs are {prs}".format(
+                num=len(changed), repo=repo, prs=list(changed.keys()),
             ),
         )
 
     info: Dict = {"repo": repo}
-    if created:
-        info["created"] = created
+    if changed:
+        info["changed"] = changed
     if dry_run_actions:
         info["dry_run_actions"] = dry_run_actions
     return info

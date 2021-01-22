@@ -57,23 +57,23 @@ def make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="
 def test_rescan_repository(rescannable_repo, reqctx, pull_request_changed_fn, allpr):
     with reqctx:
         ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
-    created = ret["created"]
+    changed = ret["changed"]
 
     # Look at the pull request numbers passed to pull_request_changed. Only the
     # external (even) numbers should be there.
     prnums = [c.args[0]["number"] for c in pull_request_changed_fn.call_args_list]
     if allpr:
         assert prnums == [102, 106, 108, 110]
-        assert set(created.keys()) == {102, 106, 108, 110}
-        assert created[110] == "OSPR-1234"
+        assert set(changed.keys()) == {102, 106, 108, 110}
+        assert changed[110] == "OSPR-1234"
     else:
         assert prnums == [102, 106]
-        assert set(created.keys()) == {102, 106}
+        assert set(changed.keys()) == {102, 106}
 
     # If we rescan again, nothing should happen.
     with reqctx:
         ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
-    assert "created" not in ret
+    assert "changed" not in ret
 
 
 def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_jira, pull_request_changed_fn):
@@ -86,7 +86,7 @@ def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_j
     fake_jira.assert_readonly()
 
     # These are the OSPR tickets for the pull requests.
-    assert ret["created"] == {
+    assert ret["changed"] == {
         102: "OSPR-9000",
         106: "OSPR-9001",
         108: "OSPR-9002",
@@ -190,7 +190,7 @@ def test_rescan_blended(reqctx, fake_github, fake_jira):
     with reqctx:
         ret = rescan_repository(pr.repo.full_name, allpr=True)
 
-    assert "created" not in ret
+    assert "changed" not in ret
 
     # We shouldn't have made any writes to GitHub or Jira.
     fake_github.assert_readonly()
@@ -232,8 +232,8 @@ def test_rescan_failure(mocker, rescannable_repo, reqctx):
     with reqctx:
         ret = rescan_repository(rescannable_repo.full_name, allpr=True)
 
-    assert list(ret["created"]) == [102, 106, 108, 110]
-    err = ret["created"][108]
+    assert list(ret["changed"]) == [102, 106, 108, 110]
+    err = ret["changed"][108]
     assert err.startswith("Traceback (most recent call last):\n")
     assert " in flaky_pull_request_changed\n" in err
     assert "1/0 # BOOM" in err
