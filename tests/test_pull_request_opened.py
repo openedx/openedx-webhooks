@@ -211,6 +211,16 @@ def test_old_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_
     assert pr.labels == {"needs triage", "open-source-contribution"}
 
 
+EXAMPLE_PLATFORM_MAP_1_2 = {
+    "child": {
+        "id": "14522",
+        "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14522",
+        "value": "Course Level Insights"
+    },
+    "id": "14209",
+    "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
+    "value": "Researcher & Data Experiences"
+}
 
 @pytest.mark.parametrize("with_epic", [False, True])
 def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_github, fake_jira):
@@ -218,21 +228,11 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
     prj = pr.as_json()
     total_issues = 0
     if with_epic:
-        map_1_2 = {
-            "child": {
-                "id": "14522",
-                "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14522",
-                "value": "Course Level Insights"
-            },
-            "id": "14209",
-            "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
-            "value": "Researcher & Data Experiences"
-        }
         epic = fake_jira.make_issue(
             project="BLENDED",
             blended_project_id="BD-34",
             blended_project_status_page="https://thewiki/bd-34",
-            platform_map_1_2=map_1_2,
+            platform_map_1_2=EXAMPLE_PLATFORM_MAP_1_2,
         )
         total_issues += 1
 
@@ -257,7 +257,7 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
     assert issue.labels == {"blended"}
     if with_epic:
         assert issue.epic_link == epic.key
-        assert issue.platform_map_1_2 == map_1_2
+        assert issue.platform_map_1_2 == EXAMPLE_PLATFORM_MAP_1_2
     else:
         assert issue.epic_link is None
         assert issue.platform_map_1_2 is None
@@ -454,21 +454,11 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
     A blended developer opens a PR, but forgets to put "[BD]" in the title.
     """
     # The blended project exists:
-    map_1_2 = {
-        "child": {
-            "id": "14522",
-            "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14522",
-            "value": "Course Level Insights"
-        },
-        "id": "14209",
-        "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
-        "value": "Researcher & Data Experiences"
-    }
     epic = fake_jira.make_issue(
         project="BLENDED",
         blended_project_id="BD-34",
         blended_project_status_page="https://thewiki/bd-34",
-        platform_map_1_2=map_1_2,
+        platform_map_1_2=EXAMPLE_PLATFORM_MAP_1_2,
     )
 
     # The developer makes a pull request, but forgets the right syntax in the title.
@@ -519,7 +509,7 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
     assert issue.summary == prj["title"]
     assert issue.labels == {"blended"}
     assert issue.epic_link == epic.key
-    assert issue.platform_map_1_2 == map_1_2
+    assert issue.platform_map_1_2 == EXAMPLE_PLATFORM_MAP_1_2
 
     # Check that the Jira issue is in Needs Triage.
     assert issue.status == "Needs Triage"
