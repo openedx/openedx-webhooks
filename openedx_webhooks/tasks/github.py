@@ -130,7 +130,7 @@ def rescan_repository(
     state = "all" if allpr else "open"
     url = f"/repos/{repo}/pulls?state={state}"
 
-    changed = {}
+    changed: Dict[int, Optional[str]] = {}
     dry_run_actions = {}
 
     # Pull requests before this will not be rescanned. Contractor messages
