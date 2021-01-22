@@ -814,4 +814,3 @@ def test_extra_fields_are_ok(reqctx, fake_github, fake_jira):
     assert len(pr.list_comments()) == 1
     # The issue should still have the ad-hoc label.
     assert "my-label" in issue.labels
-    1/0
