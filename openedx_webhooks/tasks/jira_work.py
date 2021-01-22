@@ -1,3 +1,9 @@
+"""
+Jira manipulations.
+"""
+
+from typing import Any, Dict, List, Optional
+
 import requests
 
 from openedx_webhooks.oauth import get_jira_session
@@ -81,11 +87,18 @@ def transition_jira_issue(issue_key, status_name):
     return True
 
 
-def update_jira_issue(issue_key, summary=None, description=None, labels=None, epic_link=None, extra_fields=None):
+def update_jira_issue(
+        issue_key: str,
+        summary: Optional[str]=None,
+        description: Optional[str]=None,
+        labels: Optional[List[str]]=None,
+        epic_link: Optional[str]=None,
+        extra_fields: Optional[Dict[str, str]]=None,
+    ):
     """
     Update some fields on a Jira issue.
     """
-    fields = {}
+    fields: Dict[str, Any] = {}
     notify = "false"
     custom_fields = get_jira_custom_fields(get_jira_session())
     if summary is not None:
@@ -99,7 +112,7 @@ def update_jira_issue(issue_key, summary=None, description=None, labels=None, ep
     if epic_link is not None:
         fields[custom_fields["Epic Link"]] = epic_link
     if extra_fields is not None:
-        for name, value in extra_fields:
+        for name, value in extra_fields.items():
             fields[custom_fields[name]] = value
     assert fields
     # Note: notifyUsers=false only works if the bot is an admin in the project.

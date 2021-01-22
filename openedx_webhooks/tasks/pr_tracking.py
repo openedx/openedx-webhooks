@@ -98,7 +98,7 @@ class PrCurrentInfo:
     jira_labels: Set[str] = field(default_factory=set)
     jira_epic_key: Optional[str] = None
     jira_epic: Optional[JiraDict] = None
-    jira_extra_fields: List[Tuple[str, str]] = field(default_factory=list)
+    jira_extra_fields: Dict[str, str] = field(default_factory=dict)
 
     # The actual set of labels on the pull request.
     github_labels: Set[str] = field(default_factory=set)
@@ -127,7 +127,7 @@ class PrDesiredInfo:
 
     jira_labels: Set[str] = field(default_factory=set)
     jira_epic: Optional[JiraDict] = None
-    jira_extra_fields: List[Tuple[str, str]] = field(default_factory=list)
+    jira_extra_fields: Dict[str, str] = field(default_factory=dict)
 
     # The bot-controlled labels we want to on the pull request.
     # See labels.py:CATEGORY_LABELS
@@ -178,11 +178,11 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
 
             custom_fields = get_jira_custom_fields(get_jira_session())
             current.jira_epic_key = issue["fields"].get(custom_fields["Epic Link"])
-            current.jira_extra_fields = [
-                (name, value)
+            current.jira_extra_fields = {
+                name: value
                 for name in JIRA_EXTRA_FIELDS
                 if (value := issue["fields"][custom_fields[name]]) is not None
-            ]
+            }
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
 
     if current.last_seen_state.get("draft", False) and not is_draft_pull_request(pr):
@@ -238,7 +238,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             custom_fields = get_jira_custom_fields(get_jira_session())
             map_1_2 = blended_epic["fields"].get(custom_fields["Platform Map Area (Levels 1 & 2)"])
             if map_1_2 is not None:
-                desired.jira_extra_fields.append(("Platform Map Area (Levels 1 & 2)", map_1_2))
+                desired.jira_extra_fields["Platform Map Area (Levels 1 & 2)"] = map_1_2
     else:
         comment = BotComment.WELCOME
         desired.jira_project = "OSPR"
@@ -273,9 +273,9 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         desired.bot_comments.add(BotComment.OK_TO_TEST)
 
     if "additions" in pr:
-        desired.jira_extra_fields.append(("Github Lines Added", pr["additions"]))
+        desired.jira_extra_fields["Github Lines Added"] = pr["additions"]
     if "deletions" in pr:
-        desired.jira_extra_fields.append(("Github Lines Deleted", pr["deletions"]))
+        desired.jira_extra_fields["Github Lines Deleted"] = pr["deletions"]
 
     return desired
 
@@ -390,9 +390,10 @@ class PrTrackingFixer:
         """
         Make our desired Jira issue.
         """
+        assert self.desired.jira_project is not None
         extra_fields = self.desired.jira_extra_fields
         if self.desired.jira_epic:
-            extra_fields.append(("Epic Link", self.desired.jira_epic["key"]))
+            extra_fields["Epic Link"] = self.desired.jira_epic["key"]
         user_name, institution = get_name_and_institution_for_pr(self.pr)
         new_issue = self.actions.create_ospr_issue(
             pr_url=self.pr["html_url"],
@@ -445,7 +446,7 @@ class PrTrackingFixer:
             if self.current.jira_epic is None or (self.desired.jira_epic["key"] != self.current.jira_epic["key"]):
                 update_kwargs["epic_link"] = self.desired.jira_epic["key"]
 
-        if sorted(self.desired.jira_extra_fields) != sorted(self.current.jira_extra_fields):
+        if self.desired.jira_extra_fields != self.current.jira_extra_fields:
             update_kwargs["extra_fields"] = self.desired.jira_extra_fields
 
         if update_kwargs:
@@ -671,14 +672,14 @@ class FixingActions:
 
     def create_ospr_issue(
         self, *,
-        pr_url,
-        project,
-        summary,
-        description,
-        labels,
-        user_name,
-        institution,
-        extra_fields
+        pr_url: str,
+        project: str,
+        summary: Optional[str],
+        description: Optional[str],
+        labels: List[str],
+        user_name: Optional[str],
+        institution: Optional[str],
+        extra_fields: Dict[str, str],
     ) -> Dict:
         """
         Create a new OSPR or OSPR-like issue for a pull request.
@@ -707,7 +708,7 @@ class FixingActions:
         if institution:
             new_issue["fields"][custom_fields["Customer"]] = [institution]
         if extra_fields:
-            for name, value in extra_fields:
+            for name, value in extra_fields.items():
                 new_issue["fields"][custom_fields[name]] = value
         sentry_extra_context({"new_issue": new_issue})
 
