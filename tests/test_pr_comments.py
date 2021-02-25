@@ -32,10 +32,7 @@ def test_community_pr_comment_no_author(reqctx, fake_github, fake_jira):
         comment = github_community_pr_comment(pr.as_json(), jira.key)
     assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
     assert is_comment_kind(BotComment.NEED_CLA, comment)
-    assert (
-        "[signed contributor agreement]" +
-        "(https://open.edx.org/wp-content/uploads/2019/01/individual-contributor-agreement.pdf)"
-    ) in comment
+    assert "[signed contributor agreement](https://openedx.org/cla)" in comment
     check_good_markdown(comment)
 
 

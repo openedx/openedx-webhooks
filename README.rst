@@ -191,6 +191,13 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2021-02-25
+~~~~~~~~~~
+
+- Update the CLA link to go to https://openedx.org/cla, which currently
+  redirects to our new Docusign form.  If we have to change the form in the
+  future, we can change the redirect on openedx.org.
+
 2021-01-22
 ~~~~~~~~~~
 
