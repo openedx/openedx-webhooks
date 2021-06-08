@@ -37,7 +37,7 @@ click==7.1.2
     #   -r base.in
     #   flask
     #   rq
-cryptography==3.0
+cryptography==3.3.2
     # via
     #   -r base.in
     #   jwcrypto
