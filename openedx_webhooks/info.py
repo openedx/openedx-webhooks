@@ -142,7 +142,8 @@ def _is_pull_request(pull_request: PrDict, kind: str) -> bool:
 
 def is_committer_pull_request(pull_request: PrDict) -> bool:
     """
-    Was this pull request created by a core committer for this repo?
+    Was this pull request created by a core committer for this repo
+    or branch?
     """
     person = _pr_author_data(pull_request)
     if person is None:
@@ -152,6 +153,7 @@ def is_committer_pull_request(pull_request: PrDict) -> bool:
 
     repo = pull_request["base"]["repo"]["full_name"]
     org = repo.partition("/")[0]
+    branch = pull_request["base"]["ref"]
     commit_rights = person["committer"]
     if not commit_rights:
         return False
@@ -161,6 +163,12 @@ def is_committer_pull_request(pull_request: PrDict) -> bool:
     if "repos" in commit_rights:
         if repo in commit_rights["repos"]:
             return True
+    if "branches" in commit_rights:
+        for access_branch in commit_rights["branches"]:
+            if access_branch.endswith("*") and branch.startswith(access_branch[:-1]):
+                return True
+            elif branch == access_branch:
+                return True
     return False
 
 

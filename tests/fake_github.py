@@ -119,6 +119,7 @@ class PullRequest:
     draft: bool = False
     additions: Optional[int] = None
     deletions: Optional[int] = None
+    ref: str = ""
 
     def as_json(self, brief=False) -> Dict:
         j = {
@@ -131,6 +132,7 @@ class PullRequest:
             "labels": [self.repo.get_label(l).as_json() for l in sorted(self.labels)],
             "base": {
                 "repo": self.repo.as_json(),
+                "ref": self.ref,
             },
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "url": f"{self.repo.github.host}/repos/{self.repo.full_name}/pulls/{self.number}",

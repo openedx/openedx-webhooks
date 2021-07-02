@@ -38,6 +38,8 @@ hollyhunter:
     committer:
         repos:
             - edx/edx-platform
+        branches:
+            - open-release/*
         champions:
             - nedbat
     before:
@@ -92,6 +94,8 @@ pdpinch:
             - edx/ccx-keys
         champions:
             - feanil
+        branches:
+            - open-release/aspen.1
     other_emails:
     - github@hawklake.com
     comments:
