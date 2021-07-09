@@ -85,6 +85,29 @@ def test_repo_committers(make_pull_request):
     assert not is_internal_pull_request(pr)
     assert not is_committer_pull_request(pr)
 
+def test_base_branch_committers(make_pull_request):
+    pr = make_pull_request(
+        "hollyhunter",
+        repo="edx/fake-release-repo",
+        ref="open-release/birch.1"
+    )
+    assert not is_internal_pull_request(pr)
+    assert is_committer_pull_request(pr)
+    pr = make_pull_request(
+        "hollyhunter",
+        repo="edx/fake-release-repo",
+        ref="master"
+    )
+    assert not is_internal_pull_request(pr)
+    assert not is_committer_pull_request(pr)
+    pr = make_pull_request(
+        "pdpinch",
+        repo="edx/fake-release-repo",
+        ref="open-release/birch.1"
+    )
+    assert not is_internal_pull_request(pr)
+    assert not is_committer_pull_request(pr)
+
 def test_current_person_no_institution():
     people = get_people_file()
     created_at = datetime.today()
