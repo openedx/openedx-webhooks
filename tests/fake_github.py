@@ -15,6 +15,7 @@ from urllib.parse import unquote
 
 from . import faker
 from .helpers import check_good_markdown
+from openedx_webhooks.github.dispatcher.actions.utils import CLA_CONTEXT
 
 
 class FakeGitHubException(faker.FakerException):
@@ -102,6 +103,18 @@ class Comment:
             "body": self.body,
             "user": self.user.as_json(),
         }
+
+
+@dataclass
+class PullRequestCommits:
+    commits: List
+
+    def as_json(self) -> Dict:
+        return [
+            {
+                'sha': 'deadbeefcafe',
+            },
+        ]
 
 
 @dataclass
@@ -284,6 +297,8 @@ class FakeGitHub(faker.Faker):
         self.login = login
         self.users: Dict[str, User] = {}
         self.repos: Dict[str, Repo] = {}
+        self.has_signed_cla = True
+        self.cla_statuses: Dict[str, str] = {}
 
     def make_user(self, login: str, **kwargs) -> User:
         u = self.users[login] = User(login, **kwargs)
@@ -360,6 +375,32 @@ class FakeGitHub(faker.Faker):
         if "labels" in patch:
             pr.set_labels(patch["labels"])
         return pr.as_json()
+
+    # Commmits
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pulls/(?P<number>\d+)/commits(\?.*)?")
+    def _patch_pr_commits(self, match, request, _context) -> Dict:
+        commits = PullRequestCommits(self)
+        data = commits.as_json()
+        return data
+
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?")
+    def _patch_pr_status_check(self, match, request, _context) -> Dict:
+        return [
+            {
+                'context': CLA_CONTEXT,
+                'state': self.cla_statuses.get(match['sha']),
+            },
+        ]
+
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?", 'POST')
+    def _patch_pr_status_update(self, match, request, _context) -> Dict:
+        self.cla_statuses[match['sha']] = request.json()['state']
+        return [
+            {
+                'context': CLA_CONTEXT,
+                'state': self.cla_statuses.get(match['sha']),
+            },
+        ]
 
     # Repo labels
 
