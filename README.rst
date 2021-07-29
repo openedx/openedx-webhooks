@@ -18,8 +18,8 @@ Prerequisites
 
 Make sure you've installed:
 
--  Python 2.7.x development environment (virtualenv strongly
-   recommended)
+-  Python 3.8.x development environment
+   (virtualenv strongly recommended)
 -  `Heroku Command Line`_
 
    All ``heroku`` commands can be performed through the Heroku web-based
