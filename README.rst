@@ -28,28 +28,24 @@ Make sure you've installed:
 Set up
 ~~~~~~
 
-1. Log in using the email address and password you used when creating
-   your Heroku account::
+Log in using the email address and password you used when creating
+your Heroku account::
 
-       heroku login
+    make deploy-configure
 
-   Authenticating is required to allow both the ``heroku`` and ``git``
-   commands to operate.
+Authenticating is required to allow both the ``heroku`` and ``git``
+commands to operate.
 
-2. Add the Heroku app repo as a git remote::
+Alternatively, to authenticate with SSH keys::
 
-       heroku git:remote -a openedx-webhooks-staging
+    make deploy-configure DEPLOY_USE_SSH=true
 
-3. Verify that the remote is added properly::
+You should see output similar to::
 
-       git remote -v
-
-   You should see output similar to::
-
-       heroku  https://git.heroku.com/openedx-webhooks-staging.git (push)
-       heroku  https://git.heroku.com/openedx-webhooks-staging.git (fetch)
-       origin  git@github.com:edx/openedx-webhooks.git (fetch)
-       origin  git@github.com:edx/openedx-webhooks.git (push)
+    heroku  https://git.heroku.com/openedx-webhooks-staging.git (push)
+    heroku  https://git.heroku.com/openedx-webhooks-staging.git (fetch)
+    origin  git@github.com:edx/openedx-webhooks.git (fetch)
+    origin  git@github.com:edx/openedx-webhooks.git (push)
 
 Develop
 -------
@@ -70,25 +66,18 @@ The general development cycle is:
 
 Code → Deploy branch to staging → Test → Iterate
 
-To deploy a local branch to staging::
+To deploy your current working branch to staging::
 
-    git push heroku [branch_or_tag_or_hash:]master
+    make deploy-stage-branch
 
-In most cases, to push your current working branch, use::
+To deploy an arbitrary branch::
 
-    git push heroku @:master
+    make deploy-stage-branch DEPLOY_STAGING_BRANCH=feat/my-branch
 
 Once you're satisfied with your changes, go ahead and open a pull
 request per normal development procedures.
 
-Smoke test the deployment
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Navigate to https://openedx-webhooks-staging.herokuapp.com to make sure
-the app has started. If the URL is too hard to remember, you can also
-use::
-
-    heroku open
+Smoke test the deployment.
 
 If the application isn't running, visit the `openedx-webhooks-staging
 Resources`_ page to make sure there are dynos running.
@@ -101,8 +90,7 @@ Run Tests
 
 ::
 
-    make install-dev-requirements
-    make test
+    make install-dev-requirements test
 
 Deploy
 ------
@@ -117,33 +105,17 @@ production
 to ``master``, and you've deployed the ``master`` branch successfully to
 staging::
 
-    git push heroku master
+    make deploy-stage
 
 When you're ready to promote from staging to production::
 
-    heroku pipelines:promote -r heroku
+    make deploy-prod
 
-Ensure the same versions are deployed
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Make sure the same git commit is deployed to both environments. First
-see what's deployed on staging::
-
-    heroku releases -n 1
-
-Then see what's deployed on production::
-
-    heroku releases -a openedx-webhooks -n 1
+Make sure the same git commit is deployed to both environments.
 
 Make sure the abbreviated git SHAs match.
 
-Smoke test the deployment
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Navigate to https://openedx-webhooks.herokuapp.com to make sure the app
-has started. If the URL is too hard to remember, you can also use::
-
-    heroku open -a openedx-webhooks
+Smoke test the deployment.
 
 
 Other things to know
