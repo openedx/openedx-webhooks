@@ -94,3 +94,50 @@ rq-requeue-failed: ## Requeue failed RQ jobs
 
 rqinfo: ## See RQ info
 	@$(MAKE) cmd=rqinfo rq-cmd
+
+DEPLOY_PROD_APP=openedx-webhooks
+DEPLOY_STAGING_APP=openedx-webhooks-staging
+DEPLOY_STAGING_BRANCH=HEAD
+DEPLOY_STAGING_REMOTE=heroku
+# Set to true to use git over SSH
+DEPLOY_USE_SSH=
+ifeq (,$(DEPLOY_USE_SSH))
+HEROKU_LOGIN_COMMAND=login
+HEROKU_GIT_REMOTE_ARGS=
+else
+HEROKU_LOGIN_COMMAND=keys:add
+HEROKU_GIT_REMOTE_ARGS=--ssh-git
+endif
+
+deploy-configure:  ## configure heroku for deployment
+	heroku apps >/dev/null 2>&1 || \
+		heroku "$(HEROKU_LOGIN_COMMAND)"
+	git remote get-url "$(DEPLOY_STAGING_REMOTE)" >/dev/null 2>&1 || \
+		heroku git:remote --app "$(DEPLOY_STAGING_APP)" $(HEROKU_GIT_REMOTE_ARGS)
+	@echo
+	git remote -v
+
+deploy-check: deploy-configure  ## check heroku deployments
+	@echo
+	heroku releases --app "$(DEPLOY_STAGING_APP)" -n 1 2>/dev/null
+	heroku releases --app "$(DEPLOY_PROD_APP)" -n 1 2>/dev/null
+	@echo
+
+deploy-stage:  ## deploy master to stage via heroku
+	make deploy-stage-branch DEPLOY_STAGING_BRANCH=master
+
+deploy-stage-branch: deploy-check  ## deploy a branch to stage via heroku
+	@echo
+	git push "$(DEPLOY_STAGING_REMOTE)" "$(DEPLOY_STAGING_BRANCH):master"
+	@echo
+	heroku releases --app "$(DEPLOY_STAGING_APP)" -n 1 2>/dev/null
+	heroku open --app "$(DEPLOY_STAGING_APP)" 2>/dev/null
+
+deploy-prod: deploy-check  ## deploy master to production via heroku
+	@echo
+	heroku pipelines:promote -r "$(DEPLOY_STAGING_REMOTE)"
+	@echo
+	heroku releases --app "$(DEPLOY_PROD_APP)" -n 1 2>/dev/null
+	@echo
+	make deploy-check
+	heroku open --app "$(DEPLOY_PROD_APP)" 2>/dev/null
