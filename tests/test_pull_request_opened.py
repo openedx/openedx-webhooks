@@ -86,7 +86,11 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     assert not is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
-    assert pr.labels == {"community manager review", "open-source-contribution"}
+    assert pr.labels == {
+        'community manager review',
+        'open-source-contribution',
+        'NEED-CLA',
+    }
 
 
 def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_jira):
@@ -667,7 +671,11 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, fake_github, fake_ji
     else:
         assert pr_type == "nocla"
         assert is_comment_kind(BotComment.NEED_CLA, body)
-        assert pr.labels == {"community manager review", "open-source-contribution"}
+        assert pr.labels == {
+            'community manager review',
+            'open-source-contribution',
+            'NEED-CLA',
+        }
 
     if jira_got_fiddled:
         # Someone changes the status from "Waiting on Author" manually.

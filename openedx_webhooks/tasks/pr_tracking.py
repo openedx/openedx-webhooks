@@ -263,6 +263,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     if not has_signed_agreement:
         desired.bot_comments.add(BotComment.NEED_CLA)
         desired.jira_initial_status = "Community Manager Review"
+        desired.github_labels.add('NEED-CLA')
 
     if state == "closed":
         desired.jira_status = "Rejected"
