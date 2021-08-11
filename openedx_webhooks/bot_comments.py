@@ -37,7 +37,7 @@ class BotComment(Enum):
 BOT_COMMENT_INDICATORS = {
     BotComment.WELCOME: [
         "<!-- comment:external_pr -->",
-        "Feel free to add as much of the following information to the ticket:",
+        "Feel free to add as much of the following information to the ticket",
     ],
     BotComment.WELCOME_CLOSED: [
         "<!-- comment:welcome_closed -->",
