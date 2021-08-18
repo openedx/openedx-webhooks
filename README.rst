@@ -163,6 +163,11 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2021-08-18
+~~~~~~~~~~
+
+- fix: all UI pages are now protected with basic auth.
+
 2021-02-25
 ~~~~~~~~~~
 
