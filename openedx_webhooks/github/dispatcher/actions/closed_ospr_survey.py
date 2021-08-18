@@ -5,7 +5,6 @@ Update OSPR with link to survey.
 import arrow
 
 from ....lib.github.decorators import inject_gh
-from ....lib.jira.decorators import inject_jira
 from ...models import GithubEvent
 from .utils import find_issues_for_pull_request
 
@@ -36,19 +35,18 @@ NOT_MERGED_MSG = """\
 """.format(SURVEY_URL)  # noqa
 
 
-@inject_jira
 @inject_gh
-def run(gh, jira, event_type, raw_event):
+def run(gh, event_type, raw_event):
     """
     Update PR with link to survey.
 
     Arguments:
         gh (github3.GitHub): An authenticated GitHub API client session
-        jira (jira.JIRA): An authenticated JIRA API client session
         event_type (str): GitHub event type
         raw_event (Dict[str, Any]): The parsed event payload
     """
     event = GithubEvent(gh, event_type, raw_event)
+    jira = get_authenticated_jira_client()
     has_jira_issue = bool(find_issues_for_pull_request(jira, event.html_url))
 
     if event.action != 'closed' or not has_jira_issue:

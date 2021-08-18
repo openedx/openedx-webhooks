@@ -9,7 +9,7 @@ from openedx_webhooks.jira.tasks import update_latest_github_activity
 from openedx_webhooks.lib.edx_repo_tools_data.utils import get_people
 from openedx_webhooks.lib.exceptions import NotFoundError
 from openedx_webhooks.lib.github.client import github_client as gh
-from openedx_webhooks.lib.jira.client import jira_client as jira
+from openedx_webhooks.lib.jira.client import get_authenticated_jira_client
 from openedx_webhooks.lib.jira.utils import make_fields_lookup
 
 click.disable_unicode_literals_warning = True
@@ -151,6 +151,8 @@ def cli(issue, dry_run):
     merged or rejected will be processed. You can specify multiple issues
     by using the `--issue` option multiple times.
     """
+    jira = get_authenticated_jira_client()
+
     if issue:
         issue_keys = ["OSPR-{}".format(i) for i in issue]
         issues = retrieve_issues_by_keys(jira, issue_keys)

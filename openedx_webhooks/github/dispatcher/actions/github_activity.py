@@ -4,7 +4,7 @@ Update JIRA issue with latest GitHub activity.
 
 from ....jira.tasks import update_latest_github_activity
 from ....lib.github.decorators import inject_gh
-from ....lib.jira.decorators import inject_jira
+from ....lib.jira.client import get_authenticated_jira_client
 from ...models import GithubEvent
 from .utils import find_issues_for_pull_request
 
@@ -16,15 +16,13 @@ EVENT_TYPES = (
 )
 
 
-@inject_jira
 @inject_gh
-def run(gh, jira, event_type, raw_event):
+def run(gh, event_type, raw_event, jira_client=None):
     """
     Update each corresponding JIRA issue with GitHub activity.
 
     Arguments:
         gh (github3.GitHub): An authenticated GitHub API client session
-        jira (jira.JIRA): An authenticated JIRA API client session
         event_type (str): GitHub event type
         raw_event (Dict[str, Any]): The parsed event payload
     """
@@ -36,6 +34,7 @@ def run(gh, jira, event_type, raw_event):
 
     is_edx_user = is_known_user and event.openedx_user.is_edx_user
 
+    jira = jira_client or get_authenticated_jira_client()
     issues = find_issues_for_pull_request(jira, event.html_url)
     for issue in issues:
         update_latest_github_activity(
