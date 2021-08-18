@@ -6,6 +6,8 @@ import logging_tree
 
 from openedx_webhooks import celery, log_level
 from openedx_webhooks.debug import print_long
+from openedx_webhooks.utils import requires_auth
+
 
 # Set up Celery logging.
 logger = get_task_logger(__name__)
@@ -18,6 +20,7 @@ logger.setLevel(log_level)
 tasks = Blueprint('tasks', __name__)
 
 @tasks.route('/status/<task_id>')
+@requires_auth
 def status(task_id):
     result = celery.AsyncResult(task_id)
     return jsonify({
@@ -26,6 +29,7 @@ def status(task_id):
     })
 
 @tasks.route('/statusrepr/<task_id>')
+@requires_auth
 def statusrepr(task_id):
     """Get the status of a task, but repr() everything so we can see JSON failures from /status/<task_id>"""
     result = celery.AsyncResult(task_id)
@@ -35,6 +39,7 @@ def statusrepr(task_id):
     })
 
 @tasks.route('/status/group:<group_id>')
+@requires_auth
 def group_status(group_id):
     # NOTE: This will only work if the GroupResult
     # has previously called .save() on itself

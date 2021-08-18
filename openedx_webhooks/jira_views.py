@@ -17,6 +17,7 @@ from openedx_webhooks.tasks.github_work import synchronize_labels
 from openedx_webhooks.utils import (
     jira_paginated_get, sentry_extra_context,
     github_pr_num, github_pr_url, github_pr_repo,
+    requires_auth,
 )
 
 jira_bp = Blueprint('jira_views', __name__)
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 @jira_bp.route("/issue/rescan", methods=("GET",))
+@requires_auth
 def rescan_issues_get():
     """
     Display a friendly HTML form for re-scanning JIRA issues.
@@ -32,6 +34,7 @@ def rescan_issues_get():
 
 
 @jira_bp.route("/issue/rescan", methods=("POST",))
+@requires_auth
 def rescan_issues():
     """
     Re-scan all JIRA issues that are in the "Needs Triage" state. If any were

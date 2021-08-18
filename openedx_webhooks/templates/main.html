@@ -26,8 +26,8 @@
         <a href="{{ url_for("github.login") }}">Authenticate</a>
         {% endif %}
       </li>
-      <li><a href="{{ url_for("github_views.rescan") }}">Rescan Pull Requests</a></li>
-      <li><a href="{{ url_for("github_views.process_pr") }}">Process Pull Request</a></li>
+      <li><a href="{{ url_for("github_views.rescan_get") }}">Rescan Pull Requests</a></li>
+      <li><a href="{{ url_for("github_views.process_pr_get") }}">Process Pull Request</a></li>
       <li><a href="{{ url_for("github_views.generate_error") }}">Generate Error</a></li>
     </ul>
     <h2>JIRA</h2>
@@ -40,7 +40,7 @@
         <a href="{{ url_for("jira.login") }}">Authenticate</a>
         {% endif %}
       </li>
-      <li><a href="{{ url_for("jira_views.rescan_issues") }}">Rescan Issues</a></li>
+      <li><a href="{{ url_for("jira_views.rescan_issues_get") }}">Rescan Issues</a></li>
     </ul>
     </body>
 </html>
