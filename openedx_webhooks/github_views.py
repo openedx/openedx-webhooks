@@ -18,7 +18,7 @@ from openedx_webhooks.tasks.github import (
     rescan_organization_task,
 )
 from openedx_webhooks.utils import (
-    is_valid_payload, minimal_wsgi_environ, sentry_extra_context
+    is_valid_payload, minimal_wsgi_environ, sentry_extra_context, requires_auth
 )
 
 github_bp = Blueprint('github_views', __name__)
@@ -102,6 +102,7 @@ def hook_receiver():
 
 
 @github_bp.route("/rescan", methods=("GET",))
+@requires_auth
 def rescan_get():
     """
     Display a friendly HTML form for rescanning GitHub pull requests.
@@ -110,6 +111,7 @@ def rescan_get():
 
 
 @github_bp.route("/rescan", methods=("POST",))
+@requires_auth
 def rescan():
     """
     Re-scan GitHub repositories to find pull requests that need OSPR issues
@@ -150,6 +152,7 @@ def rescan():
 
 
 @github_bp.route("/process_pr", methods=("GET",))
+@requires_auth
 def process_pr_get():
     """
     Display a friendly HTML form for processing or re-processing a pull request.
@@ -158,6 +161,7 @@ def process_pr_get():
 
 
 @github_bp.route("/process_pr", methods=("POST",))
+@requires_auth
 def process_pr():
     """
     Process (or re-process) a pull request.
@@ -189,6 +193,7 @@ def process_pr():
 
 
 @github_bp.route("/generate_error", methods=("GET",))
+@requires_auth
 def generate_error():
     """
     Used to generate an error message to test error handling
