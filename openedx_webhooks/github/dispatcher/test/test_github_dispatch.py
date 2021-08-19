@@ -4,6 +4,9 @@ from openedx_webhooks.github.dispatcher import dispatch
 
 
 class BaseDummyAction:
+    def __init__(self):
+        self.__name__ = self.__class__.__name__
+
     def run(self, event_type, event):
         pass
 
@@ -38,17 +41,17 @@ class TestDispatch:
         for a in actions:
             mocker.spy(a, 'run')
 
-        dispatch('header', 'event', actions)
+        dispatch('header', {}, actions)
 
         for a in actions:
-            a.run.assert_called_once_with('event_type', 'event')
+            a.run.assert_called_once_with('event_type', {})
 
     def test_no_match_event_type(self, mocker):
         actions = [DummyAction3()]
         for a in actions:
             mocker.spy(a, 'run')
 
-        dispatch('header', 'event', actions)
+        dispatch('header', {}, actions)
 
         for a in actions:
             assert a.run.call_count == 0
