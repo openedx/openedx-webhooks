@@ -163,6 +163,11 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2021-08-30
+~~~~~~~~~~
+
+- Removed one setting: JIRA_OAUTH_PRIVATE_KEY, which was just JIRA_OAUTH_RSA_KEY base64 encoded.
+
 2021-08-18
 ~~~~~~~~~~
 
