@@ -28,11 +28,11 @@ def patch_update_latest_github_activity(mocker):
 
 class TestProcess:
     def _test_user(
-            self, github_client, jira_client, _payload, login, is_edx_user
+        self, github_client, jira_client, _payload, login, is_edx_user
     ):
         payload = _payload.copy()
         payload['sender']['login'] = login
-        run(github_client, 'issue_comment', payload, jira_client=jira_client)
+        run('issue_comment', payload, github_client=github_client, jira_client=jira_client)
 
         func = (
             openedx_webhooks.github.dispatcher.actions.github_activity
@@ -57,7 +57,7 @@ class TestProcess:
                 'login': 'robot',
             },
         }
-        run(github_client, 'type', payload, jira_client=jira_client)
+        run('type', payload, github_client=github_client, jira_client=jira_client)
         func = (
             openedx_webhooks.github.dispatcher.actions.github_activity
             .find_issues_for_pull_request

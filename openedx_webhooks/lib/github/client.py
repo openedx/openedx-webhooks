@@ -2,9 +2,9 @@
 GitHub client instance.
 """
 
-import os
-
 from github3 import GitHub
+
+from openedx_webhooks.utils import environ_get
 
 try:
     from dotenv import find_dotenv, load_dotenv
@@ -12,7 +12,8 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
-_token = os.environ.get('GITHUB_PERSONAL_TOKEN')
-
-# (github3.GitHub): An authenticated GitHub API client session
-github_client = GitHub(token=_token)
+def get_authenticated_gh_client() -> GitHub:
+    """
+    Create an authenticated GitHub client.
+    """
+    return GitHub(token=environ_get('GITHUB_PERSONAL_TOKEN'))
