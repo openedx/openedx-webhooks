@@ -4,7 +4,6 @@ Utilities for working with JIRA.
 
 import arrow
 
-from .decorators import inject_jira
 from .models import JiraFields
 
 
@@ -25,7 +24,6 @@ def convert_to_jira_datetime_string(dt):
     return arrow.get(dt).format('YYYY-MM-DDTHH:mm:ss.SSSZ')
 
 
-@inject_jira
 def find_allowed_values(jira, project_key, issue_type_name, field_name):
     """
     Find allowed values for a given JIRA field.
@@ -54,7 +52,6 @@ def find_allowed_values(jira, project_key, issue_type_name, field_name):
     return fields[field_id]['allowedValues']
 
 
-@inject_jira
 def make_fields_lookup(jira, names=()):
     """
     Make a map of JIRA field names to IDs.

@@ -6,7 +6,6 @@ import logging
 
 from jira import JIRAError
 
-from ..lib.jira.decorators import inject_jira
 from ..lib.jira.utils import (
     convert_to_jira_datetime_string, find_allowed_values, make_fields_lookup
 )
@@ -45,7 +44,6 @@ def _make_edx_action_choices(jira):
     return choices
 
 
-@inject_jira
 def update_latest_github_activity(
         jira, issue_id, description, login, updated_at, is_edx_user
 ):

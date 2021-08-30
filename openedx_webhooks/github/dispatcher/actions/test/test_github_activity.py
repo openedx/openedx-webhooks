@@ -32,7 +32,7 @@ class TestProcess:
     ):
         payload = _payload.copy()
         payload['sender']['login'] = login
-        run(github_client, jira_client, 'issue_comment', payload)
+        run(github_client, 'issue_comment', payload, jira_client=jira_client)
 
         func = (
             openedx_webhooks.github.dispatcher.actions.github_activity
@@ -57,7 +57,7 @@ class TestProcess:
                 'login': 'robot',
             },
         }
-        run(github_client, jira_client, 'type', payload)
+        run(github_client, 'type', payload, jira_client=jira_client)
         func = (
             openedx_webhooks.github.dispatcher.actions.github_activity
             .find_issues_for_pull_request
