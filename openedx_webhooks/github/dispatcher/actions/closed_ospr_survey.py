@@ -5,6 +5,7 @@ Update OSPR with link to survey.
 import arrow
 
 from ....lib.github.client import get_authenticated_gh_client
+from ....lib.jira.client import get_authenticated_jira_client
 from ...models import GithubEvent
 from .utils import find_issues_for_pull_request
 

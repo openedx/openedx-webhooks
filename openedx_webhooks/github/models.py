@@ -39,7 +39,7 @@ class GithubEvent(GithubWebHookEvent):
         Optional(openedx_webhooks.lib.edx_repo_tools_data.models.Person):
             Activity user.
         """
-        people = get_people(self.gh)
+        people = get_people()
         try:
             return people.get(self.sender_login)
         except NotFoundError:
