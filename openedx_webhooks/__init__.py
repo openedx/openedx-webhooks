@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import traceback
 
 from celery import Celery
 from flask import Flask
@@ -78,20 +79,24 @@ def create_celery_app(app=None, config="worker"):
     celery.main = app.import_name
     celery.conf["BROKER_URL"] = app.config["CELERY_BROKER_URL"]
     celery.conf.update(app.config)
-    TaskBase = celery.Task
-    class ContextTask(TaskBase):
+    class ContextTask(celery.Task):
         abstract = True
         def __call__(self, *args, **kwargs):
             if "wsgi_environ" in kwargs:
                 wsgi_environ = kwargs.pop("wsgi_environ")
             else:
                 wsgi_environ = None
-            with app.app_context():
-                if wsgi_environ:
-                    with app.request_context(wsgi_environ):
-                        return TaskBase.__call__(self, *args, **kwargs)
-                else:
-                    return TaskBase.__call__(self, *args, **kwargs)
+            try:
+                with app.app_context():
+                    if wsgi_environ:
+                        with app.request_context(wsgi_environ):
+                            return self.run(*args, **kwargs)
+                    else:
+                        return self.run(*args, **kwargs)
+            except Exception:
+                # By default, celery will store an exception if it occurs,
+                # but we don't want the exception object, we want a traceback.
+                return traceback.format_exc()
 
     celery.Task = ContextTask
     return celery
