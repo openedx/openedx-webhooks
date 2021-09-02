@@ -457,7 +457,11 @@ class PrTrackingFixer:
 
         if update_kwargs:
             assert self.current.jira_id is not None
-            self.actions.update_jira_issue(jira_id=self.current.jira_id, **update_kwargs)
+            try:
+                self.actions.update_jira_issue(jira_id=self.current.jira_id, **update_kwargs)
+            except:
+                logger.warning(f"Couldn't update jira: {update_kwargs=}, {self.current.jira_description=}, {current_extra_fields=}")
+                raise
             self.current.jira_title = self.desired.jira_title
             self.current.jira_description = self.desired.jira_description
             self.current.jira_labels = self.desired.jira_labels
