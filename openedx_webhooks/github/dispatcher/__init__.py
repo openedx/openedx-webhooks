@@ -21,7 +21,10 @@ def dispatch(raw_headers, event, actions=ACTIONS):
     """
     event_type = GithubWebHookRequestHeader(raw_headers).event_type
 
+    pr_url = event.get("pull_request", {}).get("url", "?")
     for action in [a for a in actions if event_type in a.EVENT_TYPES]:
-        pr_url = event.get("pull_request", {}).get("url", "?")
         logger.info(f"dispatching action={action.__name__} for {event_type=}, {pr_url=}")
-        action.run(event_type, event)
+        try:
+            action.run(event_type, event)
+        except Exception:
+            logger.exception(f"Couldn't complete action={action.__name__} for {event_type=}, {pr_url=}")
