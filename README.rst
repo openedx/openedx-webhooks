@@ -163,6 +163,15 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2021-09-02
+~~~~~~~~~~
+
+- Fix an assertion error that could happen if a pull request had no body
+  (description).  The assertion was:
+
+      File "/app/openedx_webhooks/tasks/jira_work.py", line 117, in update_jira_issue
+        assert fields
+
 2021-08-30
 ~~~~~~~~~~
 

@@ -110,7 +110,7 @@ class PullRequest:
     number: int
     user: User
     title: str = ""
-    body: str = ""
+    body: Optional[str] = ""
     created_at: datetime.datetime = field(default_factory=datetime.datetime.now)
     comments: List[int] = field(default_factory=list)
     labels: Set[str] = field(default_factory=set)

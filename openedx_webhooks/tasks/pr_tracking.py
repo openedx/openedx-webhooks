@@ -223,7 +223,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
 
     desired.jira_initial_status = "Needs Triage"
     desired.jira_title = pr["title"]
-    desired.jira_description = pr["body"]
+    desired.jira_description = pr["body"] or ""
 
     has_signed_agreement = pull_request_has_cla(pr)
     blended_id = get_blended_project_id(pr)

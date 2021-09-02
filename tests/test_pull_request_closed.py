@@ -117,7 +117,8 @@ def test_external_pr_merged_but_issue_cant_transition(reqctx, fake_jira, closed_
 def test_cc_pr_closed(reqctx, fake_github, fake_jira, merged):
     # When a core committer merges a pull request, ping the champions.
     # But when it's closed without merging, no ping.
-    pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform")
+    # Use body=None here to test missing bodies also.
+    pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform", body=None)
 
     with reqctx:
         pull_request_changed(pr.as_json())
