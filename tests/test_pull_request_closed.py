@@ -4,6 +4,10 @@ from datetime import datetime
 
 import pytest
 
+from openedx_webhooks.bot_comments import (
+    BotComment,
+    is_comment_kind,
+)
 from openedx_webhooks.info import get_bot_username, pull_request_has_cla
 from openedx_webhooks.tasks.github import pull_request_changed
 from .helpers import random_text
@@ -56,6 +60,10 @@ def test_external_pr_closed(is_merged, reqctx, fake_jira, closed_pull_request):
     # We moved the Jira issue to Merged or Rejected.
     expected_status = "Merged" if is_merged else "Rejected"
     assert fake_jira.issues[issue_key].status == expected_status
+    pr_comments = pr.list_comments()
+    body = pr_comments[-1].body
+    assert "survey" in body
+    assert is_comment_kind(BotComment.SURVEY, body)
 
 
 def test_external_pr_closed_but_issue_deleted(is_merged, reqctx, fake_jira, closed_pull_request):
@@ -70,7 +78,7 @@ def test_external_pr_closed_but_issue_deleted(is_merged, reqctx, fake_jira, clos
     assert anything_happened
 
     pr_comments = pr.list_comments()
-    assert len(pr_comments) == 3    # closed_pull_request makes two
+    assert len(pr_comments) == 4    # 1 welcome, closed_pull_request makes two, 1 survey
     # We leave the old issue id in the comment.
     body = pr_comments[0].body
     jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=old_issue_key)
@@ -124,10 +132,10 @@ def test_cc_pr_closed(reqctx, fake_github, fake_jira, is_merged):
 
     pr_comments = pr.list_comments()
     if is_merged:
-        assert len(pr_comments) == 2
+        assert len(pr_comments) == 3
         assert "@nedbat, @feanil: thought you might like to know" in pr_comments[1].body
     else:
-        assert len(pr_comments) == 1
+        assert len(pr_comments) == 2    # 1 welcome, 1 survey
 
     # Processing it again won't change anything.
     with reqctx:
@@ -135,9 +143,9 @@ def test_cc_pr_closed(reqctx, fake_github, fake_jira, is_merged):
 
     pr_comments = pr.list_comments()
     if is_merged:
-        assert len(pr_comments) == 2
+        assert len(pr_comments) == 3
     else:
-        assert len(pr_comments) == 1
+        assert len(pr_comments) == 2    # 1 welcome, 1 survey
 
 
 def test_track_additions_deletions(reqctx, fake_github, fake_jira, is_merged):

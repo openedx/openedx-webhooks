@@ -9,6 +9,7 @@ import re
 from enum import Enum, auto
 from typing import Dict, List, Optional
 
+import arrow
 from flask import render_template
 
 from openedx_webhooks.info import (
@@ -33,6 +34,8 @@ class BotComment(Enum):
     OK_TO_TEST = auto()
     CHAMPION_MERGE_PING = auto()
     END_OF_WIP = auto()
+    SURVEY = auto()
+
 
 BOT_COMMENT_INDICATORS = {
     BotComment.WELCOME: [
@@ -65,6 +68,11 @@ BOT_COMMENT_INDICATORS = {
     BotComment.END_OF_WIP: [
         "<!-- comment:end_of_wip -->",
     ],
+    BotComment.SURVEY: [
+        "<!-- comment:end_survey -->",
+        "/1FAIpQLSceJOyGJ6JOzfy6lyR3T7EW_71OWUnNQXp68Fymsk3MkNoSDg/viewform",
+        "<!-- comment:no_survey_needed -->",
+    ],
 }
 
 # These are bot comments in the very first bot comment.
@@ -83,7 +91,7 @@ def is_comment_kind(kind: BotComment, text: str) -> bool:
     """
     Is this `text` a comment of this `kind`?
     """
-    return BOT_COMMENT_INDICATORS[kind][0] in text
+    return any(snip in text for snip in BOT_COMMENT_INDICATORS[kind])
 
 
 def github_community_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) -> str:
@@ -95,16 +103,25 @@ def github_community_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) 
     * check for contributor agreement
     * contain a link to our process documentation
     """
-    if pull_request["state"] == "closed":
-        template = "github_community_pr_comment_closed.md.j2"
-    else:
-        template = "github_community_pr_comment.md.j2"
     return render_template(
-        template,
+        "github_community_pr_comment.md.j2",
         user=pull_request["user"]["login"],
         issue_key=issue_key,
         has_signed_agreement=pull_request_has_cla(pull_request),
         is_draft=is_draft_pull_request(pull_request),
+        is_merged=pull_request["merged"],
+        **kwargs
+    )
+
+
+def github_community_pr_comment_closed(pull_request: PrDict, issue_key: str, **kwargs) -> str:
+    """
+    For adding a first comment to a closed pull request (happens during
+    rescanning).
+    """
+    return render_template(
+        "github_community_pr_comment_closed.md.j2",
+        issue_key=issue_key,
         is_merged=pull_request["merged"],
         **kwargs
     )
@@ -176,6 +193,43 @@ def github_blended_pr_comment(
         project_page=project_page,
         is_draft=is_draft_pull_request(pull_request),
         **kwargs
+    )
+
+
+SURVEY_URL = (
+    'https://docs.google.com/forms/d/e'
+    '/1FAIpQLSceJOyGJ6JOzfy6lyR3T7EW_71OWUnNQXp68Fymsk3MkNoSDg/viewform'
+    '?usp=pp_url'
+    '&entry.1671973413={repo_full_name}'
+    '&entry.867055334={pull_request_url}'
+    '&entry.1484655318={contributor_url}'
+    '&entry.752974735={created_at}'
+    '&entry.1917517419={closed_at}'
+    '&entry.2133058324={is_merged}'
+)
+
+def _format_datetime(datetime_string):
+    return arrow.get(datetime_string).format('YYYY-MM-DD+HH:mm')
+
+def github_end_survey_comment(pull_request: PrDict) -> str:
+    """
+    Create a "please fill out this survey" comment.
+    """
+    print(pull_request)
+    is_merged = pull_request["merged"]
+    url = SURVEY_URL.format(
+        repo_full_name=pull_request["base"]["repo"]["full_name"],
+        pull_request_url=pull_request["html_url"],
+        contributor_url=pull_request["user"]["html_url"],
+        created_at=_format_datetime(pull_request["created_at"]),
+        closed_at=_format_datetime(pull_request["closed_at"]),
+        is_merged="Yes" if is_merged else "No",
+    )
+    return render_template(
+        "github_end_survey.md.j2",
+        user=pull_request["user"]["login"],
+        is_merged=is_merged,
+        survey_url=url,
     )
 
 

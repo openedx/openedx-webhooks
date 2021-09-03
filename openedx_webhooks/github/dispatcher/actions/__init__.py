@@ -16,10 +16,9 @@ Inputs
 .. _event\_type: https://developer.github.com/v3/activity/events/types/
 """
 
-from . import closed_ospr_survey, github_activity
+from . import github_activity
 
 # List[Module, ...]: A list of actions to process, in order
 ACTIONS = [
-    closed_ospr_survey,
     github_activity,
 ]

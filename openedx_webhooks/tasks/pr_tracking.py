@@ -22,7 +22,10 @@ from openedx_webhooks.bot_comments import (
     github_committer_pr_comment,
     github_committer_merge_ping_comment,
     github_community_pr_comment,
+    github_community_pr_comment_closed,
     github_contractor_pr_comment,
+    github_end_survey_comment,
+    is_comment_kind,
 )
 from openedx_webhooks.github.dispatcher.actions.utils import update_commit_status_for_cla
 from openedx_webhooks.info import (
@@ -241,7 +244,10 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             if map_1_2 is not None:
                 desired.jira_extra_fields["Platform Map Area (Levels 1 & 2)"] = map_1_2
     else:
-        comment = BotComment.WELCOME
+        if state == "open":
+            comment = BotComment.WELCOME
+        else:
+            comment = BotComment.WELCOME_CLOSED
         desired.jira_project = "OSPR"
         desired.github_labels.add("open-source-contribution")
         committer = is_committer_pull_request(pr)
@@ -270,6 +276,9 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         desired.jira_status = "Rejected"
     elif state == "merged":
         desired.jira_status = "Merged"
+
+    if state in ["closed", "merged"]:
+        desired.bot_comments.add(BotComment.SURVEY)
 
     if has_signed_agreement:
         desired.bot_comments.add(BotComment.OK_TO_TEST)
@@ -510,6 +519,12 @@ class PrTrackingFixer:
             comment_body += github_community_pr_comment(self.pr, jira_id, **comment_kwargs)
             needed_comments.remove(BotComment.WELCOME)
 
+        if BotComment.WELCOME_CLOSED in needed_comments:
+            comment_body += github_community_pr_comment_closed(self.pr, jira_id, **comment_kwargs)
+            needed_comments.remove(BotComment.WELCOME_CLOSED)
+            if BotComment.SURVEY in self.desired.bot_comments:
+                self.desired.bot_comments.remove(BotComment.SURVEY)
+
         if BotComment.CONTRACTOR in needed_comments:
             comment_body += github_contractor_pr_comment(self.pr, **comment_kwargs)
             needed_comments.remove(BotComment.CONTRACTOR)
@@ -537,8 +552,7 @@ class PrTrackingFixer:
             needed_comments.remove(BotComment.NEED_CLA)
         if BotComment.END_OF_WIP in needed_comments:
             needed_comments.remove(BotComment.END_OF_WIP)
-        if BotComment.WELCOME_CLOSED in needed_comments:
-            needed_comments.remove(BotComment.WELCOME_CLOSED)
+        # BTW, we never have WELCOME_CLOSED in desired.bot_comments
 
         comment_body += format_data_for_comment(self.last_seen_state)
 
@@ -568,6 +582,11 @@ class PrTrackingFixer:
             body = github_committer_merge_ping_comment(self.pr, champions)
             self.actions.add_comment_to_pull_request(comment_body=body)
             needed_comments.remove(BotComment.CHAMPION_MERGE_PING)
+
+        if BotComment.SURVEY in needed_comments:
+            body = github_end_survey_comment(self.pr)
+            self.actions.add_comment_to_pull_request(comment_body=body)
+            needed_comments.remove(BotComment.SURVEY)
 
         assert needed_comments == set(), f"Couldn't make comments: {needed_comments}"
 
