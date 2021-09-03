@@ -172,6 +172,8 @@ See the fragment files (if any) in the changelog.d directory.
       File "/app/openedx_webhooks/tasks/jira_work.py", line 117, in update_jira_issue
         assert fields
 
+- Change error handling so that more actions can complete even if one fails.
+
 2021-08-30
 ~~~~~~~~~~
 
