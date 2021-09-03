@@ -138,3 +138,11 @@ def reqctx(app):
 def reset_all_memoized_functions():
     """Clears the values cached by @memoize before each test. Applied automatically."""
     openedx_webhooks.utils.clear_memoized_values()
+
+
+@pytest.fixture(params=[False, True])
+def is_merged(request):
+    """Makes tests try both merged and closed pull requests."""
+    return request.param
+
+

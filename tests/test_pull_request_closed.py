@@ -12,14 +12,8 @@ from .helpers import random_text
 pytestmark = pytest.mark.flaky_github
 
 
-@pytest.fixture(params=[False, True])
-def merged(request):
-    """Makes tests try both merged and closed pull requests."""
-    return request.param
-
-
-def test_internal_pr_closed(merged, reqctx, fake_github, fake_jira):
-    pr = fake_github.make_pull_request(user="nedbat", state="closed", merged=merged)
+def test_internal_pr_closed(is_merged, reqctx, fake_github, fake_jira):
+    pr = fake_github.make_pull_request(user="nedbat", state="closed", merged=is_merged)
     pr.add_comment(user="nedbat", body="This is great")
     pr.add_comment(user="feanil", body="Eh, it's ok")
 
@@ -31,7 +25,7 @@ def test_internal_pr_closed(merged, reqctx, fake_github, fake_jira):
 
 
 @pytest.fixture
-def closed_pull_request(merged, reqctx, fake_github, fake_jira):
+def closed_pull_request(is_merged, reqctx, fake_github, fake_jira):
     """
     Create a closed pull request and an issue key for it.
 
@@ -46,25 +40,25 @@ def closed_pull_request(merged, reqctx, fake_github, fake_jira):
 
     pr.add_comment(user="nedbat", body="Please make some changes")
     pr.add_comment(user="tusbar", body="OK, I made the changes")
-    pr.close(merge=merged)
+    pr.close(merge=is_merged)
 
     fake_jira.reset_mock()
 
     return pr, issue_key
 
 
-def test_external_pr_closed(merged, reqctx, fake_jira, closed_pull_request):
+def test_external_pr_closed(is_merged, reqctx, fake_jira, closed_pull_request):
     pr, issue_key = closed_pull_request
 
     with reqctx:
         pull_request_changed(pr.as_json())
 
     # We moved the Jira issue to Merged or Rejected.
-    expected_status = "Merged" if merged else "Rejected"
+    expected_status = "Merged" if is_merged else "Rejected"
     assert fake_jira.issues[issue_key].status == expected_status
 
 
-def test_external_pr_closed_but_issue_deleted(merged, reqctx, fake_jira, closed_pull_request):
+def test_external_pr_closed_but_issue_deleted(is_merged, reqctx, fake_jira, closed_pull_request):
     # A closing pull request, but its Jira issue has been deleted.
     pr, old_issue_key = closed_pull_request
     del fake_jira.issues[old_issue_key]
@@ -83,11 +77,11 @@ def test_external_pr_closed_but_issue_deleted(merged, reqctx, fake_jira, closed_
     assert jira_link in body
 
 
-def test_external_pr_closed_but_issue_in_status(merged, reqctx, fake_jira, closed_pull_request):
+def test_external_pr_closed_but_issue_in_status(is_merged, reqctx, fake_jira, closed_pull_request):
     # The Jira issue associated with a closing pull request is already in the
     # status we want to move it to.
     pr, issue_key = closed_pull_request
-    fake_jira.issues[issue_key].status = ("Merged" if merged else "Rejected")
+    fake_jira.issues[issue_key].status = ("Merged" if is_merged else "Rejected")
 
     with reqctx:
         pull_request_changed(pr.as_json())
@@ -114,7 +108,7 @@ def test_external_pr_merged_but_issue_cant_transition(reqctx, fake_jira, closed_
     assert fake_jira.requests_made(method="POST") == []
 
 
-def test_cc_pr_closed(reqctx, fake_github, fake_jira, merged):
+def test_cc_pr_closed(reqctx, fake_github, fake_jira, is_merged):
     # When a core committer merges a pull request, ping the champions.
     # But when it's closed without merging, no ping.
     # Use body=None here to test missing bodies also.
@@ -123,13 +117,13 @@ def test_cc_pr_closed(reqctx, fake_github, fake_jira, merged):
     with reqctx:
         pull_request_changed(pr.as_json())
 
-    pr.close(merge=merged)
+    pr.close(merge=is_merged)
 
     with reqctx:
         pull_request_changed(pr.as_json())
 
     pr_comments = pr.list_comments()
-    if merged:
+    if is_merged:
         assert len(pr_comments) == 2
         assert "@nedbat, @feanil: thought you might like to know" in pr_comments[1].body
     else:
@@ -140,13 +134,13 @@ def test_cc_pr_closed(reqctx, fake_github, fake_jira, merged):
         pull_request_changed(pr.as_json())
 
     pr_comments = pr.list_comments()
-    if merged:
+    if is_merged:
         assert len(pr_comments) == 2
     else:
         assert len(pr_comments) == 1
 
 
-def test_track_additions_deletions(reqctx, fake_github, fake_jira, merged):
+def test_track_additions_deletions(reqctx, fake_github, fake_jira, is_merged):
     pr = fake_github.make_pull_request(user="tusbar", additions=17, deletions=42)
     with reqctx:
         issue_id, _ = pull_request_changed(pr.as_json())
@@ -157,7 +151,7 @@ def test_track_additions_deletions(reqctx, fake_github, fake_jira, merged):
 
     pr.additions = 34
     pr.deletions = 1001
-    pr.close(merge=merged)
+    pr.close(merge=is_merged)
 
     with reqctx:
         pull_request_changed(pr.as_json())
