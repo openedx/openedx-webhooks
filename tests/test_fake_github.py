@@ -2,6 +2,8 @@
 
 import pytest
 import requests
+
+from freezegun import freeze_time
 from glom import glom
 
 from .fake_github import DoesNotExist, FakeGitHub
@@ -158,23 +160,28 @@ class TestRepoLabels:
 class TestPullRequests:
     def test_make_pull_request(self, fake_github):
         repo = fake_github.make_repo("an-org", "a-repo")
-        pr = repo.make_pull_request(
-            user="some-user",
-            title="Here is a pull request",
-            body="It's a good pull request, you should merge it.",
-        )
+        with freeze_time("2021-08-31 15:30:12"):
+            pr = repo.make_pull_request(
+                user="some-user",
+                title="Here is a pull request",
+                body="It's a good pull request, you should merge it.",
+            )
         resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/pulls/{pr.number}")
         assert resp.status_code == 200
         prj = resp.json()
         assert prj["number"] == pr.number
         assert prj["user"]["login"] == "some-user"
         assert prj["user"]["name"] == "Some User"
+        assert prj["user"]["url"] == "https://api.github.com/users/some-user"
+        assert prj["user"]["html_url"] == "https://github.com/some-user"
         assert prj["title"] == "Here is a pull request"
         assert prj["body"] == "It's a good pull request, you should merge it."
         assert prj["state"] == "open"
         assert prj["labels"] == []
         assert prj["base"]["repo"]["full_name"] == "an-org/a-repo"
         assert prj["html_url"] == f"https://github.com/an-org/a-repo/pull/{pr.number}"
+        assert prj["created_at"] == "2021-08-31T15:30:12Z"
+        assert prj["closed_at"] is None
 
     def test_no_such_pull_request(self, fake_github):
         fake_github.make_repo("an-org", "a-repo")
@@ -187,6 +194,28 @@ class TestPullRequests:
         resp = requests.get(f"https://api.github.com/repos/some-user/another-repo/pulls/1")
         assert resp.status_code == 404
         assert resp.json()["message"] == "Repo some-user/another-repo does not exist"
+
+    def test_close_pull_request(self, fake_github, is_merged):
+        repo = fake_github.make_repo("an-org", "a-repo")
+        with freeze_time("2021-08-31 15:30:12"):
+            pr = repo.make_pull_request(
+                user="some-user",
+                title="Here is a pull request",
+                body="It's a good pull request, you should merge it.",
+            )
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/pulls/{pr.number}")
+        assert resp.status_code == 200
+        prj = resp.json()
+        assert prj["created_at"] == "2021-08-31T15:30:12Z"
+        assert prj["closed_at"] is None
+
+        with freeze_time("2021-09-01 01:02:03"):
+            pr.close(merge=is_merged)
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/pulls/{pr.number}")
+        prj = resp.json()
+        assert prj["created_at"] == "2021-08-31T15:30:12Z"
+        assert prj["closed_at"] == "2021-09-01T01:02:03Z"
+        assert prj["merged"] == is_merged
 
 
 @pytest.fixture

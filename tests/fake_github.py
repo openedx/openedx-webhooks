@@ -55,6 +55,7 @@ class User:
             "name": self.name,
             "type": self.type,
             "url": f"https://api.github.com/users/{self.login}",
+            "html_url": f"https://github.com/{self.login}",
         }
 
 
@@ -115,7 +116,8 @@ class PullRequest:
     user: User
     title: str = ""
     body: Optional[str] = ""
-    created_at: datetime.datetime = field(default_factory=datetime.datetime.now)
+    created_at: datetime.datetime = field(default_factory=lambda:datetime.datetime.now())
+    closed_at: Optional[datetime.datetime] = None
     comments: List[int] = field(default_factory=list)
     labels: Set[str] = field(default_factory=set)
     state: str = "open"
@@ -140,6 +142,7 @@ class PullRequest:
                 "ref": self.ref,
             },
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "closed_at": self.closed_at.strftime("%Y-%m-%dT%H:%M:%SZ") if self.closed_at else None,
             "url": f"{self.repo.github.host}/repos/{self.repo.full_name}/pulls/{self.number}",
             "html_url": f"https://github.com/{self.repo.full_name}/pull/{self.number}",
         }
@@ -157,6 +160,7 @@ class PullRequest:
         """
         self.state = "closed"
         self.merged = merge
+        self.closed_at = datetime.datetime.now()
 
     def add_comment(self, user="someone", **kwargs) -> Comment:
         comment = self.repo.make_comment(user, **kwargs)
