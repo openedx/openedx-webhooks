@@ -9,6 +9,7 @@ from openedx_webhooks.bot_comments import (
     BotComment,
     is_comment_kind,
 )
+from openedx_webhooks.github.dispatcher.actions.utils import CLA_CONTEXT
 from openedx_webhooks.info import get_jira_issue_key
 from openedx_webhooks.tasks.github import pull_request_changed
 
@@ -30,6 +31,7 @@ def test_internal_pr_opened(reqctx, fake_github):
     assert key is None
     assert anything_happened is False
     assert len(pr.list_comments()) == 0
+    assert pr.status(CLA_CONTEXT) is None
 
 
 def test_pr_opened_by_bot(reqctx, fake_github):
@@ -40,6 +42,7 @@ def test_pr_opened_by_bot(reqctx, fake_github):
     assert key is None
     assert anything_happened is False
     assert len(pr.list_comments()) == 0
+    assert pr.status(CLA_CONTEXT) is None
 
 
 def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jira):
@@ -91,6 +94,8 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
         'open-source-contribution',
         'NEED-CLA',
     }
+    # Check the status check applied to the latest commit.
+    assert pr.status(CLA_CONTEXT) == "failure"
 
 
 def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_jira):
@@ -136,6 +141,8 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"needs triage", "open-source-contribution"}
+    # Check the status check applied to the latest commit.
+    assert pr.status(CLA_CONTEXT) == "success"
 
 
 def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira):
@@ -181,6 +188,8 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"waiting on author", "open-source-contribution", "core committer"}
+    # Check the status check applied to the latest commit.
+    assert pr.status(CLA_CONTEXT) == "success"
 
 
 def test_old_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira):
@@ -287,6 +296,8 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"needs triage", "blended"}
+    # Check the status check applied to the latest commit.
+    assert pr.status(CLA_CONTEXT) == "success"
 
 
 def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
@@ -676,6 +687,8 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, fake_github, fake_ji
             'open-source-contribution',
             'NEED-CLA',
         }
+    # Check the status check applied to the latest commit.
+    assert pr.status(CLA_CONTEXT) == ("failure" if pr_type == "nocla" else "success")
 
     if jira_got_fiddled:
         # Someone changes the status from "Waiting on Author" manually.

@@ -39,6 +39,9 @@ class ValidationError(FakeGitHubException):
     def __init__(self, message="Validation Failed", **kwargs):
         super().__init__(message=message, errors=[kwargs])
 
+def fake_sha():
+    """A realistic stand-in for a commit sha."""
+    return "".join(random.choice("0123456789abcdef") for c in range(32))
 
 @dataclass
 class User:
@@ -106,18 +109,6 @@ class Comment:
 
 
 @dataclass
-class PullRequestCommits:
-    commits: List
-
-    def as_json(self) -> Dict:
-        return [
-            {
-                'sha': 'deadbeefcafe',
-            },
-        ]
-
-
-@dataclass
 class PullRequest:
     repo: Repo
     number: int
@@ -130,6 +121,7 @@ class PullRequest:
     state: str = "open"
     merged: bool = False
     draft: bool = False
+    commits: List[str] = field(default_factory=list)
     additions: Optional[int] = None
     deletions: Optional[int] = None
     ref: str = ""
@@ -184,6 +176,10 @@ class PullRequest:
                 self.repo.add_label(name=label)
         self.labels = labels
 
+    def status(self, context):
+        assert context == CLA_CONTEXT
+        return self.repo.github.cla_statuses.get(self.commits[-1])
+
 
 @dataclass
 class Repo:
@@ -208,7 +204,8 @@ class Repo:
         if number is None:
             highest = max(self.pull_requests.keys(), default=10)
             number = highest + random.randint(10, 20)
-        pr = PullRequest(self, number, user, **kwargs)
+        commits = [fake_sha() for _ in range(random.randint(1, 4))]
+        pr = PullRequest(self, number, user, commits=commits, **kwargs)
         self.pull_requests[number] = pr
         return pr
 
@@ -377,10 +374,12 @@ class FakeGitHub(faker.Faker):
         return pr.as_json()
 
     # Commmits
+
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pulls/(?P<number>\d+)/commits(\?.*)?")
     def _patch_pr_commits(self, match, request, _context) -> Dict:
-        commits = PullRequestCommits(self)
-        data = commits.as_json()
+        r = self.get_repo(match["owner"], match["repo"])
+        pr = r.get_pull_request(int(match["number"]))
+        data = [{'sha': sha} for sha in pr.commits]
         return data
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?")
@@ -394,11 +393,13 @@ class FakeGitHub(faker.Faker):
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?", 'POST')
     def _patch_pr_status_update(self, match, request, _context) -> Dict:
-        self.cla_statuses[match['sha']] = request.json()['state']
+        data = request.json()
+        assert data['context'] == CLA_CONTEXT
+        self.cla_statuses[match['sha']] = state = data['state']
         return [
             {
                 'context': CLA_CONTEXT,
-                'state': self.cla_statuses.get(match['sha']),
+                'state': state,
             },
         ]
 
