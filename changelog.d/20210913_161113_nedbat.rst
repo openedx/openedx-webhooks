@@ -1,4 +1,0 @@
-.. A new scriv changelog fragment.
-
-- A GitHub check indicates whether the author has a contributor agreement or
-  not.

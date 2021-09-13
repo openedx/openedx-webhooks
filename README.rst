@@ -163,6 +163,12 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2021-09-13
+~~~~~~~~~~
+
+- A GitHub check indicates whether the author has a contributor agreement or
+  not.
+
 2021-09-02
 ~~~~~~~~~~
 
