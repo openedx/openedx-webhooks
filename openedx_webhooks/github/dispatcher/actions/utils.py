@@ -96,16 +96,19 @@ def update_commit_status_for_cla(pull_request: PrDict) -> Tuple[bool, bool]:
     if not sha:
         return (False, None)
     has_signed_agreement = pull_request_has_cla(pull_request)
-    new_state = 'failure'
     if has_signed_agreement:
         new_state = 'success'
+        description = f'@{pull_request["user"]["login"]} is covered by a Contributor Agreement'
+    else:
+        new_state = 'failure'
+        description = 'We need a signed Contributor Agreeement'
     url = f"https://api.github.com/repos/{repo_name_full}/statuses/{sha}"
     old_state = _get_commit_status_for_cla(url)
     if old_state != new_state:
         logger.info("CLA: Update state from '%s' to '%s' for commit '%s'", old_state, new_state, sha)
         payload = {
             'context': CLA_CONTEXT,
-            'description': 'We need a signed CLA',
+            'description': description,
             'state': new_state,
             # pylint: disable=line-too-long
             'target_url': 'https://openedx.atlassian.net/wiki/spaces/COMM/pages/941457737/How+to+start+contributing+to+the+Open+edX+code+base',
