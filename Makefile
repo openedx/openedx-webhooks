@@ -141,3 +141,8 @@ deploy-prod: deploy-check  ## deploy master to production via heroku
 	@echo
 	make deploy-check
 	heroku open --app "$(DEPLOY_PROD_APP)" 2>/dev/null
+
+.PHONY: docker
+docker:
+	docker build -t openedx-webhooks:latest .
+	docker run --rm -it openedx-webhooks:latest

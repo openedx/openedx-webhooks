@@ -1,23 +1,47 @@
-FROM python:2.7
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH /app
+FROM ubuntu:focal as app
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
-  bash-completion \
-  exuberant-ctags \
-  && rm -rf /var/lib/apt/lists/*
-RUN echo 'source /usr/share/bash-completion/bash_completion' >> /etc/bash.bashrc
+# System requirements.
+RUN apt-get update && apt-get upgrade -qy
+RUN apt-get install -qy \
+	git-core \
+	language-pack-en \
+	python3.8 \
+	python3-pip \
+	python3.8-dev \
+	libssl-dev
+RUN pip3 install --upgrade pip setuptools
 
-RUN echo 'export HISTFILE=$HOME/.bash_history/history' >> $HOME/.bashrc
+# Python is Python3.
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
-ARG REQUIREMENTS_FILE
-WORKDIR /app
-COPY requirements requirements
-RUN pip install --no-cache-dir -r requirements/${REQUIREMENTS_FILE} && rm -rf /root/.cache
+# Use UTF-8.
+RUN locale-gen en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 
-ARG TINI_VERSION
-RUN curl -SL \
-  https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini \
-  -o /tini
-RUN chmod +x /tini
-ENTRYPOINT ["/tini", "--"]
+RUN apt-get install -qy \
+	curl \
+	ca-certificates \
+	gnupg \
+;
+RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+    | apt-key add -
+RUN sh -c '\
+    echo "deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main" \
+    > /etc/apt/sources.list.d/pgdg.list \
+'
+RUN apt update -qy
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+RUN apt install -qy postgresql-13 libpq-dev
+
+RUN pip install tox
+
+RUN mkdir -p /edx/app/openedx-webhooks
+WORKDIR /edx/app/openedx-webhooks
+COPY Makefile ./
+COPY requirements ./requirements
+RUN make install-dev-requirements
+
+COPY . /edx/app/openedx-webhooks
+CMD ["make", "test"]

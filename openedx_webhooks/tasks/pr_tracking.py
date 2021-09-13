@@ -24,6 +24,7 @@ from openedx_webhooks.bot_comments import (
     github_community_pr_comment,
     github_contractor_pr_comment,
 )
+from openedx_webhooks.github.dispatcher.actions.utils import update_commit_status_for_cla
 from openedx_webhooks.info import (
     get_blended_project_id,
     get_bot_comments,
@@ -386,6 +387,7 @@ class PrTrackingFixer:
         if fix_comment:
             self._fix_bot_comment(comment_kwargs)
         self._add_bot_comments()
+        self.actions.update_commit_status_for_cla(pull_request=self.pr)
 
     def _make_jira_issue(self) -> None:
         """
@@ -774,3 +776,8 @@ class FixingActions:
         logger.info(f"Patching labels on PR {self.prid}: {labels}")
         resp = get_github_session().patch(url, json={"labels": labels})
         log_check_response(resp)
+
+    def update_commit_status_for_cla(self, *, pull_request: PrDict) -> None:
+        has_changed, _has_signed = update_commit_status_for_cla(pull_request)
+        if has_changed:
+            self.happened = True
