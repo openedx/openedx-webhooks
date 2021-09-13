@@ -10,6 +10,9 @@ from openedx_webhooks.github.dispatcher.actions.utils import update_commit_statu
 
 COMMIT_SHA = 'deadbeefcafe'
 PULL_REQUEST = {
+    'user': {
+        'login': 'joedev',
+    },
     'base': {
         'repo': {
             'full_name': 'edx/openedx-webhooks-test',
