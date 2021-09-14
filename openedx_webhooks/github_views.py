@@ -57,11 +57,12 @@ def hook_receiver():
     else:
         logger.info(f"Incoming GitHub event: {repo=!r}, {action=!r}, keys: {' '.join(sorted(keys))}")
 
-    q.enqueue(
-        'openedx_webhooks.github.dispatcher.dispatch',
-        dict(request.headers),
-        event,
-    )
+    # This can't authenticate with Jira now, so don't do it:
+    # q.enqueue(
+    #     'openedx_webhooks.github.dispatcher.dispatch',
+    #     dict(request.headers),
+    #     event,
+    # )
 
     # There used to be two webhook endpoints.  This is the two of them
     # concatenated, just to combine them in the simplest possible way.
