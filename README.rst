@@ -163,6 +163,18 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2021-09-14
+~~~~~~~~~~
+
+- Due to an internal refactoring, now rescanning pull requests will add the
+  end-of-pull-request survey comment if needed.
+
+- Four Jira fields are no longer updated:
+    'Github PR Last Updated At'
+    'Github PR Last Updated By'
+    'Github Latest Action'
+    'Github Latest Action by edX'
+
 2021-09-13
 ~~~~~~~~~~
 
