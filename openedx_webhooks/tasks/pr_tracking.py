@@ -27,7 +27,7 @@ from openedx_webhooks.bot_comments import (
     github_end_survey_comment,
     is_comment_kind,
 )
-from openedx_webhooks.github.dispatcher.actions.utils import update_commit_status_for_cla
+from openedx_webhooks.github.dispatcher.actions.utils import cla_status_on_pr, set_cla_status_on_pr
 from openedx_webhooks.info import (
     get_blended_project_id,
     get_bot_comments,
@@ -107,6 +107,9 @@ class PrCurrentInfo:
     # The actual set of labels on the pull request.
     github_labels: Set[str] = field(default_factory=set)
 
+    # The status of the cla check.
+    cla_check: Optional[str] = None
+
     # Did the author make a change that could move us out of "Waiting on
     # Author"?
     author_acted: bool = False
@@ -136,6 +139,9 @@ class PrDesiredInfo:
     # The bot-controlled labels we want to on the pull request.
     # See labels.py:CATEGORY_LABELS
     github_labels: Set[str] = field(default_factory=set)
+
+    # The status of the cla check.
+    cla_check: Optional[str] = None
 
 
 def existing_bot_comments(prid: PrId) -> Tuple[Optional[str], Set[BotComment]]:
@@ -188,6 +194,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
                 if (value := issue["fields"][custom_fields[name]]) is not None
             }
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
+    current.cla_check = cla_status_on_pr(pr)
 
     if current.last_seen_state.get("draft", False) and not is_draft_pull_request(pr):
         # It was a draft, but now isn't.  The author acted.
@@ -267,10 +274,13 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         desired.jira_initial_status = "Waiting on Author"
         desired.bot_comments.add(BotComment.END_OF_WIP)
 
-    if not has_signed_agreement:
+    if has_signed_agreement:
+        desired.cla_check = "success"
+    else:
         desired.bot_comments.add(BotComment.NEED_CLA)
         desired.jira_initial_status = "Community Manager Review"
         desired.github_labels.add('NEED-CLA')
+        desired.cla_check = "failure"
 
     if state == "closed":
         desired.jira_status = "Rejected"
@@ -396,7 +406,10 @@ class PrTrackingFixer:
         if fix_comment:
             self._fix_bot_comment(comment_kwargs)
         self._add_bot_comments()
-        self.actions.update_commit_status_for_cla(pull_request=self.pr)
+
+        if self.desired.cla_check != self.current.cla_check:
+            self.actions.set_cla_status(status=self.desired.cla_check)
+            self.happened = True
 
     def _make_jira_issue(self) -> None:
         """
@@ -796,7 +809,5 @@ class FixingActions:
         resp = get_github_session().patch(url, json={"labels": labels})
         log_check_response(resp)
 
-    def update_commit_status_for_cla(self, *, pull_request: PrDict) -> None:
-        has_changed, _has_signed = update_commit_status_for_cla(pull_request)
-        if has_changed:
-            self.happened = True
+    def set_cla_status(self, *, status: str) -> None:
+        set_cla_status_on_pr(self.prid.full_name, self.prid.number, status)

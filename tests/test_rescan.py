@@ -103,7 +103,7 @@ def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_j
             "create_ospr_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
-            "update_commit_status_for_cla",
+            "set_cla_status",
         ],
         106: [
             "initial_state",
@@ -111,7 +111,7 @@ def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_j
             "create_ospr_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
-            "update_commit_status_for_cla",
+            "set_cla_status",
         ],
         108: [
             "initial_state",
@@ -120,7 +120,7 @@ def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_j
             "transition_jira_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
-            "update_commit_status_for_cla",
+            "set_cla_status",
         ],
         110: [
             "initial_state",
@@ -129,7 +129,7 @@ def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_j
             "update_jira_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
-            "update_commit_status_for_cla",
+            "set_cla_status",
         ],
     }
 
