@@ -1,5 +1,6 @@
 name: Lint Commit Messages
-on: [pull_request]
+on:
+  - pull_request
 
 jobs:
   commitlint:
@@ -10,4 +11,4 @@ jobs:
           fetch-depth: 0
       - uses: wagoid/commitlint-github-action@v4
         with:
-          helpURL: https://nedbatchelder/foobar
+          helpURL: https://open-edx-proposals.readthedocs.io/en/latest/oep-0051-bp-conventional-commits.html
