@@ -279,7 +279,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     else:
         desired.bot_comments.add(BotComment.NEED_CLA)
         desired.jira_initial_status = "Community Manager Review"
-        desired.github_labels.add('NEED-CLA')
         desired.cla_check = "failure"
 
     if state == "closed":

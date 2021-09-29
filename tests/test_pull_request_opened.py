@@ -92,7 +92,6 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     assert pr.labels == {
         'community manager review',
         'open-source-contribution',
-        'NEED-CLA',
     }
     # Check the status check applied to the latest commit.
     assert pr.status(CLA_CONTEXT) == "failure"
@@ -685,7 +684,6 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, fake_github, fake_ji
         assert pr.labels == {
             'community manager review',
             'open-source-contribution',
-            'NEED-CLA',
         }
     # Check the status check applied to the latest commit.
     assert pr.status(CLA_CONTEXT) == ("failure" if pr_type == "nocla" else "success")
