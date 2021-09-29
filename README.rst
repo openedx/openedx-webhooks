@@ -163,6 +163,11 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2021-09-29
+~~~~~~~~~~
+
+- Removed the NEED-CLA label. We have a check now, which is better.
+
 2021-09-14
 ~~~~~~~~~~
 

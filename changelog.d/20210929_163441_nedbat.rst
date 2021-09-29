@@ -1,3 +1,0 @@
-.. A new scriv changelog fragment.
-
-- Removed the NEED-CLA label. We have a check now, which is better.
