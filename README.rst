@@ -445,8 +445,8 @@ TODO
 .. _Heroku Command Line: https://devcenter.heroku.com/articles/heroku-command-line
 .. _pipeline: https://devcenter.heroku.com/articles/pipelines
 
-.. |Build Status| image:: https://travis-ci.com/edx/openedx-webhooks.svg?branch=master
-   :target: https://travis-ci.com/edx/openedx-webhooks
+.. |build-status| image:: https://github.com/edx/openedx-webhooks/workflows/Python%20CI/badge.svg?branch=master
+   :target: https://github.com/edx/openedx-webhooks/actions?query=workflow%3A%22Python+CI%22
 .. |Coverage Status| image:: http://codecov.io/github/edx/openedx-webhooks/coverage.svg?branch=master
    :target: http://codecov.io/github/edx/openedx-webhooks?branch=master
 .. |Documentation badge| image:: https://readthedocs.org/projects/openedx-webhooks/badge/?version=latest
