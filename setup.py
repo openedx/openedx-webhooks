@@ -1,20 +1,21 @@
 """Install openedx-webhooks."""
 
+import os
 import re
 
 from setuptools import find_packages, setup
 
 
+# UPDATED VIA SEMGREP - if you need to remove/modify this method remove this line and add a comment specifying why
 def is_requirement(line):
-    line = line.strip()
-    # Skip blank lines, comments, and editable installs
-    return not (
-        line == '' or
-        line.startswith('--') or
-        line.startswith('-r') or
-        line.startswith('#') or
-        line.startswith('-e') or
-        line.startswith('git+')
+    """
+    Return True if the requirement line is a package requirement.
+
+    Returns:
+        bool: True if the line is not blank, a comment,
+        a URL, or an included file
+    """
+    return line and line.strip() and not line.startswith(('-r', '#', '-e', 'git+', '-c'))
     )
 
 
