@@ -16,7 +16,7 @@ from openedx_webhooks.info import (
 # These tests should run when we want to test flaky GitHub behavior.
 pytestmark = [
     pytest.mark.flaky_github,
-    pytest.mark.usefixtures("fake_repo_data", "mock_github_bp"),
+    pytest.mark.usefixtures("fake_repo_data"),
 ]
 
 
