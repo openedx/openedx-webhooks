@@ -29,7 +29,12 @@ from openedx_webhooks.utils import (
 @celery.task(bind=True)
 def pull_request_changed_task(_, pull_request):
     """A bound Celery task to call pull_request_changed."""
-    return pull_request_changed(pull_request)
+    try:
+        return pull_request_changed(pull_request)
+    except Exception as exc:
+        logger.exception("Couldn't pull_request_changed_task")
+        raise
+
 
 def pull_request_changed(pr: PrDict, actions=None) -> Tuple[Optional[str], bool]:
     """
