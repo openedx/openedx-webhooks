@@ -19,7 +19,7 @@ from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
 from openedx_webhooks import logger
-from openedx_webhooks.oauth import jira_get
+from openedx_webhooks.oauth import get_github_session, jira_get
 from openedx_webhooks.types import JiraDict
 
 
@@ -82,6 +82,13 @@ def log_check_response(response, raise_for_status=True):
             req = response.request
             logger.exception(f"HTTP request failed: {req.method} {req.url}. Response body: {response.content}")
             raise
+
+
+def log_rate_limit():
+    """Get stats from GitHub about the current rate limit, and log them."""
+    rate = get_github_session().get("/rate_limit").json()['rate']
+    reset = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(rate['reset']))
+    logger.info(f"Rate limit: {rate['limit']}, used {rate['used']}, remaining {rate['remaining']}. Reset is at {reset}")
 
 
 def is_valid_payload(secret: str, signature: str, payload: bytes) -> bool:
