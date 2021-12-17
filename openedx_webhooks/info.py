@@ -1,7 +1,7 @@
 """
 Get information about people, repos, orgs, pull requests, etc.
 """
-
+import csv
 import datetime
 import re
 from typing import Dict, Iterable, Optional, Union
@@ -25,6 +25,14 @@ def _read_repotools_yaml_file(filename):
     """Read a YAML file from the repo-tools-data repo."""
     return yaml.safe_load(_read_repotools_file(filename))
 
+def _read_repotools_csv_file(filename):
+    """
+    Reads a CSV file from the repo-tools-data repo. Returns a csv DictReader
+    object of dicts. The first row of the csv is assumed to be a header, and is
+    used to assign dictionary keys.
+    """
+    return csv.DictReader(_read_repotools_file(filename).splitlines())
+
 def _read_repotools_file(filename):
     """
     Read the text of a repo-tools-data file.
@@ -35,7 +43,51 @@ def _read_repotools_file(filename):
     return resp.text
 
 def get_people_file():
-    return _read_repotools_yaml_file("people.yaml")
+    """
+    Returns data formatted as a dictionary of people containing this information:
+    {
+        github_username: {
+            name: "",
+            agreement: "",
+            institution: ""
+            jira: "",
+            other_emails: [...],
+            committer: {...},
+            comments: [...],
+            before: {...}
+        },
+        ...
+    }
+    """
+    people_data_csv = _read_repotools_csv_file("salesforce-export.csv")
+    people = dict()
+
+    for row in people_data_csv:
+        first_name = row['First Name']
+        last_name = row['Last Name']
+        acct_name = row['Account Name']
+        github_username = row['GitHub Username']
+
+        people[github_username] = {
+            "name": f"{first_name} {last_name}"
+        }
+
+        if acct_name == "Individual Contributors":
+            people[github_username]["agreement"] = 'individual'
+        elif not acct_name:
+            people[github_username]["agreement"] = "none"
+        else:
+            people[github_username]["agreement"] = 'institution'
+            people[github_username]["institution"] = acct_name
+
+    people_data_yaml = _read_repotools_yaml_file("people.yaml")
+    for p in people:
+        # Prioritzes the csv by first updating the yaml's values with csv values
+        # And then updates any missing dict fields using yaml's fields
+        if p in people_data_yaml:
+            people_data_yaml[p].update(people[p])
+            people[p].update(people_data_yaml[p])
+    return people
 
 def get_orgs_file():
     return _read_repotools_yaml_file("orgs.yaml")
