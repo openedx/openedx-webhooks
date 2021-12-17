@@ -109,7 +109,7 @@ def github_community_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) 
         issue_key=issue_key,
         has_signed_agreement=pull_request_has_cla(pull_request),
         is_draft=is_draft_pull_request(pull_request),
-        is_merged=pull_request["merged"],
+        is_merged=pull_request.get("merged", False),
         **kwargs
     )
 
@@ -122,7 +122,7 @@ def github_community_pr_comment_closed(pull_request: PrDict, issue_key: str, **k
     return render_template(
         "github_community_pr_comment_closed.md.j2",
         issue_key=issue_key,
-        is_merged=pull_request["merged"],
+        is_merged=pull_request.get("merged", False),
         **kwargs
     )
 
@@ -216,7 +216,7 @@ def github_end_survey_comment(pull_request: PrDict) -> str:
     Create a "please fill out this survey" comment.
     """
     print(pull_request)
-    is_merged = pull_request["merged"]
+    is_merged = pull_request.get("merged", False)
     url = SURVEY_URL.format(
         repo_full_name=pull_request["base"]["repo"]["full_name"],
         pull_request_url=pull_request["html_url"],
