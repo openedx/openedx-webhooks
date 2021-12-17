@@ -38,6 +38,7 @@ from openedx_webhooks.info import (
     is_contractor_pull_request,
     is_draft_pull_request,
     is_internal_pull_request,
+    is_private_repo_pull_request,
     pull_request_has_cla,
 )
 from openedx_webhooks.labels import (
@@ -215,8 +216,12 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         logger.info(f"@{user} is a bot, ignored.")
         return None
 
+    if is_private_repo_pull_request(pr):
+        logger.info(f"{repo}#{num} (@{user}) is in a private repo, ignored")
+        return None
+
     if is_internal_pull_request(pr):
-        logger.info(f"@{user} opened PR {repo}#{num} (internal PR)")
+        logger.info(f"@{user} acted on {repo}#{num}, internal PR, ignored")
         return None
 
     desired = PrDesiredInfo()

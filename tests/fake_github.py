@@ -190,6 +190,7 @@ class Repo:
     github: FakeGitHub
     owner: str
     repo: str
+    private: bool
     labels: Dict[str, Label] = field(default_factory=dict)
     pull_requests: Dict[int, PullRequest] = field(default_factory=dict)
     comments: Dict[int, Comment] = field(default_factory=dict)
@@ -201,6 +202,10 @@ class Repo:
     def as_json(self) -> Dict:
         return {
             "full_name": self.full_name,
+            "owner": {
+                "login": self.owner,
+            },
+            "private": self.private,
         }
 
     def make_pull_request(self, user="someone", number=None, **kwargs) -> PullRequest:
@@ -314,8 +319,8 @@ class FakeGitHub(faker.Faker):
                 raise DoesNotExist(f"User {login!r} does not exist")
         return user
 
-    def make_repo(self, owner: str, repo: str) -> Repo:
-        r = Repo(self, owner, repo)
+    def make_repo(self, owner: str, repo: str, private: bool=False) -> Repo:
+        r = Repo(self, owner, repo, private)
         r.set_labels(DEFAULT_LABELS)
         self.repos[f"{owner}/{repo}"] = r
         return r

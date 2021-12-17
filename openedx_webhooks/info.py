@@ -136,6 +136,22 @@ def is_contractor_pull_request(pull_request: PrDict) -> bool:
     """
     return _is_pull_request(pull_request, "contractor")
 
+# During the decoupling, it became clear that we needed to ignore pull
+# requests in edX private repos, since contractors there may not have
+# signed a CLA, which they don't need to do.  It's not clear how this
+# logic should be generalized, but this is good for now.
+PRIVATABLE_ORGS = {"edx"}
+
+def is_private_repo_pull_request(pull_request: PrDict) -> bool:
+    """
+    Is this a private edX pull request?
+    """
+    return (
+        pull_request["base"]["repo"]["owner"]["login"] in PRIVATABLE_ORGS and
+        pull_request["base"]["repo"].get("private", False)
+    )
+
+
 def is_bot_pull_request(pull_request: PrDict) -> bool:
     """
     Was this pull request created by a bot?

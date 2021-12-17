@@ -34,6 +34,17 @@ def test_internal_pr_opened(reqctx, fake_github):
     assert pr.status(CLA_CONTEXT) is None
 
 
+def test_pr_in_private_repo_opened(reqctx, fake_github, fake_jira):
+    repo = fake_github.make_repo("edx", "some-repo", private=True)
+    pr = repo.make_pull_request(user="some_contractor")
+    with reqctx:
+        key, anything_happened = pull_request_changed(pr.as_json())
+    assert key is None
+    assert anything_happened is False
+    assert len(pr.list_comments()) == 0
+    assert pr.status(CLA_CONTEXT) is None
+
+
 def test_pr_opened_by_bot(reqctx, fake_github):
     fake_github.make_user(login="some_bot", type="Bot")
     pr = fake_github.make_pull_request(user="some_bot")
