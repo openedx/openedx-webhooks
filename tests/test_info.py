@@ -38,11 +38,13 @@ def test_internal_orgs(reqctx):
         orgs = get_orgs("internal")
     assert isinstance(orgs, set)
     assert "edX" in orgs
+    assert "2U/edX" in orgs
 
 def test_contractor_orgs():
     orgs = get_orgs("contractor")
     assert isinstance(orgs, set)
     assert "edX" not in orgs
+    assert "2U/edX" not in orgs
 
 def test_edx_employee(make_pull_request):
     pr = make_pull_request("nedbat")
