@@ -49,6 +49,13 @@ def hook_receiver():
         return msg, 403
 
     event = request.get_json()
+
+    if "pull_request" not in event and "hook" in event and "zen" in event:
+        # this is a ping
+        repo = event.get("repository", {}).get("full_name")
+        logger.info(f"ping from {repo}")
+        return "PONG"
+
     action = event["action"]
     repo = event["repository"]["full_name"]
     keys = set(event.keys()) - {"action", "sender", "repository", "organization", "installation"}
@@ -69,12 +76,6 @@ def hook_receiver():
     # One of them is above this comment, the other is below.
 
     sentry_extra_context({"event": event})
-
-    if "pull_request" not in event and "hook" in event and "zen" in event:
-        # this is a ping
-        repo = event.get("repository", {}).get("full_name")
-        logger.info(f"ping from {repo}")
-        return "PONG"
 
     # This handler code only expected pull_request creation events, so ignore
     # other events.
