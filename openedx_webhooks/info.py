@@ -90,7 +90,11 @@ def get_people_file():
     return people
 
 def get_orgs_file():
-    return _read_repotools_yaml_file("orgs.yaml")
+    orgs = _read_repotools_yaml_file("orgs.yaml")
+    for org_data in list(orgs.values()):
+        if "name" in org_data:
+            orgs[org_data["name"]] = org_data
+    return orgs
 
 def get_labels_file():
     return _read_repotools_yaml_file("labels.yaml")

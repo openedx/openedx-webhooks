@@ -20,5 +20,6 @@ OpenCraft:
     contractor: true
     agreement: institution
 edX:
+    name: 2U/edX
     agreement: institution
     internal: true
