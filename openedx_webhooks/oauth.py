@@ -1,5 +1,7 @@
 import os
 
+import requests
+from urlobject import URLObject
 from flask import flash, request
 from flask_dance.consumer import oauth_authorized, oauth_error
 from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
@@ -49,11 +51,37 @@ github_bp = make_github_blueprint(
 )
 
 
+class BaseUrlSession(requests.Session):
+    """
+    A requests Session class that applies a base URL to the requested URL.
+    This is how the flask-dance OAuth session works. This is a drop-in
+    replacement as we move from OAuth authentication to access tokens.
+    """
+    def __init__(self, base_url):
+        super().__init__()
+        self.base_url = URLObject(base_url)
+
+    def request(self, method, url, data=None, headers=None, **kwargs):
+        return super().request(
+            method=method,
+            url=self.base_url.relative(url),
+            data=data,
+            headers=headers,
+            **kwargs
+        )
+
+
 def get_github_session():
     """
-    Get the GitHub session to use, in an easily test-patchable way.
+    Get the GitHub session to use.
     """
-    return github_bp.session
+    # Create a session that's compatible with the old OAuth session the rest
+    # of the code is expecting.
+    session = BaseUrlSession("https://api.github.com")
+    token = os.environ.get("GITHUB_PERSONAL_TOKEN", "nothing_for_tests")
+    session.headers["Authorization"] = f"token {token}"
+    return session
+
 
 @oauth_authorized.connect_via(github_bp)
 def github_logged_in(blueprint, token):

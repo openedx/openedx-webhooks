@@ -19,7 +19,7 @@ from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
 from openedx_webhooks import logger
-from openedx_webhooks.oauth import jira_get
+from openedx_webhooks.oauth import get_github_session, jira_get
 from openedx_webhooks.types import JiraDict
 
 
@@ -76,7 +76,19 @@ def log_check_response(response, raise_for_status=True):
     msg = "Response: {0.status_code} {0.reason!r} for {0.url}: {0.content!r}".format(response)
     logger.debug(msg)
     if raise_for_status:
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except Exception as exc:
+            req = response.request
+            logger.exception(f"HTTP request failed: {req.method} {req.url}. Response body: {response.content}")
+            raise
+
+
+def log_rate_limit():
+    """Get stats from GitHub about the current rate limit, and log them."""
+    rate = get_github_session().get("/rate_limit").json()['rate']
+    reset = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(rate['reset']))
+    logger.info(f"Rate limit: {rate['limit']}, used {rate['used']}, remaining {rate['remaining']}. Reset is at {reset}")
 
 
 def is_valid_payload(secret: str, signature: str, payload: bytes) -> bool:
@@ -156,17 +168,10 @@ def paginated_get(url, session=None, limit=None, per_page=100, callback=None, **
     returned = 0
     while url:
         resp = retry_get(session, url, **kwargs)
+        log_check_response(resp)
         if callable(callback):
             callback(resp)
-        result = resp.json()
-        if not resp.ok:
-            msg = "{code} error for url {url}: {message}".format(
-                code=resp.status_code,
-                url=resp.url,
-                message=result["message"]
-            )
-            raise requests.exceptions.HTTPError(msg, response=resp)
-        for item in result:
+        for item in resp.json():
             yield item
             returned += 1
         url = None

@@ -400,7 +400,7 @@ class TestComments:
 
 
 @pytest.fixture
-def flaky_github(requests_mocker, mock_github_bp, fake_repo_data):
+def flaky_github(requests_mocker, fake_repo_data):
     the_fake_github = FakeGitHub(login="webhook-bot", fraction_404=1)
     the_fake_github.install_mocks(requests_mocker)
     return the_fake_github

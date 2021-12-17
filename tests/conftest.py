@@ -66,20 +66,6 @@ class FakeBlueprint:
         self.client_secret = "FooSecret"
 
 
-@pytest.fixture
-def mock_github_bp(mocker):
-    github_token = os.environ.get("GITHUB_TOKEN", "faketoken")
-    token = {"access_token": github_token, "token_type": "bearer"}
-    github_session = OAuth2Session(
-        base_url="https://api.github.com/",
-        blueprint=FakeBlueprint(token),
-    )
-    mocker.patch("flask_dance.contrib.github.github", github_session)
-    mock_bp = mock.Mock()
-    mock_bp.session = github_session
-    mocker.patch("openedx_webhooks.oauth.github_bp", mock_bp)
-
-
 def pytest_addoption(parser):
     parser.addoption(
         "--percent-404",
@@ -89,7 +75,7 @@ def pytest_addoption(parser):
     )
 
 @pytest.fixture
-def fake_github(pytestconfig, mocker, requests_mocker, mock_github_bp, fake_repo_data):
+def fake_github(pytestconfig, mocker, requests_mocker, fake_repo_data):
     fraction_404 = float(pytestconfig.getoption("percent_404")) / 100.0
     the_fake_github = FakeGitHub(login="webhook-bot", fraction_404=fraction_404)
     the_fake_github.install_mocks(requests_mocker)

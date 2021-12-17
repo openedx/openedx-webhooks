@@ -20,6 +20,7 @@ from openedx_webhooks.tasks.pr_tracking import (
 )
 from openedx_webhooks.types import PrDict
 from openedx_webhooks.utils import (
+    log_rate_limit,
     paginated_get,
     retry_get,
     sentry_extra_context,
@@ -29,7 +30,13 @@ from openedx_webhooks.utils import (
 @celery.task(bind=True)
 def pull_request_changed_task(_, pull_request):
     """A bound Celery task to call pull_request_changed."""
-    return pull_request_changed(pull_request)
+    try:
+        ret = pull_request_changed(pull_request)
+        log_rate_limit()
+    except Exception as exc:
+        logger.exception("Couldn't pull_request_changed_task")
+        raise
+
 
 def pull_request_changed(pr: PrDict, actions=None) -> Tuple[Optional[str], bool]:
     """
