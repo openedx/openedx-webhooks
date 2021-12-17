@@ -195,3 +195,23 @@ def test_is_draft_pull_request(fake_github, title):
     # No matter what the title, a pr is Draft if it says it is.
     pr = fake_github.make_pull_request(title=title, draft=True)
     assert is_draft_pull_request(pr.as_json())
+
+def test_check_csv_users_only():
+    people = get_people_file()
+    user = 'Carlos-Muniz'
+    # This user exists in the yaml but not in the csv, and should not be in people
+    assert people.get(user) is None
+
+def test_check_csv_org_priority():
+    people = get_people_file()
+    user = 'mmprandom'
+    assert people[user]['agreement'] == 'individual'
+
+def test_check_people_missing_yaml_fields():
+    people = get_people_file()
+    user = 'test-test'
+    assert people[user].get('jira') is None
+    assert people[user].get('other_emails') is None
+    assert people[user].get('commiter') is None
+    assert people[user].get('comments') is None
+    assert people[user].get('before') is None
