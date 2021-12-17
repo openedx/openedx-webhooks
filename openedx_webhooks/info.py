@@ -91,7 +91,7 @@ def get_people_file():
 
 def get_orgs_file():
     orgs = _read_repotools_yaml_file("orgs.yaml")
-    for org_data in orgs.values():
+    for org_data in list(orgs.values()):
         if "name" in org_data:
             orgs[org_data["name"]] = org_data
     return orgs
