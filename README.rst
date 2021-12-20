@@ -163,6 +163,11 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2021-12-20
+~~~~~~~~~~
+
+- The bot now ignores any private repo in the edx organization.
+
 2021-12-17
 ~~~~~~~~~~
 
