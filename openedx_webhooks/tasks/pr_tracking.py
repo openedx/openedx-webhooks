@@ -23,7 +23,6 @@ from openedx_webhooks.bot_comments import (
     github_committer_merge_ping_comment,
     github_community_pr_comment,
     github_community_pr_comment_closed,
-    github_contractor_pr_comment,
     github_end_survey_comment,
     is_comment_kind,
 )
@@ -35,7 +34,6 @@ from openedx_webhooks.info import (
     get_people_file,
     is_bot_pull_request,
     is_committer_pull_request,
-    is_contractor_pull_request,
     is_draft_pull_request,
     is_internal_pull_request,
     is_private_repo_pull_request,
@@ -225,10 +223,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         return None
 
     desired = PrDesiredInfo()
-
-    if is_contractor_pull_request(pr):
-        desired.bot_comments.add(BotComment.CONTRACTOR)
-        return desired
 
     if pr["state"] == "open":
         state = "open"
@@ -541,10 +535,6 @@ class PrTrackingFixer:
             needed_comments.remove(BotComment.WELCOME_CLOSED)
             if BotComment.SURVEY in self.desired.bot_comments:
                 self.desired.bot_comments.remove(BotComment.SURVEY)
-
-        if BotComment.CONTRACTOR in needed_comments:
-            comment_body += github_contractor_pr_comment(self.pr, **comment_kwargs)
-            needed_comments.remove(BotComment.CONTRACTOR)
 
         if BotComment.CORE_COMMITTER in needed_comments:
             comment_body += github_committer_pr_comment(self.pr, jira_id, **comment_kwargs)

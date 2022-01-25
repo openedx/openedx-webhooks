@@ -28,7 +28,6 @@ class BotComment(Enum):
     WELCOME = auto()
     WELCOME_CLOSED = auto()
     NEED_CLA = auto()
-    CONTRACTOR = auto()
     CORE_COMMITTER = auto()
     BLENDED = auto()
     OK_TO_TEST = auto()
@@ -48,10 +47,6 @@ BOT_COMMENT_INDICATORS = {
     BotComment.NEED_CLA: [
         "<!-- comment:no_cla -->",
         "We can't start reviewing your pull request until you've submitted",
-    ],
-    BotComment.CONTRACTOR: [
-        "<!-- comment:contractor -->",
-        "company that does contract work for edX",
     ],
     BotComment.CORE_COMMITTER: [
         "<!-- comment:welcome-core-committer -->",
@@ -81,7 +76,6 @@ BOT_COMMENTS_FIRST = {
     BotComment.WELCOME_CLOSED,
     BotComment.NEED_CLA,
     BotComment.BLENDED,
-    BotComment.CONTRACTOR,
     BotComment.CORE_COMMITTER,
     BotComment.OK_TO_TEST,
     BotComment.END_OF_WIP,
@@ -123,24 +117,6 @@ def github_community_pr_comment_closed(pull_request: PrDict, issue_key: str, **k
         "github_community_pr_comment_closed.md.j2",
         issue_key=issue_key,
         is_merged=pull_request.get("merged", False),
-        **kwargs
-    )
-
-
-def github_contractor_pr_comment(pull_request: PrDict, **kwargs) -> str:
-    """
-    For a newly-created pull request from a contractor that edX works with,
-    write a comment on the pull request. The comment should:
-
-    * Help the author determine if the work is paid for by edX or not
-    * If not, show the author how to trigger the creation of an OSPR issue
-    """
-    return render_template(
-        "github_contractor_pr_comment.md.j2",
-        user=pull_request["user"]["login"],
-        repo=pull_request["base"]["repo"]["full_name"],
-        number=pull_request["number"],
-        is_draft=is_draft_pull_request(pull_request),
         **kwargs
     )
 

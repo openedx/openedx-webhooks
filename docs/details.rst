@@ -30,10 +30,6 @@ handled:
 - If the author is marked as "internal" (an edX employee), the bot does
   nothing.
 
-- If the author is marked as "contractor", the bot puts a comment on the pull
-  request indicating that it doesn't know whether to make a Jira issue or not,
-  with a link the author can use to make one.  The bot is done.
-
 - If the title of the pull request indicates this is a blended project (with
   "[BD-XXX]" in the title), then this is a blended pull request.
 
@@ -98,8 +94,8 @@ be changed.
 
 - Initial bot comment:
 
-  - All four kinds of pull requests (contractor, blended, core committer, and
-    regular) get different comments.
+  - Each kind of pull request (blended, core committer, and regular) gets
+    different comments.
 
   - If the user doesn't have a signed CLA, the bot adds a paragraph about
     needing to sign one.
