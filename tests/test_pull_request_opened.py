@@ -24,14 +24,14 @@ def sync_labels_fn(mocker):
     return mocker.patch("openedx_webhooks.tasks.github_work.synchronize_labels")
 
 
-def test_internal_pr_opened(reqctx, fake_github):
+def test_internal_pr_opened(reqctx, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="nedbat")
     with reqctx:
         key, anything_happened = pull_request_changed(pr.as_json())
     assert key is None
-    assert anything_happened is False
+    assert anything_happened is True
     assert len(pr.list_comments()) == 0
-    assert pr.status(CLA_CONTEXT) is None
+    assert pr.status(CLA_CONTEXT) == "success"
 
 
 def test_pr_in_private_repo_opened(reqctx, fake_github, fake_jira):
@@ -40,20 +40,21 @@ def test_pr_in_private_repo_opened(reqctx, fake_github, fake_jira):
     with reqctx:
         key, anything_happened = pull_request_changed(pr.as_json())
     assert key is None
-    assert anything_happened is False
+    assert anything_happened is True
     assert len(pr.list_comments()) == 0
-    assert pr.status(CLA_CONTEXT) is None
+    # some_contractor has no cla, and even in a private repo we check.
+    assert pr.status(CLA_CONTEXT) == "failure"
 
 
-def test_pr_opened_by_bot(reqctx, fake_github):
+def test_pr_opened_by_bot(reqctx, fake_github, fake_jira):
     fake_github.make_user(login="some_bot", type="Bot")
     pr = fake_github.make_pull_request(user="some_bot")
     with reqctx:
         key, anything_happened = pull_request_changed(pr.as_json())
     assert key is None
-    assert anything_happened is False
+    assert anything_happened is True
     assert len(pr.list_comments()) == 0
-    assert pr.status(CLA_CONTEXT) is None
+    assert pr.status(CLA_CONTEXT) == "success"
 
 
 def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jira):

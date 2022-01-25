@@ -119,6 +119,9 @@ class PrDesiredInfo:
     """
     The information we want to have for a pull request.
     """
+    # Is this an "external" pull request (True), or internal (False)?
+    is_ospr: bool = False
+
     bot_comments: Set[BotComment] = field(default_factory=set)
     jira_project: Optional[str] = None
     jira_title: Optional[str] = None
@@ -206,23 +209,22 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     """
     Examine a pull request to decide what state we want the world to be in.
     """
+    desired = PrDesiredInfo()
+
     user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
 
-    if is_bot_pull_request(pr):
-        logger.info(f"@{user} is a bot, ignored.")
-        return None
-
-    if is_private_repo_pull_request(pr):
-        logger.info(f"{repo}#{num} (@{user}) is in a private repo, ignored")
-        return None
-
-    if is_internal_pull_request(pr):
-        logger.info(f"@{user} acted on {repo}#{num}, internal PR, ignored")
-        return None
-
-    desired = PrDesiredInfo()
+    desired.is_ospr = False
+    is_bot = is_bot_pull_request(pr)
+    if is_bot:
+        logger.info(f"@{user} is a bot, not an ospr.")
+    elif is_private_repo_pull_request(pr):
+        logger.info(f"{repo}#{num} (@{user}) is in a private repo, not an ospr")
+    elif is_internal_pull_request(pr):
+        logger.info(f"@{user} acted on {repo}#{num}, internal PR, not an ospr")
+    else:
+        desired.is_ospr = True
 
     if pr["state"] == "open":
         state = "open"
@@ -235,10 +237,9 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     desired.jira_title = pr["title"]
     desired.jira_description = pr["body"] or ""
 
-    has_signed_agreement = pull_request_has_cla(pr)
     blended_id = get_blended_project_id(pr)
     if blended_id is not None:
-        comment = BotComment.BLENDED
+        desired.bot_comments.add(BotComment.BLENDED)
         desired.jira_project = "BLENDED"
         desired.github_labels.add("blended")
         desired.jira_labels.add("blended")
@@ -249,7 +250,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             map_1_2 = blended_epic["fields"].get(custom_fields["Platform Map Area (Levels 1 & 2)"])
             if map_1_2 is not None:
                 desired.jira_extra_fields["Platform Map Area (Levels 1 & 2)"] = map_1_2
-    else:
+    elif desired.is_ospr:
         if state == "open":
             comment = BotComment.WELCOME
         else:
@@ -265,36 +266,39 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             desired.github_labels.add("core committer")
             if state == "merged":
                 desired.bot_comments.add(BotComment.CHAMPION_MERGE_PING)
+        desired.bot_comments.add(comment)
 
-    desired.bot_comments.add(comment)
-
-    # Some PR states mean we want to insist on a Jira status.
-    if is_draft_pull_request(pr):
-        desired.jira_initial_status = "Waiting on Author"
-        desired.bot_comments.add(BotComment.END_OF_WIP)
-
-    if has_signed_agreement:
+    has_signed_agreement = pull_request_has_cla(pr)
+    if is_bot or has_signed_agreement:
         desired.cla_check = "success"
     else:
-        desired.bot_comments.add(BotComment.NEED_CLA)
-        desired.jira_initial_status = "Community Manager Review"
         desired.cla_check = "failure"
 
-    if state == "closed":
-        desired.jira_status = "Rejected"
-    elif state == "merged":
-        desired.jira_status = "Merged"
+    if desired.is_ospr:
+        # Some PR states mean we want to insist on a Jira status.
+        if is_draft_pull_request(pr):
+            desired.jira_initial_status = "Waiting on Author"
+            desired.bot_comments.add(BotComment.END_OF_WIP)
 
-    if state in ["closed", "merged"]:
-        desired.bot_comments.add(BotComment.SURVEY)
+        if not has_signed_agreement:
+            desired.bot_comments.add(BotComment.NEED_CLA)
+            desired.jira_initial_status = "Community Manager Review"
 
-    if has_signed_agreement:
-        desired.bot_comments.add(BotComment.OK_TO_TEST)
+        if state == "closed":
+            desired.jira_status = "Rejected"
+        elif state == "merged":
+            desired.jira_status = "Merged"
 
-    if "additions" in pr:
-        desired.jira_extra_fields["Github Lines Added"] = pr["additions"]
-    if "deletions" in pr:
-        desired.jira_extra_fields["Github Lines Deleted"] = pr["deletions"]
+        if state in ["closed", "merged"]:
+            desired.bot_comments.add(BotComment.SURVEY)
+
+        if has_signed_agreement:
+            desired.bot_comments.add(BotComment.OK_TO_TEST)
+
+        if "additions" in pr:
+            desired.jira_extra_fields["Github Lines Added"] = pr["additions"]
+        if "deletions" in pr:
+            desired.jira_extra_fields["Github Lines Deleted"] = pr["deletions"]
 
     return desired
 
@@ -325,6 +329,14 @@ class PrTrackingFixer:
         return self.current.jira_id, self.happened
 
     def fix(self) -> None:
+        if self.desired.is_ospr:
+            self.fix_ospr()
+
+        if self.desired.cla_check != self.current.cla_check:
+            self.actions.set_cla_status(status=self.desired.cla_check)
+            self.happened = True
+
+    def fix_ospr(self) -> None:
         """
         The main routine for making needed changes.
         """
@@ -404,10 +416,6 @@ class PrTrackingFixer:
         if fix_comment:
             self._fix_bot_comment(comment_kwargs)
         self._add_bot_comments()
-
-        if self.desired.cla_check != self.current.cla_check:
-            self.actions.set_cla_status(status=self.desired.cla_check)
-            self.happened = True
 
     def _make_jira_issue(self) -> None:
         """

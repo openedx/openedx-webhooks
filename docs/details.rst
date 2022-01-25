@@ -10,7 +10,7 @@ Making a Jira issue for a pull request
 
 The bot gets notifications from GitHub when a pull request is created in the
 organizations and/or repos where it is configured.  It's currently configured
-in the edx organization, and probably a few other places we have lost track of.
+in the edx and openedx organizations.
 
 A number of aspects of the pull request are examined:
 
@@ -27,8 +27,9 @@ The bot has to choose:
 Pull requests fall into a number of categories, which determine how it is
 handled:
 
-- If the author is marked as "internal" (an edX employee), the bot does
-  nothing.
+- If the author is marked as "internal" (an edX employee), the bot only applies
+  the CLA check. No comments are put on the pull request, and no Jira ticket is
+  created.
 
 - If the title of the pull request indicates this is a blended project (with
   "[BD-XXX]" in the title), then this is a blended pull request.
@@ -107,6 +108,9 @@ be changed.
 
   - The number of lines added and deleted in the pull request are recorded in
     the "Github Lines Added" and "Github Lines Deleted" fields.
+
+  - A GitHub status check called "openedx/cla" is added to the latest commit.
+    This is applied to all pull requests, even edX internal ones.
 
 
 Updating Jira issue when pull requests change
