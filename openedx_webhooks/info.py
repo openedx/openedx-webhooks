@@ -127,15 +127,6 @@ def is_internal_pull_request(pull_request: PrDict) -> bool:
     """
     return _is_pull_request(pull_request, "internal")
 
-def is_contractor_pull_request(pull_request: PrDict) -> bool:
-    """
-    Was this pull request created by someone in an organization that does
-    paid contracting work for edX? If so, we don't know if this pull request
-    falls under edX's contract, or if it should be treated as a pull request
-    from the community.
-    """
-    return _is_pull_request(pull_request, "contractor")
-
 # During the decoupling, it became clear that we needed to ignore pull
 # requests in edX private repos, since contractors there may not have
 # signed a CLA, which they don't need to do.  It's not clear how this
