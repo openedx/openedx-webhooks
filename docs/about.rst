@@ -11,12 +11,10 @@ GitHub PR to Jira issue
 
 The most well-known need this bot serves is automatically creating Jira issues
 for incoming GitHub pull requests. It detects the author of the pull request,
-and determines whether that author is an edX employee, a contractor that often
-does work for edX, or someone else in the Open edX community. If the author
-is an edX employee, the pull request is utterly ignored. If the author is a
-contractor that often does work for edX, the bot adds a comment to the pull
-request, asking the contractor to make an OSPR issue for their pull request
-if necessary. Otherwise, the bot automatically makes an OSPR issue for the
+and determines whether that author is an edX employee
+or someone in the Open edX community. If the author
+is an edX employee, the pull request is utterly ignored.
+Otherwise, the bot automatically makes an OSPR issue for the
 pull request, and adds a comment to the pull request that links to the OSPR
 issue.
 

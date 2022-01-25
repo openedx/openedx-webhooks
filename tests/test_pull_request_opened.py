@@ -335,61 +335,6 @@ def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
     assert len(pr.list_comments()) == 1
 
 
-def test_contractor_pr_opened(reqctx, fake_github, fake_jira):
-    pr = fake_github.make_pull_request(user="joecontractor")
-    prj = pr.as_json()
-
-    with reqctx:
-        issue_id, anything_happened = pull_request_changed(prj)
-
-    assert issue_id is None
-    assert anything_happened is True
-
-    # No Jira issue was created.
-    assert len(fake_jira.issues) == 0
-
-    # Check the GitHub comment that was created.
-    pr_comments = pr.list_comments()
-    assert len(pr_comments) == 1
-    body = pr_comments[0].body
-    assert is_comment_kind(BotComment.CONTRACTOR, body)
-    href = (
-        'href="https://openedx-webhooks.herokuapp.com/github/process_pr' +
-        '?repo={}'.format(prj["base"]["repo"]["full_name"].replace("/", "%2F")) +
-        '&number={}"'.format(prj["number"])
-    )
-    assert href in body
-    assert 'Create an OSPR issue for this pull request' in body
-
-
-def test_contractor_pr_rescanned(reqctx, fake_github, fake_jira):
-    pr = fake_github.make_pull_request(user="joecontractor")
-    with reqctx:
-        issue_id, anything_happened = pull_request_changed(pr.as_json())
-
-    assert issue_id is None
-    assert anything_happened is True
-
-    # No Jira issue was created.
-    assert len(fake_jira.issues) == 0
-
-    # One GitHub comment was created.
-    assert len(pr.list_comments()) == 1
-
-    # Rescan it.  Nothing should happen.
-    with reqctx:
-        issue_id, anything_happened = pull_request_changed(pr.as_json())
-
-    assert issue_id is None
-    assert anything_happened is False
-
-    # No Jira issue was created.
-    assert len(fake_jira.issues) == 0
-
-    # One GitHub comment was created.
-    assert len(pr.list_comments()) == 1
-
-
 def test_changing_pr_title(reqctx, fake_github, fake_jira):
     # After the Jira issue is created, changing the title of the pull request
     # will update the title of the issue.
