@@ -9,7 +9,7 @@ from openedx_webhooks.types import PrDict
 from openedx_webhooks.utils import log_check_response
 
 
-CLA_CONTEXT = 'edx/cla'
+CLA_CONTEXT = "openedx/cla"
 
 
 def find_issues_for_pull_request(jira, pull_request_url):
