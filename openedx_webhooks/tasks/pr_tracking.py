@@ -26,7 +26,14 @@ from openedx_webhooks.bot_comments import (
     github_end_survey_comment,
     is_comment_kind,
 )
-from openedx_webhooks.github.dispatcher.actions.utils import cla_status_on_pr, set_cla_status_on_pr
+from openedx_webhooks.github.dispatcher.actions.utils import (
+    CLA_STATUS_BAD,
+    CLA_STATUS_BOT,
+    CLA_STATUS_GOOD,
+    CLA_STATUS_PRIVATE,
+    cla_status_on_pr,
+    set_cla_status_on_pr,
+)
 from openedx_webhooks.info import (
     get_blended_project_id,
     get_bot_comments,
@@ -36,7 +43,7 @@ from openedx_webhooks.info import (
     is_committer_pull_request,
     is_draft_pull_request,
     is_internal_pull_request,
-    is_private_repo_pull_request,
+    is_private_repo_no_cla_pull_request,
     pull_request_has_cla,
 )
 from openedx_webhooks.labels import (
@@ -107,7 +114,7 @@ class PrCurrentInfo:
     github_labels: Set[str] = field(default_factory=set)
 
     # The status of the cla check.
-    cla_check: Optional[str] = None
+    cla_check: Optional[Dict[str, str]] = None
 
     # Did the author make a change that could move us out of "Waiting on
     # Author"?
@@ -143,7 +150,7 @@ class PrDesiredInfo:
     github_labels: Set[str] = field(default_factory=set)
 
     # The status of the cla check.
-    cla_check: Optional[str] = None
+    cla_check: Optional[Dict[str, str]] = None
 
 
 def existing_bot_comments(prid: PrId) -> Tuple[Optional[str], Set[BotComment]]:
@@ -217,9 +224,10 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
 
     desired.is_ospr = False
     is_bot = is_bot_pull_request(pr)
+    is_no_cla = is_private_repo_no_cla_pull_request(pr)
     if is_bot:
         logger.info(f"@{user} is a bot, not an ospr.")
-    elif is_private_repo_pull_request(pr):
+    elif is_no_cla:
         logger.info(f"{repo}#{num} (@{user}) is in a private repo, not an ospr")
     elif is_internal_pull_request(pr):
         logger.info(f"@{user} acted on {repo}#{num}, internal PR, not an ospr")
@@ -269,10 +277,14 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         desired.bot_comments.add(comment)
 
     has_signed_agreement = pull_request_has_cla(pr)
-    if is_bot or has_signed_agreement:
-        desired.cla_check = "success"
+    if is_bot:
+        desired.cla_check = CLA_STATUS_BOT
+    elif has_signed_agreement:
+        desired.cla_check = CLA_STATUS_GOOD
+    elif is_no_cla:
+        desired.cla_check = CLA_STATUS_PRIVATE
     else:
-        desired.cla_check = "failure"
+        desired.cla_check = CLA_STATUS_BAD
 
     if desired.is_ospr:
         # Some PR states mean we want to insist on a Jira status.
@@ -812,5 +824,5 @@ class FixingActions:
         resp = get_github_session().patch(url, json={"labels": labels})
         log_check_response(resp)
 
-    def set_cla_status(self, *, status: str) -> None:
+    def set_cla_status(self, *, status: Dict[str, str]) -> None:
         set_cla_status_on_pr(self.prid.full_name, self.prid.number, status)
