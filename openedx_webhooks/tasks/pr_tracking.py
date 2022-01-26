@@ -333,6 +333,7 @@ class PrTrackingFixer:
             self.fix_ospr()
 
         if self.desired.cla_check != self.current.cla_check:
+            assert self.desired.cla_check is not None
             self.actions.set_cla_status(status=self.desired.cla_check)
             self.happened = True
 
