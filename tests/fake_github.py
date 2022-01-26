@@ -304,7 +304,7 @@ class FakeGitHub(faker.Faker):
         self.users: Dict[str, User] = {}
         self.repos: Dict[str, Repo] = {}
         self.has_signed_cla = True
-        self.cla_statuses: Dict[str, str] = {}
+        self.cla_statuses: Dict[str, Dict[str, str]] = {}
 
     def make_user(self, login: str, **kwargs) -> User:
         u = self.users[login] = User(login, **kwargs)
@@ -385,32 +385,26 @@ class FakeGitHub(faker.Faker):
     # Commmits
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pulls/(?P<number>\d+)/commits(\?.*)?")
-    def _patch_pr_commits(self, match, request, _context) -> List[Dict[str, str]]:
+    def _get_pr_commits(self, match, request, _context) -> List[Dict[str, str]]:
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))
         data = [{'sha': sha} for sha in pr.commits]
         return data
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?")
-    def _patch_pr_status_check(self, match, request, _context) -> List[Dict[str, Any]]:
-        return [
-            {
-                'context': CLA_CONTEXT,
-                'state': self.cla_statuses.get(match['sha']),
-            },
-        ]
+    def _get_pr_status_check(self, match, request, _context) -> List[Dict[str, Any]]:
+        sha: str = match["sha"]
+        if sha in self.cla_statuses:
+            return [self.cla_statuses[sha]]
+        else:
+            return []
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?", 'POST')
-    def _patch_pr_status_update(self, match, request, _context) -> List[Dict[str, Any]]:
+    def _post_pr_status_update(self, match, request, _context) -> List[Dict[str, Any]]:
         data = request.json()
         assert data['context'] == CLA_CONTEXT
-        self.cla_statuses[match['sha']] = state = data['state']
-        return [
-            {
-                'context': CLA_CONTEXT,
-                'state': state,
-            },
-        ]
+        self.cla_statuses[match['sha']] = data
+        return [data]
 
     # Repo labels
 
