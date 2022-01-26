@@ -28,8 +28,10 @@ fulltest: ## Run tests with randomness to emulate flaky GitHub
 test-html-coverage-report: test ## Run tests and show coverage report in browser
 	open htmlcov/index.html
 
-lint: ## Run pylint
+pylint: ## Run pylint
 	-pylint --rcfile=pylintrc openedx_webhooks tests bin setup.py
+
+mypy: ## Run mypy to check type annotations
 	-mypy openedx_webhooks tests
 
 upgrade: export CUSTOM_COMPILE_COMMAND = make upgrade
