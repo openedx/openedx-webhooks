@@ -17,12 +17,13 @@ testschema: ## Install a schema under test.
 TEST_FLAGS = $(TEST_ARGS) -rxefs --cov=openedx_webhooks --cov=tests --cov-report=
 
 test: ## Run tests
-	py.test $(TEST_FLAGS) --cov-context=test
+	pytest $(TEST_FLAGS) --cov-context=test
 	coverage html --show-contexts
+	coverage xml
 
 fulltest: ## Run tests with randomness to emulate flaky GitHub
-	py.test $(TEST_FLAGS)
-	py.test $(TEST_FLAGS) --cov-append -m flaky_github --disable-warnings --percent-404=1 --count=100
+	pytest $(TEST_FLAGS)
+	pytest $(TEST_FLAGS) --cov-append -m flaky_github --disable-warnings --percent-404=1 --count=100
 	coverage html
 
 test-html-coverage-report: test ## Run tests and show coverage report in browser

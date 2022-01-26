@@ -33,6 +33,7 @@ jobs:
       run: |
         python manage.py dbcreate
         make test
+        ls -al
         cd docs && make html
 
     - name: Run Coverage
