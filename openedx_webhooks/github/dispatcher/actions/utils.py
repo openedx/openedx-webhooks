@@ -9,9 +9,6 @@ from openedx_webhooks.types import PrDict
 from openedx_webhooks.utils import log_check_response
 
 
-CLA_CONTEXT = "openedx/cla"
-
-
 def find_issues_for_pull_request(jira, pull_request_url):
     """
     Find corresponding JIRA issues for a given GitHub pull request.
@@ -55,24 +52,31 @@ def _get_latest_commit_for_pull_request_data(repo_name_full: str, number: int) -
     return data
 
 
-def _get_commit_status_for_cla(url):
+def _get_commit_status_for_cla(url) -> Optional[Dict[str, str]]:
     """
-    Send a GET request to the Github API to lookup the build status
+    Send a GET request to the Github API to lookup the build status.
+
+    Returns:
+        a dict with state, description, and target_url.
     """
     logger.info("CLA: GET %s", url)
     response = get_github_session().get(url)
     log_check_response(response)
     data = response.json()
     logger.info("CLA: GOT %s %s", url, data)
-    cla_status = [
+    cla_statuses = [
         status
         for status in data
-        if status.get('context') == CLA_CONTEXT
+        if status['context'] == CLA_CONTEXT
     ]
-    state = None
-    if len(cla_status) > 0:
-        state = cla_status[-1].get('state')
-    return state
+    status = None
+    if cla_statuses:
+        cla_status = cla_statuses[-1]
+        status = {
+            k: v for k, v in cla_status.items()
+            if k in ["context", "state", "description", "target_url"]
+        }
+    return status
 
 
 def _update_commit_status_for_cla(url, payload):
@@ -87,7 +91,7 @@ def _update_commit_status_for_cla(url, payload):
     return data
 
 
-def cla_status_on_pr(pull_request: PrDict) -> Optional[str]:
+def cla_status_on_pr(pull_request: PrDict) -> Optional[Dict[str, str]]:
     repo_name_full = pull_request['base']['repo']['full_name']
     number = pull_request['number']
     sha = _get_latest_commit_for_pull_request(repo_name_full, number)
@@ -97,21 +101,45 @@ def cla_status_on_pr(pull_request: PrDict) -> Optional[str]:
     status = _get_commit_status_for_cla(url)
     return status
 
+# A status is a dict of values. We only have a few that we use, so build them
+# all here.
+CLA_CONTEXT = "openedx/cla"
+CLA_DETAIL_URL = "https://openedx.atlassian.net/wiki/spaces/COMM/pages/941457737/How+to+start+contributing+to+the+Open+edX+code+base"
 
-def set_cla_status_on_pr(repo_name_full: str, number: int, status: str) -> bool:
+CLA_STATUS_GOOD = {
+    "context": CLA_CONTEXT,
+    "state": "success",
+    "description": "The author is covered by a Contributor Agreement",
+    "target_url": CLA_DETAIL_URL,
+}
+
+CLA_STATUS_BAD = {
+    "context": CLA_CONTEXT,
+    "state": "failure",
+    "description": "We need a signed Contributor Agreeement",
+    "target_url": CLA_DETAIL_URL,
+}
+
+CLA_STATUS_BOT = {
+    "context": CLA_CONTEXT,
+    "state": "success",
+    "description": "Bots don't need contributor agreements",
+}
+
+CLA_STATUS_PRIVATE = {
+    "context": CLA_CONTEXT,
+    "state": "success",
+    "description": "The author has no contributor agreement, but it is not required in this private repo",
+    "target_url": CLA_DETAIL_URL,
+}
+
+
+def set_cla_status_on_pr(repo_name_full: str, number: int, status: Dict[str, str]) -> bool:
     sha = _get_latest_commit_for_pull_request(repo_name_full, number)
     logger.info("CLA: Update state from to '%s' for commit '%s'", status, sha)
-    if status == "success":
-        description = 'The author is covered by a Contributor Agreement'
-    else:
-        description = 'We need a signed Contributor Agreeement'
     payload = {
         'context': CLA_CONTEXT,
-        'description': description,
-        'state': status,
-        # pylint: disable=line-too-long
-        'target_url': 'https://openedx.atlassian.net/wiki/spaces/COMM/pages/941457737/How+to+start+contributing+to+the+Open+edX+code+base',
-        # pylint: enable=line-too-long
+        **status,
     }
     url = f"https://api.github.com/repos/{repo_name_full}/statuses/{sha}"
     data = _update_commit_status_for_cla(url, payload)

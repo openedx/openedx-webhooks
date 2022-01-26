@@ -133,7 +133,7 @@ def is_internal_pull_request(pull_request: PrDict) -> bool:
 # logic should be generalized, but this is good for now.
 PRIVATABLE_ORGS = {"edx"}
 
-def is_private_repo_pull_request(pull_request: PrDict) -> bool:
+def is_private_repo_no_cla_pull_request(pull_request: PrDict) -> bool:
     """
     Is this a private edX pull request?
     """
