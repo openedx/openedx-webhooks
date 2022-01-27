@@ -163,6 +163,14 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2022-01-27
+~~~~~~~~~~
+
+- Removed the code that handled "contractor" pull requests, where the bot
+  couldn't know if an OSPR ticket was needed or not.
+
+- The CLA check is now applied to all pull requests, even edX internal ones.
+
 2021-12-20
 ~~~~~~~~~~
 
