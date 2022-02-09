@@ -85,6 +85,8 @@ def hook_receiver():
     pr = event["pull_request"]
     pr_number = pr["number"]
     action = event["action"]
+    if action == "reopened":
+        pr["state"] = "open"
 
     pr_activity = f"{repo} #{pr_number} {action!r}"
     if action in ["opened", "edited", "closed", "synchronize", "ready_for_review", "converted_to_draft"]:
