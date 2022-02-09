@@ -215,7 +215,6 @@ def github_end_survey_comment(pull_request: PrDict) -> str:
     """
     Create a "please fill out this survey" comment.
     """
-    print(pull_request)
     is_merged = pull_request.get("merged", False)
     url = SURVEY_URL.format(
         repo_full_name=pull_request["base"]["repo"]["full_name"],
