@@ -162,6 +162,14 @@ class PullRequest:
         self.merged = merge
         self.closed_at = datetime.datetime.now()
 
+    def reopen(self):
+        """
+        Re-open a pull request.
+        """
+        self.state = "open"
+        self.merged = False
+        self.closed_at = None
+
     def add_comment(self, user="someone", **kwargs) -> Comment:
         comment = self.repo.make_comment(user, **kwargs)
         self.comments.append(comment.id)
