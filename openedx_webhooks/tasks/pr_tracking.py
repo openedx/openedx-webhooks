@@ -234,7 +234,9 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     else:
         desired.is_ospr = True
 
-    if pr["state"] == "open":
+    if pr.get("hook_action") == "reopened":
+        state = "reopened"
+    elif pr["state"] == "open":
         state = "open"
     elif pr["merged"]:
         state = "merged"
@@ -259,7 +261,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             if map_1_2 is not None:
                 desired.jira_extra_fields["Platform Map Area (Levels 1 & 2)"] = map_1_2
     elif desired.is_ospr:
-        if state == "open":
+        if state in ["open", "reopened"]:
             comment = BotComment.WELCOME
         else:
             comment = BotComment.WELCOME_CLOSED
@@ -300,6 +302,8 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             desired.jira_status = "Rejected"
         elif state == "merged":
             desired.jira_status = "Merged"
+        elif state == "reopened":
+            desired.jira_status = "Community Manager Review"
 
         if state in ["closed", "merged"]:
             desired.bot_comments.add(BotComment.SURVEY)
