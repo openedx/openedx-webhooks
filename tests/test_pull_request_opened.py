@@ -132,7 +132,7 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     # Test re-opening.
     issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
     assert issue_id2 == issue_id
-    assert anything_happened2 is False
+    assert anything_happened2 is True
     # Now there are two comments, closing the PR added a survey comment.
     assert len(pr.list_comments()) == 2
 
