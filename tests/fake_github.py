@@ -169,7 +169,6 @@ class PullRequest:
         self.state = "open"
         self.merged = False
         self.closed_at = None
-        # Need to be able to define `self.event.action = "reopened"` here
 
     def add_comment(self, user="someone", **kwargs) -> Comment:
         comment = self.repo.make_comment(user, **kwargs)

@@ -37,7 +37,9 @@ def close_and_reopen_pr(reqctx, pr):
         pull_request_changed(pr.as_json())
     pr.reopen()
     with reqctx:
-        return pull_request_changed(pr.as_json())
+        prj = pr.as_json()
+        prj["hook_action"] = "reopened"
+        return pull_request_changed(prj)
 
 
 def test_internal_pr_opened(reqctx, fake_github, fake_jira):
@@ -137,7 +139,7 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     assert len(pr.list_comments()) == 2
 
     issue = fake_jira.issues[issue_id]
-    assert issue.status == "Community Manager Review"   # This fails: Jira is still Rejected.
+    assert issue.status == "Community Manager Review"
 
 
 def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_jira):
@@ -183,8 +185,19 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"needs triage", "open-source-contribution"}
+
     # Check the status check applied to the latest commit.
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
+
+    # Test re-opening.
+    issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
+    assert issue_id2 == issue_id
+    assert anything_happened2 is True
+    # Now there are two comments, closing the PR added a survey comment.
+    assert len(pr.list_comments()) == 2
+
+    issue = fake_jira.issues[issue_id]
+    assert issue.status == "Community Manager Review"
 
 
 def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira):

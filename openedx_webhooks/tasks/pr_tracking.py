@@ -234,10 +234,10 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     else:
         desired.is_ospr = True
 
-    if pr["state"] == "open":
-        state = "open"
-    elif pr["state"] == "reopened":
+    if pr.get("hook_action") == "reopened":
         state = "reopened"
+    elif pr["state"] == "open":
+        state = "open"
     elif pr["merged"]:
         state = "merged"
     else:
