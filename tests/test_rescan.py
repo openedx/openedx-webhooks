@@ -229,7 +229,7 @@ def test_rescan_organization(rescannable_org, reqctx, pull_request_changed_fn, a
 def test_rescan_failure(mocker, rescannable_repo, reqctx):
     def flaky_pull_request_changed(pr, actions):
         if pr["number"] == 108:
-            1/0 # BOOM
+            return 1/0 # BOOM
         else:
             return pull_request_changed(pr, actions)
 

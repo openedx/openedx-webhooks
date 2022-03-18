@@ -92,8 +92,13 @@ class PrCurrentInfo:
     # The text of the first bot comment.
     bot_comment0_text: Optional[str] = None
 
+    # The comment id of the survey comment, if any.
+    bot_survey_comment_id: Options[str] = None
+
     # The last-seen state stored in the first bot comment.
     last_seen_state: Dict = field(default_factory=dict)
+    # And aggregate of all data stored on all bot comments.
+    all_bot_state: Dict = field(default_factory=dict)
 
     # The Jira issue id mentioned on the PR if any.
     jira_mentioned_id: Optional[str] = None
@@ -130,6 +135,7 @@ class PrDesiredInfo:
     is_ospr: bool = False
 
     bot_comments: Set[BotComment] = field(default_factory=set)
+    bot_comments_to_remove: Set[BotComment] = field(default_factory=set)
     jira_project: Optional[str] = None
     jira_title: Optional[str] = None
     jira_description: Optional[str] = None
@@ -140,6 +146,9 @@ class PrDesiredInfo:
     # The Jira status we want to set on an existing issue. Can be None if we
     # don't need to force a new status, but can leave the existing status.
     jira_status: Optional[str] = None
+    # If we're closing the pull request, we save away the previous Jira state
+    # in case we need to re-open it.
+    jira_previous_status: Optional[str] = None
 
     jira_labels: Set[str] = field(default_factory=set)
     jira_epic: Optional[JiraDict] = None
@@ -153,35 +162,26 @@ class PrDesiredInfo:
     cla_check: Optional[Dict[str, str]] = None
 
 
-def existing_bot_comments(prid: PrId) -> Tuple[Optional[str], Set[BotComment]]:
-    """
-    Get the set of bot comments already on the pull request.
-
-    Returns a tuple:
-        comment0: the text of the first (most important) bot comment.
-        comment_ids: set of bot comment ids.
-    """
-    comment0 = None
-    comment_ids = set()
-    for i, comment in enumerate(get_bot_comments(prid)):
-        body = comment["body"]
-        if i == 0:
-            comment0 = body
-        for comment_id, snips in BOT_COMMENT_INDICATORS.items():
-            if any(snip in body for snip in snips):
-                comment_ids.add(comment_id)
-    return comment0, comment_ids
-
-
 def current_support_state(pr: PrDict) -> PrCurrentInfo:
     """
     Examine the world to determine what the current support state is.
     """
     prid = PrId.from_pr_dict(pr)
     current = PrCurrentInfo()
-    current.bot_comment0_text, current.bot_comments = existing_bot_comments(prid)
-    if current.bot_comment0_text is not None:
+
+    full_bot_comments = list(get_bot_comments(prid))
+    if full_bot_comments:
+        current.bot_comment0_text = full_bot_comments[0]["body"]
         current.last_seen_state = extract_data_from_comment(current.bot_comment0_text)
+    for comment in full_bot_comments:
+        body = comment["body"]
+        for comment_id, snips in BOT_COMMENT_INDICATORS.items():
+            if any(snip in body for snip in snips):
+                current.bot_comments.add(comment_id)
+                if comment_id == BotComment.SURVEY:
+                    current.bot_survey_comment_id = comment["id"]
+        current.all_bot_state.update(extract_data_from_comment(body))
+
     current.jira_id = current.jira_mentioned_id = get_jira_issue_key(prid)
     if current.jira_id:
         issue = get_jira_issue(current.jira_id, missing_ok=True)
@@ -303,7 +303,8 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         elif state == "merged":
             desired.jira_status = "Merged"
         elif state == "reopened":
-            desired.jira_status = "Community Manager Review"
+            desired.jira_status = "pre-close"   # Not a real Jira status.
+            desired.bot_comments_to_remove.add(BotComment.SURVEY)
 
         if state in ["closed", "merged"]:
             desired.bot_comments.add(BotComment.SURVEY)
@@ -414,6 +415,10 @@ class PrTrackingFixer:
 
             # Check the state of the Jira issue.
             if self.desired.jira_status is not None and self.desired.jira_status != self.current.jira_status:
+                if self.desired.jira_status == "pre-close":
+                    self.desired.jira_status = self.current.all_bot_state.get("jira-pre-close", "Community Manager Review")
+                elif self.desired.jira_status == "Rejected":
+                    self.desired.jira_previous_status = self.current.jira_status
                 self.actions.transition_jira_issue(jira_id=self.current.jira_id, jira_status=self.desired.jira_status)
                 self.current.jira_status = self.desired.jira_status
                 self.happened = True
@@ -617,8 +622,15 @@ class PrTrackingFixer:
 
         if BotComment.SURVEY in needed_comments:
             body = github_end_survey_comment(self.pr)
+            if self.desired.jira_status == "Rejected":
+                # For close/re-open cycling, remember what Jira was before the close.
+                body += format_data_for_comment({"jira-pre-close": self.desired.jira_previous_status})
             self.actions.add_comment_to_pull_request(comment_body=body)
             needed_comments.remove(BotComment.SURVEY)
+
+        if BotComment.SURVEY in self.desired.bot_comments_to_remove:
+            if self.current.bot_survey_comment_id:
+                self.actions.delete_comment_on_pull_request(comment_id=self.current.bot_survey_comment_id)
 
         assert needed_comments == set(), f"Couldn't make comments: {needed_comments}"
 
@@ -814,6 +826,12 @@ class FixingActions:
         url = f"/repos/{self.prid.full_name}/issues/comments/{comment_id}"
         logger.info(f"Updating comment on PR {self.prid}: {text_summary(comment_body, 90)!r}")
         resp = get_github_session().patch(url, json={"body": comment_body})
+        log_check_response(resp)
+
+    def delete_comment_on_pull_request(self, *, comment_id: int) -> None:
+        url = f"/repos/{self.prid.full_name}/issues/comments/{comment_id}"
+        logger.info(f"Deleting comment on PR {self.prid}")
+        resp = get_github_session().delete(url)
         log_check_response(resp)
 
     def update_labels_on_pull_request(self, *, labels: List[str]) -> None:
