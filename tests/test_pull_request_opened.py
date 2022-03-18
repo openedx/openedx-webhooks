@@ -135,8 +135,9 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
     assert issue_id2 == issue_id
     assert anything_happened2 is True
-    # Now there are two comments, closing the PR added a survey comment.
-    assert len(pr.list_comments()) == 2
+    # Now there is one comment: closing the PR added a survey comment, but
+    # re-opening it deleted it.
+    assert len(pr.list_comments()) == 1
 
     issue = fake_jira.issues[issue_id]
     assert issue.status == "Community Manager Review"
@@ -193,11 +194,34 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
     issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
     assert issue_id2 == issue_id
     assert anything_happened2 is True
-    # Now there are two comments, closing the PR added a survey comment.
-    assert len(pr.list_comments()) == 2
+    # Now there is one comment: closing the PR added a survey comment, but
+    # re-opening it deleted it.
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
 
     issue = fake_jira.issues[issue_id]
-    assert issue.status == "Community Manager Review"
+    # Re-opening a pull request should put Jira back its state before the closing.
+    assert issue.status == "Needs Triage"
+
+
+def test_psycho_reopening(reqctx, sync_labels_fn, fake_github, fake_jira):
+    # Check that close/re-open/close/re-open etc will properly track the jira status.
+    pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", number=11235)
+    prj = pr.as_json()
+
+    with reqctx:
+        issue_id, _ = pull_request_changed(prj)
+
+    issue = fake_jira.issues[issue_id]
+    for status in ["Waiting on Author", "Needs Triage", "Architecture Review", "Changes Requested"]:
+        issue.status = status
+        issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
+        assert issue_id2 == issue_id
+        assert anything_happened2 is True
+
+        issue = fake_jira.issues[issue_id]
+        # Re-opening a pull request should put Jira back its state before the closing.
+        assert issue.status == status
 
 
 def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira):

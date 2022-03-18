@@ -393,14 +393,14 @@ class FakeGitHub(faker.Faker):
     # Commmits
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pulls/(?P<number>\d+)/commits(\?.*)?")
-    def _get_pr_commits(self, match, request, _context) -> List[Dict[str, str]]:
+    def _get_pr_commits(self, match, _request, _context) -> List[Dict[str, str]]:
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))
         data = [{'sha': sha} for sha in pr.commits]
         return data
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?")
-    def _get_pr_status_check(self, match, request, _context) -> List[Dict[str, Any]]:
+    def _get_pr_status_check(self, match, _request, _context) -> List[Dict[str, Any]]:
         sha: str = match["sha"]
         if sha in self.cla_statuses:
             return [self.cla_statuses[sha]]

@@ -146,3 +146,11 @@ request.
 
 If the pull request was a core committer PR, the bot leaves a comment pinging
 the committer's edX champions, to help them stay current.
+
+
+When a pull request is re-opened
+--------------------------------
+
+The bot deletes the "please complete a survey" comment that was added when the
+pull request was closed.  The Jira issue is returned to the state it was in
+when the pull request was closed.
