@@ -398,6 +398,29 @@ class TestComments:
                 json={"body": "Look: [None](https://foo.com)"},
             )
 
+    def test_deleting_comments(self, fake_github):
+        repo = fake_github.make_repo("an-org", "a-repo")
+        pr = repo.make_pull_request()
+
+        pr.add_comment(user="tusbar", body="This is my comment")
+        pr.add_comment(user="feanil", body="I love this change!")
+
+        # List the comments, and get the id of the first one.
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments")
+        comment_id = resp.json()[0]["id"]
+
+        # Update the first comment.
+        resp = requests.delete(
+            f"https://api.github.com/repos/an-org/a-repo/issues/comments/{comment_id}",
+        )
+        assert resp.status_code == 204
+
+        # List the comments, and see only the second comment.
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments")
+        comments = resp.json()
+        assert len(comments) == 1
+        assert comments[0]["body"] == "I love this change!"
+
 
 @pytest.fixture
 def flaky_github(requests_mocker, fake_repo_data):
