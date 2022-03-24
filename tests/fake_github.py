@@ -176,7 +176,7 @@ class PullRequest:
         return comment
 
     def list_comments(self) -> List[Comment]:
-        return [self.repo.comments[cid] for cid in self.comments]
+        return [com for cid in self.comments if (com := self.repo.comments.get(cid))]
 
     def set_labels(self, labels: Iterable[str]) -> None:
         """
@@ -454,7 +454,7 @@ class FakeGitHub(faker.Faker):
         # https://developer.github.com/v3/issues/comments/#list-issue-comments
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))
-        return [r.comments[cid].as_json() for cid in pr.comments]
+        return [com.as_json() for cid in pr.comments if (com := r.comments.get(cid))]
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/(?P<number>\d+)/comments", "POST")
     def _post_issues_comments(self, match, request, _context) -> Dict:
@@ -472,3 +472,10 @@ class FakeGitHub(faker.Faker):
         comment.body = request.json()["body"]
         comment.validate()
         return comment.as_json()
+
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/comments/(?P<comment_id>\d+)", "DELETE")
+    def _delete_issues_comments(self, match, _request, context) -> Dict:
+        # https://developer.github.com/v3/issues/comments/#delete-an-issue-comment
+        r = self.get_repo(match["owner"], match["repo"])
+        del r.comments[int(match["comment_id"])]
+        context.status_code = 204
