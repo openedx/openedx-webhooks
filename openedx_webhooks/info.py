@@ -19,6 +19,8 @@ from openedx_webhooks.utils import (
     retry_get,
 )
 
+DATA_FILES_URL_BASE = "https://raw.githubusercontent.com/openedx/openedx-webhooks-data/master/"
+
 
 @memoize_timed(minutes=15)
 def _read_repotools_yaml_file(filename):
@@ -38,7 +40,7 @@ def _read_repotools_file(filename):
     Read the text of a repo-tools-data file.
     """
     github = get_github_session()
-    resp = github.get(f"https://raw.githubusercontent.com/openedx/openedx-webhooks-data/master/{filename}")
+    resp = github.get(f"{DATA_FILES_URL_BASE}{filename}")
     resp.raise_for_status()
     return resp.text
 
