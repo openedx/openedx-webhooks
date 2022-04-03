@@ -38,7 +38,7 @@ def _read_repotools_file(filename):
     Read the text of a repo-tools-data file.
     """
     github = get_github_session()
-    resp = github.get(f"https://raw.githubusercontent.com/edx/repo-tools-data/master/{filename}")
+    resp = github.get(f"https://raw.githubusercontent.com/openedx/openedx-webhooks-data/master/{filename}")
     resp.raise_for_status()
     return resp.text
 
