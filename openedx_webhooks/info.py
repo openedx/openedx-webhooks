@@ -3,6 +3,7 @@ Get information about people, repos, orgs, pull requests, etc.
 """
 import csv
 import datetime
+import logging
 import re
 from typing import Dict, Iterable, Optional, Union
 
@@ -20,7 +21,7 @@ from openedx_webhooks.utils import (
 )
 
 DATA_FILES_URL_BASE = "https://raw.githubusercontent.com/openedx/openedx-webhooks-data/master/"
-
+logger = logging.getLogger(__name__)
 
 @memoize_timed(minutes=15)
 def _read_repotools_yaml_file(filename):
@@ -40,7 +41,9 @@ def _read_repotools_file(filename):
     Read the text of a repo-tools-data file.
     """
     github = get_github_session()
-    resp = github.get(f"{DATA_FILES_URL_BASE}{filename}")
+    data_file_url = f"{DATA_FILES_URL_BASE}{filename}"
+    logger.debug(f"Grabbing data file from: {data_file_url}")
+    resp = github.get(data_file_url)
     resp.raise_for_status()
     return resp.text
 
