@@ -37,7 +37,7 @@ def fake_repo_data(requests_mocker):
             return data.read()
 
     requests_mocker.get(
-        re.compile(f"https://raw.githubusercontent.com/edx/repo-tools-data/master/"),
+        re.compile(f"{openedx_webhooks.info.DATA_FILES_URL_BASE}"),
         text=_repo_data_callback,
     )
 
