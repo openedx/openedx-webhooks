@@ -4,11 +4,11 @@ GitHub related domain models.
 
 from functools import lru_cache
 
-from ..lib.webhooks_data.utils import get_people as _get_people
+from openedx_webhooks.info import get_people_file
+
 from ..lib.exceptions import NotFoundError
 from ..lib.github.models import GithubWebHookEvent
-
-get_people = lru_cache()(_get_people)
+from ..lib.webhooks_data.models import People
 
 
 class GithubEvent(GithubWebHookEvent):
@@ -39,7 +39,7 @@ class GithubEvent(GithubWebHookEvent):
         Optional(openedx_webhooks.lib.webhooks_data.models.Person):
             Activity user.
         """
-        people = get_people()
+        people = People(get_people_file())
         try:
             return people.get(self.sender_login)
         except NotFoundError:
