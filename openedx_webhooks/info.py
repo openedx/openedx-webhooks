@@ -23,7 +23,6 @@ from openedx_webhooks.utils import (
 DATA_FILES_URL_BASE = "https://raw.githubusercontent.com/openedx/openedx-webhooks-data/master/"
 logger = logging.getLogger(__name__)
 
-@memoize_timed(minutes=15)
 def _read_yaml_data_file(filename):
     """Read a YAML file from the DATA_FILES_URL_BASE."""
     return yaml.safe_load(_read_data_file(filename))
@@ -36,6 +35,7 @@ def _read_csv_data_file(filename):
     """
     return csv.DictReader(_read_data_file(filename).splitlines())
 
+@memoize_timed(minutes=15)
 def _read_data_file(filename):
     """
     Read the text of a DATA_FILES_URL_BASE file.
@@ -47,6 +47,7 @@ def _read_data_file(filename):
     resp.raise_for_status()
     return resp.text
 
+@memoize_timed(minutes=15)
 def get_people_file():
     """
     Returns data formatted as a dictionary of people containing this information:
