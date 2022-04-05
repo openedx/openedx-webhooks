@@ -162,6 +162,10 @@ Unreleased
 See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
+2022-04-05
+~~~~~~~~~~
+
+- Load yaml and csv data files from the `openedx/openedx-webhooks-data` repo.
 
 2022-03-25
 ~~~~~~~~~~
