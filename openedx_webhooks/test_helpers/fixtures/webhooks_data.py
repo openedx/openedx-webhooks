@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from openedx_webhooks.lib.edx_repo_tools_data.models import People, Person
+from openedx_webhooks.lib.webhooks_data.models import People, Person
 
 
 # Data
