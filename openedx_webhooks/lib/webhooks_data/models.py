@@ -40,7 +40,7 @@ class People:
             key (str)
 
         Returns:
-            openedx_webhooks.lib.edx_repo_tools_data.models.Person
+            openedx_webhooks.lib.webhooks_data.models.Person
 
         Raises:
             openedx_webhooks.lib.exceptions.NotFoundError: If key cannot

@@ -6,7 +6,7 @@ from functools import lru_cache
 from jira import JIRAError
 
 from openedx_webhooks.jira.tasks import update_latest_github_activity
-from openedx_webhooks.lib.edx_repo_tools_data.utils import get_people
+from openedx_webhooks.lib.webhooks_data.utils import get_people
 from openedx_webhooks.lib.exceptions import NotFoundError
 from openedx_webhooks.lib.github.client import github_client as gh
 from openedx_webhooks.lib.jira.client import get_authenticated_jira_client

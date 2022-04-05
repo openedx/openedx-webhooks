@@ -4,7 +4,7 @@ GitHub related domain models.
 
 from functools import lru_cache
 
-from ..lib.edx_repo_tools_data.utils import get_people as _get_people
+from ..lib.webhooks_data.utils import get_people as _get_people
 from ..lib.exceptions import NotFoundError
 from ..lib.github.models import GithubWebHookEvent
 
@@ -36,7 +36,7 @@ class GithubEvent(GithubWebHookEvent):
     @property
     def openedx_user(self):
         """
-        Optional(openedx_webhooks.lib.edx_repo_tools_data.models.Person):
+        Optional(openedx_webhooks.lib.webhooks_data.models.Person):
             Activity user.
         """
         people = get_people()
