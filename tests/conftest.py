@@ -43,20 +43,20 @@ def fake_repo_data(requests_mocker):
 
 
 @pytest.yield_fixture(scope="session", autouse=True)
-def hard_cache_repotools_yaml_files(session_mocker):
+def hard_cache_yaml_data_files(session_mocker):
     """
     Reading yaml files is slowish, and these data files don't change.
     Read them once per test run, and re-use the data.
     """
-    real_read_repotools_yaml_file = openedx_webhooks.info._read_repotools_yaml_file
-    repotools_files: Dict[str, Dict] = {}
-    def new_read_repotools_yaml_file(filename):
-        data = repotools_files.get(filename)
+    real_read_yaml_data_file = openedx_webhooks.info._read_yaml_data_file
+    data_files: Dict[str, Dict] = {}
+    def new_read_yaml_data_file(filename):
+        data = data_files.get(filename)
         if data is None:
-            data = real_read_repotools_yaml_file(filename)
-            repotools_files[filename] = data
+            data = real_read_yaml_data_file(filename)
+            data_files[filename] = data
         return data
-    session_mocker.patch("openedx_webhooks.info._read_repotools_yaml_file", new_read_repotools_yaml_file)
+    session_mocker.patch("openedx_webhooks.info._read_yaml_data_file", new_read_yaml_data_file)
 
 
 class FakeBlueprint:
