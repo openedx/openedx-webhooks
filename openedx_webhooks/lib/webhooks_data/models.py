@@ -1,5 +1,10 @@
 """
-edx/repo-tools-data related domain models.
+Domain models for how we represent people within this codebase.
+
+The model loads a dictionary of people names to their attributes
+into a form that's easy for us to work with.
+
+Currently this data comes from the `openedx/openedx-webhooks-data` repo.
 """
 
 from datetime import date
@@ -40,7 +45,7 @@ class People:
             key (str)
 
         Returns:
-            openedx_webhooks.lib.edx_repo_tools_data.models.Person
+            openedx_webhooks.lib.webhooks_data.models.Person
 
         Raises:
             openedx_webhooks.lib.exceptions.NotFoundError: If key cannot

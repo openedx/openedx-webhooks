@@ -1,6 +1,6 @@
 import arrow
 
-from openedx_webhooks.lib.edx_repo_tools_data.models import Person
+from openedx_webhooks.lib.webhooks_data.models import Person
 
 
 class TestAgreement:

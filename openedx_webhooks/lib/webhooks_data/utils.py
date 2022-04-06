@@ -13,7 +13,7 @@ def get_people():
     Fetch `people.yaml` from GitHub repo.
 
     Returns:
-        openedx_webhooks.lib.edx_repo_tools_data.models.People
+        openedx_webhooks.lib.webhooks_data.models.People
     """
     gh = get_authenticated_gh_client()
     repo = gh.repository('edx', 'repo-tools-data')
