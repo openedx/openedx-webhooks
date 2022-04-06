@@ -24,21 +24,21 @@ DATA_FILES_URL_BASE = "https://raw.githubusercontent.com/openedx/openedx-webhook
 logger = logging.getLogger(__name__)
 
 @memoize_timed(minutes=15)
-def _read_repotools_yaml_file(filename):
-    """Read a YAML file from the repo-tools-data repo."""
-    return yaml.safe_load(_read_repotools_file(filename))
+def _read_yaml_data_file(filename):
+    """Read a YAML file from the DATA_FILES_URL_BASE."""
+    return yaml.safe_load(_read_data_file(filename))
 
-def _read_repotools_csv_file(filename):
+def _read_csv_data_file(filename):
     """
-    Reads a CSV file from the repo-tools-data repo. Returns a csv DictReader
+    Reads a CSV file from the DATA_FILES_URL_BASE. Returns a csv DictReader
     object of dicts. The first row of the csv is assumed to be a header, and is
     used to assign dictionary keys.
     """
-    return csv.DictReader(_read_repotools_file(filename).splitlines())
+    return csv.DictReader(_read_data_file(filename).splitlines())
 
-def _read_repotools_file(filename):
+def _read_data_file(filename):
     """
-    Read the text of a repo-tools-data file.
+    Read the text of a DATA_FILES_URL_BASE file.
     """
     github = get_github_session()
     data_file_url = f"{DATA_FILES_URL_BASE}{filename}"
@@ -64,7 +64,7 @@ def get_people_file():
         ...
     }
     """
-    people_data_csv = _read_repotools_csv_file("salesforce-export.csv")
+    people_data_csv = _read_csv_data_file("salesforce-export.csv")
     people = dict()
 
     for row in people_data_csv:
@@ -85,7 +85,7 @@ def get_people_file():
             people[github_username]["agreement"] = 'institution'
             people[github_username]["institution"] = acct_name
 
-    people_data_yaml = _read_repotools_yaml_file("people.yaml")
+    people_data_yaml = _read_yaml_data_file("people.yaml")
     for p in people:
         # Prioritzes the csv by first updating the yaml's values with csv values
         # And then updates any missing dict fields using yaml's fields
@@ -95,14 +95,14 @@ def get_people_file():
     return people
 
 def get_orgs_file():
-    orgs = _read_repotools_yaml_file("orgs.yaml")
+    orgs = _read_yaml_data_file("orgs.yaml")
     for org_data in list(orgs.values()):
         if "name" in org_data:
             orgs[org_data["name"]] = org_data
     return orgs
 
 def get_labels_file():
-    return _read_repotools_yaml_file("labels.yaml")
+    return _read_yaml_data_file("labels.yaml")
 
 def get_orgs(key):
     """Return the set of orgs with a true `key`."""
@@ -114,7 +114,7 @@ def get_person_certain_time(person: Dict, certain_time: datetime.datetime) -> Di
     Return person data structure for a particular time
 
     Arguments:
-        person: dict of a Github user info from people.yaml in repo-tools-data
+        person: dict of a Github user info from people.yaml at DATA_FILES_URL_BASE
         certain_time: datetime.datetime object used to determine the state of the person
 
     """

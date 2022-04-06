@@ -14,7 +14,7 @@ from openedx_webhooks.utils import (
 
 @memoize_timed(minutes=15)
 def synchronize_labels(repo: str) -> None:
-    """Ensure the labels in `repo` match the specs in repo-tools-data/labels.yaml"""
+    """Ensure the labels in `repo` match the specs in {DATA_FILES_URL_BASE}/labels.yaml"""
 
     url = f"/repos/{repo}/labels"
     repo_labels = {lbl["name"]: lbl for lbl in paginated_get(url, session=get_github_session())}
