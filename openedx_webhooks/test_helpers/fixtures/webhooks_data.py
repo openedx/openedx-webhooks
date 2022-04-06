@@ -101,8 +101,8 @@ def robot(robot_data):
 
 # People
 @pytest.fixture
-def people(active_data, active_edx_data, expired_data, robot_data):
+def people_data(active_data, active_edx_data, expired_data, robot_data):
     data = {}
     for d in (active_data, active_edx_data, expired_data, robot_data):
         data.update(d)
-    return People(data)
+    return data
