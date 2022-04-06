@@ -2,6 +2,8 @@
 Operations on GitHub data.
 """
 
+from typing import Any, Dict
+
 from openedx_webhooks.info import get_labels_file
 from openedx_webhooks.oauth import get_github_session
 from openedx_webhooks.tasks import logger
@@ -12,12 +14,19 @@ from openedx_webhooks.utils import (
 )
 
 
+def get_repo_labels(repo: str) -> Dict[str, Dict[str, Any]]:
+    """Get a dict mapping label names to full label info."""
+    url = f"/repos/{repo}/labels"
+    repo_labels = {lbl["name"]: lbl for lbl in paginated_get(url, session=get_github_session())}
+    return repo_labels
+
+
 @memoize_timed(minutes=15)
 def synchronize_labels(repo: str) -> None:
     """Ensure the labels in `repo` match the specs in {DATA_FILES_URL_BASE}/labels.yaml"""
 
     url = f"/repos/{repo}/labels"
-    repo_labels = {lbl["name"]: lbl for lbl in paginated_get(url, session=get_github_session())}
+    repo_labels = get_repo_labels(repo)
     desired_labels = get_labels_file()
     for name, label_data in desired_labels.items():
         if label_data.get("delete", False):

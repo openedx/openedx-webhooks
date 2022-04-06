@@ -13,7 +13,7 @@ from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
 from openedx_webhooks.oauth import jira_get
-from openedx_webhooks.tasks.github_work import synchronize_labels
+from openedx_webhooks.tasks.github_work import get_repo_labels, synchronize_labels
 from openedx_webhooks.utils import (
     jira_paginated_get, sentry_extra_context,
     github_pr_num, github_pr_url, github_pr_repo,
@@ -270,12 +270,8 @@ def issue_updated():
 
     synchronize_labels(pr_repo)
 
-    repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
-    repo_labels_resp.raise_for_status()
-    # map of label name to label URL
-    repo_labels = {l["name"]: l["url"] for l in repo_labels_resp.json()}
-    # map of label name lowercased to label name in the case that it is on Github
-    repo_labels_lower = {name.lower(): name for name in repo_labels}
+    repo_labels = get_repo_labels(repo=pr_repo)
+    repo_labels_lower = {name.lower() for name in repo_labels}
 
     new_status = status_changelog_items[0]["toString"]
 
@@ -343,12 +339,7 @@ def jira_issue_status_changed(issue, changelog):
     gh_issue_resp.raise_for_status()
     gh_issue = gh_issue_resp.json()
 
-    # get repo labels
-    repo_labels_resp = github.get("/repos/{repo}/labels".format(repo=pr_repo))
-    repo_labels_resp.raise_for_status()
-    # map of label name to label URL
-    repo_labels = {l["name"]: l["url"] for l in repo_labels_resp.json()}
-    # map of label name lowercased to label name in the case that it is on Github
+    repo_labels = get_repo_labels(repo=pr_repo)
     repo_labels_lower = {name.lower(): name for name in repo_labels}
     logger.info(f"repo_labels_lower: {repo_labels_lower!r}")
 
