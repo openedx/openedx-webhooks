@@ -93,7 +93,7 @@ class PrCurrentInfo:
     bot_comment0_text: Optional[str] = None
 
     # The comment id of the survey comment, if any.
-    bot_survey_comment_id: Options[str] = None
+    bot_survey_comment_id: Optional[str] = None
 
     # The last-seen state stored in the first bot comment.
     last_seen_state: Dict = field(default_factory=dict)

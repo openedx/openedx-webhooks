@@ -423,7 +423,7 @@ class FakeGitHub(faker.Faker):
         return [label.as_json() for label in r.labels.values()]
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels", "POST")
-    def _post_labels(self, match, request, context):
+    def _post_labels(self, match, request, context) -> Dict:
         # https://developer.github.com/v3/issues/labels/#create-a-label
         r = self.get_repo(match["owner"], match["repo"])
         label = r.add_label(**request.json())
@@ -431,7 +431,7 @@ class FakeGitHub(faker.Faker):
         return label.as_json()
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels/(?P<name>.*)", "PATCH")
-    def _patch_labels(self, match, request, _context):
+    def _patch_labels(self, match, request, _context) -> Dict:
         # https://developer.github.com/v3/issues/labels/#update-a-label
         r = self.get_repo(match["owner"], match["repo"])
         data = request.json()
@@ -441,7 +441,7 @@ class FakeGitHub(faker.Faker):
         return label.as_json()
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels/(?P<name>.*)", "DELETE")
-    def _delete_labels(self, match, _request, context):
+    def _delete_labels(self, match, _request, context) -> None:
         # https://developer.github.com/v3/issues/labels/#delete-a-label
         r = self.get_repo(match["owner"], match["repo"])
         r.delete_label(unquote(match["name"]))
@@ -474,7 +474,7 @@ class FakeGitHub(faker.Faker):
         return comment.as_json()
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/comments/(?P<comment_id>\d+)", "DELETE")
-    def _delete_issues_comments(self, match, _request, context) -> Dict:
+    def _delete_issues_comments(self, match, _request, context) -> None:
         # https://developer.github.com/v3/issues/comments/#delete-an-issue-comment
         r = self.get_repo(match["owner"], match["repo"])
         del r.comments[int(match["comment_id"])]
