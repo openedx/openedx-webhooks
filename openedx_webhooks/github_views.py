@@ -58,11 +58,12 @@ def hook_receiver():
 
     action = event["action"]
     repo = event["repository"]["full_name"]
+    who = event.get("sender", {}).get("login", "someone")
     keys = set(event.keys()) - {"action", "sender", "repository", "organization", "installation"}
     if is_debug(__name__):
         print_long_json("Incoming GitHub event", event)
     else:
-        logger.info(f"Incoming GitHub event: {repo=!r}, {action=!r}, keys: {' '.join(sorted(keys))}")
+        logger.info(f"Incoming GitHub event: {repo=!r}, {action=!r}, {who=!r}, keys: {' '.join(sorted(keys))}")
 
     # This can't authenticate with Jira now, so don't do it:
     # q.enqueue(
