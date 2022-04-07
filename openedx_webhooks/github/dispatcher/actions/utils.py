@@ -35,7 +35,7 @@ def _get_latest_commit_for_pull_request(repo_name_full: str, number: int) -> Opt
         sha = commit.get('sha')
     else:
         sha = None
-    logger.info("CLA: SHA %s", sha)
+    logger.debug("CLA: SHA %s", sha)
     return sha
 
 
@@ -44,11 +44,11 @@ def _get_latest_commit_for_pull_request_data(repo_name_full: str, number: int) -
     Lookup the commits for a pull request.
     """
     url = f"https://api.github.com/repos/{repo_name_full}/pulls/{number}/commits"
-    logger.info("CLA: GET %s", url)
+    logger.debug("CLA: GET %s", url)
     response = get_github_session().get(url)
     log_check_response(response)
     data = response.json()
-    logger.info("CLA: GOT %s", data)
+    logger.debug("CLA: GOT %s", data)
     return data
 
 
@@ -59,11 +59,11 @@ def _get_commit_status_for_cla(url) -> Optional[Dict[str, str]]:
     Returns:
         a dict with state, description, and target_url.
     """
-    logger.info("CLA: GET %s", url)
+    logger.debug("CLA: GET %s", url)
     response = get_github_session().get(url)
     log_check_response(response)
     data = response.json()
-    logger.info("CLA: GOT %s %s", url, data)
+    logger.debug("CLA: GOT %s %s", url, data)
     cla_statuses = [
         status
         for status in data
@@ -83,11 +83,11 @@ def _update_commit_status_for_cla(url, payload):
     """
     Send a POST request to the Github API to update the build status
     """
-    logger.info("CLA: POST %s %s", url, payload)
+    logger.debug("CLA: POST %s %s", url, payload)
     response = get_github_session().post(url, json=payload)
     log_check_response(response)
     data = response.json()
-    logger.info("CLA: PAST %s %s", url, data)
+    logger.debug("CLA: POSTED %s %s", url, data)
     return data
 
 
@@ -136,7 +136,7 @@ CLA_STATUS_PRIVATE = {
 
 def set_cla_status_on_pr(repo_name_full: str, number: int, status: Dict[str, str]) -> bool:
     sha = _get_latest_commit_for_pull_request(repo_name_full, number)
-    logger.info("CLA: Update state from to '%s' for commit '%s'", status, sha)
+    logger.debug("CLA: Update state from to '%s' for commit '%s'", status, sha)
     payload = {
         'context': CLA_CONTEXT,
         **status,
