@@ -11,6 +11,7 @@ from flask import (
 from flask_dance.contrib.github import github
 
 from openedx_webhooks.debug import is_debug, print_long_json
+from openedx_webhooks.info import get_bot_username
 from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
 from openedx_webhooks.lib.rq import q
 from openedx_webhooks.tasks.github import (
@@ -64,6 +65,12 @@ def hook_receiver():
         print_long_json("Incoming GitHub event", event)
     else:
         logger.info(f"Incoming GitHub event: {repo=!r}, {action=!r}, {who=!r}, keys: {' '.join(sorted(keys))}")
+
+    # When the bot comments on a pull request, it causes an event, which gets
+    # sent to webhooks, including us.  We don't have to do anything for our
+    # own comment events.
+    if who == get_bot_username() and "comment" in event:
+        return "No thanks", 202
 
     # This can't authenticate with Jira now, so don't do it:
     # q.enqueue(
