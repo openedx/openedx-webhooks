@@ -88,13 +88,10 @@ flask==2.1.2
     # via
     #   -r requirements/base.in
     #   flask-dance
-    #   flask-script
     #   flask-sqlalchemy
     #   flask-sslify
     #   sentry-sdk
 flask-dance[sqla]==6.0.0
-    # via -r requirements/base.in
-flask-script==2.0.6
     # via -r requirements/base.in
 flask-sqlalchemy==2.5.1
     # via -r requirements/base.in
