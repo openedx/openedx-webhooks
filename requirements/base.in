@@ -9,7 +9,6 @@ celery
 github3.py
 
 Flask-SSLify
-Flask-Script
 PyYAML
 URLObject
 arrow
