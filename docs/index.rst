@@ -18,6 +18,7 @@ Contents:
    install
    endpoints
    things-that-go-wrong
+   testing
 
 
 .. _pull request process: http://edx.readthedocs.org/projects/edx-developer-guide/en/latest/process/overview.html
