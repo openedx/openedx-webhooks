@@ -13,9 +13,10 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Set
 from urllib.parse import unquote
 
+from openedx_webhooks.github.dispatcher.actions.utils import CLA_CONTEXT
+
 from . import faker
 from .helpers import check_good_markdown
-from openedx_webhooks.github.dispatcher.actions.utils import CLA_CONTEXT
 
 
 class FakeGitHubException(faker.FakerException):
@@ -109,6 +110,11 @@ class Comment:
         }
 
 
+def patchable_now():
+    """Current time, in a way that freezegun can monkeypatch."""
+    return datetime.datetime.now()
+
+
 @dataclass
 class PullRequest:
     repo: Repo
@@ -116,7 +122,7 @@ class PullRequest:
     user: User
     title: str = ""
     body: Optional[str] = ""
-    created_at: datetime.datetime = field(default_factory=lambda:datetime.datetime.now())
+    created_at: datetime.datetime = field(default_factory=patchable_now)
     closed_at: Optional[datetime.datetime] = None
     comments: List[int] = field(default_factory=list)
     labels: Set[str] = field(default_factory=set)

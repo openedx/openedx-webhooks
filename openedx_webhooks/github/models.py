@@ -2,8 +2,6 @@
 GitHub related domain models.
 """
 
-from functools import lru_cache
-
 from openedx_webhooks.info import get_people_file
 
 from ..lib.exceptions import NotFoundError

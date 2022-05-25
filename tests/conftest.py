@@ -130,5 +130,3 @@ def reset_all_memoized_functions():
 def is_merged(request):
     """Makes tests try both merged and closed pull requests."""
     return request.param
-
-
