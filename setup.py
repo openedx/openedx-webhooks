@@ -1,6 +1,5 @@
 """Install openedx-webhooks."""
 
-import os
 import re
 
 from setuptools import find_packages, setup
@@ -16,7 +15,6 @@ def is_requirement(line):
         a URL, or an included file
     """
     return line and line.strip() and not line.startswith(('-r', '#', '-e', 'git+', '-c'))
-    )
 
 
 def get_requirements(path):

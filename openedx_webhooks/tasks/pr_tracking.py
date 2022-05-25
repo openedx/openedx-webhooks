@@ -24,7 +24,6 @@ from openedx_webhooks.bot_comments import (
     github_community_pr_comment,
     github_community_pr_comment_closed,
     github_end_survey_comment,
-    is_comment_kind,
 )
 from openedx_webhooks.github.dispatcher.actions.utils import (
     CLA_STATUS_BAD,
@@ -171,7 +170,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
 
     full_bot_comments = list(get_bot_comments(prid))
     if full_bot_comments:
-        current.bot_comment0_text = full_bot_comments[0]["body"]
+        current.bot_comment0_text = cast(str, full_bot_comments[0]["body"])
         current.last_seen_state = extract_data_from_comment(current.bot_comment0_text)
     for comment in full_bot_comments:
         body = comment["body"]
@@ -419,7 +418,7 @@ class PrTrackingFixer:
                     self.desired.jira_status = self.current.all_bot_state.get("jira-pre-close", "Community Manager Review")
                 elif self.desired.jira_status == "Rejected":
                     self.desired.jira_previous_status = self.current.jira_status
-                self.actions.transition_jira_issue(jira_id=self.current.jira_id, jira_status=self.desired.jira_status)
+                self.actions.transition_jira_issue(jira_id=self.current.jira_id, jira_status=cast(str, self.desired.jira_status))
                 self.current.jira_status = self.desired.jira_status
                 self.happened = True
 

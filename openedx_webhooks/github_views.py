@@ -13,7 +13,6 @@ from flask_dance.contrib.github import github
 from openedx_webhooks.debug import is_debug, print_long_json
 from openedx_webhooks.info import get_bot_username
 from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
-from openedx_webhooks.lib.rq import q
 from openedx_webhooks.tasks.github import (
     pull_request_changed_task, rescan_repository, rescan_repository_task,
     rescan_organization_task,
