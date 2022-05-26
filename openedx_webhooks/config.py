@@ -13,8 +13,8 @@ class DefaultConfig:
     CELERY_ACCEPT_CONTENT = ["json"]
     CELERY_TASK_SERIALIZER = "json"
     CELERY_RESULT_SERIALIZER = "json"
-    CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
-    CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://")
+    CELERY_EAGER_PROPAGATES = True
+    BROKER_URL = os.environ.get("REDIS_URL", "redis://")
     CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://")
 
 

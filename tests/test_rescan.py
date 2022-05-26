@@ -37,12 +37,15 @@ def make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="
     # Numbers of internal pull requsts are odd, external are even.
     repo.make_pull_request(user="nedbat", number=101, created_at=datetime(2019, 1, 1))
     repo.make_pull_request(user="tusbar", number=102, created_at=datetime(2019, 2, 1))
-    repo.make_pull_request(user="nedbat", number=103, state="closed", created_at=datetime(2019, 3, 1))
+    repo.make_pull_request(user="nedbat", number=103, state="closed", created_at=datetime(2019, 3, 1),
+        closed_at=datetime(2020,7,1))
     repo.make_pull_request(user="feanil", number=105, created_at=datetime(2019, 4, 1))
     repo.make_pull_request(user="tusbar", number=106, created_at=datetime(2019, 5, 1))
-    repo.make_pull_request(user="tusbar", number=108, state="closed", created_at=datetime(2019, 6, 1))
+    repo.make_pull_request(user="tusbar", number=108, state="closed", created_at=datetime(2019, 6, 1),
+        closed_at=datetime(2020,7,1))
     # One of the PRs already has a bot comment with a Jira issue.
-    pr = repo.make_pull_request(user="tusbar", number=110, state="closed", merged=True, created_at=datetime(2019, 7, 1))
+    pr = repo.make_pull_request(user="tusbar", number=110, state="closed", merged=True, created_at=datetime(2019, 7, 1),
+        closed_at=datetime(2020,7,1))
     pr.add_comment(user=get_bot_username(), body="A ticket: OSPR-1234!\n<!-- comment:external_pr -->")
     fake_jira.make_issue(key="OSPR-1234", summary="An issue")
 

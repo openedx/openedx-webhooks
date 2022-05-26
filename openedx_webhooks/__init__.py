@@ -77,7 +77,6 @@ def create_celery_app(app=None, config="worker"):
 
     app = app or create_app(config=config)
     celery.main = app.import_name
-    celery.conf["BROKER_URL"] = app.config["CELERY_BROKER_URL"]
     celery.conf.update(app.config)
     class ContextTask(celery.Task):
         abstract = True

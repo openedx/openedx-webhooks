@@ -1,26 +1,37 @@
 #!/usr/bin/env python
-from flask_script import Manager, prompt_bool
-
-from openedx_webhooks import create_app
-from openedx_webhooks.models import db
-
-manager = Manager(create_app)
+import click
 
 
-@manager.command
+from flask_sqlalchemy import SQLAlchemy
+from openedx_webhooks import create_app, db
+
+
+app = create_app()
+
+@click.group()
+def cli():
+    pass
+
+@click.command()
 def dbcreate():
     "Creates database tables from SQLAlchemy models"
-    db.create_all()
-    db.session.commit()
-
-
-@manager.command
-def dbdrop():
-    "Drops database tables"
-    if prompt_bool("Are you sure you want to lose all your data"):
-        db.drop_all()
+    with app.app_context():
+        db.create_all()
         db.session.commit()
 
 
+@click.command()
+def dbdrop():
+    "Drops database tables"
+    if click.confirm("Are you sure you want to lose all your data"):
+        with app.app_context():
+            db.drop_all()
+            db.session.commit()
+
+
+cli.add_command(dbcreate)
+cli.add_command(dbdrop)
+
+
 if __name__ == "__main__":
-    manager.run()
+    cli()
