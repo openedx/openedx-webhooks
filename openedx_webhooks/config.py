@@ -17,6 +17,15 @@ class DefaultConfig:
     BROKER_URL = os.environ.get("REDIS_URL", "redis://")
     CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://")
 
+    def __init__(self):
+        # Convert the heroku postgres URI to one that is compatible with SQLAlchemy
+        # See https://help.heroku.com/ZKNTJQSK/why-is-sqlalchemy-1-4-x-not-connecting-to-heroku-postgres
+
+        uri = self.SQLALCHEMY_DATABASE_URI
+        if uri.startswith("postgres://"):
+            uri = uri.replace("postgres://", "postgresql://", 1)
+            self.SQLALCHEMY_DATABASE_URI = uri
+
 
 class WorkerConfig(DefaultConfig):
     CELERY_IMPORTS = (

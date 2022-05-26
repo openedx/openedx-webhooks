@@ -11,7 +11,7 @@ import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.middleware.proxy_fix import ProxyFix
-
+from werkzeug.utils import import_string
 
 __version__ = "0.1.0"
 
@@ -41,7 +41,10 @@ def create_app(config=None):
     app = Flask(__name__)
     app.wsgi_app = ProxyFix(app.wsgi_app)
     config = config or os.environ.get("OPENEDX_WEBHOOKS_CONFIG") or "default"
-    app.config.from_object(expand_config(config))
+    # Instantiate the config object because we rely on the __init__
+    # function to translate config between heroku and what sqlalchemy wants
+    config_obj = import_string(expand_config(config))()
+    app.config.from_object(config_obj)
 
     db.init_app(app)
     create_celery_app(app)
