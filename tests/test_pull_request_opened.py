@@ -116,7 +116,7 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
+    jira_link = "[{id}](https://test.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @new_contributor!" in body
     assert is_comment_kind(BotComment.NEED_CLA, body)
@@ -177,7 +177,7 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
+    jira_link = "[{id}](https://test.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @tusbar!" in body
     assert is_comment_kind(BotComment.WELCOME, body)
@@ -258,7 +258,7 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
+    jira_link = "[{id}](https://test.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @felipemontoya!" in body
     assert is_comment_kind(BotComment.CORE_COMMITTER, body)
@@ -292,7 +292,7 @@ def test_old_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
+    jira_link = "[{id}](https://test.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @felipemontoya!" in body
     assert not is_comment_kind(BotComment.CORE_COMMITTER, body)
@@ -306,11 +306,11 @@ def test_old_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_
 EXAMPLE_PLATFORM_MAP_1_2 = {
     "child": {
         "id": "14522",
-        "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14522",
+        "self": "https://test.atlassian.net/rest/api/2/customFieldOption/14522",
         "value": "Course Level Insights"
     },
     "id": "14209",
-    "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
+    "self": "https://test.atlassian.net/rest/api/2/customFieldOption/14209",
     "value": "Researcher & Data Experiences"
 }
 
@@ -364,7 +364,7 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id)
+    jira_link = "[{id}](https://test.atlassian.net/browse/{id})".format(id=issue_id)
     assert jira_link in body
     assert "Thanks for the pull request, @tusbar!" in body
     has_project_link = "the [BD-34](https://thewiki/bd-34) project page" in body
@@ -795,7 +795,7 @@ def test_handle_closed_pr(reqctx, sync_labels_fn, fake_github, fake_jira, is_mer
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=issue_id1)
+    jira_link = "[{id}](https://test.atlassian.net/browse/{id})".format(id=issue_id1)
     assert jira_link in body
     if is_merged:
         assert "Although this pull request is already merged," in body

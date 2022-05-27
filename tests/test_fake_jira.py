@@ -9,7 +9,7 @@ class TestIssues:
     """
     def test_get_issue(self, fake_jira):
         fake_jira.make_issue(key="HELLO-123", summary="This is a bad bug!")
-        resp = requests.get("https://openedx.atlassian.net/rest/api/2/issue/HELLO-123")
+        resp = requests.get("https://test.atlassian.net/rest/api/2/issue/HELLO-123")
         assert resp.status_code == 200
         issue = resp.json()
         assert issue["key"] == "HELLO-123"
@@ -22,11 +22,11 @@ class TestIssues:
             description="Here are the details so you can see how serious it is.",
         )
         resp = requests.put(
-            f"https://openedx.atlassian.net/rest/api/2/issue/{issue.key}",
+            f"https://test.atlassian.net/rest/api/2/issue/{issue.key}",
             json={"fields": {"summary": "This is OK."}},
         )
         assert resp.status_code == 204
-        resp = requests.get(f"https://openedx.atlassian.net/rest/api/2/issue/{issue.key}")
+        resp = requests.get(f"https://test.atlassian.net/rest/api/2/issue/{issue.key}")
         assert resp.status_code == 200
         issue2 = resp.json()
         # The title is changed.
@@ -36,14 +36,14 @@ class TestIssues:
 
     def test_delete_issue(self, fake_jira):
         fake_jira.make_issue(key="HELLO-123", summary="This is a bad bug!")
-        resp = requests.get("https://openedx.atlassian.net/rest/api/2/issue/HELLO-123")
+        resp = requests.get("https://test.atlassian.net/rest/api/2/issue/HELLO-123")
         assert resp.status_code == 200
         assert "HELLO-123" in fake_jira.issues
 
-        resp = requests.delete("https://openedx.atlassian.net/rest/api/2/issue/HELLO-123")
+        resp = requests.delete("https://test.atlassian.net/rest/api/2/issue/HELLO-123")
         assert resp.status_code == 204
 
-        resp = requests.get("https://openedx.atlassian.net/rest/api/2/issue/HELLO-123")
+        resp = requests.get("https://test.atlassian.net/rest/api/2/issue/HELLO-123")
         assert resp.status_code == 404
         assert "HELLO-123" not in fake_jira.issues
 
@@ -55,14 +55,14 @@ class TestIssues:
         assert key2.startswith("BLENDED-")
 
         # Look it up under the old key.
-        resp = requests.get(f"https://openedx.atlassian.net/rest/api/2/issue/{key1}")
+        resp = requests.get(f"https://test.atlassian.net/rest/api/2/issue/{key1}")
         assert resp.status_code == 200
         jissue1 = resp.json()
         assert jissue1["key"] == key2   # it has the new key.
         assert jissue1["fields"]["summary"] == "This is a bad bug!"
 
         # Look it up under the new key.
-        resp = requests.get(f"https://openedx.atlassian.net/rest/api/2/issue/{key2}")
+        resp = requests.get(f"https://test.atlassian.net/rest/api/2/issue/{key2}")
         assert resp.status_code == 200
         jissue2 = resp.json()
         assert jissue2["key"] == key2
@@ -70,7 +70,7 @@ class TestIssues:
 
     def test_empty_values(self, fake_jira):
         fake_jira.make_issue(key="HELLO-123", summary="", description="")
-        resp = requests.get("https://openedx.atlassian.net/rest/api/2/issue/HELLO-123")
+        resp = requests.get("https://test.atlassian.net/rest/api/2/issue/HELLO-123")
         assert resp.status_code == 200
         issue = resp.json()
         assert issue["key"] == "HELLO-123"
@@ -83,17 +83,17 @@ class TestBadRequests:
     Tests of the error edge cases.
     """
     def test_no_such_put(self, fake_jira):
-        resp = requests.put(f"https://openedx.atlassian.net/rest/api/2/issue/XYZ-999")
+        resp = requests.put(f"https://test.atlassian.net/rest/api/2/issue/XYZ-999")
         assert resp.status_code == 404
 
     def test_no_such_delete(self, fake_jira):
-        resp = requests.delete(f"https://openedx.atlassian.net/rest/api/2/issue/XYZ-999")
+        resp = requests.delete(f"https://test.atlassian.net/rest/api/2/issue/XYZ-999")
         assert resp.status_code == 404
 
     def test_no_such_transitions(self, fake_jira):
-        resp = requests.get(f"https://openedx.atlassian.net/rest/api/2/issue/XYZ-999/transitions")
+        resp = requests.get(f"https://test.atlassian.net/rest/api/2/issue/XYZ-999/transitions")
         assert resp.status_code == 404
 
     def test_baffling_search(self, fake_jira):
-        resp = requests.get(f"https://openedx.atlassian.net/rest/api/2/search?jql=xyzzy")
+        resp = requests.get(f"https://test.atlassian.net/rest/api/2/search?jql=xyzzy")
         assert resp.status_code == 500

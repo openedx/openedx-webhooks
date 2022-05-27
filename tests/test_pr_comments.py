@@ -22,7 +22,7 @@ def test_community_pr_comment(reqctx, fake_github, fake_jira):
     jira = fake_jira.make_issue(key="TNL-12345")
     with reqctx:
         comment = github_community_pr_comment(pr.as_json(), jira.key)
-    assert "[TNL-12345](https://openedx.atlassian.net/browse/TNL-12345)" in comment
+    assert "[TNL-12345](https://test.atlassian.net/browse/TNL-12345)" in comment
     assert not is_comment_kind(BotComment.NEED_CLA, comment)
     check_good_markdown(comment)
 
@@ -32,7 +32,7 @@ def test_community_pr_comment_no_cla(reqctx, fake_github, fake_jira):
     jira = fake_jira.make_issue(key="FOO-1")
     with reqctx:
         comment = github_community_pr_comment(pr.as_json(), jira.key)
-    assert "[FOO-1](https://openedx.atlassian.net/browse/FOO-1)" in comment
+    assert "[FOO-1](https://test.atlassian.net/browse/FOO-1)" in comment
     assert is_comment_kind(BotComment.NEED_CLA, comment)
     assert "[signed contributor agreement](https://openedx.org/cla)" in comment
     check_good_markdown(comment)

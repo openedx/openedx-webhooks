@@ -1,6 +1,6 @@
 {% filter replace("\n", " ")|trim %}
 Thanks for the pull request, @{{ user }}! I've created
-[{{ issue_key }}](https://openedx.atlassian.net/browse/{{ issue_key }})
+[{{ issue_key }}]({{ jira_host }}/browse/{{ issue_key }})
 to keep track of it in JIRA.
 {% endfilter %}
 

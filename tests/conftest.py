@@ -74,6 +74,13 @@ def pytest_addoption(parser):
         default="0",
     )
 
+TEST_JIRA = "https://test.atlassian.net"
+
+@pytest.yield_fixture(autouse=True)
+def settings_for_tests(mocker):
+    mocker.patch("openedx_webhooks.settings.JIRA_HOST", TEST_JIRA)
+
+
 @pytest.fixture
 def fake_github(pytestconfig, mocker, requests_mocker, fake_repo_data):
     fraction_404 = float(pytestconfig.getoption("percent_404")) / 100.0
@@ -89,7 +96,7 @@ def fake_github(pytestconfig, mocker, requests_mocker, fake_repo_data):
 def mock_jira_bp(mocker):
     token = {"access_token": "faketoken", "token_type": "bearer"}
     jira_session = OAuth2Session(
-        base_url="https://openedx.atlassian.net/",
+        base_url=TEST_JIRA,
         blueprint=FakeBlueprint(token),
     )
     mocker.patch("flask_dance.contrib.jira.jira", jira_session)
