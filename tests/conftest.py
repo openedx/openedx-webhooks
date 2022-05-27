@@ -74,10 +74,12 @@ def pytest_addoption(parser):
         default="0",
     )
 
+TEST_OSPR_PROJECT = ("testorg", 17)
 TEST_JIRA = "https://test.atlassian.net"
 
 @pytest.yield_fixture(autouse=True)
 def settings_for_tests(mocker):
+    mocker.patch("openedx_webhooks.settings.GITHUB_OSPR_PROJECT", TEST_OSPR_PROJECT)
     mocker.patch("openedx_webhooks.settings.JIRA_HOST", TEST_JIRA)
 
 

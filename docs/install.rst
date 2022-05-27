@@ -78,13 +78,31 @@ OAuth authentication for Jira requires a RSA keypair. To set this up:
 GitHub
 ~~~~~~
 
-1. `Register a new application on GitHub <https://github.com/settings/applications/new>`_
+1. `Register a new application on GitHub <https://github.com/settings/applications/new>`_.
+
 2. The new application will give you a consumer key and consumer secret. Set
    these values in the Heroku environment:
 
    .. code-block:: bash
 
       $ heroku config:set GITHUB_OAUTH_CLIENT_ID=my-id GITHUB_OAUTH_CLIENT_SECRET=my-secret
+
+3. Create a GitHub personal access token for the bot user.  It will need these
+   scopes: admin:repo_hook, repo, user:email, workflow, write:org.  Specify it
+   as a Heroku setting:
+
+   .. code-block:: bash
+
+       $ heroku config:set GITHUB_PERSONAL_TOKEN=my-pat
+
+4. A GitHub project will be needed for the pull requests.  Specify it as
+   org:number:
+
+   .. code-block:: bash
+
+      $ heroku config:set GITHUB_OSPR_PROJECT=openedx:19
+
+
 
 Deploy
 ------

@@ -5,6 +5,7 @@ Base classes for defining fake implementations of APIs.
 
 import functools
 import inspect
+import json
 import re
 from typing import Any, List, Tuple
 
@@ -120,7 +121,13 @@ class Faker:
             url = req.path
             if req.query:
                 url += "?" + req.query
-            reqs.append((url, req.method))
+            meth = req.method
+            # GraphQL hack: everything is a POST, so sniff the body to see if it's
+            # a query or a mutation.
+            if "/graphql" in url and req.text is not None:
+                body = json.loads(req.text)
+                meth = body["query"].split()[0]
+            reqs.append((url, meth))
         return reqs
 
     def reset_mock(self) -> None:
@@ -133,5 +140,5 @@ class Faker:
         """
         Assert that no changes were made, only GET requests.
         """
-        writing_requests = [(url, method) for url, method in self.requests_made() if method != "GET"]
+        writing_requests = [(url, method) for url, method in self.requests_made() if method not in {"GET", "query"}]
         assert writing_requests == [], f"Found writing requests: {writing_requests}"

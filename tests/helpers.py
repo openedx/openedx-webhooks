@@ -42,3 +42,33 @@ def random_text() -> str:
     for _ in range(random.randint(4, 10)):
         words.append("".join(random.choice(alphabet) for _ in range(random.randrange(1, 6))))
     return " ".join(words)
+
+
+def check_good_graphql(text: str) -> None:
+    """
+    Do some simple checks of a GraphQL query.
+
+    Returns:
+        Nothing.  Will raise an exception with a failure message if something
+        is wrong.
+    """
+    # Remove all comments.
+    code = re.sub(r"(?m)#.*$", "", text)
+
+    # The first word should be "query" or "mutation".
+    first = code.split(None, 1)[0]
+    if first not in {"query", "mutation"}:
+        raise ValueError(f"GraphQL query starts with wrong word: {text!r}")
+
+    # Parens should be balanced.
+    stack = []
+    pairs = dict([")(", "][", "}{"])
+    for ch in code:
+        if ch in "([{":
+            stack.append(ch)
+        elif ch in ")]}":
+            if not stack or stack[-1] != pairs[ch]:
+                raise ValueError(f"GraphQL query has unbalanced parens: {text!r}")
+            stack.pop()
+    if stack:
+        raise ValueError(f"GraphQL query has unbalanced parens: {text!r}")

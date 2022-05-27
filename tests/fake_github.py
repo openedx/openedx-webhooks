@@ -1,9 +1,10 @@
 """
-A fake implementation of the GitHub REST API.
+A fake implementation of the GitHub REST and GraphQL API.
 """
 
 from __future__ import annotations
 
+import collections
 import dataclasses
 import datetime
 import itertools
@@ -14,9 +15,10 @@ from typing import Any, Dict, Iterable, List, Optional, Set
 from urllib.parse import unquote
 
 from openedx_webhooks.github.dispatcher.actions.utils import CLA_CONTEXT
+from openedx_webhooks.types import GhProject
 
 from . import faker
-from .helpers import check_good_markdown
+from .helpers import check_good_graphql, check_good_markdown
 
 
 class FakeGitHubException(faker.FakerException):
@@ -43,6 +45,10 @@ class ValidationError(FakeGitHubException):
 def fake_sha():
     """A realistic stand-in for a commit sha."""
     return "".join(random.choice("0123456789abcdef") for c in range(32))
+
+def fake_node_id():
+    """A plausible stand-in for a node id."""
+    return "NODE_" + "".join(random.choice("0123456789abcdef") for c in range(16))
 
 @dataclass
 class User:
@@ -122,6 +128,7 @@ class PullRequest:
     user: User
     title: str = ""
     body: Optional[str] = ""
+    node_id: str = field(default_factory=fake_node_id)
     created_at: datetime.datetime = field(default_factory=patchable_now)
     closed_at: Optional[datetime.datetime] = None
     comments: List[int] = field(default_factory=list)
@@ -137,6 +144,7 @@ class PullRequest:
     def as_json(self, brief=False) -> Dict:
         j = {
             "number": self.number,
+            "node_id": self.node_id,
             "state": self.state,
             "draft": self.draft,
             "title": self.title,
@@ -198,6 +206,12 @@ class PullRequest:
         assert context == CLA_CONTEXT
         return self.repo.github.cla_statuses.get(self.commits[-1])
 
+    def is_in_project(self, project: GhProject) -> bool:
+        proj_node_id = self.repo.github.projects.get(project)
+        if proj_node_id is None:
+            return False
+        return self.node_id in self.repo.github.project_items[proj_node_id]
+
 
 @dataclass
 class Repo:
@@ -216,6 +230,7 @@ class Repo:
     def as_json(self) -> Dict:
         return {
             "full_name": self.full_name,
+            "name": self.repo,
             "owner": {
                 "login": self.owner,
             },
@@ -230,6 +245,7 @@ class Repo:
         commits = [fake_sha() for _ in range(random.randint(1, 4))]
         pr = PullRequest(self, number, user, commits=commits, **kwargs)
         self.pull_requests[number] = pr
+        self.github.pr_nodes[pr.node_id] = pr
         return pr
 
     def list_pull_requests(self, state: str) -> List[PullRequest]:
@@ -317,7 +333,17 @@ class FakeGitHub(faker.Faker):
         self.login = login
         self.users: Dict[str, User] = {}
         self.repos: Dict[str, Repo] = {}
-        self.has_signed_cla = True
+
+        # Map from PR node id to pull request.
+        self.pr_nodes: Dict[str, PullRequest] = {}
+        # Map from Project node id to (orgname, number) pairs.
+        self.project_nodes: Dict[str, GhProject] = {}
+        # Map from (orgname, number) project ids to project node id.
+        self.projects: Dict[GhProject, str] = {}
+        # Map from PR node id to Project node ids, and from Project node id
+        # to PR node ids.
+        self.project_items: Dict[str, Set[str]] = collections.defaultdict(set)
+
         self.cla_statuses: Dict[str, Dict[str, str]] = {}
 
     def make_user(self, login: str, **kwargs) -> User:
@@ -485,3 +511,59 @@ class FakeGitHub(faker.Faker):
         r = self.get_repo(match["owner"], match["repo"])
         del r.comments[int(match["comment_id"])]
         context.status_code = 204
+
+    # GraphQL
+
+    @faker.route(r"/graphql", "POST")
+    def _graphql(self, _match, request, _context) -> Dict:
+        """Dispatch a GraphQL request."""
+        data = request.json()
+        query = data["query"]
+        check_good_graphql(query)
+        slug = query.split()[1]
+        kwargs = data["variables"]
+        method = getattr(self, f"_graphql_{slug}")
+        if method is None:
+            raise Exception(f"Unknown GraphQL slug in FakeGitHub: {slug = }")
+        return method(**kwargs)
+
+    def _graphql_ProjectsForPr(self, owner: str, name: str, number: int) -> Dict:
+        r = self.get_repo(owner, name)
+        pr = r.get_pull_request(number)
+        project_node_ids = self.project_items[pr.node_id]
+        nodes = []
+        for node_id in project_node_ids:
+            org, num = self.project_nodes[node_id]
+            nodes.append(
+                {"project": {"owner": {"login": org}, "number": num}}
+            )
+        return {
+            "data": {
+                "repository": {
+                    "pullRequest": {
+                        "projectNextItems": {
+                            "nodes": nodes,
+                        }
+                    }
+                }
+            }
+        }
+
+    def _graphql_OrgProjectId(self, owner: str, number: int) -> Dict:
+        proj_id = f"PROJECT:{owner}.{number}"
+        self.project_nodes[proj_id] = (owner, number)
+        self.projects[(owner, number)] = proj_id
+        return {
+            "data": {
+                "organization": {
+                    "projectNext": {
+                        "id": proj_id
+                    }
+                }
+            }
+        }
+
+    def _graphql_AddProjectItem(self, projectId: str, prNodeId: str) -> Dict:
+        self.project_items[projectId].add(prNodeId)
+        self.project_items[prNodeId].add(projectId)
+        return {"data": "saul goodman"}

@@ -5,6 +5,7 @@ from datetime import datetime
 
 import pytest
 
+from openedx_webhooks import settings
 from openedx_webhooks.bot_comments import (
     BotComment,
     is_comment_kind,
@@ -18,7 +19,6 @@ from openedx_webhooks.github.dispatcher.actions.utils import (
 )
 from openedx_webhooks.info import get_jira_issue_key
 from openedx_webhooks.tasks.github import pull_request_changed
-
 
 # These tests should run when we want to test flaky GitHub behavior.
 pytestmark = pytest.mark.flaky_github
@@ -51,6 +51,7 @@ def test_internal_pr_opened(reqctx, fake_github, fake_jira):
     assert anything_happened is True
     assert len(pr.list_comments()) == 0
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
+    assert not pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
 
     key, anything_happened2 = close_and_reopen_pr(reqctx, pr)
     assert key is None
@@ -130,6 +131,8 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     }
     # Check the status check applied to the latest commit.
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_BAD
+    # It should have been put in the OSPR project.
+    assert pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
 
     # Test re-opening.
     issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
@@ -189,6 +192,8 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
 
     # Check the status check applied to the latest commit.
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
+    # It should have been put in the OSPR project.
+    assert pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
 
     # Test re-opening.
     issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
@@ -269,6 +274,8 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     assert pr.labels == {"waiting on author", "open-source-contribution", "core committer"}
     # Check the status check applied to the latest commit.
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
+    # It should have been put in the OSPR project.
+    assert pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
 
 
 def test_old_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira):
@@ -377,6 +384,8 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
     assert pr.labels == {"needs triage", "blended"}
     # Check the status check applied to the latest commit.
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
+    # It should have been put in the OSPR project.
+    assert pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
 
 
 def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
