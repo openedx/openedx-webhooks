@@ -5,22 +5,23 @@ import pytest
 from .helpers import check_good_graphql, check_good_markdown, random_text
 
 
-@pytest.mark.parametrize("text, ok", [
-    ("This is a paragraph", True),
-    ("This is a paragraph\n\nThis is also\n", True),
-    ("   Bad: initial space", False),
-    ("<!-- ok -->\nA paragraph", True),
-    ("<!-- bad -->A paragraph", False),
-    ("Trailing comment<!-- bad -->\n", False),
-    ("Look here: [None](https://foo.com).", False),
-    ("Look here: [foo](https://foo.com/api/id/None).", False),
-    ("Look here: [foo](https://foo.com/api/id/None/comments).", False),
+@pytest.mark.parametrize("text, ok, msg", [
+    ("This is a paragraph", True, ""),
+    ("This is a paragraph\n\nThis is also\n", True, ""),
+    ("   Bad: initial space", False, "start with whitespace"),
+    ("<!-- ok -->\nA paragraph", True, ""),
+    ("<!-- bad -->A paragraph", False, "comment with following text"),
+    ("Trailing comment<!-- bad -->\n", False, "comment in the middle"),
+    ("Look here: [None](https://foo.com).", False, "link to None"),
+    ("Look here: [foo](https://foo.com/api/id/None).", False, "link to a None"),
+    ("Look here: [foo](https://foo.com/api/id/None/comments).", False, "link to a None"),
 ])
-def test_check_good_markdown(text, ok):
+def test_check_good_markdown(text, ok, msg):
     if ok:
+        assert msg == ""
         check_good_markdown(text)
     else:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=msg):
             check_good_markdown(text)
 
 
