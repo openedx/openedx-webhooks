@@ -76,7 +76,7 @@ class Issue:
 class FakeJira(faker.Faker):
     """A fake implementation of the Jira API, specialized to the OSPR project."""
 
-    HOST = "openedx.atlassian.net"
+    HOST = "https://test.atlassian.net"
 
     # Custom fields for OSPR. The values are arbitrary.
     CONTRIBUTOR_NAME = "custom_101"
@@ -118,7 +118,7 @@ class FakeJira(faker.Faker):
     TRANSITION_IDS = {id: name for name, id in TRANSITIONS.items()}
 
     def __init__(self):
-        super().__init__(host="https://openedx.atlassian.net")
+        super().__init__(host=self.HOST)
         # Map from issue keys to Issue objects.
         self.issues: Dict[str, Issue] = {}
         # Map from old keys to new keys for moved issues.
@@ -205,7 +205,7 @@ class FakeJira(faker.Faker):
         )
         self.make_issue(key, **kwargs)
         # Response is only some information:
-        # {"id":"184975","key":"OSPR-4836","self":"https://openedx.atlassian.net/rest/api/2/issue/184975"}
+        # {"id":"184975","key":"OSPR-4836","self":"https://test.atlassian.net/rest/api/2/issue/184975"}
         # We don't use id or self, so just return the key.
         context.status_code = 201
         return {"key": key}

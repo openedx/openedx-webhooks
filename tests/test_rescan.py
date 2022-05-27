@@ -163,11 +163,11 @@ def test_rescan_blended(reqctx, fake_github, fake_jira):
     map_1_2 = {
         "child": {
             "id": "14522",
-            "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14522",
+            "self": "https://test.atlassian.net/rest/api/2/customFieldOption/14522",
             "value": "Course Level Insights"
         },
         "id": "14209",
-        "self": "https://openedx.atlassian.net/rest/api/2/customFieldOption/14209",
+        "self": "https://test.atlassian.net/rest/api/2/customFieldOption/14209",
         "value": "Researcher & Data Experiences"
     }
     epic = fake_jira.make_issue(

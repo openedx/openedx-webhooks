@@ -81,7 +81,7 @@ def test_external_pr_closed_but_issue_deleted(is_merged, reqctx, fake_jira, clos
     assert len(pr_comments) == 4    # 1 welcome, closed_pull_request makes two, 1 survey
     # We leave the old issue id in the comment.
     body = pr_comments[0].body
-    jira_link = "[{id}](https://openedx.atlassian.net/browse/{id})".format(id=old_issue_key)
+    jira_link = "[{id}](https://test.atlassian.net/browse/{id})".format(id=old_issue_key)
     assert jira_link in body
 
 

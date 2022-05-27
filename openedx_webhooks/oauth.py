@@ -8,7 +8,7 @@ from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
 from flask_dance.contrib.github import make_github_blueprint
 from flask_dance.contrib.jira import make_jira_blueprint
 
-from openedx_webhooks import db
+from openedx_webhooks import db, settings
 from openedx_webhooks.models import OAuth
 
 ## JIRA ##
@@ -19,7 +19,7 @@ jira_bp = make_jira_blueprint(
     consumer_key=os.environ.get("JIRA_OAUTH_CONSUMER_KEY"),
     rsa_key=os.environ.get("JIRA_OAUTH_RSA_KEY"),
     # these are actually necessary
-    base_url="https://openedx.atlassian.net",
+    base_url=settings.JIRA_HOST,
     storage=SQLAlchemyStorage(OAuth, db.session),
 )
 
