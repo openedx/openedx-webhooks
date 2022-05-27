@@ -19,8 +19,6 @@ def get_authenticated_jira_client() -> JIRA:
     """
     server = environ_get('JIRA_SERVER')
     oauth_info = dict(
-        access_token=environ_get('JIRA_ACCESS_TOKEN'),
-        access_token_secret=environ_get('JIRA_ACCESS_TOKEN_SECRET'),
         consumer_key=environ_get('JIRA_OAUTH_CONSUMER_KEY'),
         key_cert=environ_get('JIRA_OAUTH_RSA_KEY'),
     )
