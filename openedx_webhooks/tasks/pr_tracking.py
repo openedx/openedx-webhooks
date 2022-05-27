@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
 from glom import glom
 
+from openedx_webhooks import settings
 from openedx_webhooks.bot_comments import (
     BOT_COMMENT_INDICATORS,
     BOT_COMMENTS_FIRST,
@@ -24,6 +25,10 @@ from openedx_webhooks.bot_comments import (
     github_community_pr_comment,
     github_community_pr_comment_closed,
     github_end_survey_comment,
+)
+from openedx_webhooks.gh_projects import (
+    add_pull_request_to_project,
+    pull_request_projects,
 )
 from openedx_webhooks.github.dispatcher.actions.utils import (
     CLA_STATUS_BAD,
@@ -59,7 +64,7 @@ from openedx_webhooks.tasks.jira_work import (
     transition_jira_issue,
     update_jira_issue,
 )
-from openedx_webhooks.types import JiraDict, PrDict
+from openedx_webhooks.types import GhProject, JiraDict, PrDict
 from openedx_webhooks.utils import (
     get_jira_custom_fields,
     get_jira_issue,
@@ -117,6 +122,9 @@ class PrCurrentInfo:
     # The actual set of labels on the pull request.
     github_labels: Set[str] = field(default_factory=set)
 
+    # The GitHub projects the PR is in.
+    github_projects: Set[GhProject] = field(default_factory=set)
+
     # The status of the cla check.
     cla_check: Optional[Dict[str, str]] = None
 
@@ -156,6 +164,9 @@ class PrDesiredInfo:
     # The bot-controlled labels we want to on the pull request.
     # See labels.py:CATEGORY_LABELS
     github_labels: Set[str] = field(default_factory=set)
+
+    # The GitHub projects we want the PR in.
+    github_projects: Set[GhProject] = field(default_factory=set)
 
     # The status of the cla check.
     cla_check: Optional[Dict[str, str]] = None
@@ -202,6 +213,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
                 if (value := issue["fields"][custom_fields[name]]) is not None
             }
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
+    current.github_projects = set(pull_request_projects(pr))
     current.cla_check = cla_status_on_pr(pr)
 
     if current.last_seen_state.get("draft", False) and not is_draft_pull_request(pr):
@@ -310,6 +322,9 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
 
         if has_signed_agreement:
             desired.bot_comments.add(BotComment.OK_TO_TEST)
+
+        if settings.GITHUB_OSPR_PROJECT:
+            desired.github_projects.add(settings.GITHUB_OSPR_PROJECT)
 
         if "additions" in pr:
             desired.jira_extra_fields["Github Lines Added"] = pr["additions"]
@@ -437,6 +452,13 @@ class PrTrackingFixer:
         if fix_comment:
             self._fix_bot_comment(comment_kwargs)
         self._add_bot_comments()
+
+        # Check the GitHub projects.
+        for project in (self.desired.github_projects - self.current.github_projects):
+            self.actions.add_pull_request_to_project(
+                pr_node_id=self.pr["node_id"], project=project
+            )
+            self.happened = True
 
     def _make_jira_issue(self) -> None:
         """
@@ -844,6 +866,12 @@ class FixingActions:
         logger.info(f"Patching labels on PR {self.prid}: {labels}")
         resp = get_github_session().patch(url, json={"labels": labels})
         log_check_response(resp)
+
+    def add_pull_request_to_project(self, *, pr_node_id: str, project: GhProject) -> None:
+        """
+        Add a pull request to a project.
+        """
+        add_pull_request_to_project(self.prid, pr_node_id, project)
 
     def set_cla_status(self, *, status: Dict[str, str]) -> None:
         set_cla_status_on_pr(self.prid.full_name, self.prid.number, status)
