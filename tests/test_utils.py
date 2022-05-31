@@ -13,7 +13,7 @@ from openedx_webhooks.utils import graphql_query, text_summary
     (["lorem ipsum quia dolor sit amet consecte"], "lorem ipsum quia dolor sit amet consecte"),
     (["lorem ipsum quia dolor sit amet consectetur adipisci velit, sed quia non numquam eius modi tempora incidunt."],
       "lorem ipsum quia d...i tempora incidunt."),
-    (["lorem ipsum quia dolor sit amet consectetur adipisci velit, sed quia non numquam eius modi tempora incidunt.", 80],
+    (["lorem ipsum quia dolor sit amet consectetur adipisci velit, quia non numquam eius modi tempora incidunt.", 80],
       "lorem ipsum quia dolor sit amet consec...non numquam eius modi tempora incidunt."),
 ])
 def test_text_summary(args, summary):

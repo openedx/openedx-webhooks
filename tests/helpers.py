@@ -62,11 +62,11 @@ def check_good_graphql(text: str) -> None:
 
     # Parens should be balanced.
     stack = []
-    pairs = dict([")(", "][", "}{"])
+    pairs = {")": "(", "}": "{", "]": "["}
     for ch in code:
-        if ch in "([{":
+        if ch in pairs.values():
             stack.append(ch)
-        elif ch in ")]}":
+        elif ch in pairs.keys():
             if not stack or stack[-1] != pairs[ch]:
                 raise ValueError(f"GraphQL query has unbalanced parens: {text!r}")
             stack.pop()
