@@ -37,7 +37,7 @@ def fake_repo_data(requests_mocker):
             return data.read()
 
     requests_mocker.get(
-        re.compile(f"{openedx_webhooks.info.DATA_FILES_URL_BASE}"),
+        re.compile(re.escape(openedx_webhooks.info.DATA_FILES_URL_BASE)),
         text=_repo_data_callback,
     )
 
