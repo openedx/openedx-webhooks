@@ -2,32 +2,14 @@
 Functions for working with GitHub projects with the GraphQL API.
 """
 
-from typing import Dict, Iterable
+from typing import Iterable
 
 from glom import glom
 
 from openedx_webhooks.lib.github.models import PrId
-from openedx_webhooks.oauth import get_github_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.types import GhProject, PrDict
-from openedx_webhooks.utils import log_check_response
-
-def graphql_query(query: str, variables: Dict) -> Dict:
-    """
-    Make a GraphQL query against GitHub.
-    """
-    url = "https://api.github.com/graphql"
-    body = {
-        "query": query,
-        "variables": variables,
-    }
-    response = get_github_session().post(url, json=body)
-    log_check_response(response)
-    returned = response.json()
-    if "errors" in returned and returned["errors"]:
-        raise Exception(f"GraphQL error: {returned}")
-    return returned["data"]
-
+from openedx_webhooks.utils import graphql_query
 
 # The name of the query is used by FakeGitHub while testing.
 

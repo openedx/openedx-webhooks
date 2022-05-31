@@ -10,7 +10,7 @@ import time
 from functools import wraps
 from hashlib import sha1
 from time import sleep as retry_sleep   # so that we can patch it for tests.
-from typing import Optional
+from typing import Dict, Optional
 
 import cachetools.func
 import requests
@@ -225,6 +225,23 @@ def jira_paginated_get(url, session=None,
             # `result` is a list
             start += len(result)
             more_results = True  # just keep going until there are no more results.
+
+
+def graphql_query(query: str, variables: Dict = {}) -> Dict:    # pylint: disable=dangerous-default-value
+    """
+    Make a GraphQL query against GitHub.
+    """
+    url = "https://api.github.com/graphql"
+    body = {
+        "query": query,
+        "variables": variables,
+    }
+    response = get_github_session().post(url, json=body)
+    log_check_response(response)
+    returned = response.json()
+    if "errors" in returned and returned["errors"]:
+        raise Exception(f"GraphQL error: {returned!r}")
+    return returned["data"]
 
 
 # A list of all the memoized functions, so that `clear_memoized_values` can
