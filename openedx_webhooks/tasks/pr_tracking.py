@@ -271,6 +271,9 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             map_1_2 = blended_epic["fields"].get(custom_fields["Platform Map Area (Levels 1 & 2)"])
             if map_1_2 is not None:
                 desired.jira_extra_fields["Platform Map Area (Levels 1 & 2)"] = map_1_2
+        assert settings.GITHUB_BLENDED_PROJECT, "You must set GITHUB_BLENDED_PROJECT"
+        desired.github_projects.add(settings.GITHUB_BLENDED_PROJECT)
+
     elif desired.is_ospr:
         if state in ["open", "reopened"]:
             comment = BotComment.WELCOME
@@ -288,6 +291,9 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             if state == "merged":
                 desired.bot_comments.add(BotComment.CHAMPION_MERGE_PING)
         desired.bot_comments.add(comment)
+
+        assert settings.GITHUB_OSPR_PROJECT, "You must set GITHUB_OSPR_PROJECT"
+        desired.github_projects.add(settings.GITHUB_OSPR_PROJECT)
 
     has_signed_agreement = pull_request_has_cla(pr)
     if is_bot:
@@ -322,9 +328,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
 
         if has_signed_agreement:
             desired.bot_comments.add(BotComment.OK_TO_TEST)
-
-        if settings.GITHUB_OSPR_PROJECT:
-            desired.github_projects.add(settings.GITHUB_OSPR_PROJECT)
 
         if "additions" in pr:
             desired.jira_extra_fields["Github Lines Added"] = pr["additions"]

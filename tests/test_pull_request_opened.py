@@ -52,6 +52,7 @@ def test_internal_pr_opened(reqctx, fake_github, fake_jira):
     assert len(pr.list_comments()) == 0
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
     assert not pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
+    assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
     key, anything_happened2 = close_and_reopen_pr(reqctx, pr)
     assert key is None
@@ -68,6 +69,8 @@ def test_pr_in_private_repo_opened(reqctx, fake_github, fake_jira):
     assert len(pr.list_comments()) == 0
     # some_contractor has no cla, and even in a private repo we check.
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_PRIVATE
+    assert not pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
+    assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
 
 def test_pr_opened_by_bot(reqctx, fake_github, fake_jira):
@@ -79,6 +82,8 @@ def test_pr_opened_by_bot(reqctx, fake_github, fake_jira):
     assert anything_happened is True
     assert len(pr.list_comments()) == 0
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_BOT
+    assert not pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
+    assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
 
 def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jira):
@@ -133,6 +138,7 @@ def test_external_pr_opened_no_cla(reqctx, sync_labels_fn, fake_github, fake_jir
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_BAD
     # It should have been put in the OSPR project.
     assert pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
+    assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
     # Test re-opening.
     issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
@@ -194,6 +200,7 @@ def test_external_pr_opened_with_cla(reqctx, sync_labels_fn, fake_github, fake_j
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
     # It should have been put in the OSPR project.
     assert pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
+    assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
     # Test re-opening.
     issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
@@ -276,6 +283,7 @@ def test_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
     # It should have been put in the OSPR project.
     assert pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
+    assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
 
 def test_old_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira):
@@ -384,8 +392,9 @@ def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_gith
     assert pr.labels == {"needs triage", "blended"}
     # Check the status check applied to the latest commit.
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
-    # It should have been put in the OSPR project.
-    assert pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
+    # It should have been put in the Blended project.
+    assert not pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
+    assert pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
 
 def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
@@ -721,6 +730,12 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, fake_github, fake_ji
         }
     # Check the status check applied to the latest commit.
     assert pr.status(CLA_CONTEXT) == (CLA_STATUS_BAD if pr_type == "nocla" else CLA_STATUS_GOOD)
+    if pr_type == "blended":
+        assert not pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
+        assert pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
+    else:
+        assert pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
+        assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
     if jira_got_fiddled:
         # Someone changes the status from "Waiting on Author" manually.
@@ -817,6 +832,8 @@ def test_handle_closed_pr(reqctx, sync_labels_fn, fake_github, fake_jira, is_mer
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {("merged" if is_merged else "rejected"), "open-source-contribution"}
+    assert pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
+    assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
     # Rescan the pull request.
     with reqctx:
