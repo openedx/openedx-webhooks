@@ -73,7 +73,7 @@ OAuth authentication for Jira requires a RSA keypair. To set this up:
 
     .. code-block:: bash
 
-        $ heroku config:set JIRA_HOST=https://somejira.atlassian.net/
+        $ heroku config:set JIRA_SERVER=https://somejira.atlassian.net/
 
 GitHub
 ~~~~~~

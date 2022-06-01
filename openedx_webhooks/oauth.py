@@ -19,7 +19,7 @@ jira_bp = make_jira_blueprint(
     consumer_key=os.environ.get("JIRA_OAUTH_CONSUMER_KEY"),
     rsa_key=os.environ.get("JIRA_OAUTH_RSA_KEY"),
     # these are actually necessary
-    base_url=settings.JIRA_HOST,
+    base_url=settings.JIRA_SERVER,
     storage=SQLAlchemyStorage(OAuth, db.session),
 )
 

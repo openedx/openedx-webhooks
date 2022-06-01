@@ -3,7 +3,7 @@
 import os
 
 
-JIRA_HOST = os.environ.get("JIRA_SERVER", "https://none.nojira.net")
+JIRA_SERVER = os.environ.get("JIRA_SERVER", "https://none.nojira.net")
 
 # The project all OSPRs should be added to.
 # This should be in the form of org:num, like "openedx:19"
