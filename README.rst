@@ -3,7 +3,7 @@
 Open edX Webhooks Handlers (and Other JIRA/GitHub Utilities)
 ============================================================
 
-Webhooks for `Open edX`_ integrating `JIRA`_ and `GitHub`_. Designed to
+Webhooks for `Open edX`_ integrating JIRA and GitHub. Designed to
 be deployed at `Heroku`_.
 
 `Access the app`_ at https://openedx-webhooks.herokuapp.com.
@@ -485,8 +485,6 @@ TODO
 -  Make sure ``docs/`` is up to date
 
 .. _Open edX: http://openedx.org
-.. _JIRA: https://2u-internal.atlassian.net
-.. _GitHub: https://github.com/openedx
 .. _Heroku: http://heroku.com
 .. _Access the app: https://openedx-webhooks.herokuapp.com
 .. _Heroku Command Line: https://devcenter.heroku.com/articles/heroku-command-line
