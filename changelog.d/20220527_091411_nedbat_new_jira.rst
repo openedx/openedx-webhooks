@@ -1,4 +1,0 @@
-.. A new scriv changelog fragment.
-
-- Removed mention of unused JIRA credentials JIRA_ACCESS_TOKEN and
-  JIRA_ACCESS_TOKEN_SECRET.

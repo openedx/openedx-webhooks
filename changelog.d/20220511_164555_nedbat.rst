@@ -1,3 +1,0 @@
-.. A new scriv changelog fragment.
-
-- The JIRA server is now configurable with the JIRA_HOST environment variable.

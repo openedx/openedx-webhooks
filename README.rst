@@ -163,6 +163,18 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2022-06-01
+~~~~~~~~~~
+
+- The JIRA server is now configurable with the JIRA_SERVER environment
+  variable.
+
+- New external pull requests will be added to a GitHub project.  The project is
+  configurable with the GITHUB_OSPR_PROJECT environment variable.
+
+- Removed mention of unused JIRA credentials JIRA_ACCESS_TOKEN and
+  JIRA_ACCESS_TOKEN_SECRET.
+
 2022-04-06
 ~~~~~~~~~~
 

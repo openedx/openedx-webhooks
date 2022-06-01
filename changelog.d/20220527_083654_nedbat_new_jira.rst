@@ -1,7 +1,0 @@
-.. A new scriv changelog fragment.
-
-- The JIRA server is now configurable with the JIRA_SERVER environment
-  variable.
-
-- New external pull requests will be added to a GitHub project.  The project is
-  configurable with the GITHUB_OSPR_PROJECT environment variable.
