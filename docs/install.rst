@@ -96,7 +96,7 @@ GitHub
        $ heroku config:set GITHUB_PERSONAL_TOKEN=my-pat
 
 4. A GitHub project will be needed for the pull requests.  Specify it as
-   org:number:
+   ``org:number``:
 
    .. code-block:: bash
 
