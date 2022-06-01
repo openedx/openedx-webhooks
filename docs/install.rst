@@ -95,12 +95,13 @@ GitHub
 
        $ heroku config:set GITHUB_PERSONAL_TOKEN=my-pat
 
-4. A GitHub project will be needed for the pull requests.  Specify it as
-   ``org:number``:
+4. A GitHub project will be needed for blended pull requests, and another for
+   other OSPRs.  Specify them as ``org:number``:
 
    .. code-block:: bash
 
       $ heroku config:set GITHUB_OSPR_PROJECT=openedx:19
+      $ heroku config:set GITHUB_BLENDED_PROJECT=edx:9
 
 
 
