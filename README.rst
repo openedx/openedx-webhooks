@@ -163,6 +163,12 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2022-06-03
+~~~~~~~~~~
+
+- Blended pull requests now go into a separate project, specified with
+  the GITHUB_BLENDED_PROJECT setting.
+
 2022-06-01
 ~~~~~~~~~~
 
