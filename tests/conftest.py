@@ -137,7 +137,10 @@ def reset_all_memoized_functions():
     openedx_webhooks.utils.clear_memoized_values()
 
 
-@pytest.fixture(params=[False, True])
+@pytest.fixture(params=[
+    pytest.param(False, id="pr:closed"),
+    pytest.param(True, id="pr:merged"),
+])
 def is_merged(request):
     """Makes tests try both merged and closed pull requests."""
     return request.param

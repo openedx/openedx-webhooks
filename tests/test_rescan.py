@@ -56,7 +56,10 @@ def make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="
     return repo
 
 
-@pytest.mark.parametrize("allpr", [False, True])
+@pytest.mark.parametrize("allpr", [
+    pytest.param(False, id="allpr:no"),
+    pytest.param(True, id="allpr:yes"),
+])
 def test_rescan_repository(rescannable_repo, reqctx, pull_request_changed_fn, allpr):
     with reqctx:
         ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
