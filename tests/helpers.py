@@ -1,7 +1,10 @@
 """Helpers for tests."""
 
+import contextlib
 import random
 import re
+import unittest.mock
+from typing import Optional
 
 
 def check_good_markdown(text: str) -> None:
@@ -31,6 +34,25 @@ def check_good_markdown(text: str) -> None:
     # We should never link to a url with None as a component.
     if re.search(r"\]\([^)]*/None[/)]", text):
         raise ValueError(f"Markdown has a link to a None url: {text!r}")
+
+
+def check_issue_link_in_markdown(text: str, issue_id: str) -> None:
+    """
+    Check that `text` has properly links to `issue_id`.
+
+    Args:
+        text: Markdown text.
+        issue_id: A JIRA issue id, which can be None.
+
+    Returns:
+        Nothing.  Will raise an exception with a failure message if something
+        is wrong.
+    """
+    if issue_id is not None:
+        jira_link = "[{id}](https://test.atlassian.net/browse/{id})".format(id=issue_id)
+        assert jira_link in text, f"Markdown is missing a link to {issue_id}"
+    else:
+        assert "/browse/" not in text, f"Markdown links to JIRA when we have no issue id"
 
 
 def random_text() -> str:
@@ -72,3 +94,17 @@ def check_good_graphql(text: str) -> None:
             stack.pop()
     if stack:
         raise ValueError(f"GraphQL query has unbalanced parens: {text!r}")
+
+
+@contextlib.contextmanager
+def jira_server(server: Optional[str]):
+    """
+    Use a particular JIRA_SERVER for a chunk of code.
+
+    Args:
+        server: a string like "https://myjira.atlassian.net", or None for no
+            JIRA server.
+
+    """
+    with unittest.mock.patch("openedx_webhooks.settings.JIRA_SERVER", server):
+        yield

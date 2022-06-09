@@ -299,3 +299,21 @@ def get_jira_issue_key(pr: Union[PrId, PrDict]) -> Optional[str]:
         if match:
             return match.group(0)
     return None
+
+
+def jira_project_for_ospr(pr: PrDict) -> Optional[str]:
+    """
+    What Jira project should be used for this external pull request?
+
+    Returns a string or None if no Jira should be used.
+    """
+    return "OSPR"
+
+
+def jira_project_for_blended(pr: PrDict) -> Optional[str]:
+    """
+    What Jira project should be used for this blended pull request?
+
+    Returns a string or None if no Jira should be used.
+    """
+    return "BLENDED"

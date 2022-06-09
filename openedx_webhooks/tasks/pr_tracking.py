@@ -48,6 +48,8 @@ from openedx_webhooks.info import (
     is_draft_pull_request,
     is_internal_pull_request,
     is_private_repo_no_cla_pull_request,
+    jira_project_for_blended,
+    jira_project_for_ospr,
     pull_request_has_cla,
 )
 from openedx_webhooks.labels import (
@@ -107,7 +109,7 @@ class PrCurrentInfo:
     # The Jira issue id mentioned on the PR if any.
     jira_mentioned_id: Optional[str] = None
 
-    # The actual Jira issue id.  Can differ from jira__mentioned_id if the
+    # The actual Jira issue id.  Can differ from jira_mentioned_id if the
     # issue was moved, or can be None if the issue has been deleted.
     jira_id: Optional[str] = None
 
@@ -261,16 +263,17 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     blended_id = get_blended_project_id(pr)
     if blended_id is not None:
         desired.bot_comments.add(BotComment.BLENDED)
-        desired.jira_project = "BLENDED"
         desired.github_labels.add("blended")
-        desired.jira_labels.add("blended")
-        blended_epic = find_blended_epic(blended_id)
-        if blended_epic is not None:
-            desired.jira_epic = blended_epic
-            custom_fields = get_jira_custom_fields(get_jira_session())
-            map_1_2 = blended_epic["fields"].get(custom_fields["Platform Map Area (Levels 1 & 2)"])
-            if map_1_2 is not None:
-                desired.jira_extra_fields["Platform Map Area (Levels 1 & 2)"] = map_1_2
+        desired.jira_project = jira_project_for_blended(pr)
+        if desired.jira_project is not None:
+            desired.jira_labels.add("blended")
+            blended_epic = find_blended_epic(blended_id)
+            if blended_epic is not None:
+                desired.jira_epic = blended_epic
+                custom_fields = get_jira_custom_fields(get_jira_session())
+                map_1_2 = blended_epic["fields"].get(custom_fields["Platform Map Area (Levels 1 & 2)"])
+                if map_1_2 is not None:
+                    desired.jira_extra_fields["Platform Map Area (Levels 1 & 2)"] = map_1_2
         assert settings.GITHUB_BLENDED_PROJECT, "You must set GITHUB_BLENDED_PROJECT"
         desired.github_projects.add(settings.GITHUB_BLENDED_PROJECT)
 
@@ -279,7 +282,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             comment = BotComment.WELCOME
         else:
             comment = BotComment.WELCOME_CLOSED
-        desired.jira_project = "OSPR"
+        desired.jira_project = jira_project_for_ospr(pr)
         desired.github_labels.add("open-source-contribution")
         committer = is_committer_pull_request(pr)
         if committer:
@@ -643,6 +646,7 @@ class PrTrackingFixer:
             body = github_committer_merge_ping_comment(self.pr, champions)
             self.actions.add_comment_to_pull_request(comment_body=body)
             needed_comments.remove(BotComment.CHAMPION_MERGE_PING)
+            self.happened = True
 
         if BotComment.SURVEY in needed_comments:
             body = github_end_survey_comment(self.pr)
@@ -651,10 +655,12 @@ class PrTrackingFixer:
                 body += format_data_for_comment({"jira-pre-close": self.desired.jira_previous_status})
             self.actions.add_comment_to_pull_request(comment_body=body)
             needed_comments.remove(BotComment.SURVEY)
+            self.happened = True
 
         if BotComment.SURVEY in self.desired.bot_comments_to_remove:
             if self.current.bot_survey_comment_id:
                 self.actions.delete_comment_on_pull_request(comment_id=self.current.bot_survey_comment_id)
+                self.happened = True
 
         assert needed_comments == set(), f"Couldn't make comments: {needed_comments}"
 

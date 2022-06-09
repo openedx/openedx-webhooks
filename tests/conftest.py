@@ -144,3 +144,13 @@ def reset_all_memoized_functions():
 def is_merged(request):
     """Makes tests try both merged and closed pull requests."""
     return request.param
+
+
+@pytest.fixture(params=[
+    pytest.param(False, id="jira:no"),
+    pytest.param(True, id="jira:yes"),
+])
+def has_jira(request, mocker):
+    """Makes tests try both with and without accessing Jira."""
+    mocker.patch("openedx_webhooks.settings.JIRA_SERVER", TEST_JIRA if request.param else None)
+    return request.param
