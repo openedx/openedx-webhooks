@@ -329,7 +329,10 @@ EXAMPLE_PLATFORM_MAP_1_2 = {
     "value": "Researcher & Data Experiences"
 }
 
-@pytest.mark.parametrize("with_epic", [False, True])
+@pytest.mark.parametrize("with_epic", [
+    pytest.param(False, id="epic:no"),
+    pytest.param(True, id="epic:yes"),
+])
 def test_blended_pr_opened_with_cla(with_epic, reqctx, sync_labels_fn, fake_github, fake_jira):
     pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", title="[BD-34] Something good")
     prj = pr.as_json()
@@ -647,13 +650,11 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
     assert get_jira_issue_key(prj) == issue_id
 
 
-@pytest.mark.parametrize(
-    "pr_type, jira_got_fiddled",
-    itertools.product(
-        ["normal", "blended", "committer", "nocla"],
-        [False, True],
-    )
-)
+@pytest.mark.parametrize("pr_type", ["normal", "blended", "committer", "nocla"])
+@pytest.mark.parametrize("jira_got_fiddled", [
+    pytest.param(False, id="jira:notfiddled"),
+    pytest.param(True, id="jira:fiddled"),
+])
 def test_draft_pr_opened(pr_type, jira_got_fiddled, reqctx, fake_github, fake_jira):
     # Open a WIP pull request.
     title1 = "WIP: broken"
