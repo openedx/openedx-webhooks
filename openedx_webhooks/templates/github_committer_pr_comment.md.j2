@@ -1,7 +1,9 @@
 {% filter replace("\n", " ")|trim %}
-Thanks for the pull request, @{{ user }}! I've created
-[{{ issue_key }}]({{ jira_host }}/browse/{{ issue_key }})
+Thanks for the pull request, @{{ user }}!
+{% if issue_key %}
+I've created [{{ issue_key }}]({{ jira_server }}/browse/{{ issue_key }})
 to keep track of it in JIRA.
+{% endif %}
 {% endfilter %}
 
 {% filter replace("\n", " ")|trim %}

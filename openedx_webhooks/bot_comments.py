@@ -105,7 +105,7 @@ def github_community_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) 
         has_signed_agreement=pull_request_has_cla(pull_request),
         is_draft=is_draft_pull_request(pull_request),
         is_merged=pull_request.get("merged", False),
-        jira_host=settings.JIRA_SERVER,
+        jira_server=settings.JIRA_SERVER,
         **kwargs
     )
 
@@ -119,7 +119,7 @@ def github_community_pr_comment_closed(pull_request: PrDict, issue_key: str, **k
         "github_community_pr_comment_closed.md.j2",
         issue_key=issue_key,
         is_merged=pull_request.get("merged", False),
-        jira_host=settings.JIRA_SERVER,
+        jira_server=settings.JIRA_SERVER,
         **kwargs
     )
 
@@ -133,7 +133,7 @@ def github_committer_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) 
         user=pull_request["user"]["login"],
         issue_key=issue_key,
         is_draft=is_draft_pull_request(pull_request),
-        jira_host=settings.JIRA_SERVER,
+        jira_server=settings.JIRA_SERVER,
         **kwargs
     )
 
@@ -172,7 +172,7 @@ def github_blended_pr_comment(
         project_name=project_name,
         project_page=project_page,
         is_draft=is_draft_pull_request(pull_request),
-        jira_host=settings.JIRA_SERVER,
+        jira_server=settings.JIRA_SERVER,
         **kwargs
     )
 

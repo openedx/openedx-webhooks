@@ -1,7 +1,9 @@
 {% filter replace("\n", " ")|trim %}
 Thanks for the pull request, @{{ user }}!
-I've created [{{ issue_key }}]({{ jira_host }}/browse/{{ issue_key }})
+{% if issue_key %}
+I've created [{{ issue_key }}]({{ jira_server }}/browse/{{ issue_key }})
 to keep track of it in Jira.
+{% endif %}
 {% if deleted_issue_key %}
 (The original issue {{ deleted_issue_key }} has been deleted.)
 {% endif %}

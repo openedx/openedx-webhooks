@@ -6,7 +6,7 @@ from typing import Optional
 from openedx_webhooks.types import GhProject
 
 
-JIRA_SERVER = os.environ.get("JIRA_SERVER", "https://none.nojira.net")
+JIRA_SERVER = os.environ.get("JIRA_SERVER", None)
 
 def read_project_setting(setting_name: str) -> Optional[GhProject]:
     """Read a project spec from a setting.
