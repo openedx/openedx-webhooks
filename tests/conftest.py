@@ -16,7 +16,7 @@ from .fake_github import FakeGitHub
 from .fake_jira import FakeJira
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def requests_mocker():
     """Make requests_mock available as a fixture."""
     mocker = requests_mock.Mocker(real_http=False, case_sensitive=True)
@@ -42,7 +42,7 @@ def fake_repo_data(requests_mocker):
     )
 
 
-@pytest.yield_fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def hard_cache_yaml_data_files(session_mocker):
     """
     Reading yaml files is slowish, and these data files don't change.
@@ -78,7 +78,7 @@ TEST_OSPR_PROJECT = ("testorg", 17)
 TEST_BLENDED_PROJECT = ("blendorg", 42)
 TEST_JIRA = "https://test.atlassian.net"
 
-@pytest.yield_fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def settings_for_tests(mocker):
     mocker.patch("openedx_webhooks.settings.GITHUB_OSPR_PROJECT", TEST_OSPR_PROJECT)
     mocker.patch("openedx_webhooks.settings.GITHUB_BLENDED_PROJECT", TEST_BLENDED_PROJECT)
