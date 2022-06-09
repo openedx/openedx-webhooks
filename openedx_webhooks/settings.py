@@ -6,7 +6,9 @@ from typing import Optional
 from openedx_webhooks.types import GhProject
 
 
-JIRA_SERVER = os.environ.get("JIRA_SERVER", None)
+# The Jira server to use.  Missing or "" will become None,
+# meaning don't use Jira at all.
+JIRA_SERVER = os.environ.get("JIRA_SERVER", None) or None
 
 def read_project_setting(setting_name: str) -> Optional[GhProject]:
     """Read a project spec from a setting.

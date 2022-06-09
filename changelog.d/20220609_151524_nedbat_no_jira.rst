@@ -1,0 +1,4 @@
+.. A new scriv changelog fragment.
+
+- Removing the JIRA_SERVER setting will disable Jira access for the bot. No Jira
+  issues will be created or updated.

@@ -10,6 +10,7 @@ from typing import Dict, Iterable, Optional, Union
 import yaml
 from iso8601 import parse_date
 
+from openedx_webhooks import settings
 from openedx_webhooks.lib.github.models import PrId
 from openedx_webhooks.oauth import get_github_session
 from openedx_webhooks.types import PrDict, PrCommentDict
@@ -307,6 +308,8 @@ def jira_project_for_ospr(pr: PrDict) -> Optional[str]:
 
     Returns a string or None if no Jira should be used.
     """
+    if settings.JIRA_SERVER is None:
+        return None
     return "OSPR"
 
 
@@ -316,4 +319,6 @@ def jira_project_for_blended(pr: PrDict) -> Optional[str]:
 
     Returns a string or None if no Jira should be used.
     """
+    if settings.JIRA_SERVER is None:
+        return None
     return "BLENDED"
