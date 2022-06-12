@@ -108,6 +108,8 @@ class PrCurrentInfo:
 
     # The Jira issue id mentioned on the PR if any.
     jira_mentioned_id: Optional[str] = None
+    # Was the mentioned Jira issue on our Jira server?
+    on_our_jira: bool = False
 
     # The actual Jira issue id.  Can differ from jira_mentioned_id if the
     # issue was moved, or can be None if the issue has been deleted.
@@ -194,8 +196,10 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
                     current.bot_survey_comment_id = comment["id"]
         current.all_bot_state.update(extract_data_from_comment(body))
 
-    current.jira_id = current.jira_mentioned_id = get_jira_issue_key(prid)
-    if current.jira_id:
+    on_our_jira, jira_id = get_jira_issue_key(prid)
+    current.jira_id = current.jira_mentioned_id = jira_id
+    current.on_our_jira = on_our_jira
+    if current.jira_id and current.on_our_jira:
         issue = get_jira_issue(current.jira_id, missing_ok=True)
         if issue is None:
             # Issue has been deleted. Forget about it, and we'll make a new one.
@@ -390,7 +394,7 @@ class PrTrackingFixer:
         make_issue = False
 
         # We might have an issue already, but in the wrong project.
-        if self.current.jira_id is not None:
+        if self.current.jira_id is not None and self.current.on_our_jira:
             assert self.current.jira_mentioned_id is not None
             mentioned_project = self.current.jira_mentioned_id.partition("-")[0]
             actual_project = self.current.jira_id.partition("-")[0]
@@ -427,7 +431,7 @@ class PrTrackingFixer:
         # Draftiness
         self.last_seen_state["draft"] = is_draft_pull_request(self.pr)
 
-        if self.current.jira_id:
+        if self.current.jira_id and self.current.on_our_jira:
             # If the author acted, and we were waiting on the author, then we
             # should set the status to this PR's usual initial status.
             if self.current.author_acted and self.current.jira_status == "Waiting on Author":

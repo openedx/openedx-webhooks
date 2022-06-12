@@ -12,6 +12,7 @@ from openedx_webhooks.tasks.github import (
     rescan_organization,
     rescan_repository,
 )
+from openedx_webhooks.bot_comments import github_community_pr_comment
 
 
 @pytest.fixture
@@ -24,9 +25,10 @@ def pull_request_changed_fn(mocker):
 
 
 @pytest.fixture
-def rescannable_repo(fake_github, fake_jira):
+def rescannable_repo(reqctx, fake_github, fake_jira):
     """Get the rescannable repo."""
-    return make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="a-repo")
+    with reqctx:
+        return make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="a-repo")
 
 
 def make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="a-repo"):
@@ -46,7 +48,7 @@ def make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="
     # One of the PRs already has a bot comment with a Jira issue.
     pr = repo.make_pull_request(user="tusbar", number=110, state="closed", merged=True, created_at=datetime(2019, 7, 1),
         closed_at=datetime(2020,7,1))
-    pr.add_comment(user=get_bot_username(), body="A ticket: OSPR-1234!\n<!-- comment:external_pr -->")
+    pr.add_comment(user=get_bot_username(), body=github_community_pr_comment(pr.as_json(), "OSPR-1234"))
     fake_jira.make_issue(key="OSPR-1234", summary="An issue")
 
     # Issues before 2018 should not be rescanned.
@@ -213,13 +215,14 @@ def test_rescan_blended(reqctx, fake_github, fake_jira):
 
 
 @pytest.fixture
-def rescannable_org(fake_github, fake_jira):
+def rescannable_org(reqctx, fake_github, fake_jira):
     """
     Make two orgs with two repos each full of pull requests.
     """
-    for org_name in ["org1", "org2"]:
-        for repo_name in ["rep1", "rep2"]:
-            make_rescannable_repo(fake_github, fake_jira, org_name, repo_name)
+    with reqctx:
+        for org_name in ["org1", "org2"]:
+            for repo_name in ["rep1", "rep2"]:
+                make_rescannable_repo(fake_github, fake_jira, org_name, repo_name)
 
 
 @pytest.mark.parametrize("allpr, earliest, latest, nums", [

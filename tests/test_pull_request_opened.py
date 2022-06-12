@@ -603,7 +603,7 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
     assert issue.status == "Needs Triage"
 
     # The pull request has to be associated with the new issue.
-    assert get_jira_issue_key(prj) == issue_id
+    assert get_jira_issue_key(prj) == (True, issue_id)
 
     # The pull request still has the ad-hoc label.
     assert "pretty" in pr.labels
@@ -675,7 +675,7 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
     assert issue.status == "Needs Triage"
 
     # The pull request has to be associated with the new issue.
-    assert get_jira_issue_key(prj) == issue_id
+    assert get_jira_issue_key(prj) == (True, issue_id)
 
 
 @pytest.mark.parametrize("pr_type", ["normal", "blended", "committer", "nocla"])

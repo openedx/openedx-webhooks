@@ -10,7 +10,7 @@ from openedx_webhooks.bot_comments import (
 )
 from openedx_webhooks.info import get_bot_username, pull_request_has_cla
 from openedx_webhooks.tasks.github import pull_request_changed
-from .helpers import check_issue_link_in_markdown, random_text
+from .helpers import check_issue_link_in_markdown, jira_server, random_text
 
 # These tests should run when we want to test flaky GitHub behavior.
 pytestmark = pytest.mark.flaky_github
@@ -196,3 +196,24 @@ def test_rescan_closed_with_wrong_cla(reqctx, fake_github, fake_jira):
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     assert pr_comments[0].body == body
+
+
+@pytest.mark.parametrize("new_jira", [None, "https://new-jira.atlassian.net"])
+def test_close_jira_pr_with_new_jira(reqctx, fake_github, fake_jira, new_jira, is_merged):
+    # Open the pull request with a jira server.
+    with jira_server("https://my-jira.atlassian.net"):
+        pr = fake_github.make_pull_request(user="tusbar")
+        with reqctx:
+            issue_id1, _ = pull_request_changed(pr.as_json())
+
+    assert issue_id1 is not None
+    fake_jira.reset_mock()
+
+    # Later, close it when we have no jira server or a different jira server.
+    with jira_server(new_jira):
+        pr.close(merge=is_merged)
+        with reqctx:
+            issue_id2, _ = pull_request_changed(pr.as_json())
+
+    assert issue_id2 == issue_id1
+    assert len(fake_jira.requests_made()) == 0
