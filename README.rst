@@ -163,6 +163,12 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2022-06-13
+~~~~~~~~~~
+
+- Removing the JIRA_SERVER setting will disable Jira access for the bot. No Jira
+  issues will be created or updated.
+
 2022-06-03
 ~~~~~~~~~~
 
