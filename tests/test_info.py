@@ -33,9 +33,8 @@ def make_pull_request(fake_github):
     return _fn
 
 
-def test_internal_orgs(reqctx):
-    with reqctx:
-        orgs = get_orgs("internal")
+def test_internal_orgs():
+    orgs = get_orgs("internal")
     assert isinstance(orgs, set)
     assert "edX" in orgs
     assert "2U/edX" in orgs

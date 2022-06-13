@@ -25,10 +25,9 @@ def pull_request_changed_fn(mocker):
 
 
 @pytest.fixture
-def rescannable_repo(reqctx, fake_github, fake_jira):
+def rescannable_repo(fake_github, fake_jira):
     """Get the rescannable repo."""
-    with reqctx:
-        return make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="a-repo")
+    return make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="a-repo")
 
 
 def make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="a-repo"):
@@ -62,9 +61,8 @@ def make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="
     pytest.param(False, id="allpr:no"),
     pytest.param(True, id="allpr:yes"),
 ])
-def test_rescan_repository(rescannable_repo, reqctx, pull_request_changed_fn, allpr):
-    with reqctx:
-        ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
+def test_rescan_repository(rescannable_repo, pull_request_changed_fn, allpr):
+    ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
     changed = ret["changed"]
 
     # Look at the pull request numbers passed to pull_request_changed. Only the
@@ -79,15 +77,13 @@ def test_rescan_repository(rescannable_repo, reqctx, pull_request_changed_fn, al
         assert set(changed.keys()) == {102, 106}
 
     # If we rescan again, nothing should happen.
-    with reqctx:
-        ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
+    ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
     assert "changed" not in ret
 
 
-def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_jira, pull_request_changed_fn):
+def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pull_request_changed_fn):
     # Rescan as a dry run.
-    with reqctx:
-        ret = rescan_repository(rescannable_repo.full_name, allpr=True, dry_run=True)
+    ret = rescan_repository(rescannable_repo.full_name, allpr=True, dry_run=True)
 
     # We shouldn't have made any writes to GitHub or Jira.
     fake_github.assert_readonly()
@@ -154,9 +150,8 @@ def test_rescan_repository_dry_run(rescannable_repo, reqctx, fake_github, fake_j
     ("2019-06-01", "", [108, 110]),
     ("2019-06-01", "2019-06-30", [108]),
 ])
-def test_rescan_repository_date_limits(rescannable_repo, reqctx, pull_request_changed_fn, earliest, latest, nums):
-    with reqctx:
-        rescan_repository(rescannable_repo.full_name, allpr=True, earliest=earliest, latest=latest)
+def test_rescan_repository_date_limits(rescannable_repo, pull_request_changed_fn, earliest, latest, nums):
+    rescan_repository(rescannable_repo.full_name, allpr=True, earliest=earliest, latest=latest)
 
     # Look at the pull request numbers passed to pull_request_changed. Only the
     # external (even) numbers should be there.
@@ -164,7 +159,7 @@ def test_rescan_repository_date_limits(rescannable_repo, reqctx, pull_request_ch
     assert prnums == nums
 
 
-def test_rescan_blended(reqctx, fake_github, fake_jira):
+def test_rescan_blended(fake_github, fake_jira):
     # At one point, we weren't treating epic links right when rescanning, and
     # kept updating the jira issue.
     pr = fake_github.make_pull_request(user="tusbar", title="[BD-34] Something good")
@@ -186,8 +181,7 @@ def test_rescan_blended(reqctx, fake_github, fake_jira):
         platform_map_1_2=map_1_2,
     )
 
-    with reqctx:
-        issue_id, anything_happened = pull_request_changed(prj)
+    issue_id, anything_happened = pull_request_changed(prj)
 
     assert issue_id is not None
     assert issue_id.startswith("BLENDED-")
@@ -204,8 +198,7 @@ def test_rescan_blended(reqctx, fake_github, fake_jira):
     fake_jira.reset_mock()
 
     # Rescan.
-    with reqctx:
-        ret = rescan_repository(pr.repo.full_name, allpr=True)
+    ret = rescan_repository(pr.repo.full_name, allpr=True)
 
     assert "changed" not in ret
 
@@ -215,14 +208,13 @@ def test_rescan_blended(reqctx, fake_github, fake_jira):
 
 
 @pytest.fixture
-def rescannable_org(reqctx, fake_github, fake_jira):
+def rescannable_org(fake_github, fake_jira):
     """
     Make two orgs with two repos each full of pull requests.
     """
-    with reqctx:
-        for org_name in ["org1", "org2"]:
-            for repo_name in ["rep1", "rep2"]:
-                make_rescannable_repo(fake_github, fake_jira, org_name, repo_name)
+    for org_name in ["org1", "org2"]:
+        for repo_name in ["rep1", "rep2"]:
+            make_rescannable_repo(fake_github, fake_jira, org_name, repo_name)
 
 
 @pytest.mark.parametrize("allpr, earliest, latest, nums", [
@@ -231,15 +223,14 @@ def rescannable_org(reqctx, fake_github, fake_jira):
     (True, "2019-06-01", "", [108, 110]),
     (True, "2019-06-01", "2019-06-30", [108]),
 ])
-def test_rescan_organization(rescannable_org, reqctx, pull_request_changed_fn, allpr, earliest, latest, nums):
-    with reqctx:
-        rescan_organization("org1", allpr=allpr, earliest=earliest, latest=latest)
+def test_rescan_organization(rescannable_org, pull_request_changed_fn, allpr, earliest, latest, nums):
+    rescan_organization("org1", allpr=allpr, earliest=earliest, latest=latest)
     prs = [PrId.from_pr_dict(c.args[0]) for c in pull_request_changed_fn.call_args_list]
     assert all(prid.org == "org1" for prid in prs)
     assert prs == [PrId(f"org1/{r}", num) for r in ["rep1", "rep2"] for num in nums]
 
 
-def test_rescan_failure(mocker, rescannable_repo, reqctx):
+def test_rescan_failure(mocker, rescannable_repo):
     def flaky_pull_request_changed(pr, actions):
         if pr["number"] == 108:
             return 1/0 # BOOM
@@ -247,8 +238,7 @@ def test_rescan_failure(mocker, rescannable_repo, reqctx):
             return pull_request_changed(pr, actions)
 
     mocker.patch("openedx_webhooks.tasks.github.pull_request_changed", flaky_pull_request_changed)
-    with reqctx:
-        ret = rescan_repository(rescannable_repo.full_name, allpr=True)
+    ret = rescan_repository(rescannable_repo.full_name, allpr=True)
 
     assert list(ret["changed"]) == [102, 106, 108, 110]
     err = ret["changed"][108]

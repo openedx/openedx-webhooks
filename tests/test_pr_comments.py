@@ -16,36 +16,33 @@ from openedx_webhooks.bot_comments import (
 from .helpers import check_good_markdown
 
 
-def test_community_pr_comment(reqctx, fake_github, fake_jira):
+def test_community_pr_comment(fake_github, fake_jira):
     # A pull request from a member in good standing.
     pr = fake_github.make_pull_request(user="tusbar")
     jira = fake_jira.make_issue(key="TNL-12345")
-    with reqctx:
-        comment = github_community_pr_comment(pr.as_json(), jira.key)
+    comment = github_community_pr_comment(pr.as_json(), jira.key)
     assert "[TNL-12345](https://test.atlassian.net/browse/TNL-12345)" in comment
     assert not is_comment_kind(BotComment.NEED_CLA, comment)
     check_good_markdown(comment)
 
 
-def test_community_pr_comment_no_cla(reqctx, fake_github, fake_jira):
+def test_community_pr_comment_no_cla(fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="FakeUser")
     jira = fake_jira.make_issue(key="FOO-1")
-    with reqctx:
-        comment = github_community_pr_comment(pr.as_json(), jira.key)
+    comment = github_community_pr_comment(pr.as_json(), jira.key)
     assert "[FOO-1](https://test.atlassian.net/browse/FOO-1)" in comment
     assert is_comment_kind(BotComment.NEED_CLA, comment)
     assert "[signed contributor agreement](https://openedx.org/cla)" in comment
     check_good_markdown(comment)
 
 
-def test_survey_pr_comment(reqctx, fake_github, is_merged):
+def test_survey_pr_comment(fake_github, is_merged):
     with freeze_time("2021-08-31 15:30:12"):
         pr = fake_github.make_pull_request(user="FakeUser")
     with freeze_time("2021-09-01 01:02:03"):
         pr.close(merge=is_merged)
     prj = pr.as_json()
-    with reqctx:
-        comment = github_end_survey_comment(prj)
+    comment = github_end_survey_comment(prj)
     assert "@FakeUser" in comment
     assert "/1FAIpQLSceJOyGJ6JOzfy6lyR3T7EW_71OWUnNQXp68Fymsk3MkNoSDg/viewform" in comment
     assert "&entry.1671973413=an-org/a-repo" in comment

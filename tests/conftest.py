@@ -116,19 +116,15 @@ def fake_jira(mock_jira_bp, requests_mocker):
     return the_fake_jira
 
 
-@pytest.fixture
-def app():
-    return openedx_webhooks.create_app(config="testing")
-
-
-@pytest.fixture
-def reqctx(app):
+@pytest.fixture(autouse=True)
+def configure_flask_app():
     """
-    Needed to make the app understand it's running under HTTPS
+    Needed to make the app understand it's running under HTTPS, and have Flask
+    initialized properly.
     """
-    return app.test_request_context(
-        '/', base_url="https://openedx-webhooks.herokuapp.com"
-    )
+    app = openedx_webhooks.create_app(config="testing")
+    with app.test_request_context('/', base_url="https://openedx-webhooks.herokuapp.com"):
+        yield
 
 
 @pytest.fixture(autouse=True)

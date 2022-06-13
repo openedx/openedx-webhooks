@@ -17,19 +17,18 @@ DESIRED_LABELS = [
     Label(name='something', color='123456', description='Huh?'),
 ]
 
-def test_no_labels_yet(reqctx, fake_github):
+def test_no_labels_yet(fake_github):
     repo = fake_github.make_repo("edx", "some-repo")
     repo.set_labels([
         {"name": "something", "color": "123456", "description": "Huh?"},
     ])
 
-    with reqctx:
-        synchronize_labels("edx/some-repo")
+    synchronize_labels("edx/some-repo")
 
     assert repo.get_labels() == DESIRED_LABELS
     assert len(fake_github.requests_made(method="POST")) == 2
 
-def test_no_sync_needed(reqctx, fake_github):
+def test_no_sync_needed(fake_github):
     repo = fake_github.make_repo("edx", "some-repo")
     repo.set_labels([
         {"name": "something", "color": "123456", "description": "Huh?"},
@@ -37,8 +36,7 @@ def test_no_sync_needed(reqctx, fake_github):
         {"name": "basic label", "color": "bfe5bf"},
     ])
 
-    with reqctx:
-        synchronize_labels("edx/some-repo")
+    synchronize_labels("edx/some-repo")
 
     assert repo.get_labels() == DESIRED_LABELS
     assert fake_github.requests_made(method="POST") == []
@@ -46,21 +44,20 @@ def test_no_sync_needed(reqctx, fake_github):
     assert fake_github.requests_made(method="DELETE") == []
 
 
-def test_one_is_missing(reqctx, fake_github):
+def test_one_is_missing(fake_github):
     repo = fake_github.make_repo("edx", "some-repo")
     repo.set_labels([
         {"name": "something", "color": "123456", "description": "Huh?"},
         {"name": "basic label", "color": "bfe5bf"},
     ])
 
-    with reqctx:
-        synchronize_labels("edx/some-repo")
+    synchronize_labels("edx/some-repo")
 
     assert repo.get_labels() == DESIRED_LABELS
     assert len(fake_github.requests_made(method="POST")) == 1
 
 
-def test_color_is_wrong(reqctx, fake_github):
+def test_color_is_wrong(fake_github):
     repo = fake_github.make_repo("edx", "some-repo")
     repo.set_labels([
         {"name": "something", "color": "123456", "description": "Huh?"},
@@ -68,15 +65,14 @@ def test_color_is_wrong(reqctx, fake_github):
         {"name": "basic label", "color": "bfe5bf"},
     ])
 
-    with reqctx:
-        synchronize_labels("edx/some-repo")
+    synchronize_labels("edx/some-repo")
 
     assert repo.get_labels() == DESIRED_LABELS
     assert len(fake_github.requests_made(method="POST")) == 0
     assert len(fake_github.requests_made(method="PATCH")) == 1
 
 
-def test_description_is_wrong(reqctx, fake_github):
+def test_description_is_wrong(fake_github):
     repo = fake_github.make_repo("edx", "some-repo")
     repo.set_labels([
         {"name": "something", "color": "123456", "description": "Huh?"},
@@ -84,15 +80,14 @@ def test_description_is_wrong(reqctx, fake_github):
         {"name": "basic label", "color": "bfe5bf"},
     ])
 
-    with reqctx:
-        synchronize_labels("edx/some-repo")
+    synchronize_labels("edx/some-repo")
 
     assert repo.get_labels() == DESIRED_LABELS
     assert len(fake_github.requests_made(method="POST")) == 0
     assert len(fake_github.requests_made(method="PATCH")) == 1
 
 
-def test_delete_unneeded(reqctx, fake_github):
+def test_delete_unneeded(fake_github):
     repo = fake_github.make_repo("edx", "some-repo")
     repo.set_labels([
         {"name": "something", "color": "123456", "description": "Huh?"},
@@ -101,8 +96,7 @@ def test_delete_unneeded(reqctx, fake_github):
         {"name": "not needed label", "color": "ff0000"},
     ])
 
-    with reqctx:
-        synchronize_labels("edx/some-repo")
+    synchronize_labels("edx/some-repo")
 
     assert repo.get_labels() == DESIRED_LABELS
     assert len(fake_github.requests_made(method="POST")) == 0

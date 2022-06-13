@@ -31,22 +31,19 @@ def sync_labels_fn(mocker):
     return mocker.patch("openedx_webhooks.tasks.github_work.synchronize_labels")
 
 
-def close_and_reopen_pr(reqctx, pr):
+def close_and_reopen_pr(pr):
     """For testing re-opening, close the pr, process it, then re-open it."""
     pr.close(merge=False)
-    with reqctx:
-        pull_request_changed(pr.as_json())
+    pull_request_changed(pr.as_json())
     pr.reopen()
-    with reqctx:
-        prj = pr.as_json()
-        prj["hook_action"] = "reopened"
-        return pull_request_changed(prj)
+    prj = pr.as_json()
+    prj["hook_action"] = "reopened"
+    return pull_request_changed(prj)
 
 
-def test_internal_pr_opened(reqctx, fake_github, fake_jira):
+def test_internal_pr_opened(fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="nedbat")
-    with reqctx:
-        key, anything_happened = pull_request_changed(pr.as_json())
+    key, anything_happened = pull_request_changed(pr.as_json())
 
     assert key is None
     assert anything_happened is True
@@ -55,16 +52,15 @@ def test_internal_pr_opened(reqctx, fake_github, fake_jira):
     assert not pr.is_in_project(settings.GITHUB_OSPR_PROJECT)
     assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
-    key, anything_happened2 = close_and_reopen_pr(reqctx, pr)
+    key, anything_happened2 = close_and_reopen_pr(pr)
     assert key is None
     assert anything_happened2 is False
 
 
-def test_pr_in_private_repo_opened(reqctx, fake_github, fake_jira):
+def test_pr_in_private_repo_opened(fake_github, fake_jira):
     repo = fake_github.make_repo("edx", "some-repo", private=True)
     pr = repo.make_pull_request(user="some_contractor")
-    with reqctx:
-        key, anything_happened = pull_request_changed(pr.as_json())
+    key, anything_happened = pull_request_changed(pr.as_json())
     assert key is None
     assert anything_happened is True
     assert len(pr.list_comments()) == 0
@@ -74,11 +70,10 @@ def test_pr_in_private_repo_opened(reqctx, fake_github, fake_jira):
     assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
 
-def test_pr_opened_by_bot(reqctx, fake_github, fake_jira):
+def test_pr_opened_by_bot(fake_github, fake_jira):
     fake_github.make_user(login="some_bot", type="Bot")
     pr = fake_github.make_pull_request(user="some_bot")
-    with reqctx:
-        key, anything_happened = pull_request_changed(pr.as_json())
+    key, anything_happened = pull_request_changed(pr.as_json())
     assert key is None
     assert anything_happened is True
     assert len(pr.list_comments()) == 0
@@ -87,14 +82,13 @@ def test_pr_opened_by_bot(reqctx, fake_github, fake_jira):
     assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
 
-def test_external_pr_opened_no_cla(has_jira, reqctx, sync_labels_fn, fake_github, fake_jira):
+def test_external_pr_opened_no_cla(has_jira, sync_labels_fn, fake_github, fake_jira):
     # No CLA, because this person is not in people.yaml
     fake_github.make_user(login="new_contributor", name="Newb Contributor")
     pr = fake_github.make_pull_request(owner="edx", repo="edx-platform", user="new_contributor")
     prj = pr.as_json()
 
-    with reqctx:
-        issue_id, anything_happened = pull_request_changed(prj)
+    issue_id, anything_happened = pull_request_changed(prj)
 
     assert anything_happened is True
 
@@ -146,7 +140,7 @@ def test_external_pr_opened_no_cla(has_jira, reqctx, sync_labels_fn, fake_github
     assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
     # Test re-opening.
-    issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
+    issue_id2, anything_happened2 = close_and_reopen_pr(pr)
     assert issue_id2 == issue_id
     assert anything_happened2 is True
     # Now there is one comment: closing the PR added a survey comment, but
@@ -160,12 +154,11 @@ def test_external_pr_opened_no_cla(has_jira, reqctx, sync_labels_fn, fake_github
         assert len(fake_jira.issues) == 0
 
 
-def test_external_pr_opened_with_cla(has_jira, reqctx, sync_labels_fn, fake_github, fake_jira):
+def test_external_pr_opened_with_cla(has_jira, sync_labels_fn, fake_github, fake_jira):
     pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", number=11235)
     prj = pr.as_json()
 
-    with reqctx:
-        issue_id, anything_happened = pull_request_changed(prj)
+    issue_id, anything_happened = pull_request_changed(prj)
 
     assert anything_happened is True
     if has_jira:
@@ -217,7 +210,7 @@ def test_external_pr_opened_with_cla(has_jira, reqctx, sync_labels_fn, fake_gith
     assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
     # Test re-opening.
-    issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
+    issue_id2, anything_happened2 = close_and_reopen_pr(pr)
     assert issue_id2 == issue_id
     assert anything_happened2 is True
     # Now there is one comment: closing the PR added a survey comment, but
@@ -233,18 +226,17 @@ def test_external_pr_opened_with_cla(has_jira, reqctx, sync_labels_fn, fake_gith
         assert len(fake_jira.issues) == 0
 
 
-def test_psycho_reopening(reqctx, sync_labels_fn, fake_github, fake_jira):
+def test_psycho_reopening(sync_labels_fn, fake_github, fake_jira):
     # Check that close/re-open/close/re-open etc will properly track the jira status.
     pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", number=11235)
     prj = pr.as_json()
 
-    with reqctx:
-        issue_id, _ = pull_request_changed(prj)
+    issue_id, _ = pull_request_changed(prj)
 
     issue = fake_jira.issues[issue_id]
     for status in ["Waiting on Author", "Needs Triage", "Architecture Review", "Changes Requested"]:
         issue.status = status
-        issue_id2, anything_happened2 = close_and_reopen_pr(reqctx, pr)
+        issue_id2, anything_happened2 = close_and_reopen_pr(pr)
         assert issue_id2 == issue_id
         assert anything_happened2 is True
 
@@ -253,12 +245,11 @@ def test_psycho_reopening(reqctx, sync_labels_fn, fake_github, fake_jira):
         assert issue.status == status
 
 
-def test_core_committer_pr_opened(has_jira, reqctx, sync_labels_fn, fake_github, fake_jira):
+def test_core_committer_pr_opened(has_jira, sync_labels_fn, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform")
     prj = pr.as_json()
 
-    with reqctx:
-        issue_id, anything_happened = pull_request_changed(prj)
+    issue_id, anything_happened = pull_request_changed(prj)
 
     assert anything_happened is True
     if has_jira:
@@ -309,7 +300,7 @@ def test_core_committer_pr_opened(has_jira, reqctx, sync_labels_fn, fake_github,
     assert not pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
 
-def test_old_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_jira):
+def test_old_core_committer_pr_opened(sync_labels_fn, fake_github, fake_jira):
     # No-one was a core committer before June 2020.
     # This test only asserts the core-committer things, that they are not cc.
     pr = fake_github.make_pull_request(
@@ -317,8 +308,7 @@ def test_old_core_committer_pr_opened(reqctx, sync_labels_fn, fake_github, fake_
     )
     prj = pr.as_json()
 
-    with reqctx:
-        issue_id, _ = pull_request_changed(prj)
+    issue_id, _ = pull_request_changed(prj)
 
     issue = fake_jira.issues[issue_id]
     assert issue.labels == set()
@@ -355,7 +345,7 @@ EXAMPLE_PLATFORM_MAP_1_2 = {
     pytest.param(False, id="epic:no"),
     pytest.param(True, id="epic:yes"),
 ])
-def test_blended_pr_opened_with_cla(with_epic, has_jira, reqctx, sync_labels_fn, fake_github, fake_jira):
+def test_blended_pr_opened_with_cla(with_epic, has_jira, sync_labels_fn, fake_github, fake_jira):
     pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", title="[BD-34] Something good")
     prj = pr.as_json()
     total_issues = 0
@@ -368,8 +358,7 @@ def test_blended_pr_opened_with_cla(with_epic, has_jira, reqctx, sync_labels_fn,
         )
         total_issues += 1
 
-    with reqctx:
-        issue_id, anything_happened = pull_request_changed(prj)
+    issue_id, anything_happened = pull_request_changed(prj)
 
     assert anything_happened is True
     if has_jira:
@@ -428,20 +417,18 @@ def test_blended_pr_opened_with_cla(with_epic, has_jira, reqctx, sync_labels_fn,
     assert pr.is_in_project(settings.GITHUB_BLENDED_PROJECT)
 
 
-def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
+def test_external_pr_rescanned(fake_github, fake_jira):
     # Rescanning a pull request shouldn't do anything.
 
     # Make a pull request and process it.
     pr = fake_github.make_pull_request(user="tusbar")
-    with reqctx:
-        issue_id1, anything_happened1 = pull_request_changed(pr.as_json())
+    issue_id1, anything_happened1 = pull_request_changed(pr.as_json())
 
     assert anything_happened1 is True
     assert len(pr.list_comments()) == 1
 
     # Rescan the pull request.
-    with reqctx:
-        issue_id2, anything_happened2 = pull_request_changed(pr.as_json())
+    issue_id2, anything_happened2 = pull_request_changed(pr.as_json())
 
     assert issue_id2 == issue_id1
     assert anything_happened2 is False
@@ -453,7 +440,7 @@ def test_external_pr_rescanned(reqctx, fake_github, fake_jira):
     assert len(pr.list_comments()) == 1
 
 
-def test_changing_pr_title(reqctx, fake_github, fake_jira):
+def test_changing_pr_title(fake_github, fake_jira):
     # After the Jira issue is created, changing the title of the pull request
     # will update the title of the issue.
     pr = fake_github.make_pull_request(
@@ -461,8 +448,7 @@ def test_changing_pr_title(reqctx, fake_github, fake_jira):
         title="These are my changes, please take them.",
     )
 
-    with reqctx:
-        issue_id1, _ = pull_request_changed(pr.as_json())
+    issue_id1, _ = pull_request_changed(pr.as_json())
 
     issue = fake_jira.issues[issue_id1]
     assert issue.summary == "These are my changes, please take them."
@@ -475,8 +461,7 @@ def test_changing_pr_title(reqctx, fake_github, fake_jira):
 
     # Author updates the title.
     pr.title = "This is the best!"
-    with reqctx:
-        issue_id2, _ = pull_request_changed(pr.as_json())
+    issue_id2, _ = pull_request_changed(pr.as_json())
 
     assert issue_id2 == issue_id1
     issue = fake_jira.issues[issue_id2]
@@ -490,7 +475,7 @@ def test_changing_pr_title(reqctx, fake_github, fake_jira):
     assert "my-label" in issue.labels
 
 
-def test_changing_pr_description(reqctx, fake_github, fake_jira):
+def test_changing_pr_description(fake_github, fake_jira):
     # After the Jira issue is created, changing the body of the pull request
     # will update the description of the issue.
     pr = fake_github.make_pull_request(
@@ -499,8 +484,7 @@ def test_changing_pr_description(reqctx, fake_github, fake_jira):
         body="Blah blah lots of description.",
     )
 
-    with reqctx:
-        issue_id1, _ = pull_request_changed(pr.as_json())
+    issue_id1, _ = pull_request_changed(pr.as_json())
 
     issue = fake_jira.issues[issue_id1]
     assert issue.summary == "These are my changes, please take them."
@@ -520,8 +504,7 @@ def test_changing_pr_description(reqctx, fake_github, fake_jira):
 
     # Author updates the description of the PR.
     pr.body = "OK, now I am really describing things."
-    with reqctx:
-        issue_id2, _ = pull_request_changed(pr.as_json())
+    issue_id2, _ = pull_request_changed(pr.as_json())
 
     assert issue_id2 == issue_id1
     issue = fake_jira.issues[issue_id2]
@@ -537,7 +520,7 @@ def test_changing_pr_description(reqctx, fake_github, fake_jira):
     assert pr.labels == {"blocked by other work", "open-source-contribution"}
 
 
-def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
+def test_title_change_changes_jira_project(fake_github, fake_jira):
     """
     A blended developer opens a PR, but forgets to put "[BD]" in the title.
     """
@@ -552,8 +535,7 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
     # The developer makes a pull request, but forgets the right syntax in the title.
     pr = fake_github.make_pull_request(user="tusbar", title="This is for BD-34")
 
-    with reqctx:
-        ospr_id, anything_happened = pull_request_changed(pr.as_json())
+    ospr_id, anything_happened = pull_request_changed(pr.as_json())
 
     # An OSPR issue was made.
     assert ospr_id is not None
@@ -567,8 +549,7 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
 
     # The developer changes the title.
     pr.title = "This is for [BD-34]."
-    with reqctx:
-        issue_id, anything_happened = pull_request_changed(pr.as_json())
+    issue_id, anything_happened = pull_request_changed(pr.as_json())
 
     assert anything_happened is True
     assert issue_id is not None
@@ -609,7 +590,7 @@ def test_title_change_changes_jira_project(reqctx, fake_github, fake_jira):
     assert "pretty" in pr.labels
 
 
-def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
+def test_title_change_but_issue_already_moved(fake_github, fake_jira):
     """
     A blended developer opens a PR, but forgets to put "[BD]" in the title.
     In the meantime, someone already moved the OSPR issue to BLENDED.
@@ -623,9 +604,7 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
 
     # The developer makes a pull request, but forgets the right syntax in the title.
     pr = fake_github.make_pull_request(user="tusbar", title="This is for BD-34")
-
-    with reqctx:
-        ospr_id, anything_happened = pull_request_changed(pr.as_json())
+    ospr_id, anything_happened = pull_request_changed(pr.as_json())
 
     # An OSPR issue was made.
     assert ospr_id is not None
@@ -639,8 +618,7 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
 
     # The developer changes the title.
     pr.title = "This is for [BD-34]."
-    with reqctx:
-        issue_id, anything_happened = pull_request_changed(pr.as_json())
+    issue_id, anything_happened = pull_request_changed(pr.as_json())
 
     assert anything_happened is True
     assert issue_id is not None
@@ -683,7 +661,7 @@ def test_title_change_but_issue_already_moved(reqctx, fake_github, fake_jira):
     pytest.param(False, id="jira:notfiddled"),
     pytest.param(True, id="jira:fiddled"),
 ])
-def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, reqctx, fake_github, fake_jira):
+def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, fake_github, fake_jira):
     # Open a WIP pull request.
     title1 = "WIP: broken"
     title2 = "Fixed and done"
@@ -705,9 +683,7 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, reqctx, fake_githu
         pr = fake_github.make_pull_request(owner="edx", repo="edx-platform", user="new_contributor", title=title1)
 
     prj = pr.as_json()
-
-    with reqctx:
-        issue_id, anything_happened = pull_request_changed(prj)
+    issue_id, anything_happened = pull_request_changed(prj)
 
     assert anything_happened is True
     if has_jira:
@@ -777,8 +753,7 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, reqctx, fake_githu
 
     # The author updates the PR, no longer draft.
     pr.title = title2
-    with reqctx:
-        issue_id2, _ = pull_request_changed(pr.as_json())
+    issue_id2, _ = pull_request_changed(pr.as_json())
 
     assert issue_id2 == issue_id
     if has_jira:
@@ -804,8 +779,7 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, reqctx, fake_githu
 
     # Oops, it goes back to draft!
     pr.title = title1
-    with reqctx:
-        issue_id3, _ = pull_request_changed(pr.as_json())
+    issue_id3, _ = pull_request_changed(pr.as_json())
 
     assert issue_id3 == issue_id
     if has_jira:
@@ -831,12 +805,10 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, reqctx, fake_githu
             assert initial_status.lower() in pr.labels
 
 
-def test_handle_closed_pr(is_merged, has_jira, reqctx, sync_labels_fn, fake_github, fake_jira):
+def test_handle_closed_pr(is_merged, has_jira, sync_labels_fn, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="tusbar", number=11237, state="closed", merged=is_merged)
     prj = pr.as_json()
-
-    with reqctx:
-        issue_id1, anything_happened = pull_request_changed(prj)
+    issue_id1, anything_happened = pull_request_changed(prj)
 
     assert anything_happened is True
     if has_jira:
@@ -885,8 +857,7 @@ def test_handle_closed_pr(is_merged, has_jira, reqctx, sync_labels_fn, fake_gith
 
     # Rescan the pull request.
     num_issues = len(fake_jira.issues)
-    with reqctx:
-        issue_id2, anything_happened2 = pull_request_changed(pr.as_json())
+    issue_id2, anything_happened2 = pull_request_changed(pr.as_json())
 
     assert issue_id2 == issue_id1
     assert anything_happened2 is False
@@ -898,7 +869,7 @@ def test_handle_closed_pr(is_merged, has_jira, reqctx, sync_labels_fn, fake_gith
     assert len(pr.list_comments()) == 1
 
 
-def test_extra_fields_are_ok(reqctx, fake_github, fake_jira):
+def test_extra_fields_are_ok(fake_github, fake_jira):
     # If someone adds platform map information to the Jira issue, it won't
     # trigger an update.
     pr = fake_github.make_pull_request(
@@ -908,8 +879,7 @@ def test_extra_fields_are_ok(reqctx, fake_github, fake_jira):
         deletions=1492,
     )
 
-    with reqctx:
-        issue_id1, _ = pull_request_changed(pr.as_json())
+    issue_id1, _ = pull_request_changed(pr.as_json())
 
     issue = fake_jira.issues[issue_id1]
     assert issue.summary == "These are my changes, please take them."
@@ -921,8 +891,7 @@ def test_extra_fields_are_ok(reqctx, fake_github, fake_jira):
     issue.labels.add("my-label")
 
     # PR gets rescanned.
-    with reqctx:
-        issue_id2, happened = pull_request_changed(pr.as_json())
+    issue_id2, happened = pull_request_changed(pr.as_json())
 
     assert not happened
     assert issue_id2 == issue_id1
