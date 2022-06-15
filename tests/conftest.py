@@ -11,6 +11,7 @@ from flask_dance.consumer.requests import OAuth2Session
 import openedx_webhooks
 import openedx_webhooks.utils
 import openedx_webhooks.info
+from openedx_webhooks import settings
 
 from .fake_github import FakeGitHub
 from .fake_jira import FakeJira
@@ -111,7 +112,7 @@ def mock_jira_bp(mocker):
 
 @pytest.fixture
 def fake_jira(mock_jira_bp, requests_mocker):
-    the_fake_jira = FakeJira()
+    the_fake_jira = FakeJira(settings.JIRA_SERVER)
     the_fake_jira.install_mocks(requests_mocker)
     return the_fake_jira
 

@@ -18,7 +18,7 @@ from flask import request, Response
 from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
-from openedx_webhooks import logger
+from openedx_webhooks import logger, settings
 from openedx_webhooks.oauth import get_github_session, jira_get
 from openedx_webhooks.types import JiraDict
 
@@ -295,11 +295,14 @@ def get_jira_custom_fields(session=None):
     """
     Return a name-to-id mapping for the custom fields on JIRA.
     """
-    session = session or jira
-    field_resp = session.get("/rest/api/2/field")
-    field_resp.raise_for_status()
-    fields = field_resp.json()
-    return {f["name"]: f["id"] for f in fields if f["custom"]}
+    if settings.JIRA_SERVER:
+        session = session or jira
+        field_resp = session.get("/rest/api/2/field")
+        field_resp.raise_for_status()
+        fields = field_resp.json()
+        return {f["name"]: f["id"] for f in fields if f["custom"]}
+    else:
+        return {}
 
 
 def get_jira_issue(key: str, missing_ok: bool = False) -> Optional[JiraDict]:

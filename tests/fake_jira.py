@@ -76,8 +76,6 @@ class Issue:
 class FakeJira(faker.Faker):
     """A fake implementation of the Jira API, specialized to the OSPR project."""
 
-    HOST = "https://test.atlassian.net"
-
     # Custom fields for OSPR. The values are arbitrary.
     CONTRIBUTOR_NAME = "custom_101"
     CUSTOMER = "custom_102"
@@ -117,8 +115,8 @@ class FakeJira(faker.Faker):
 
     TRANSITION_IDS = {id: name for name, id in TRANSITIONS.items()}
 
-    def __init__(self):
-        super().__init__(host=self.HOST)
+    def __init__(self, host):
+        super().__init__(host=host)
         # Map from issue keys to Issue objects.
         self.issues: Dict[str, Issue] = {}
         # Map from old keys to new keys for moved issues.

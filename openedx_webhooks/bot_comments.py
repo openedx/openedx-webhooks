@@ -160,7 +160,7 @@ def github_blended_pr_comment(
     Create a Blended PR comment.
     """
     custom_fields = get_jira_custom_fields(get_jira_session())
-    if blended_epic is not None:
+    if custom_fields and blended_epic is not None:
         project_name = blended_epic["fields"].get(custom_fields["Blended Project ID"])
         project_page = blended_epic["fields"].get(custom_fields["Blended Project Status Page"])
     else:

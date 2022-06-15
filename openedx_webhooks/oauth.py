@@ -28,7 +28,10 @@ def get_jira_session():
     """
     Get the Jira session to use, in an easily test-patchable way.
     """
-    return jira_bp.session
+    if settings.JIRA_SERVER:
+        return jira_bp.session
+    else:
+        return None
 
 @oauth_authorized.connect_via(jira_bp)
 def jira_logged_in(blueprint, token):
