@@ -884,7 +884,10 @@ class FixingActions:
         """
         Add a pull request to a project.
         """
-        add_pull_request_to_project(self.prid, pr_node_id, project)
+        try:
+            add_pull_request_to_project(self.prid, pr_node_id, project)
+        except Exception as exc:
+            logger.exception(f"Couldn't add PR to project: {exc}")
 
     def set_cla_status(self, *, status: Dict[str, str]) -> None:
         set_cla_status_on_pr(self.prid.full_name, self.prid.number, status)
