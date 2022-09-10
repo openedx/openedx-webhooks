@@ -85,7 +85,7 @@ def test_pr_opened_by_bot(fake_github, fake_jira):
 def test_external_pr_opened_no_cla(has_jira, sync_labels_fn, fake_github, fake_jira):
     # No CLA, because this person is not in people.yaml
     fake_github.make_user(login="new_contributor", name="Newb Contributor")
-    pr = fake_github.make_pull_request(owner="edx", repo="edx-platform", user="new_contributor")
+    pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform", user="new_contributor")
     prj = pr.as_json()
 
     issue_id, anything_happened = pull_request_changed(prj)
@@ -115,7 +115,7 @@ def test_external_pr_opened_no_cla(has_jira, sync_labels_fn, fake_github, fake_j
         assert len(fake_jira.issues) == 0
 
     # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with(f"edx/edx-platform")
+    sync_labels_fn.assert_called_once_with(f"openedx/edx-platform")
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -246,7 +246,7 @@ def test_psycho_reopening(sync_labels_fn, fake_github, fake_jira):
 
 
 def test_core_committer_pr_opened(has_jira, sync_labels_fn, fake_github, fake_jira):
-    pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform")
+    pr = fake_github.make_pull_request(user="felipemontoya", owner="openedx", repo="edx-platform")
     prj = pr.as_json()
 
     issue_id, anything_happened = pull_request_changed(prj)
@@ -276,7 +276,7 @@ def test_core_committer_pr_opened(has_jira, sync_labels_fn, fake_github, fake_ji
         assert len(fake_jira.issues) == 0
 
     # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with(f"edx/edx-platform")
+    sync_labels_fn.assert_called_once_with(f"openedx/edx-platform")
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -675,7 +675,7 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, fake_github, fake_
         pr = fake_github.make_pull_request(user="tusbar", title=title1)
     elif pr_type == "committer":
         initial_status = "Waiting on Author"
-        pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform", title=title1)
+        pr = fake_github.make_pull_request(user="felipemontoya", owner="openedx", repo="edx-platform", title=title1)
     else:
         assert pr_type == "nocla"
         initial_status = "Community Manager Review"

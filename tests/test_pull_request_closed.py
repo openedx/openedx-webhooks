@@ -120,7 +120,7 @@ def test_cc_pr_closed(fake_github, fake_jira, is_merged):
     # When a core committer merges a pull request, ping the champions.
     # But when it's closed without merging, no ping.
     # Use body=None here to test missing bodies also.
-    pr = fake_github.make_pull_request(user="felipemontoya", owner="edx", repo="edx-platform", body=None)
+    pr = fake_github.make_pull_request(user="felipemontoya", owner="openedx", repo="edx-platform", body=None)
     pull_request_changed(pr.as_json())
 
     pr.close(merge=is_merged)

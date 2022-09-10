@@ -25,7 +25,7 @@ def make_pull_request(fake_github):
     """
     Provide a function for making a JSON pull request object.
     """
-    def _fn(user, repo="edx/edx-platform", **kwargs):
+    def _fn(user, repo="openedx/edx-platform", **kwargs):
         fake_github.make_user(user)
         owner, repo = repo.split("/")
         pr = fake_github.make_pull_request(user=user, owner=owner, repo=repo, **kwargs)
@@ -65,39 +65,39 @@ def test_left_but_still_a_fan(make_pull_request):
     assert not is_internal_pull_request(pr)
 
 def test_org_committers(make_pull_request):
-    pr = make_pull_request("felipemontoya", repo="edx/something")
+    pr = make_pull_request("felipemontoya", repo="openedx/something")
     assert not is_internal_pull_request(pr)
     assert is_committer_pull_request(pr)
-    pr = make_pull_request("felipemontoya", repo="openedx/something")
+    pr = make_pull_request("felipemontoya", repo="edx/something")
     assert not is_internal_pull_request(pr)
     assert not is_committer_pull_request(pr)
 
 def test_repo_committers(make_pull_request):
-    pr = make_pull_request("pdpinch", repo="edx/ccx-keys")
+    pr = make_pull_request("pdpinch", repo="openedx/ccx-keys")
     assert not is_internal_pull_request(pr)
     assert is_committer_pull_request(pr)
-    pr = make_pull_request("pdpinch", repo="edx/edx-platform")
+    pr = make_pull_request("pdpinch", repo="openedx/edx-platform")
     assert not is_internal_pull_request(pr)
     assert not is_committer_pull_request(pr)
 
 def test_base_branch_committers(make_pull_request):
     pr = make_pull_request(
         "hollyhunter",
-        repo="edx/fake-release-repo",
+        repo="openedx/fake-release-repo",
         ref="open-release/birch.1"
     )
     assert not is_internal_pull_request(pr)
     assert is_committer_pull_request(pr)
     pr = make_pull_request(
         "hollyhunter",
-        repo="edx/fake-release-repo",
+        repo="openedx/fake-release-repo",
         ref="master"
     )
     assert not is_internal_pull_request(pr)
     assert not is_committer_pull_request(pr)
     pr = make_pull_request(
         "pdpinch",
-        repo="edx/fake-release-repo",
+        repo="openedx/fake-release-repo",
         ref="open-release/birch.1"
     )
     assert not is_internal_pull_request(pr)

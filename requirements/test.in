@@ -12,4 +12,4 @@ pytz
 requests-mock
 
 # Our repo-tools-data schema checkers
-git+https://github.com/edx/repo-tools-data-schema.git
+git+https://github.com/openedx/repo-tools-data-schema.git
