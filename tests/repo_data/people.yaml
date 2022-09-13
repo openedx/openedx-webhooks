@@ -25,7 +25,7 @@ felipemontoya:
     institution: EduNEXT
     committer:
         orgs:
-            - edx
+            - openedx
         champions:
             - nedbat
             - feanil
@@ -42,7 +42,7 @@ hollyhunter:
     agreement: individual
     committer:
         repos:
-            - edx/edx-platform
+            - openedx/edx-platform
         branches:
             - open-release/*
         champions:
@@ -96,7 +96,7 @@ pdpinch:
     jira: pdpinch@mit.edu
     committer:
         repos:
-            - edx/ccx-keys
+            - openedx/ccx-keys
         champions:
             - feanil
         branches:
@@ -125,7 +125,7 @@ raisingarizona:
             agreement: individual
             committer:
                 repos:
-                    - edx/edx-platform
+                    - openedx/edx-platform
         2014-01-02:
             committer: false
 theJohnnyBrown:

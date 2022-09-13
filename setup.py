@@ -39,7 +39,7 @@ setup(
     long_description=open('README.rst').read(),
     author="Open Source Community Managers at edX",
     author_email="oscm@edx.org",
-    url="https://github.com/edx/openedx_webhooks",
+    url="https://github.com/openedx/openedx_webhooks",
     packages=find_packages(),
     install_requires=get_requirements("requirements.txt"),
     license='Apache 2.0',

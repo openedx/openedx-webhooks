@@ -21,7 +21,7 @@
       even for PRs made by edX employees and contractors working with edX.
     </p>
     <label for="repo">Repo to scan</label>
-    <input type="text" name="repo" id="repo" value="{{ request.args.get("repo", "edx/edx-platform") }}" />
+    <input type="text" name="repo" id="repo" value="{{ request.args.get("repo", "openedx/edx-platform") }}" />
     <label for="number">PR Number</label>
     <input type="number" name="number" id="number" value="{{ request.args.get("number", "") }}" />
     <input type="submit" value="Process" />
