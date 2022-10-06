@@ -15,9 +15,6 @@ feanil:
     agreement: institution
     institution: edX
     jira: feanil
-    other_emails:
-    - feanil.patel@edx.org
-    - fpatel@edx.org
 felipemontoya:
     name: Felipe Montoya
     email: felipe.montoya@edunext.co
@@ -86,8 +83,6 @@ nedbat:
     agreement: institution
     institution: edX
     jira: ned
-    other_emails:
-        - ned@nedbatchelder.com
 pdpinch:
     name: Peter Pinch
     email: pdpinch@mit.edu
@@ -101,8 +96,6 @@ pdpinch:
             - feanil
         branches:
             - open-release/aspen.1
-    other_emails:
-    - github@hawklake.com
     comments:
     - Also signed CLA (individual agreement)
 pmitros:
