@@ -57,7 +57,6 @@ def get_people_file():
             name: "",
             agreement: "",
             institution: ""
-            jira: "",
             committer: {...},
             comments: [...],
             before: {...}

@@ -8,13 +8,11 @@ antoviaque:
     name: Xavier Antoviaque
     agreement: institution
     institution: OpenCraft
-    jira: XavierAntoviaque
 feanil:
     name: Feanil Patel
     email: feanil@edx.org
     agreement: institution
     institution: edX
-    jira: feanil
 felipemontoya:
     name: Felipe Montoya
     email: felipe.montoya@edunext.co
@@ -26,7 +24,6 @@ felipemontoya:
         champions:
             - nedbat
             - feanil
-    jira: felipemontoya
     comments:
     - also signed individual agreement (CLA)
     before:
@@ -51,7 +48,6 @@ jarv:
     email: jarv@edx.org
     name: John Jarvis
     agreement: individual
-    jira: jarv
     before:
         2014-12-12:
             agreement: institution
@@ -72,7 +68,6 @@ mmprandom:
     agreement: none
     comments:
     - LMS intern, summer 2014
-    jira: mpeterson
     before:
         2014-08-12:
             agreement: institution
@@ -82,13 +77,11 @@ nedbat:
     name: Ned Batchelder
     agreement: institution
     institution: edX
-    jira: ned
 pdpinch:
     name: Peter Pinch
     email: pdpinch@mit.edu
     agreement: institution
     institution: MIT
-    jira: pdpinch@mit.edu
     committer:
         repos:
             - openedx/ccx-keys
@@ -103,7 +96,6 @@ pmitros:
     name: Piotr Mitros
     agreement: institution
     institution: edX
-    jira: pmitros
 raisingarizona:
     email: hi.mcdunnough@noemail.com
     name: H.I. Mcdunnough
