@@ -21,9 +21,6 @@ felipemontoya:
     committer:
         orgs:
             - openedx
-        champions:
-            - nedbat
-            - feanil
     comments:
     - also signed individual agreement (CLA)
     before:
@@ -39,8 +36,6 @@ hollyhunter:
             - openedx/edx-platform
         branches:
             - open-release/*
-        champions:
-            - nedbat
     before:
         2020-01-02:
             committer: false
@@ -85,8 +80,6 @@ pdpinch:
     committer:
         repos:
             - openedx/ccx-keys
-        champions:
-            - feanil
         branches:
             - open-release/aspen.1
     comments:

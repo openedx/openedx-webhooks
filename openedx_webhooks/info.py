@@ -58,7 +58,6 @@ def get_people_file():
             agreement: "",
             institution: ""
             committer: {...},
-            comments: [...],
             before: {...}
         },
         ...

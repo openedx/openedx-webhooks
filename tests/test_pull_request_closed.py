@@ -127,20 +127,13 @@ def test_cc_pr_closed(fake_github, fake_jira, is_merged):
     pull_request_changed(pr.as_json())
 
     pr_comments = pr.list_comments()
-    if is_merged:
-        assert len(pr_comments) == 3
-        assert "@nedbat, @feanil: thought you might like to know" in pr_comments[1].body
-    else:
-        assert len(pr_comments) == 2    # 1 welcome, 1 survey
+    assert len(pr_comments) == 2    # 1 welcome, 1 survey
 
     # Processing it again won't change anything.
     pull_request_changed(pr.as_json())
 
     pr_comments = pr.list_comments()
-    if is_merged:
-        assert len(pr_comments) == 3
-    else:
-        assert len(pr_comments) == 2    # 1 welcome, 1 survey
+    assert len(pr_comments) == 2    # 1 welcome, 1 survey
 
 
 def test_track_additions_deletions(fake_github, fake_jira, is_merged):
