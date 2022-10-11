@@ -206,7 +206,6 @@ def test_check_people_missing_yaml_fields():
     people = get_people_file()
     user = 'test-test'
     assert people[user].get('jira') is None
-    assert people[user].get('other_emails') is None
     assert people[user].get('commiter') is None
     assert people[user].get('comments') is None
     assert people[user].get('before') is None

@@ -32,7 +32,6 @@ class BotComment(Enum):
     CORE_COMMITTER = auto()
     BLENDED = auto()
     OK_TO_TEST = auto()
-    CHAMPION_MERGE_PING = auto()
     END_OF_WIP = auto()
     SURVEY = auto()
 
@@ -57,9 +56,6 @@ BOT_COMMENT_INDICATORS = {
     ],
     BotComment.OK_TO_TEST: [
         "<!-- jenkins ok to test -->",
-    ],
-    BotComment.CHAMPION_MERGE_PING: [
-        "<!-- comment:champion_merge_ping -->",
     ],
     BotComment.END_OF_WIP: [
         "<!-- comment:end_of_wip -->",
@@ -134,18 +130,6 @@ def github_committer_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) 
         issue_key=issue_key,
         is_draft=is_draft_pull_request(pull_request),
         jira_server=settings.JIRA_SERVER,
-        **kwargs
-    )
-
-
-def github_committer_merge_ping_comment(pull_request: PrDict, champions: List[str], **kwargs) -> str:
-    """
-    Create the body of the comment saying, "Hey champion: a core committer merged something!"
-    """
-    return render_template(
-        "github_committer_merge_ping_comment.md.j2",
-        user=pull_request["user"]["login"],
-        champions=champions,
         **kwargs
     )
 

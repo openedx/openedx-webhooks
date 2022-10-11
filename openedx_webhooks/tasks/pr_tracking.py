@@ -21,7 +21,6 @@ from openedx_webhooks.bot_comments import (
     format_data_for_comment,
     github_blended_pr_comment,
     github_committer_pr_comment,
-    github_committer_merge_ping_comment,
     github_community_pr_comment,
     github_community_pr_comment_closed,
     github_end_survey_comment,
@@ -295,8 +294,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             desired.jira_initial_status = "Waiting on Author"
             desired.bot_comments.add(BotComment.CORE_COMMITTER)
             desired.github_labels.add("core committer")
-            if state == "merged":
-                desired.bot_comments.add(BotComment.CHAMPION_MERGE_PING)
         desired.bot_comments.add(comment)
 
         assert settings.GITHUB_OSPR_PROJECT, "You must set GITHUB_OSPR_PROJECT"
@@ -645,13 +642,6 @@ class PrTrackingFixer:
         """
         needed_comments = self.desired.bot_comments - self.current.bot_comments - BOT_COMMENTS_FIRST
 
-        if BotComment.CHAMPION_MERGE_PING in needed_comments:
-            champions = get_champions_for_pr(self.pr)
-            body = github_committer_merge_ping_comment(self.pr, champions)
-            self.actions.add_comment_to_pull_request(comment_body=body)
-            needed_comments.remove(BotComment.CHAMPION_MERGE_PING)
-            self.happened = True
-
         if BotComment.SURVEY in needed_comments:
             body = github_end_survey_comment(self.pr)
             if self.desired.jira_status == "Rejected":
@@ -718,17 +708,6 @@ def get_name_and_institution_for_pr(pr: PrDict) -> Tuple[str, Optional[str]]:
     institution = people.get(user, {}).get("institution", None)
 
     return user_name, institution
-
-
-def get_champions_for_pr(pr: PrDict) -> List[str]:
-    """
-    Get a list of GitHub nicks for the edX champions for this core committer
-    pull request.
-    """
-    user = pr["user"]["login"]
-    people = get_people_file()
-    user_data = people.get(user, {})
-    return glom(user_data, "committer.champions", default=[])
 
 
 class DryRunFixingActions:

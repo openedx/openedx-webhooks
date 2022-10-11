@@ -1,7 +1,0 @@
-{% filter replace("\n", " ")|trim %}
-{% for champ in champions -%}
-    {%- if not loop.first %}, {% endif %}@{{ champ }}
-{%- endfor %}: thought you might like to know that {{ user }} merged this pull request.
-{% endfilter %}
-
-<!-- comment:champion_merge_ping -->

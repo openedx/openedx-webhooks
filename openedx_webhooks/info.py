@@ -57,10 +57,7 @@ def get_people_file():
             name: "",
             agreement: "",
             institution: ""
-            jira: "",
-            other_emails: [...],
             committer: {...},
-            comments: [...],
             before: {...}
         },
         ...
