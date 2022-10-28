@@ -8,5 +8,13 @@
 # pin when possible.  Writing an issue against the offending project and
 # linking to it here is good.
 
+# Common constraints for Open edX repos
+-c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
+
 # codecov 2.1.6 pins coverage==4.5.4, not sure why.
 codecov==2.1.5
+
+# https://github.com/sphinx-contrib/httpdomain/issues/60
+werkzeug<2.2
+Flask<2.2.0
+flask-sqlalchemy<3.0.0
