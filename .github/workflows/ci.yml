@@ -33,9 +33,9 @@ jobs:
       run: |
         python manage.py dbcreate
         make test
-        cd docs && make html
 
     - name: Run Coverage
       uses: codecov/codecov-action@v2
       with:
         fail_ci_if_error: true
+
