@@ -21,7 +21,7 @@ query ProjectsForPr (
 ) {
   repository (owner: $owner, name: $name) {
     pullRequest (number: $number) {
-      projectNextItems (first: 100) {
+      projectItems (first: 100) {
         nodes {
           project {
             number
@@ -55,7 +55,7 @@ def pull_request_projects(pr: PrDict) -> Iterable[GhProject]:
     projects = glom(
         data,
         (
-            "repository.pullRequest.projectNextItems.nodes",
+            "repository.pullRequest.projectItems.nodes",
             [
                 {"org": "project.owner.login", "number": "project.number"}
             ]
@@ -71,7 +71,7 @@ query OrgProjectId (
   $number: Int!
 ) {
   organization (login: $owner) {
-    projectNext (number: $number) {
+    projectV2 (number: $number) {
       id
     }
   }
@@ -83,8 +83,8 @@ mutation AddProjectItem (
   $projectId: ID!
   $prNodeId: ID!
 ) {
-  addProjectNextItem (input: {projectId: $projectId, contentId: $prNodeId}) {
-    projectNextItem {
+  addProjectV2ItemById (input: {projectId: $projectId, contentId: $prNodeId}) {
+    item {
       id
     }
   }
@@ -100,7 +100,7 @@ def add_pull_request_to_project(prid: PrId, pr_node_id: str, project: GhProject)
     # Find the project id.
     variables = {"owner": project[0], "number": project[1]}
     data = graphql_query(query=ORG_PROJECT_ID, variables=variables)
-    proj_id = glom(data, "organization.projectNext.id")
+    proj_id = glom(data, "organization.projectV2.id")
 
     # Add the pull request.
     variables = {"projectId": proj_id, "prNodeId": pr_node_id}
