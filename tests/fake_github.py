@@ -541,7 +541,7 @@ class FakeGitHub(faker.Faker):
             "data": {
                 "repository": {
                     "pullRequest": {
-                        "projectNextItems": {
+                        "projectItems": {
                             "nodes": nodes,
                         }
                     }
@@ -556,7 +556,7 @@ class FakeGitHub(faker.Faker):
         return {
             "data": {
                 "organization": {
-                    "projectNext": {
+                    "projectV2": {
                         "id": proj_id
                     }
                 }
