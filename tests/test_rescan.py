@@ -102,24 +102,25 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
     actions = {k: [name for name, kwargs in actions] for k, actions in ret["dry_run_actions"].items()}
     assert actions == {
         102: [
+            "set_cla_status",
             "initial_state",
             "synchronize_labels",
             "create_ospr_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
-            "set_cla_status",
         ],
         106: [
+            "set_cla_status",
             "initial_state",
             "synchronize_labels",
             "create_ospr_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
-            "set_cla_status",
         ],
         108: [
+            "set_cla_status",
             "initial_state",
             "synchronize_labels",
             "create_ospr_issue",
@@ -127,9 +128,9 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
-            "set_cla_status",
         ],
         110: [
+            "set_cla_status",
             "initial_state",
             "synchronize_labels",
             "transition_jira_issue",
@@ -137,7 +138,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
-            "set_cla_status",
         ],
     }
 
