@@ -41,7 +41,7 @@ def test_random_text():
           $number: Int!
         ) {     # This line has )
           organization (login: $owner) {
-            projectNext (number: $number) {
+            projectV2 (number: $number) {
               id
             }
           }
@@ -55,8 +55,8 @@ def test_random_text():
           $projectId: String!
           $prNodeId: String!
         {   # This line is missing )
-          addProjectNextItem (input: {projectId: $projectId, contentId: $prNodeId}) {
-            projectNextItem {
+          addProjectV2ItemById (input: {projectId: $projectId, contentId: $prNodeId}) {
+            item {
               id
             }
           }
