@@ -218,7 +218,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
                 if (value := issue["fields"][custom_fields[name]]) is not None
             }
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
-    # current.github_projects = set(pull_request_projects(pr))
+    current.github_projects = set(pull_request_projects(pr))
     current.cla_check = cla_status_on_pr(pr)
 
     if current.last_seen_state.get("draft", False) and not is_draft_pull_request(pr):
@@ -278,7 +278,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
                 if map_1_2 is not None:
                     desired.jira_extra_fields["Platform Map Area (Levels 1 & 2)"] = map_1_2
         assert settings.GITHUB_BLENDED_PROJECT, "You must set GITHUB_BLENDED_PROJECT"
-        # desired.github_projects.add(settings.GITHUB_BLENDED_PROJECT)
+        desired.github_projects.add(settings.GITHUB_BLENDED_PROJECT)
 
     elif desired.is_ospr:
         if state in ["open", "reopened"]:
@@ -297,7 +297,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         desired.bot_comments.add(comment)
 
         assert settings.GITHUB_OSPR_PROJECT, "You must set GITHUB_OSPR_PROJECT"
-        # desired.github_projects.add(settings.GITHUB_OSPR_PROJECT)
+        desired.github_projects.add(settings.GITHUB_OSPR_PROJECT)
 
     has_signed_agreement = pull_request_has_cla(pr)
     if is_bot:
