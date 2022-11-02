@@ -367,13 +367,13 @@ class PrTrackingFixer:
         return self.current.jira_id, self.happened
 
     def fix(self) -> None:
-        if self.desired.is_ospr:
-            self.fix_ospr()
-
         if self.desired.cla_check != self.current.cla_check:
             assert self.desired.cla_check is not None
             self.actions.set_cla_status(status=self.desired.cla_check)
             self.happened = True
+
+        if self.desired.is_ospr:
+            self.fix_ospr()
 
     def fix_ospr(self) -> None:
         """
