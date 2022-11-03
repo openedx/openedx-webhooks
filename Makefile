@@ -47,6 +47,7 @@ upgrade:
 	pip-compile --upgrade -o requirements/base.txt requirements/base.in
 	pip-compile --upgrade -o requirements/test.txt requirements/test.in
 	pip-compile --upgrade -o requirements/dev.txt requirements/dev.in
+	pip-compile --upgrade -o requirements/doc.txt requirements/doc.in
 
 
 PRIVATE_IN = requirements/private.in
