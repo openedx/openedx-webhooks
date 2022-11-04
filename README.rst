@@ -18,7 +18,7 @@ Prerequisites
 
 Make sure you've installed:
 
--  Python 3.8.x development environment
+-  Python 3.10.x development environment
    (virtualenv strongly recommended)
 -  `Heroku Command Line`_
 

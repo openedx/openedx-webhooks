@@ -1,13 +1,13 @@
-FROM ubuntu:focal as app
+FROM ubuntu:22.04 as app
 
 # System requirements.
 RUN apt-get update && apt-get upgrade -qy
 RUN apt-get install -qy \
 	git-core \
 	language-pack-en \
-	python3.8 \
+	python3.10 \
 	python3-pip \
-	python3.8-dev \
+	python3.10-dev \
 	libssl-dev
 RUN pip3 install --upgrade pip setuptools
 
@@ -28,12 +28,12 @@ RUN apt-get install -qy \
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc \
     | apt-key add -
 RUN sh -c '\
-    echo "deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main" \
+    echo "deb http://apt.postgresql.org/pub/repos/apt jammy-pgdg main" \
     > /etc/apt/sources.list.d/pgdg.list \
 '
 RUN apt update -qy
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
-RUN apt install -qy postgresql-13 libpq-dev
+RUN apt install -qy postgresql libpq-dev
 
 RUN pip install tox
 
