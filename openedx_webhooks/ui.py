@@ -4,7 +4,7 @@ from flask import Blueprint, render_template
 from flask_dance.contrib.github import github as github_session
 from flask_dance.contrib.jira import jira as jira_session
 from openedx_webhooks.utils import requires_auth
-
+from openedx_webhooks import settings
 
 ui = Blueprint('ui', __name__)
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ def index():
 
 
     jira_username = None
-    if jira_session.authorized:
+    if settings.JIRA_SERVER and jira_session.authorized:
         jira_user_resp = jira_session.get("/rest/api/2/myself")
         if jira_user_resp.ok:
             try:
