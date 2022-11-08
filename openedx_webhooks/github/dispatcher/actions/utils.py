@@ -45,7 +45,7 @@ def _get_latest_commit_for_pull_request_data(repo_name_full: str, number: int) -
     """
     url = f"https://api.github.com/repos/{repo_name_full}/pulls/{number}/commits"
     logger.debug("CLA: GET %s", url)
-    response = get_github_session().get(url)
+    response = get_github_session().get(url, params={"per_page": 100})
     log_check_response(response)
     data = response.json()
     logger.debug("CLA: GOT %s", data)
