@@ -30,7 +30,6 @@ def sync_labels_fn(mocker):
     """A patch on synchronize_labels"""
     return mocker.patch("openedx_webhooks.tasks.github_work.synchronize_labels")
 
-
 def close_and_reopen_pr(pr):
     """For testing re-opening, close the pr, process it, then re-open it."""
     pr.close(merge=False)
@@ -661,7 +660,18 @@ def test_title_change_but_issue_already_moved(fake_github, fake_jira):
     pytest.param(False, id="jira:notfiddled"),
     pytest.param(True, id="jira:fiddled"),
 ])
-def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, fake_github, fake_jira):
+def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, fake_github, fake_jira, mocker):
+
+    # Set the GITHUB_STATUS_LABEL variable with a set() of labels that should map to jira issues.
+    # We set this explicitly here because the production version of the list can change and we don't
+    # want that to break the test.
+    github_status_labels = {
+        "needs triage",
+        "waiting on author",
+        "community manager review",
+    }
+    mocker.patch("openedx_webhooks.tasks.pr_tracking.GITHUB_STATUS_LABELS", github_status_labels)
+
     # Open a WIP pull request.
     title1 = "WIP: broken"
     title2 = "Fixed and done"

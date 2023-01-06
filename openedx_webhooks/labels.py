@@ -6,20 +6,7 @@ by which authority. This is that information.
 # These are labels that correspond to Jira statuses.  Only one of them should
 # be used at a time.
 
-GITHUB_STATUS_LABELS = {
-    "architecture review",
-    "awaiting prioritization",
-    "blocked by other work",
-    "changes requested",
-    "community manager review",
-    "engineering review",
-    "merged",
-    "needs triage",
-    "open edx community review",
-    "product review",
-    "rejected",
-    "waiting on author",
-}
+GITHUB_STATUS_LABELS = set()
 
 # These are categorization labels the bot assigns based on other information.
 
