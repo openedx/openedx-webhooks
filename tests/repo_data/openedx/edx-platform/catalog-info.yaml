@@ -1,0 +1,14 @@
+# This file records information about this repo. Its use is described in OEP-55:
+# https://open-edx-proposals.readthedocs.io/en/latest/processes/oep-0055-proc-project-maintainers.html
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: 'edx-platform'
+  description: "the original ball of mud"
+  annotations:
+    openedx.org/arch-interest-groups: ""
+spec:
+  owner: group:arch-bom
+  type: 'service'
+  lifecycle: 'production'

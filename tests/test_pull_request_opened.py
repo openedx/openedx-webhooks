@@ -901,3 +901,29 @@ def test_extra_fields_are_ok(fake_github, fake_jira):
     assert len(pr.list_comments()) == 1
     # The issue should still have the ad-hoc label.
     assert "my-label" in issue.labels
+
+
+def test_dont_add_internal_prs_to_project(fake_github, fake_jira):
+    pr = fake_github.make_pull_request(owner="openedx", repo="credentials", user="nedbat")
+    pull_request_changed(pr.as_json())
+    assert pull_request_projects(pr.as_json()) == set()
+
+
+def test_add_external_prs_to_project(fake_github, fake_jira):
+    pr = fake_github.make_pull_request(owner="openedx", repo="credentials", user="tusbar")
+    pull_request_changed(pr.as_json())
+    assert pull_request_projects(pr.as_json()) == {settings.GITHUB_OSPR_PROJECT, ("openedx", 23)}
+
+
+def test_dont_add_draft_prs_to_project(fake_github, fake_jira):
+    pr = fake_github.make_pull_request(owner="openedx", repo="credentials", user="tusbar", draft=True)
+    pull_request_changed(pr.as_json())
+    assert pull_request_projects(pr.as_json()) == {settings.GITHUB_OSPR_PROJECT}
+
+
+def test_add_to_multiple_projects(fake_github, fake_jira):
+    pr = fake_github.make_pull_request(owner="anotherorg", repo="multi-project", user="tusbar")
+    pull_request_changed(pr.as_json())
+    assert pull_request_projects(pr.as_json()) == {
+        settings.GITHUB_OSPR_PROJECT, ("openedx", 23), ("anotherorg", 17),
+    }

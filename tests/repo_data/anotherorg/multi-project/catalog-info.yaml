@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: 'Multi-project'
+  description: 'Some other thing'
+  annotations:
+    openedx.org/add-to-projects: "openedx:23, anotherorg:17"
+spec:
+  type: 'service'
+  lifecycle: 'production'
+  owner: someone-else
