@@ -10,8 +10,6 @@ import itertools
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
-from glom import glom
-
 from openedx_webhooks import settings
 from openedx_webhooks.bot_comments import (
     BOT_COMMENT_INDICATORS,
@@ -49,6 +47,7 @@ from openedx_webhooks.info import (
     is_private_repo_no_cla_pull_request,
     jira_project_for_blended,
     jira_project_for_ospr,
+    projects_for_pr,
     pull_request_has_cla,
 )
 from openedx_webhooks.labels import (
@@ -298,6 +297,8 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
 
         assert settings.GITHUB_OSPR_PROJECT, "You must set GITHUB_OSPR_PROJECT"
         desired.github_projects.add(settings.GITHUB_OSPR_PROJECT)
+
+    desired.github_projects.update(projects_for_pr(pr))
 
     has_signed_agreement = pull_request_has_cla(pr)
     if is_bot:
