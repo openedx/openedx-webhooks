@@ -6,7 +6,7 @@ import pathlib
 
 from repo_tools_data_schema import validate_labels, validate_orgs, validate_people
 
-TEST_DATA_DIR = pathlib.Path(__file__).parent / "repo_data"
+TEST_DATA_DIR = pathlib.Path(__file__).parent / "repo_data" / "openedx" / "openedx-webhooks-data"
 
 
 def test_labels_yaml():

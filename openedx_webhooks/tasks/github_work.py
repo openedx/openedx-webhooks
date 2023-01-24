@@ -23,7 +23,7 @@ def get_repo_labels(repo: str) -> Dict[str, Dict[str, Any]]:
 
 @memoize_timed(minutes=15)
 def synchronize_labels(repo: str) -> None:
-    """Ensure the labels in `repo` match the specs in {DATA_FILES_URL_BASE}/labels.yaml"""
+    """Ensure the labels in `repo` match the specs in openedx-webhooks-data/labels.yaml"""
 
     url = f"/repos/{repo}/labels"
     repo_labels = get_repo_labels(repo)
