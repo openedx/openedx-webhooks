@@ -51,7 +51,7 @@ class MyFake(faker.Faker):
         context.status_code = int(request.qs["code"][0])
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def my_fake():
     """
     A pytest fixture to create an instance of MyFake.
