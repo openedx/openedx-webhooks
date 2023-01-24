@@ -154,3 +154,31 @@ When a pull request is re-opened
 The bot deletes the "please complete a survey" comment that was added when the
 pull request was closed.  The Jira issue is returned to the state it was in
 when the pull request was closed.
+
+
+Adding pull requests to GitHub projects
+---------------------------------------
+
+The bot will add new pull requests to GitHub projects.  Projects are specified
+with a string like "openedx:23" meaning `project number 23`_ in the openedx
+organization.
+
+.. _project number 23: https://github.com/orgs/openedx/projects/23
+
+- Regular non-internal pull requests get added to the project specified in the
+  GITHUB_OSPR_PROJECT setting.
+
+- Blended pull requests get added to the project specified in the
+  GITHUB_BLENDED_PROJECT setting.
+
+- Individual repos can specify other projects that external non-draft pull
+  requests should be added to.  The projects are listed in an annotation in
+  their catalog-info.yaml file:
+
+  .. code-block:: yaml
+
+      annotations:
+        # This can be multiple comma-separated projects.
+        openedx.org/add-to-projects: "openedx:23"
+
+The bot never removes pull requests from projects.

@@ -8,12 +8,13 @@ import re
 from typing import Dict, Iterable, Optional, Tuple, Union
 
 import yaml
+from glom import glom
 from iso8601 import parse_date
 
 from openedx_webhooks import settings
 from openedx_webhooks.lib.github.models import PrId
 from openedx_webhooks.oauth import get_github_session
-from openedx_webhooks.types import PrDict, PrCommentDict
+from openedx_webhooks.types import GhProject, PrDict, PrCommentDict
 from openedx_webhooks.utils import (
     memoize,
     memoize_timed,
@@ -357,3 +358,38 @@ def jira_project_for_blended(pr: PrDict) -> Optional[str]:
     if settings.JIRA_SERVER is None:
         return None
     return "BLENDED"
+
+
+def get_catalog_info(repo_fullname: str) -> Dict:
+    """Get the parsed catalog-info.yaml data from a repo, or {} if missing."""
+    yml = _read_github_file(repo_fullname, "catalog-info.yaml", not_there="{}")
+    return yaml.safe_load(yml)
+
+
+def projects_for_pr(pull_request: PrDict) -> Iterable[GhProject]:
+    """
+    Get the projects a pull request should be added to.
+
+    Draft pull requests don't get added.
+
+    The projects are specified in an annotation in catalog-info.yaml::
+
+        metadata:
+          annotations:
+            openedx.org/add-to-projects: "openedx:23, openedx:456"
+
+    Each entry is an org:num spec for an organization project.
+
+    """
+    if is_draft_pull_request(pull_request):
+        return set()
+
+    catalog_info = get_catalog_info(pull_request["base"]["repo"]["full_name"])
+    annotations = glom(catalog_info, "metadata.annotations", default={})
+    projects = annotations.get("openedx.org/add-to-projects", "")
+    gh_projects = []
+    if projects:
+        for spec in projects.split(","):
+            org, number = spec.strip().split(":")
+            gh_projects.append((org, int(number)))
+    return gh_projects
