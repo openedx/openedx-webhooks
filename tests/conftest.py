@@ -1,7 +1,8 @@
-import os
-import os.path
+"""Automatically run by pytest to set up test infrastructure."""
+
 import re
 import unittest.mock as mock
+from pathlib import Path
 from typing import Dict
 
 import pytest
@@ -27,20 +28,27 @@ def requests_mocker():
     finally:
         mocker.stop()
 
+# URLs we use to grab data from GitHub.  We use requests_mock to provide
+# canned data during tests.
+DATA_REGEX = re.compile(r"https://raw.githubusercontent.com/([^/]+/[^/]+)/HEAD/(.*)")
 
 @pytest.fixture
 def fake_repo_data(requests_mocker):
-    def _repo_data_callback(request, _):
-        """Read repo_data data from local data."""
-        filename = request.path.split("/")[-1]
-        repo_data_dir = os.path.join(os.path.dirname(__file__), "repo_data")
-        with open(os.path.join(repo_data_dir, filename)) as data:
-            return data.read()
+    """A fixture to use local files instead of GitHub-fetched data files."""
 
-    requests_mocker.get(
-        re.compile(re.escape(openedx_webhooks.info.DATA_FILES_URL_BASE)),
-        text=_repo_data_callback,
-    )
+    def _repo_data_callback(request, context):
+        """Read repo_data data from local data."""
+        m = re.fullmatch(DATA_REGEX, request.url)
+        assert m, f"{request.url = }"
+        repo_data_dir = Path(__file__).parent / "repo_data"
+        file_path = repo_data_dir / "/".join(m.groups())
+        if file_path.exists():
+            return file_path.read_text()
+        else:
+            context.status_code = 404
+            return "No such file"
+
+    requests_mocker.get(DATA_REGEX, text=_repo_data_callback)
 
 
 @pytest.fixture(scope="session", autouse=True)

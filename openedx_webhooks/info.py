@@ -21,30 +21,57 @@ from openedx_webhooks.utils import (
     retry_get,
 )
 
-DATA_FILES_URL_BASE = "https://raw.githubusercontent.com/openedx/openedx-webhooks-data/master/"
 logger = logging.getLogger(__name__)
 
+
+def _github_file_url(repo_fullname: str, file_path: str) -> str:
+    """Get the GitHub url to retrieve the text of a file."""
+    # HEAD is used here to get the tip of the repo, regardless of whether it
+    # uses master or main.
+    return f"https://raw.githubusercontent.com/{repo_fullname}/HEAD/{file_path}"
+
 def _read_yaml_data_file(filename):
-    """Read a YAML file from the DATA_FILES_URL_BASE."""
+    """Read a YAML file from openedx-webhooks-data."""
     return yaml.safe_load(_read_data_file(filename))
 
 def _read_csv_data_file(filename):
     """
-    Reads a CSV file from the DATA_FILES_URL_BASE. Returns a csv DictReader
+    Reads a CSV file from openedx-webhooks-data. Returns a csv DictReader
     object of dicts. The first row of the csv is assumed to be a header, and is
     used to assign dictionary keys.
     """
     return csv.DictReader(_read_data_file(filename).splitlines())
 
+# Cache the webhooks data files, because every PR change reads them.
 @memoize_timed(minutes=15)
 def _read_data_file(filename):
     """
-    Read the text of a DATA_FILES_URL_BASE file.
+    Read the text of an openedx-webhooks-data file.
+    """
+    return _read_github_file("openedx/openedx-webhooks-data", filename)
+
+
+def _read_github_file(repo_fullname: str, file_path: str, not_there: Optional[str] = None) -> str:
+    """
+    Read a GitHub file from the main or master branch of a repo.
+
+    `not_there` is for handling missing files.  All other errors trying to
+    access the file are raised as exceptions.
+
+    Arguments:
+        `repo_fullname`: the owner and repo to access: ``"openedx/edx-platform"``.
+        `file_path`: the path to the file within the repo.
+        `not_there`: if provided, text to return if the file (or repo) doesn't exist.
+
+    Returns:
+        The text of the file, or `not_there` if provided.
     """
     github = get_github_session()
-    data_file_url = f"{DATA_FILES_URL_BASE}{filename}"
+    data_file_url = _github_file_url(repo_fullname, file_path)
     logger.debug(f"Grabbing data file from: {data_file_url}")
     resp = github.get(data_file_url)
+    if resp.status_code == 404 and not_there is not None:
+        return not_there
     resp.raise_for_status()
     return resp.text
 
@@ -113,8 +140,8 @@ def get_person_certain_time(person: Dict, certain_time: datetime.datetime) -> Di
     Return person data structure for a particular time
 
     Arguments:
-        person: dict of a Github user info from people.yaml at DATA_FILES_URL_BASE
-        certain_time: datetime.datetime object used to determine the state of the person
+        person: dict of GitHub user info from people.yaml.
+        certain_time: datetime.datetime object used to determine the state of the person.
 
     """
     # Layer together all of the applicable "before" clauses.
