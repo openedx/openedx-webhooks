@@ -2,7 +2,7 @@
 Functions for working with GitHub projects with the GraphQL API.
 """
 
-from typing import Iterable
+from typing import Set
 
 from glom import glom
 
@@ -38,11 +38,11 @@ query ProjectsForPr (
 }
 """
 
-def pull_request_projects(pr: PrDict) -> Iterable[GhProject]:
+def pull_request_projects(pr: PrDict) -> Set[GhProject]:
     """Return the projects this PR is in.
 
-    The projects are expressed as dicts with owning org and number:
-    [("openedx", 19)]
+    The projects are expressed as sets of tuples with owning org and number:
+    {("openedx", 19)}
 
     """
     variables = glom(pr, {
@@ -62,7 +62,7 @@ def pull_request_projects(pr: PrDict) -> Iterable[GhProject]:
         )
     )
     # I can't figure out how to get glom to make a tuple directly...
-    return [(p["org"], p["number"]) for p in projects]
+    return {(p["org"], p["number"]) for p in projects}
 
 
 ORG_PROJECT_ID = """\
