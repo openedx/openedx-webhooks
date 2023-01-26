@@ -9,6 +9,8 @@ import requests_mock
 from . import faker
 
 
+# pylint: disable=missing-timeout
+
 class MyException(faker.FakerException):
     status_code = 501
 

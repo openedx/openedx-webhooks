@@ -52,7 +52,7 @@ def check_issue_link_in_markdown(text: str, issue_id: str) -> None:
         jira_link = "[{id}](https://test.atlassian.net/browse/{id})".format(id=issue_id)
         assert jira_link in text, f"Markdown is missing a link to {issue_id}"
     else:
-        assert "/browse/" not in text, f"Markdown links to JIRA when we have no issue id"
+        assert "/browse/" not in text, "Markdown links to JIRA when we have no issue id"
 
 
 def random_text() -> str:
@@ -88,7 +88,7 @@ def check_good_graphql(text: str) -> None:
     for ch in code:
         if ch in pairs.values():
             stack.append(ch)
-        elif ch in pairs.keys():
+        elif ch in pairs.keys():            # pylint: disable=consider-iterating-dictionary
             if not stack or stack[-1] != pairs[ch]:
                 raise ValueError(f"GraphQL query has unbalanced parens: {text!r}")
             stack.pop()
