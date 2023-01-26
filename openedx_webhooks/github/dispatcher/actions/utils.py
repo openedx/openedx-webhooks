@@ -129,7 +129,7 @@ CLA_STATUS_BOT = {
 CLA_STATUS_PRIVATE = {
     "context": CLA_CONTEXT,
     "state": "success",
-    "description": "The author has no contributor agreement, but it is not required in this private repo",
+    "description": "No contributor agreement is needed in a private repo",
     "target_url": CLA_DETAIL_URL,
 }
 
