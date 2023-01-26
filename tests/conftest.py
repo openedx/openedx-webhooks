@@ -1,9 +1,9 @@
 """Automatically run by pytest to set up test infrastructure."""
 
 import re
-import unittest.mock as mock
 from pathlib import Path
 from typing import Dict
+from unittest import mock
 
 import pytest
 import requests_mock

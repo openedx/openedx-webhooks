@@ -112,7 +112,7 @@ def test_external_pr_opened_no_cla(has_jira, sync_labels_fn, fake_github, fake_j
         assert len(fake_jira.issues) == 0
 
     # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with(f"openedx/edx-platform")
+    sync_labels_fn.assert_called_once_with("openedx/edx-platform")
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -167,7 +167,7 @@ def test_external_pr_opened_with_cla(has_jira, sync_labels_fn, fake_github, fake
         assert issue.contributor_name == "Bertrand Marron"
         assert issue.customer == ["IONISx"]
         assert issue.pr_number == 11235
-        assert issue.repo == f"edx/some-code"
+        assert issue.repo == "edx/some-code"
         assert issue.url == prj["html_url"]
         assert issue.description == prj["body"]
         assert issue.issuetype == "Pull Request Review"
@@ -181,7 +181,7 @@ def test_external_pr_opened_with_cla(has_jira, sync_labels_fn, fake_github, fake
         assert len(fake_jira.issues) == 0
 
     # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with(f"edx/some-code")
+    sync_labels_fn.assert_called_once_with("edx/some-code")
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -271,7 +271,7 @@ def test_core_committer_pr_opened(has_jira, sync_labels_fn, fake_github, fake_ji
         assert len(fake_jira.issues) == 0
 
     # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with(f"openedx/edx-platform")
+    sync_labels_fn.assert_called_once_with("openedx/edx-platform")
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -365,7 +365,7 @@ def test_blended_pr_opened_with_cla(with_epic, has_jira, sync_labels_fn, fake_gi
         assert issue.contributor_name == "Bertrand Marron"
         assert issue.customer == ["IONISx"]
         assert issue.pr_number == prj["number"]
-        assert issue.repo == f"edx/some-code"
+        assert issue.repo == "edx/some-code"
         assert issue.url == prj["html_url"]
         assert issue.description == prj["body"]
         assert issue.issuetype == "Pull Request Review"
@@ -385,7 +385,7 @@ def test_blended_pr_opened_with_cla(with_epic, has_jira, sync_labels_fn, fake_gi
         assert len(fake_jira.issues) == total_issues
 
     # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with(f"edx/some-code")
+    sync_labels_fn.assert_called_once_with("edx/some-code")
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -655,6 +655,7 @@ def test_title_change_but_issue_already_moved(fake_github, fake_jira):
     pytest.param(True, id="jira:fiddled"),
 ])
 def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, fake_github, fake_jira, mocker):
+    # pylint: disable=too-many-statements
 
     # Set the GITHUB_STATUS_LABEL variable with a set() of labels that should map to jira issues.
     # We set this explicitly here because the production version of the list can change and we don't

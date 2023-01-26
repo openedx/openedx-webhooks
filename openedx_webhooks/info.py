@@ -92,7 +92,7 @@ def get_people_file():
     }
     """
     people_data_csv = _read_csv_data_file("salesforce-export.csv")
-    people = dict()
+    people = {}
 
     for row in people_data_csv:
         first_name = row['First Name']
@@ -113,7 +113,7 @@ def get_people_file():
             people[github_username]["institution"] = acct_name
 
     people_data_yaml = _read_yaml_data_file("people.yaml")
-    for p in people:
+    for p in people:        # pylint: disable=consider-using-dict-items
         # Prioritzes the csv by first updating the yaml's values with csv values
         # And then updates any missing dict fields using yaml's fields
         if p in people_data_yaml:
@@ -338,7 +338,7 @@ def get_jira_issue_key(pr: Union[PrId, PrDict]) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-def jira_project_for_ospr(pr: PrDict) -> Optional[str]:
+def jira_project_for_ospr(_pr: PrDict) -> Optional[str]:
     """
     What Jira project should be used for this external pull request?
 
@@ -349,7 +349,7 @@ def jira_project_for_ospr(pr: PrDict) -> Optional[str]:
     return "OSPR"
 
 
-def jira_project_for_blended(pr: PrDict) -> Optional[str]:
+def jira_project_for_blended(_pr: PrDict) -> Optional[str]:
     """
     What Jira project should be used for this blended pull request?
 

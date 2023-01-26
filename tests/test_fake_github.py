@@ -9,6 +9,8 @@ from glom import glom
 from .fake_github import DoesNotExist, FakeGitHub
 
 
+# pylint: disable=missing-timeout
+
 class TestUsers:
     def test_get_me(self, fake_github):
         resp = requests.get("https://api.github.com/user")
@@ -38,7 +40,7 @@ class TestRepos:
 class TestRepoLabels:
     def test_get_default_labels(self, fake_github):
         fake_github.make_repo("an-org", "a-repo")
-        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/labels")
+        resp = requests.get("https://api.github.com/repos/an-org/a-repo/labels")
         assert resp.status_code == 200
         labels = resp.json()
         assert isinstance(labels, list)
@@ -185,13 +187,13 @@ class TestPullRequests:
 
     def test_no_such_pull_request(self, fake_github):
         fake_github.make_repo("an-org", "a-repo")
-        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/pulls/99")
+        resp = requests.get("https://api.github.com/repos/an-org/a-repo/pulls/99")
         assert resp.status_code == 404
         assert resp.json()["message"] == "Pull request an-org/a-repo #99 does not exist"
 
     def test_no_such_repo_for_pull_request(self, fake_github):
         fake_github.make_repo("an-org", "a-repo")
-        resp = requests.get(f"https://api.github.com/repos/some-user/another-repo/pulls/1")
+        resp = requests.get("https://api.github.com/repos/some-user/another-repo/pulls/1")
         assert resp.status_code == 404
         assert resp.json()["message"] == "Repo some-user/another-repo does not exist"
 
@@ -230,7 +232,7 @@ def pull_requests_to_list(fake_github):
 
 class TestPullRequestList:
     def test_list_pull_requests(self, pull_requests_to_list):
-        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/pulls")
+        resp = requests.get("https://api.github.com/repos/an-org/a-repo/pulls")
         prjs = resp.json()
         # By default, only open pull requests are listed.
         assert len(prjs) == 3

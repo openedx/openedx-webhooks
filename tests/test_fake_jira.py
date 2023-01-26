@@ -3,6 +3,8 @@
 import requests
 
 
+# pylint: disable=missing-timeout
+
 class TestIssues:
     """
     Tests of the correct behavior of issuees.
@@ -83,17 +85,17 @@ class TestBadRequests:
     Tests of the error edge cases.
     """
     def test_no_such_put(self, fake_jira):
-        resp = requests.put(f"https://test.atlassian.net/rest/api/2/issue/XYZ-999")
+        resp = requests.put("https://test.atlassian.net/rest/api/2/issue/XYZ-999")
         assert resp.status_code == 404
 
     def test_no_such_delete(self, fake_jira):
-        resp = requests.delete(f"https://test.atlassian.net/rest/api/2/issue/XYZ-999")
+        resp = requests.delete("https://test.atlassian.net/rest/api/2/issue/XYZ-999")
         assert resp.status_code == 404
 
     def test_no_such_transitions(self, fake_jira):
-        resp = requests.get(f"https://test.atlassian.net/rest/api/2/issue/XYZ-999/transitions")
+        resp = requests.get("https://test.atlassian.net/rest/api/2/issue/XYZ-999/transitions")
         assert resp.status_code == 404
 
     def test_baffling_search(self, fake_jira):
-        resp = requests.get(f"https://test.atlassian.net/rest/api/2/search?jql=xyzzy")
+        resp = requests.get("https://test.atlassian.net/rest/api/2/search?jql=xyzzy")
         assert resp.status_code == 500
