@@ -31,9 +31,9 @@ from openedx_webhooks.utils import (
 def pull_request_changed_task(_, pull_request):
     """A bound Celery task to call pull_request_changed."""
     try:
-        ret = pull_request_changed(pull_request)
+        pull_request_changed(pull_request)
         log_rate_limit()
-    except Exception as exc:
+    except Exception:
         logger.exception("Couldn't pull_request_changed_task")
         raise
 
@@ -168,7 +168,7 @@ def rescan_repository(
             pull_request = resp.json()
 
             issue_key, anything_happened = pull_request_changed(pull_request, actions=actions)
-        except Exception:
+        except Exception:       # pylint: disable=broad-except
             changed[pull_request["number"]] = traceback.format_exc()
         else:
             if anything_happened:

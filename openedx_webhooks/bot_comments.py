@@ -7,7 +7,7 @@ import json
 import re
 
 from enum import Enum, auto
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import arrow
 from flask import render_template
