@@ -115,7 +115,7 @@ class FakeJira(faker.Faker):
 
     TRANSITION_IDS = {id: name for name, id in TRANSITIONS.items()}
 
-    def __init__(self, host):
+    def __init__(self, host) -> None:
         super().__init__(host=host)
         # Map from issue keys to Issue objects.
         self.issues: Dict[str, Issue] = {}
