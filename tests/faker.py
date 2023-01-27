@@ -7,7 +7,7 @@ import functools
 import inspect
 import json
 import re
-from typing import Any, List, Tuple
+from typing import Any
 
 
 class FakerException(Exception):
@@ -103,7 +103,11 @@ class Faker:
                     **{data_type: method},
                 )
 
-    def requests_made(self, path_regex: str = None, method: str = None) -> List[Tuple[str, str]]:
+    def requests_made(
+        self,
+        path_regex: str | None = None,
+        method: str | None = None,
+    ) -> list[tuple[str, str]]:
         """
         Return a list of (method, url) pairs that have been made to this host.
 

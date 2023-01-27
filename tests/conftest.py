@@ -52,7 +52,7 @@ def fake_repo_data(requests_mocker):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def hard_cache_yaml_data_files(session_mocker):
+def hard_cache_yaml_data_files(session_mocker) -> None:
     """
     Reading yaml files is slowish, and these data files don't change.
     Read them once per test run, and re-use the data.
