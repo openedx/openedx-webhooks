@@ -32,8 +32,9 @@ test-html-coverage-report: test ## Run tests and show coverage report in browser
 pylint: ## Run pylint
 	-pylint --rcfile=pylintrc openedx_webhooks tests bin setup.py
 
+TYPEABLE = openedx_webhooks tests
 mypy: ## Run mypy to check type annotations
-	-mypy openedx_webhooks tests
+	-mypy $(TYPEABLE)
 
 upgrade: export CUSTOM_COMPILE_COMMAND=make upgrade
 upgrade: ## Update the requirements/*.txt files with the latest packages satisfying requirements/*.in
@@ -80,6 +81,9 @@ ifneq (, $(wildcard $(PRIVATE_OUT)))
 else
 	pip-sync requirements/dev.txt
 endif
+	@# This run of mypy is to discover the missing type stubs, then we install them
+	-mypy $(TYPEABLE) > /dev/null
+	mypy --install-types --non-interactive
 
 rq-cmd:
 	$(eval remote ?= heroku)
