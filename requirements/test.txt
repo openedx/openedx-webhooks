@@ -59,10 +59,8 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.2.0
     # via celery
-codecov==2.1.5
-    # via
-    #   -c requirements/constraints.txt
-    #   -r requirements/test.in
+codecov==2.1.12
+    # via -r requirements/test.in
 contextlib2==21.6.0
     # via schema
 coverage[toml]==7.1.0
