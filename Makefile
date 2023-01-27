@@ -36,8 +36,7 @@ mypy: ## Run mypy to check type annotations
 	-mypy openedx_webhooks tests
 
 upgrade: export CUSTOM_COMPILE_COMMAND=make upgrade
-upgrade:
-	## update the requirements/*.txt files with the latest packages satisfying requirements/*.in
+upgrade: ## Update the requirements/*.txt files with the latest packages satisfying requirements/*.in
 	pip install -qr requirements/pip-tools.txt
 	# Make sure to compile files after any other files they include!
 	pip-compile --allow-unsafe --rebuild --upgrade -o requirements/pip.txt requirements/pip.in
