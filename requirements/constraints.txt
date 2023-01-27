@@ -10,8 +10,3 @@
 
 # Common constraints for Open edX repos
 -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
-
-# https://github.com/sphinx-contrib/httpdomain/issues/60
-werkzeug<2.2
-Flask<2.2.0
-flask-sqlalchemy<3.0.0

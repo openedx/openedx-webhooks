@@ -58,9 +58,8 @@ defusedxml==0.7.1
     # via jira
 face==20.1.1
     # via glom
-flask==2.1.3
+flask==2.2.2
     # via
-    #   -c requirements/constraints.txt
     #   -r requirements/base.in
     #   flask-dance
     #   flask-sqlalchemy
@@ -68,10 +67,8 @@ flask==2.1.3
     #   sentry-sdk
 flask-dance[sqla]==6.2.0
     # via -r requirements/base.in
-flask-sqlalchemy==2.5.1
-    # via
-    #   -c requirements/constraints.txt
-    #   -r requirements/base.in
+flask-sqlalchemy==3.0.2
+    # via -r requirements/base.in
 flask-sslify==0.1.5
     # via -r requirements/base.in
 github3-py==3.2.0
@@ -97,7 +94,9 @@ kombu==5.2.4
 logging-tree==1.9
     # via -r requirements/base.in
 markupsafe==2.1.2
-    # via jinja2
+    # via
+    #   jinja2
+    #   werkzeug
 oauthlib[signedtoken]==3.2.2
     # via
     #   -r requirements/base.in
@@ -175,9 +174,8 @@ vine==5.0.0
     #   kombu
 wcwidth==0.2.6
     # via prompt-toolkit
-werkzeug==2.1.2
+werkzeug==2.2.2
     # via
-    #   -c requirements/constraints.txt
     #   flask
     #   flask-dance
 
