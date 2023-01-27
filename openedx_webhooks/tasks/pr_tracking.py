@@ -354,7 +354,13 @@ class PrTrackingFixer:
     Complex logic to compare the current and desired states and make needed changes.
     """
 
-    def __init__(self, pr: PrDict, current: PrCurrentInfo, desired: PrDesiredInfo, actions: FixingActions = None):
+    def __init__(
+        self,
+        pr: PrDict,
+        current: PrCurrentInfo,
+        desired: PrDesiredInfo,
+        actions: FixingActions | None = None,
+    ) -> None:
         self.pr = pr
         self.current = current
         self.desired = desired
