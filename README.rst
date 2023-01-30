@@ -166,13 +166,16 @@ See the fragment files (if any) in the changelog.d directory.
 2023-01-30
 ~~~~~~~~~~
 
-- Adding a pull request to a project could fail if the two are in different
-  GitHub orgs (like edx and openedx).  This failure used to stop the bot from
-  making further changes, but now we log the exception and continue.
-
 - Added: contribution pull requests will be added to GitHub projects if the
   base repo says to by adding an "openedx.org/add-to-projects" annotation in
   its catalog-info.yaml file.
+
+2022-07-21
+~~~~~~~~~~
+
+- Adding a pull request to a project could fail if the two are in different
+  GitHub orgs (like edx and openedx).  This failure used to stop the bot from
+  making further changes, but now we log the exception and continue.
 
 2022-06-13
 ~~~~~~~~~~
