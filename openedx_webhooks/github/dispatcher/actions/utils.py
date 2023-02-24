@@ -136,7 +136,7 @@ CLA_STATUS_PRIVATE = {
 
 def set_cla_status_on_pr(repo_name_full: str, number: int, status: Dict[str, str]) -> bool:
     sha = _get_latest_commit_for_pull_request(repo_name_full, number)
-    logger.debug("CLA: Update state from to '%s' for commit '%s'", status, sha)
+    logger.debug("CLA: Update status to %r for commit %r", status, sha)
     payload = {
         'context': CLA_CONTEXT,
         **status,
