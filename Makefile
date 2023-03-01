@@ -12,6 +12,7 @@ clean: ## Clean cache, test, and build directories
 
 testschema: ## Install a schema under test.
 	# Get the version of repo-tools-data-schema that corresponds to our branch.
+	pip uninstall -y repo-tools-data-schema
 	pip install -U git+https://github.com/openedx/repo-tools-data-schema.git@$$(git rev-parse --abbrev-ref HEAD)
 
 TEST_FLAGS = $(TEST_ARGS) -rxefs --cov=openedx_webhooks --cov=tests --cov-report=
