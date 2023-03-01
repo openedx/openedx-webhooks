@@ -92,6 +92,21 @@ Run Tests
 
     make install-dev-requirements test
 
+If you are testing a change to `repo-tools-data-schema`_, you need to coordinate
+changes in both repos:
+
+- Name your branch here the same as your branch in repo-tools-data-schema.
+
+- Be sure your changes in repo-tools-data-schema are pushed to your branch on
+  GitHub.
+
+- Run ``make testschema`` to install your branch of repo-tools-data-schema in
+  this virtualenv.
+
+- Run tests here as usual.
+
+.. _repo-tools-data-schema: https://github.com/openedx/repo-tools-data-schema
+
 Deploy
 ------
 
