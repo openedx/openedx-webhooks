@@ -15,6 +15,7 @@ from openedx_webhooks.github.dispatcher.actions.utils import (
     CLA_STATUS_BAD,
     CLA_STATUS_BOT,
     CLA_STATUS_GOOD,
+    CLA_STATUS_NO_CONTRIBUTIONS,
     CLA_STATUS_PRIVATE,
 )
 from openedx_webhooks.info import get_jira_issue_key
@@ -42,7 +43,7 @@ def close_and_reopen_pr(pr):
 
 
 def test_internal_pr_opened(fake_github, fake_jira):
-    pr = fake_github.make_pull_request(user="nedbat")
+    pr = fake_github.make_pull_request("openedx", user="nedbat")
     key, anything_happened = pull_request_changed(pr.as_json())
 
     assert key is None
@@ -57,7 +58,7 @@ def test_internal_pr_opened(fake_github, fake_jira):
 
 
 def test_pr_in_private_repo_opened(fake_github, fake_jira):
-    repo = fake_github.make_repo("edx", "some-repo", private=True)
+    repo = fake_github.make_repo("edx", "some-private-repo", private=True)
     pr = repo.make_pull_request(user="some_contractor")
     key, anything_happened = pull_request_changed(pr.as_json())
     assert key is None
@@ -65,6 +66,21 @@ def test_pr_in_private_repo_opened(fake_github, fake_jira):
     assert len(pr.list_comments()) == 0
     # some_contractor has no cla, and even in a private repo we check.
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_PRIVATE
+    assert pull_request_projects(pr.as_json()) == set()
+
+
+def test_pr_in_nocontrib_repo_opened(fake_github, fake_jira):
+    repo = fake_github.make_repo("edx", "some-public-repo")
+    pr = repo.make_pull_request(user="tusbar")
+    key, anything_happened = pull_request_changed(pr.as_json())
+    assert key is None
+    assert anything_happened is True
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    assert is_comment_kind(BotComment.NO_CONTRIBUTIONS, body)
+    # tusbar has a cla, but we aren't accepting contributions.
+    assert pr.status(CLA_CONTEXT) == CLA_STATUS_NO_CONTRIBUTIONS
     assert pull_request_projects(pr.as_json()) == set()
 
 
@@ -151,7 +167,7 @@ def test_external_pr_opened_no_cla(has_jira, sync_labels_fn, fake_github, fake_j
 
 
 def test_external_pr_opened_with_cla(has_jira, sync_labels_fn, fake_github, fake_jira):
-    pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", number=11235)
+    pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user="tusbar", number=11235)
     prj = pr.as_json()
 
     issue_id, anything_happened = pull_request_changed(prj)
@@ -167,7 +183,7 @@ def test_external_pr_opened_with_cla(has_jira, sync_labels_fn, fake_github, fake
         assert issue.contributor_name == "Bertrand Marron"
         assert issue.customer == ["IONISx"]
         assert issue.pr_number == 11235
-        assert issue.repo == "edx/some-code"
+        assert issue.repo == "openedx/some-code"
         assert issue.url == prj["html_url"]
         assert issue.description == prj["body"]
         assert issue.issuetype == "Pull Request Review"
@@ -181,7 +197,7 @@ def test_external_pr_opened_with_cla(has_jira, sync_labels_fn, fake_github, fake
         assert len(fake_jira.issues) == 0
 
     # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with("edx/some-code")
+    sync_labels_fn.assert_called_once_with("openedx/some-code")
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -223,7 +239,7 @@ def test_external_pr_opened_with_cla(has_jira, sync_labels_fn, fake_github, fake
 
 def test_psycho_reopening(sync_labels_fn, fake_github, fake_jira):
     # Check that close/re-open/close/re-open etc will properly track the jira status.
-    pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", number=11235)
+    pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user="tusbar", number=11235)
     prj = pr.as_json()
 
     issue_id, _ = pull_request_changed(prj)
@@ -298,7 +314,7 @@ def test_old_core_committer_pr_opened(sync_labels_fn, fake_github, fake_jira):
     # No-one was a core committer before June 2020.
     # This test only asserts the core-committer things, that they are not cc.
     pr = fake_github.make_pull_request(
-        user="felipemontoya", owner="edx", repo="edx-platform", created_at=datetime(2020, 1, 1),
+        user="felipemontoya", owner="openedx", repo="edx-platform", created_at=datetime(2020, 1, 1),
     )
     prj = pr.as_json()
 
@@ -340,7 +356,7 @@ EXAMPLE_PLATFORM_MAP_1_2 = {
     pytest.param(True, id="epic:yes"),
 ])
 def test_blended_pr_opened_with_cla(with_epic, has_jira, sync_labels_fn, fake_github, fake_jira):
-    pr = fake_github.make_pull_request(owner="edx", repo="some-code", user="tusbar", title="[BD-34] Something good")
+    pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user="tusbar", title="[BD-34] Something good")
     prj = pr.as_json()
     total_issues = 0
     if with_epic:
@@ -365,7 +381,7 @@ def test_blended_pr_opened_with_cla(with_epic, has_jira, sync_labels_fn, fake_gi
         assert issue.contributor_name == "Bertrand Marron"
         assert issue.customer == ["IONISx"]
         assert issue.pr_number == prj["number"]
-        assert issue.repo == "edx/some-code"
+        assert issue.repo == "openedx/some-code"
         assert issue.url == prj["html_url"]
         assert issue.description == prj["body"]
         assert issue.issuetype == "Pull Request Review"
@@ -385,7 +401,7 @@ def test_blended_pr_opened_with_cla(with_epic, has_jira, sync_labels_fn, fake_gi
         assert len(fake_jira.issues) == total_issues
 
     # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with("edx/some-code")
+    sync_labels_fn.assert_called_once_with("openedx/some-code")
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -685,7 +701,7 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, fake_github, fake_
         assert pr_type == "nocla"
         initial_status = "Community Manager Review"
         fake_github.make_user(login="new_contributor", name="Newb Contributor")
-        pr = fake_github.make_pull_request(owner="edx", repo="edx-platform", user="new_contributor", title=title1)
+        pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform", user="new_contributor", title=title1)
 
     prj = pr.as_json()
     issue_id, anything_happened = pull_request_changed(prj)

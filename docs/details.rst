@@ -27,9 +27,10 @@ The bot has to choose:
 Pull requests fall into a number of categories, which determine how it is
 handled:
 
-- If the author is marked as "internal" (an edX employee), the bot only applies
-  the CLA check. No comments are put on the pull request, and no Jira ticket is
-  created.
+- If the author is "internal" to the pull request's GitHub org (as determined
+  by the author's institution affiliation, and the institution's
+  "internal-ghorgs" setting in orgs.yaml), the bot only applies the CLA check.
+  No comments are put on the pull request, and no Jira ticket is created.
 
 - If the title of the pull request indicates this is a blended project (with
   "[BD-XXX]" in the title), then this is a blended pull request.
@@ -110,7 +111,8 @@ be changed.
     the "Github Lines Added" and "Github Lines Deleted" fields.
 
   - A GitHub status check called "openedx/cla" is added to the latest commit.
-    This is applied to all pull requests, even edX internal ones.
+    This is applied to all pull requests, even ones by authors internal to the
+    pull request's organization.
 
 
 Updating Jira issue when pull requests change

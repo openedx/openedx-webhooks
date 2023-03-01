@@ -34,6 +34,7 @@ class BotComment(Enum):
     OK_TO_TEST = auto()
     END_OF_WIP = auto()
     SURVEY = auto()
+    NO_CONTRIBUTIONS = auto()
 
 
 BOT_COMMENT_INDICATORS = {
@@ -65,6 +66,9 @@ BOT_COMMENT_INDICATORS = {
         "/1FAIpQLSceJOyGJ6JOzfy6lyR3T7EW_71OWUnNQXp68Fymsk3MkNoSDg/viewform",
         "<!-- comment:no_survey_needed -->",
     ],
+    BotComment.NO_CONTRIBUTIONS: [
+        "<!-- comment:no-contributions -->",
+    ],
 }
 
 # These are bot comments in the very first bot comment.
@@ -76,6 +80,7 @@ BOT_COMMENTS_FIRST = {
     BotComment.CORE_COMMITTER,
     BotComment.OK_TO_TEST,
     BotComment.END_OF_WIP,
+    BotComment.NO_CONTRIBUTIONS,
 }
 
 def is_comment_kind(kind: BotComment, text: str) -> bool:
@@ -195,6 +200,13 @@ def github_end_survey_comment(pull_request: PrDict) -> str:
         is_merged=is_merged,
         survey_url=url,
     )
+
+
+def no_contributions_thanks(pull_request: PrDict) -> str:
+    """
+    Create a "no contributions" comment.
+    """
+    return render_template("no_contributions.md.j2")
 
 
 def extract_data_from_comment(text: str) -> Dict:
