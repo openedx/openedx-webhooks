@@ -9,6 +9,9 @@ EduNEXT:
     contact:
         name: Luis Felipe Montoya
         email: contact@edunext.co
+InternalOrg:
+    agreement: institution
+    internal: True
 MIT:
     contractor: false
     agreement: institution
@@ -16,10 +19,19 @@ MIT:
         name: Lita Nelsen
         email: lita@mit.edu
 OpenCraft:
-    internal: false
     contractor: true
     agreement: institution
 edX:
     name: 2U/edX
     agreement: institution
-    internal: true
+    internal-ghorgs:
+        - edx
+        - openedx
+        - an-org
+        - org1
+tCRIL:
+    agreement: institution
+    internal-ghorgs:
+        - openedx
+        - an-org
+        - org1

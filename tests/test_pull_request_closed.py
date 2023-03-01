@@ -17,7 +17,7 @@ pytestmark = pytest.mark.flaky_github
 
 
 def test_internal_pr_closed(is_merged, has_jira, fake_github, fake_jira):
-    pr = fake_github.make_pull_request(user="nedbat", state="closed", merged=is_merged)
+    pr = fake_github.make_pull_request("openedx", user="nedbat", state="closed", merged=is_merged)
     pr.add_comment(user="nedbat", body="This is great")
     pr.add_comment(user="feanil", body="Eh, it's ok")
     pull_request_changed(pr.as_json())

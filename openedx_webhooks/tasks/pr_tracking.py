@@ -22,6 +22,7 @@ from openedx_webhooks.bot_comments import (
     github_community_pr_comment,
     github_community_pr_comment_closed,
     github_end_survey_comment,
+    no_contributions_thanks,
 )
 from openedx_webhooks.gh_projects import (
     add_pull_request_to_project,
@@ -31,6 +32,7 @@ from openedx_webhooks.github.dispatcher.actions.utils import (
     CLA_STATUS_BAD,
     CLA_STATUS_BOT,
     CLA_STATUS_GOOD,
+    CLA_STATUS_NO_CONTRIBUTIONS,
     CLA_STATUS_PRIVATE,
     cla_status_on_pr,
     set_cla_status_on_pr,
@@ -49,6 +51,7 @@ from openedx_webhooks.info import (
     jira_project_for_ospr,
     projects_for_pr,
     pull_request_has_cla,
+    repo_refuses_contributions,
 )
 from openedx_webhooks.labels import (
     GITHUB_CATEGORY_LABELS,
@@ -142,6 +145,8 @@ class PrDesiredInfo:
     """
     # Is this an "external" pull request (True), or internal (False)?
     is_ospr: bool = False
+    # Is this pull request being refused?
+    is_refused: bool = False
 
     bot_comments: Set[BotComment] = field(default_factory=set)
     bot_comments_to_remove: Set[BotComment] = field(default_factory=set)
@@ -237,15 +242,16 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
 
-    desired.is_ospr = False
-    is_bot = is_bot_pull_request(pr)
-    is_no_cla = is_private_repo_no_cla_pull_request(pr)
-    if is_bot:
+    user_is_bot = is_bot_pull_request(pr)
+    no_cla_is_needed = is_private_repo_no_cla_pull_request(pr)
+    if user_is_bot:
         logger.info(f"@{user} is a bot, not an ospr.")
-    elif is_no_cla:
+    elif no_cla_is_needed:
         logger.info(f"{repo}#{num} (@{user}) is in a private repo, not an ospr")
     elif is_internal_pull_request(pr):
         logger.info(f"@{user} acted on {repo}#{num}, internal PR, not an ospr")
+    elif repo_refuses_contributions(pr):
+        desired.is_refused = True
     else:
         desired.is_ospr = True
 
@@ -301,12 +307,15 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     desired.github_projects.update(projects_for_pr(pr))
 
     has_signed_agreement = pull_request_has_cla(pr)
-    if is_bot:
+    if user_is_bot:
         desired.cla_check = CLA_STATUS_BOT
+    elif no_cla_is_needed:
+        desired.cla_check = CLA_STATUS_PRIVATE
+    elif desired.is_refused:
+        desired.cla_check = CLA_STATUS_NO_CONTRIBUTIONS
+        desired.is_ospr = False
     elif has_signed_agreement:
         desired.cla_check = CLA_STATUS_GOOD
-    elif is_no_cla:
-        desired.cla_check = CLA_STATUS_PRIVATE
     else:
         desired.cla_check = CLA_STATUS_BAD
 
@@ -338,6 +347,9 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             desired.jira_extra_fields["Github Lines Added"] = pr["additions"]
         if "deletions" in pr:
             desired.jira_extra_fields["Github Lines Deleted"] = pr["deletions"]
+
+    if desired.is_refused:
+        desired.bot_comments.add(BotComment.NO_CONTRIBUTIONS)
 
     return desired
 
@@ -381,6 +393,19 @@ class PrTrackingFixer:
 
         if self.desired.is_ospr:
             self.fix_ospr()
+
+        if self.desired.is_refused:
+            self.fix_comments()
+
+    def fix_comments(self, comment_kwargs: Optional[Dict] = None) -> None:
+        fix_comment = True
+        if self.pr["state"] == "closed" and self.current.bot_comments:
+            # If the PR is closed and already has bot comments, then don't
+            # change the bot comment.
+            fix_comment = False
+        if fix_comment:
+            self._fix_bot_comment(comment_kwargs or {})
+        self._add_bot_comments()
 
     def fix_ospr(self) -> None:
         """
@@ -458,14 +483,7 @@ class PrTrackingFixer:
         self._fix_github_labels()
 
         # Check the bot comments.
-        fix_comment = True
-        if self.pr["state"] == "closed" and self.current.bot_comments:
-            # If the PR is closed and already has bot comments, then don't
-            # change the bot comment.
-            fix_comment = False
-        if fix_comment:
-            self._fix_bot_comment(comment_kwargs)
-        self._add_bot_comments()
+        self.fix_comments(comment_kwargs)
 
         # Check the GitHub projects.
         for project in (self.desired.github_projects - self.current.github_projects):
@@ -618,6 +636,10 @@ class PrTrackingFixer:
             if comment_body:
                 comment_body += "\n<!-- jenkins ok to test -->"
             needed_comments.remove(BotComment.OK_TO_TEST)
+
+        if BotComment.NO_CONTRIBUTIONS in needed_comments:
+            comment_body += no_contributions_thanks(self.pr)
+            needed_comments.remove(BotComment.NO_CONTRIBUTIONS)
 
         # These are handled in github_community_pr_comment and github_blended_pr_comment.
         if BotComment.NEED_CLA in needed_comments:

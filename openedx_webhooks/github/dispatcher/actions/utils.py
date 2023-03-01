@@ -133,6 +133,12 @@ CLA_STATUS_PRIVATE = {
     "target_url": CLA_DETAIL_URL,
 }
 
+CLA_STATUS_NO_CONTRIBUTIONS = {
+    "context": CLA_CONTEXT,
+    "state": "failure",
+    "description": "This repo does not accept contributions",
+}
+
 
 def set_cla_status_on_pr(repo_name_full: str, number: int, status: Dict[str, str]) -> bool:
     sha = _get_latest_commit_for_pull_request(repo_name_full, number)

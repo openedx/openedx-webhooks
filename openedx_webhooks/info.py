@@ -131,11 +131,6 @@ def get_orgs_file():
 def get_labels_file():
     return _read_yaml_data_file("labels.yaml")
 
-def get_orgs(key):
-    """Return the set of orgs with a true `key`."""
-    orgs = get_orgs_file()
-    return {o for o, info in orgs.items() if info.get(key, False)}
-
 def get_person_certain_time(person: Dict, certain_time: datetime.datetime) -> Dict:
     """
     Return person data structure for a particular time
@@ -153,11 +148,35 @@ def get_person_certain_time(person: Dict, certain_time: datetime.datetime) -> Di
         update_person.update(person["before"][before_date])
     return update_person
 
+
 def is_internal_pull_request(pull_request: PrDict) -> bool:
     """
-    Was this pull request created by someone who works for edX?
+    Is this pull request's author internal to the PR's GitHub org?
     """
-    return _is_pull_request(pull_request, "internal")
+    person = _pr_author_data(pull_request)
+    if person is None:
+        return False
+
+    org_name = person.get("institution")
+    if org_name is None:
+        return False
+
+    org_data = get_orgs_file().get(org_name)
+    if org_data is None:
+        return False
+    if org_data.get("internal", False):
+        # This is an temporary stop-gap: the old data will work with the new
+        # code so we can deploy new code and then update the data files.
+        # Once the data files are updated to remove "internal", we can get rid
+        # of this code.
+        return True
+
+    gh_org = pull_request["base"]["repo"]["owner"]["login"]
+    if gh_org in org_data.get("internal-ghorgs", []):
+        return True
+
+    return False
+
 
 # During the decoupling, it became clear that we needed to ignore pull
 # requests in edX private repos, since contractors there may not have
@@ -207,33 +226,6 @@ def _pr_author_data(pull_request: PrDict) -> Optional[Dict]:
     person = get_person_certain_time(people[author], created_at)
     return person
 
-def _is_pull_request(pull_request: PrDict, kind: str) -> bool:
-    """
-    Is this pull request of a certain kind?
-
-    Arguments:
-        pull_request: the dict data read from GitHub.
-        kind (str): either "internal" or "contractor".
-
-    Returns:
-        bool
-
-    """
-    person = _pr_author_data(pull_request)
-    if person is None:
-        return False
-
-    if person.get(kind, False):
-        # This person has the flag personally.
-        return True
-
-    the_orgs = get_orgs(kind)
-    if person.get("institution") in the_orgs:
-        # This person's institution has the flag.
-        return True
-
-    return False
-
 
 def is_committer_pull_request(pull_request: PrDict) -> bool:
     """
@@ -265,6 +257,18 @@ def is_committer_pull_request(pull_request: PrDict) -> bool:
             elif branch == access_branch:
                 return True
     return False
+
+
+NO_CONTRIBUTION_ORGS = {"edx"}
+
+def repo_refuses_contributions(pull_request: PrDict) -> bool:
+    """
+    Does this PR's repo accept contributions at all?
+
+    Returns True for no contributions.
+
+    """
+    return pull_request["base"]["repo"]["owner"]["login"] in NO_CONTRIBUTION_ORGS
 
 
 def pull_request_has_cla(pull_request: PrDict) -> bool:

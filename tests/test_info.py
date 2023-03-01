@@ -6,7 +6,7 @@ from datetime import datetime
 import pytest
 
 from openedx_webhooks.info import (
-    get_orgs, get_people_file, get_person_certain_time,
+    get_people_file, get_person_certain_time,
     is_committer_pull_request, is_internal_pull_request, is_draft_pull_request,
     pull_request_has_cla,
     get_blended_project_id,
@@ -33,14 +33,22 @@ def make_pull_request(fake_github):
     return _fn
 
 
-def test_internal_orgs():
-    orgs = get_orgs("internal")
-    assert isinstance(orgs, set)
-    assert "edX" in orgs
-    assert "2U/edX" in orgs
-
 def test_edx_employee(make_pull_request):
     pr = make_pull_request("nedbat")
+    assert is_internal_pull_request(pr)
+    pr = make_pull_request("nedbat", repo="edx/something")
+    assert is_internal_pull_request(pr)
+
+def test_tcril_employee(make_pull_request):
+    pr = make_pull_request("feanil")
+    assert is_internal_pull_request(pr)
+    pr = make_pull_request("feanil", repo="edx/something")
+    assert not is_internal_pull_request(pr)
+
+def test_intguy(make_pull_request):
+    pr = make_pull_request("intguy", repo="anywhere/anything")
+    assert is_internal_pull_request(pr)
+    pr = make_pull_request("intguy", repo="edx/something")
     assert is_internal_pull_request(pr)
 
 def test_ex_edx_employee(make_pull_request):
