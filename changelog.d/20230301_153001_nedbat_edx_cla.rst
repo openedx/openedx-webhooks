@@ -1,7 +1,0 @@
-.. A new scriv changelog fragment.
-
-- The "internal" setting is being replaced by an "internal-ghorgs" list on an
-  institution.  A pull request is now internal if the author's associated
-  institution (in orgs.yaml) has the org the PR is being made to as an
-  internal-ghorgs org.  The old "internal" setting is still used, but we'll be
-  deleting it once the new code is in place.

@@ -178,6 +178,15 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2023-03-02
+~~~~~~~~~~
+
+- The "internal" setting is being replaced by an "internal-ghorgs" list on an
+  institution.  A pull request is now internal if the author's associated
+  institution (in orgs.yaml) has the org the PR is being made to as an
+  internal-ghorgs org.  The old "internal" setting is still used, but we'll be
+  deleting it once the new code is in place.
+
 2023-01-30
 ~~~~~~~~~~
 
