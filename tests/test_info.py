@@ -45,12 +45,6 @@ def test_tcril_employee(make_pull_request):
     pr = make_pull_request("feanil", repo="edx/something")
     assert not is_internal_pull_request(pr)
 
-def test_intguy(make_pull_request):
-    pr = make_pull_request("intguy", repo="anywhere/anything")
-    assert is_internal_pull_request(pr)
-    pr = make_pull_request("intguy", repo="edx/something")
-    assert is_internal_pull_request(pr)
-
 def test_ex_edx_employee(make_pull_request):
     pr = make_pull_request("mmprandom")
     assert not is_internal_pull_request(pr)

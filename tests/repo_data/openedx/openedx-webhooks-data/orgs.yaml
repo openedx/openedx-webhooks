@@ -9,9 +9,6 @@ EduNEXT:
     contact:
         name: Luis Felipe Montoya
         email: contact@edunext.co
-InternalOrg:
-    agreement: institution
-    internal: True
 MIT:
     contractor: false
     agreement: institution
