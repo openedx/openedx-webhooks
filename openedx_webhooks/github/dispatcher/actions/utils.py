@@ -109,7 +109,7 @@ CLA_DETAIL_URL = "https://openedx.atlassian.net/wiki/spaces/COMM/pages/941457737
 CLA_STATUS_GOOD = {
     "context": CLA_CONTEXT,
     "state": "success",
-    "description": "The author is covered by a Contributor Agreement",
+    "description": "The author is authorized to contribute",
     "target_url": CLA_DETAIL_URL,
 }
 
@@ -136,7 +136,7 @@ CLA_STATUS_PRIVATE = {
 CLA_STATUS_NO_CONTRIBUTIONS = {
     "context": CLA_CONTEXT,
     "state": "failure",
-    "description": "This repo does not accept contributions",
+    "description": "This repo does not accept outside contributions except under contract",
 }
 
 
