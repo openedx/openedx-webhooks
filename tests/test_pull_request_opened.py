@@ -69,9 +69,10 @@ def test_pr_in_private_repo_opened(fake_github, fake_jira):
     assert pull_request_projects(pr.as_json()) == set()
 
 
-def test_pr_in_nocontrib_repo_opened(fake_github, fake_jira):
+@pytest.mark.parametrize("user", ["tusbar", "feanil"])
+def test_pr_in_nocontrib_repo_opened(fake_github, fake_jira, user):
     repo = fake_github.make_repo("edx", "some-public-repo")
-    pr = repo.make_pull_request(user="tusbar")
+    pr = repo.make_pull_request(user=user)
     key, anything_happened = pull_request_changed(pr.as_json())
     assert key is None
     assert anything_happened is True
