@@ -244,11 +244,12 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
 
     user_is_bot = is_bot_pull_request(pr)
     no_cla_is_needed = is_private_repo_no_cla_pull_request(pr)
+    is_internal = is_internal_pull_request(pr)
     if user_is_bot:
         logger.info(f"@{user} is a bot, not an ospr.")
     elif no_cla_is_needed:
         logger.info(f"{repo}#{num} (@{user}) is in a private repo, not an ospr")
-    elif is_internal_pull_request(pr):
+    elif is_internal:
         logger.info(f"@{user} acted on {repo}#{num}, internal PR, not an ospr")
     elif repo_refuses_contributions(pr):
         desired.is_refused = True
@@ -314,7 +315,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     elif desired.is_refused:
         desired.cla_check = CLA_STATUS_NO_CONTRIBUTIONS
         desired.is_ospr = False
-    elif has_signed_agreement:
+    elif is_internal or has_signed_agreement:
         desired.cla_check = CLA_STATUS_GOOD
     else:
         desired.cla_check = CLA_STATUS_BAD
