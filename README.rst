@@ -178,6 +178,14 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2023-03-03
+~~~~~~~~~~
+
+- Removed the code that used the now-obsolete ``internal`` setting in
+  orgs.yaml.
+
+- Tweaked the CLA messages.
+
 2023-03-02
 ~~~~~~~~~~
 
