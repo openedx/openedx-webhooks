@@ -78,6 +78,8 @@ def issue_created():
     logger.info("Jira issue created: {}".format(event["issue"]["key"]))
     logger.debug("/jira/issue/created data: {}".format(json.dumps(event)))
 
+    return "Doing nothing"
+
     if "issue" not in event:
         # It's rare, but we occasionally see junk data from JIRA. For example,
         # here's a real API request we've received on this handler:
@@ -227,6 +229,8 @@ def issue_updated():
 
     logger.info("Jira issue updated: {}".format(event["issue"]["key"]))
     logger.debug("/jira/issue/updated data: {}".format(json.dumps(event)))
+
+    return "Doing nothing"
 
     if "issue" not in event:
         # It's rare, but we occasionally see junk data from JIRA. For example,
