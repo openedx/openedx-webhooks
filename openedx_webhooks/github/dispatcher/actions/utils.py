@@ -116,7 +116,7 @@ CLA_STATUS_GOOD = {
 CLA_STATUS_BAD = {
     "context": CLA_CONTEXT,
     "state": "failure",
-    "description": "We need a signed Contributor Agreeement",
+    "description": "We need a signed Contributor Agreement",
     "target_url": CLA_DETAIL_URL,
 }
 
