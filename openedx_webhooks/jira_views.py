@@ -76,7 +76,8 @@ def issue_created():
     sentry_extra_context({"event": event})
 
     logger.info("Jira issue created: {}".format(event["issue"]["key"]))
-    logger.debug("/jira/issue/created data: {}".format(json.dumps(event)))
+    # Temporary verbose logging.
+    logger.info("/jira/issue/created data: {}".format(json.dumps(event)))
 
     return "Doing nothing"
 
@@ -228,7 +229,8 @@ def issue_updated():
     sentry_extra_context({"event": event})
 
     logger.info("Jira issue updated: {}".format(event["issue"]["key"]))
-    logger.debug("/jira/issue/updated data: {}".format(json.dumps(event)))
+    # Temporary verbose logging.
+    logger.info("/jira/issue/updated data: {}".format(json.dumps(event)))
 
     return "Doing nothing"
 
