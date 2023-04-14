@@ -2,7 +2,6 @@
 -r base.in
 -r doc.in
 
-codecov
 freezegun
 pytest
 pytest-cov
