@@ -12,7 +12,7 @@ arrow==1.2.3
     # via
     #   -r requirements/base.in
     #   rq-dashboard
-astroid==2.13.3
+astroid==2.15.2
     # via
     #   pylint
     #   pylint-celery
@@ -21,9 +21,8 @@ async-timeout==4.0.2
 attrs==22.2.0
     # via
     #   glom
-    #   pytest
     #   scriv
-babel==2.11.0
+babel==2.12.1
     # via sphinx
 backoff==2.2.1
     # via repo-tools-data-schema
@@ -31,11 +30,11 @@ billiard==3.6.4.0
     # via celery
 bleach==6.0.0
     # via readme-renderer
-blinker==1.5
+blinker==1.6.2
     # via
     #   -r requirements/base.in
     #   sentry-sdk
-boltons==21.0.0
+boltons==23.0.0
     # via
     #   face
     #   glom
@@ -51,7 +50,7 @@ certifi==2022.12.7
     #   sentry-sdk
 cffi==1.15.1
     # via cryptography
-charset-normalizer==3.0.1
+charset-normalizer==3.1.0
     # via requests
 click==8.1.3
     # via
@@ -79,15 +78,11 @@ click-repl==0.2.0
     # via celery
 code-annotations==1.3.0
     # via edx-lint
-codecov==2.1.12
-    # via -r requirements/test.in
 contextlib2==21.6.0
     # via schema
-coverage[toml]==7.1.0
-    # via
-    #   codecov
-    #   pytest-cov
-cryptography==39.0.0
+coverage[toml]==7.2.3
+    # via pytest-cov
+cryptography==40.0.2
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -96,18 +91,18 @@ defusedxml==0.7.1
     # via jira
 dill==0.3.6
     # via pylint
-docutils==0.17.1
+docutils==0.18.1
     # via
     #   readme-renderer
     #   sphinx
     #   sphinx-rtd-theme
-edx-lint==5.3.0
+edx-lint==5.3.4
     # via -r requirements/dev.in
-exceptiongroup==1.1.0
+exceptiongroup==1.1.1
     # via pytest
 face==20.1.1
     # via glom
-flask==2.2.2
+flask==2.2.3
     # via
     #   -r requirements/base.in
     #   flask-dance
@@ -117,7 +112,7 @@ flask==2.2.2
     #   sentry-sdk
 flask-dance[sqla]==6.2.0
     # via -r requirements/base.in
-flask-sqlalchemy==3.0.2
+flask-sqlalchemy==3.0.3
     # via -r requirements/base.in
 flask-sslify==0.1.5
     # via -r requirements/base.in
@@ -125,9 +120,9 @@ freezegun==1.2.2
     # via -r requirements/test.in
 github3-py==3.2.0
     # via -r requirements/base.in
-glom==23.1.1
+glom==23.3.0
     # via -r requirements/base.in
-greenlet==2.0.1
+greenlet==2.0.2
     # via sqlalchemy
 gunicorn==20.1.0
     # via -r requirements/base.in
@@ -139,7 +134,7 @@ iniconfig==2.0.0
     # via pytest
 iso8601==1.1.0
     # via -r requirements/base.in
-isort==5.11.4
+isort==5.12.0
     # via
     #   -r requirements/dev.in
     #   pylint
@@ -151,7 +146,7 @@ jinja2==3.1.2
     #   flask
     #   scriv
     #   sphinx
-jira==3.4.1
+jira==3.5.0
     # via -r requirements/base.in
 kombu==5.2.4
     # via celery
@@ -165,16 +160,16 @@ markupsafe==2.1.2
     #   werkzeug
 mccabe==0.7.0
     # via pylint
-mypy==0.991
+mypy==1.2.0
     # via -r requirements/dev.in
-mypy-extensions==0.4.3
+mypy-extensions==1.0.0
     # via mypy
 oauthlib[signedtoken]==3.2.2
     # via
     #   -r requirements/base.in
     #   flask-dance
     #   requests-oauthlib
-packaging==23.0
+packaging==23.1
     # via
     #   build
     #   jira
@@ -182,19 +177,19 @@ packaging==23.0
     #   sphinx
 pbr==5.11.1
     # via stevedore
-pip-tools==6.12.1
+pip-tools==6.13.0
     # via -r requirements/dev.in
-platformdirs==2.6.2
+platformdirs==3.2.0
     # via pylint
 pluggy==1.0.0
     # via pytest
-prompt-toolkit==3.0.36
+prompt-toolkit==3.0.38
     # via click-repl
-psycopg2==2.9.5
+psycopg2==2.9.6
     # via -r requirements/base.in
 pycparser==2.21
     # via cffi
-pygments==2.14.0
+pygments==2.15.0
     # via
     #   readme-renderer
     #   sphinx
@@ -202,7 +197,7 @@ pyjwt[crypto]==2.6.0
     # via
     #   github3-py
     #   oauthlib
-pylint==2.15.10
+pylint==2.17.2
     # via
     #   edx-lint
     #   pylint-celery
@@ -221,7 +216,7 @@ pylint-pytest==1.1.2
     # via -r requirements/dev.in
 pyproject-hooks==1.0.0
     # via build
-pytest==7.2.1
+pytest==7.3.1
     # via
     #   -r requirements/test.in
     #   pylint-pytest
@@ -239,14 +234,13 @@ python-dateutil==2.8.2
     #   arrow
     #   freezegun
     #   github3-py
-python-dotenv==0.21.1
+python-dotenv==1.0.0
     # via -r requirements/dev.in
-python-slugify==7.0.0
+python-slugify==8.0.1
     # via code-annotations
-pytz==2022.7.1
+pytz==2023.3
     # via
     #   -r requirements/test.in
-    #   babel
     #   celery
 pyyaml==6.0
     # via
@@ -255,7 +249,7 @@ pyyaml==6.0
     #   repo-tools-data-schema
 readme-renderer==37.3
     # via -r requirements/doc.in
-redis==4.4.2
+redis==4.5.4
     # via
     #   -r requirements/base.in
     #   rq
@@ -265,7 +259,6 @@ repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.g
 requests==2.28.2
     # via
     #   -r requirements/base.in
-    #   codecov
     #   flask-dance
     #   github3-py
     #   jira
@@ -284,7 +277,7 @@ requests-oauthlib==1.3.1
     #   jira
 requests-toolbelt==0.10.1
     # via jira
-rq==1.12.0
+rq==1.13.0
     # via
     #   -r requirements/base.in
     #   rq-dashboard
@@ -292,9 +285,9 @@ rq-dashboard==0.6.1
     # via -r requirements/dev.in
 schema==0.7.5
     # via repo-tools-data-schema
-scriv==1.2.0
+scriv==1.2.1
     # via -r requirements/dev.in
-sentry-sdk[flask]==1.14.0
+sentry-sdk[flask]==1.19.1
     # via -r requirements/base.in
 six==1.16.0
     # via
@@ -312,27 +305,30 @@ sphinx==5.3.0
     #   -r requirements/doc.in
     #   sphinx-rtd-theme
     #   sphinxcontrib-httpdomain
-sphinx-rtd-theme==1.1.1
+    #   sphinxcontrib-jquery
+sphinx-rtd-theme==1.2.0
     # via -r requirements/doc.in
 sphinxcontrib-applehelp==1.0.4
     # via sphinx
 sphinxcontrib-devhelp==1.0.2
     # via sphinx
-sphinxcontrib-htmlhelp==2.0.0
+sphinxcontrib-htmlhelp==2.0.1
     # via sphinx
 sphinxcontrib-httpdomain==1.8.1
     # via -r requirements/doc.in
+sphinxcontrib-jquery==4.1
+    # via sphinx-rtd-theme
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
 sphinxcontrib-qthelp==1.0.3
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
-sqlalchemy==2.0.0
+sqlalchemy==2.0.9
     # via
     #   flask-dance
     #   flask-sqlalchemy
-stevedore==4.1.1
+stevedore==5.0.0
     # via code-annotations
 text-unidecode==1.3
     # via python-slugify
@@ -344,9 +340,9 @@ tomli==2.0.1
     #   pylint
     #   pyproject-hooks
     #   pytest
-tomlkit==0.11.6
+tomlkit==0.11.7
     # via pylint
-typing-extensions==4.4.0
+typing-extensions==4.5.0
     # via
     #   astroid
     #   jira
@@ -354,7 +350,7 @@ typing-extensions==4.4.0
     #   sqlalchemy
 uritemplate==4.1.1
     # via github3-py
-urllib3==1.26.14
+urllib3==1.26.15
     # via
     #   requests
     #   sentry-sdk
@@ -371,13 +367,13 @@ wcwidth==0.2.6
     # via prompt-toolkit
 webencodings==0.5.1
     # via bleach
-werkzeug==2.2.2
+werkzeug==2.2.3
     # via
     #   flask
     #   flask-dance
-wheel==0.38.4
+wheel==0.40.0
     # via pip-tools
-wrapt==1.14.1
+wrapt==1.15.0
     # via astroid
 
 # The following packages are considered to be unsafe in a requirements file:
