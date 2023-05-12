@@ -50,26 +50,56 @@ def hook_receiver():
 
     event = request.get_json()
 
-    if "pull_request" not in event and "hook" in event and "zen" in event:
-        # this is a ping
-        repo = event.get("repository", {}).get("full_name")
-        logger.info(f"ping from {repo}")
-        return "PONG"
-
     action = event["action"]
-    repo = event["repository"]["full_name"]
+    repo = event.get("repository", {}).get("full_name")
     who = event.get("sender", {}).get("login", "someone")
     keys = set(event.keys()) - {"action", "sender", "repository", "organization", "installation"}
+    logger.info(f"Incoming GitHub event: {repo=!r}, {action=!r}, {who=!r}, keys: {' '.join(sorted(keys))}")
     if is_debug(__name__):
         print_long_json("Incoming GitHub event", event)
-    else:
-        logger.info(f"Incoming GitHub event: {repo=!r}, {action=!r}, {who=!r}, keys: {' '.join(sorted(keys))}")
 
-    # When the bot comments on a pull request, it causes an event, which gets
-    # sent to webhooks, including us.  We don't have to do anything for our
-    # own comment events.
-    if who == get_bot_username() and "comment" in event:
-        return "No thanks", 202
+    sentry_extra_context({"event": event})
+
+    # Actions and keys we get:
+    #   Creating a PR: action=opened, number, pull_request
+    #   Editing a PR: action=edited, changes, number, pull_request
+    #   Commenting on a PR: action=created, comment, issue
+    #       {"issue": { "html_url": "https://github.com/owner/repo/pull/101"}}
+    #   Creating an issue: action=opened, issue
+    #   Editing a comment: action=edited, changes, comment, issue
+    #   Commenting on an issue: action=created, comment, issue
+    #       {"issue": { "html_url": "https://github.com/owner/repo/issue/101"}}
+
+    match event:
+        case {"pull_request": _}:
+            return handle_pull_request_event(event)
+
+        case {"comment": _}:
+            return handle_comment_event(event)
+
+        case {"zen": _, "hook": _}:
+            # this is a ping
+            logger.info(f"ping from {repo}")
+            return "PONG"
+
+        case _:
+            # Ignore all other events.
+            return "Thank you", 202
+
+# Actions on pull requests that we'll act on.
+PR_ACTIONS = {
+    "opened",
+    "edited",
+    "closed",
+    "synchronize",
+    "ready_for_review",
+    "converted_to_draft",
+    "reopened",
+    "enqueued",
+}
+
+def handle_pull_request_event(event):
+    """Handle a webhook event about a pull request."""
 
     # This can't authenticate with Jira now, so don't do it:
     # q.enqueue(
@@ -82,20 +112,13 @@ def hook_receiver():
     # concatenated, just to combine them in the simplest possible way.
     # One of them is above this comment, the other is below.
 
-    sentry_extra_context({"event": event})
-
-    # This handler code only expected pull_request creation events, so ignore
-    # other events.
-    if "pull_request" not in event:
-        return "Thank you", 202
-
     pr = event["pull_request"]
     pr_number = pr["number"]
-    action = event["action"]
-    pr["hook_action"] = event["action"]
+    repo = event["repository"]["full_name"]
+    pr["hook_action"] = action = event["action"]
 
     pr_activity = f"{repo} #{pr_number} {action!r}"
-    if action in ["opened", "edited", "closed", "synchronize", "ready_for_review", "converted_to_draft", "reopened", "enqueued"]:
+    if action in PR_ACTIONS:
         logger.info(f"{pr_activity}, processing...")
         result = pull_request_changed_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
     else:
@@ -109,6 +132,20 @@ def hook_receiver():
     resp.status_code = 202
     resp.headers["Location"] = status_url
     return resp
+
+
+def handle_comment_event(event):
+    """Handle a webhook event about a comment."""
+
+    # When the bot comments on a pull request, it causes an event, which gets
+    # sent to webhooks, including us.  We don't have to do anything for our
+    # own comment events.
+    who = event.get("sender", {}).get("login", "someone")
+    if who == get_bot_username():
+        return "No thanks", 202
+
+    # Soon to come: handling comments.
+    return "No thanks", 202
 
 
 @github_bp.route("/rescan", methods=("GET",))
