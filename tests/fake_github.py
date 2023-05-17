@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Set
 from urllib.parse import unquote
 
-from openedx_webhooks.github.dispatcher.actions.utils import CLA_CONTEXT
+from openedx_webhooks.cla_check import CLA_CONTEXT
 from openedx_webhooks.types import GhProject
 
 from . import faker

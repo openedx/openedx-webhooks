@@ -24,11 +24,7 @@ from openedx_webhooks.bot_comments import (
     github_end_survey_comment,
     no_contributions_thanks,
 )
-from openedx_webhooks.gh_projects import (
-    add_pull_request_to_project,
-    pull_request_projects,
-)
-from openedx_webhooks.github.dispatcher.actions.utils import (
+from openedx_webhooks.cla_check import (
     CLA_STATUS_BAD,
     CLA_STATUS_BOT,
     CLA_STATUS_GOOD,
@@ -36,6 +32,10 @@ from openedx_webhooks.github.dispatcher.actions.utils import (
     CLA_STATUS_PRIVATE,
     cla_status_on_pr,
     set_cla_status_on_pr,
+)
+from openedx_webhooks.gh_projects import (
+    add_pull_request_to_project,
+    pull_request_projects,
 )
 from openedx_webhooks.info import (
     get_blended_project_id,

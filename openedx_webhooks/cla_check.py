@@ -9,21 +9,6 @@ from openedx_webhooks.types import PrDict
 from openedx_webhooks.utils import log_check_response
 
 
-def find_issues_for_pull_request(jira, pull_request_url):
-    """
-    Find corresponding JIRA issues for a given GitHub pull request.
-
-    Arguments:
-        jira (jira.JIRA): An authenticated JIRA API client session
-        pull_request_url (str)
-
-    Returns:
-        jira.client.ResultList[jira.Issue]
-    """
-    jql = 'project=OSPR AND cf[10904]="{}"'.format(pull_request_url)
-    return jira.search_issues(jql)
-
-
 def _get_latest_commit_for_pull_request(repo_name_full: str, number: int) -> Optional[str]:
     """
     Lookup PR commit details and pull out the SHA of the most recent commit.
@@ -54,10 +39,10 @@ def _get_latest_commit_for_pull_request_data(repo_name_full: str, number: int) -
 
 def _get_commit_status_for_cla(url) -> Optional[Dict[str, str]]:
     """
-    Send a GET request to the Github API to lookup the build status.
+    Send a GET request to the GitHub API to lookup the build status.
 
     Returns:
-        a dict with state, description, and target_url.
+        a dict with context, state, description, and target_url.
     """
     logger.debug("CLA: GET %s", url)
     response = get_github_session().get(url)
@@ -81,7 +66,7 @@ def _get_commit_status_for_cla(url) -> Optional[Dict[str, str]]:
 
 def _update_commit_status_for_cla(url, payload):
     """
-    Send a POST request to the Github API to update the build status
+    Send a POST request to the GitHub API to update the build status
     """
     logger.debug("CLA: POST %s %s", url, payload)
     response = get_github_session().post(url, json=payload)
@@ -92,6 +77,12 @@ def _update_commit_status_for_cla(url, payload):
 
 
 def cla_status_on_pr(pull_request: PrDict) -> Optional[Dict[str, str]]:
+    """
+    Get the CLA status for a pull request.
+
+    Returns:
+        a dict with context, state, description, and target_url.
+    """
     repo_name_full = pull_request['base']['repo']['full_name']
     number = pull_request['number']
     sha = _get_latest_commit_for_pull_request(repo_name_full, number)
@@ -104,7 +95,10 @@ def cla_status_on_pr(pull_request: PrDict) -> Optional[Dict[str, str]]:
 # A status is a dict of values. We only have a few that we use, so build them
 # all here.
 CLA_CONTEXT = "openedx/cla"
-CLA_DETAIL_URL = "https://openedx.atlassian.net/wiki/spaces/COMM/pages/941457737/How+to+start+contributing+to+the+Open+edX+code+base"
+CLA_DETAIL_URL = (
+    "https://openedx.atlassian.net/wiki/spaces/COMM/pages/941457737/" +
+        "How+to+start+contributing+to+the+Open+edX+code+base"
+)
 
 CLA_STATUS_GOOD = {
     "context": CLA_CONTEXT,
@@ -141,6 +135,18 @@ CLA_STATUS_NO_CONTRIBUTIONS = {
 
 
 def set_cla_status_on_pr(repo_name_full: str, number: int, status: Dict[str, str]) -> bool:
+    """
+    Set the CLA check status on a pull request.
+
+    Arguments:
+        repo_name_full: a string like "openedx/edx-platform"
+        number: the pull request number
+        status:
+            a dict with context, state, description, and target_url as expected
+            by the GitHub API:
+            https://docs.github.com/en/rest/commits/statuses#create-a-commit-status
+
+    """
     sha = _get_latest_commit_for_pull_request(repo_name_full, number)
     logger.debug("CLA: Update status to %r for commit %r", status, sha)
     payload = {

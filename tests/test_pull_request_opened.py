@@ -9,8 +9,7 @@ from openedx_webhooks.bot_comments import (
     BotComment,
     is_comment_kind,
 )
-from openedx_webhooks.gh_projects import pull_request_projects
-from openedx_webhooks.github.dispatcher.actions.utils import (
+from openedx_webhooks.cla_check import (
     CLA_CONTEXT,
     CLA_STATUS_BAD,
     CLA_STATUS_BOT,
@@ -18,6 +17,7 @@ from openedx_webhooks.github.dispatcher.actions.utils import (
     CLA_STATUS_NO_CONTRIBUTIONS,
     CLA_STATUS_PRIVATE,
 )
+from openedx_webhooks.gh_projects import pull_request_projects
 from openedx_webhooks.info import get_jira_issue_key
 from openedx_webhooks.tasks.github import pull_request_changed
 

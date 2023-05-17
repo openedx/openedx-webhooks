@@ -6,7 +6,7 @@ from ....jira.tasks import update_latest_github_activity
 from ....lib.github.client import get_authenticated_gh_client
 from ....lib.jira.client import get_authenticated_jira_client
 from ...models import GithubEvent
-from .utils import find_issues_for_pull_request
+from ....tasks.jira_work import find_issues_for_pull_request
 
 EVENT_TYPES = (
     'issue_comment',
