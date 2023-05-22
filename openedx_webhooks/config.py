@@ -20,11 +20,17 @@ class DefaultConfig:
     def __init__(self):
         # Convert the heroku postgres URI to one that is compatible with SQLAlchemy
         # See https://help.heroku.com/ZKNTJQSK/why-is-sqlalchemy-1-4-x-not-connecting-to-heroku-postgres
-
         uri = self.SQLALCHEMY_DATABASE_URI
         if uri.startswith("postgres://"):
             uri = uri.replace("postgres://", "postgresql://", 1)
             self.SQLALCHEMY_DATABASE_URI = uri
+
+        # Don't require cert validation if usng redis over TLS because heroku redis uses self signed certs.
+        # https://help.heroku.com/HC0F8CUS/redis-connection-issues
+        redis_tls_options = "?ssl_cert_reqs=none"
+        if self.BROKER_URL.startswith("rediss"):
+            self.BROKER_URL += redis_tls_options
+            self.CELERY_RESULT_BACKEND += redis_tls_options
 
 
 class WorkerConfig(DefaultConfig):
