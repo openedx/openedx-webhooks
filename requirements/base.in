@@ -26,5 +26,4 @@ psycopg2
 redis
 requests
 requests-oauthlib
-rq
 sentry-sdk[flask]
