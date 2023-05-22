@@ -14,8 +14,8 @@ class DefaultConfig:
     CELERY_TASK_SERIALIZER = "json"
     CELERY_RESULT_SERIALIZER = "json"
     CELERY_EAGER_PROPAGATES = True
-    BROKER_URL = os.environ.get("REDIS_URL", "redis://")
-    CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://")
+    BROKER_URL = os.environ.get('REDIS_TLS_URL', os.environ.get("REDIS_URL", "redis://"))
+    CELERY_RESULT_BACKEND = os.environ.get('REDIS_TLS_URL', os.environ.get("REDIS_URL", "redis://"))
 
     def __init__(self):
         # Convert the heroku postgres URI to one that is compatible with SQLAlchemy
