@@ -59,7 +59,7 @@ click-repl==0.2.0
     # via celery
 contextlib2==21.6.0
     # via schema
-coverage[toml]==7.2.5
+coverage[toml]==7.2.6
     # via pytest-cov
 cryptography==40.0.2
     # via
@@ -80,14 +80,8 @@ face==20.1.1
 flask==2.3.2
     # via
     #   -r requirements/base.in
-    #   flask-dance
-    #   flask-sqlalchemy
     #   flask-sslify
     #   sentry-sdk
-flask-dance[sqla]==7.0.0
-    # via -r requirements/base.in
-flask-sqlalchemy==3.0.3
-    # via -r requirements/base.in
 flask-sslify==0.1.5
     # via -r requirements/base.in
 freezegun==1.2.2
@@ -96,8 +90,6 @@ github3-py==4.0.1
     # via -r requirements/base.in
 glom==23.3.0
     # via -r requirements/base.in
-greenlet==2.0.2
-    # via sqlalchemy
 gunicorn==20.1.0
     # via -r requirements/base.in
 idna==3.4
@@ -128,7 +120,6 @@ markupsafe==2.1.2
 oauthlib[signedtoken]==3.2.2
     # via
     #   -r requirements/base.in
-    #   flask-dance
     #   requests-oauthlib
 packaging==23.1
     # via
@@ -139,8 +130,6 @@ pluggy==1.0.0
     # via pytest
 prompt-toolkit==3.0.38
     # via click-repl
-psycopg2==2.9.6
-    # via -r requirements/base.in
 pycparser==2.21
     # via cffi
 pygments==2.15.1
@@ -182,10 +171,9 @@ redis==4.5.5
     # via -r requirements/base.in
 repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.git
     # via -r requirements/test.in
-requests==2.30.0
+requests==2.31.0
     # via
     #   -r requirements/base.in
-    #   flask-dance
     #   github3-py
     #   jira
     #   repo-tools-data-schema
@@ -198,13 +186,12 @@ requests-mock==1.10.0
 requests-oauthlib==1.3.1
     # via
     #   -r requirements/base.in
-    #   flask-dance
     #   jira
 requests-toolbelt==1.0.0
     # via jira
 schema==0.7.5
     # via repo-tools-data-schema
-sentry-sdk[flask]==1.23.1
+sentry-sdk[flask]==1.24.0
     # via -r requirements/base.in
 six==1.16.0
     # via
@@ -217,12 +204,11 @@ snowballstemmer==2.2.0
     # via sphinx
 sphinx==5.3.0
     # via
-    #   -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/doc.in
     #   sphinx-rtd-theme
     #   sphinxcontrib-httpdomain
     #   sphinxcontrib-jquery
-sphinx-rtd-theme==1.2.0
+sphinx-rtd-theme==1.2.1
     # via -r requirements/doc.in
 sphinxcontrib-applehelp==1.0.4
     # via sphinx
@@ -240,28 +226,20 @@ sphinxcontrib-qthelp==1.0.3
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
-sqlalchemy==2.0.15
-    # via
-    #   flask-dance
-    #   flask-sqlalchemy
 tomli==2.0.1
     # via
     #   coverage
     #   pytest
-typing-extensions==4.5.0
-    # via
-    #   jira
-    #   sqlalchemy
+typing-extensions==4.6.1
+    # via jira
 uritemplate==4.1.1
     # via github3-py
-urllib3==1.26.15
+urllib3==1.26.16
     # via
     #   requests
     #   sentry-sdk
 urlobject==2.4.3
-    # via
-    #   -r requirements/base.in
-    #   flask-dance
+    # via -r requirements/base.in
 vine==5.0.0
     # via
     #   amqp
@@ -272,9 +250,8 @@ wcwidth==0.2.6
 webencodings==0.5.1
     # via bleach
 werkzeug==2.3.4
-    # via
-    #   flask
-    #   flask-dance
+    # via flask
 
 # The following packages are considered to be unsafe in a requirements file:
-# setuptools
+setuptools==67.8.0
+    # via gunicorn

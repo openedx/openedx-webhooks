@@ -15,10 +15,14 @@ pip-tools==6.13.0
 pyproject-hooks==1.0.0
     # via build
 tomli==2.0.1
-    # via build
+    # via
+    #   build
+    #   pyproject-hooks
 wheel==0.40.0
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
-# pip
-# setuptools
+pip==23.1.2
+    # via pip-tools
+setuptools==67.8.0
+    # via pip-tools

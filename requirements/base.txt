@@ -61,22 +61,14 @@ face==20.1.1
 flask==2.3.2
     # via
     #   -r requirements/base.in
-    #   flask-dance
-    #   flask-sqlalchemy
     #   flask-sslify
     #   sentry-sdk
-flask-dance[sqla]==7.0.0
-    # via -r requirements/base.in
-flask-sqlalchemy==3.0.3
-    # via -r requirements/base.in
 flask-sslify==0.1.5
     # via -r requirements/base.in
 github3-py==4.0.1
     # via -r requirements/base.in
 glom==23.3.0
     # via -r requirements/base.in
-greenlet==2.0.2
-    # via sqlalchemy
 gunicorn==20.1.0
     # via -r requirements/base.in
 idna==3.4
@@ -101,14 +93,11 @@ markupsafe==2.1.2
 oauthlib[signedtoken]==3.2.2
     # via
     #   -r requirements/base.in
-    #   flask-dance
     #   requests-oauthlib
 packaging==23.1
     # via jira
 prompt-toolkit==3.0.38
     # via click-repl
-psycopg2==2.9.6
-    # via -r requirements/base.in
 pycparser==2.21
     # via cffi
 pyjwt[crypto]==2.7.0
@@ -125,10 +114,9 @@ pyyaml==6.0
     # via -r requirements/base.in
 redis==4.5.5
     # via -r requirements/base.in
-requests==2.30.0
+requests==2.31.0
     # via
     #   -r requirements/base.in
-    #   flask-dance
     #   github3-py
     #   jira
     #   requests-oauthlib
@@ -136,34 +124,25 @@ requests==2.30.0
 requests-oauthlib==1.3.1
     # via
     #   -r requirements/base.in
-    #   flask-dance
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==1.23.1
+sentry-sdk[flask]==1.24.0
     # via -r requirements/base.in
 six==1.16.0
     # via
     #   click-repl
     #   python-dateutil
-sqlalchemy==2.0.15
-    # via
-    #   flask-dance
-    #   flask-sqlalchemy
-typing-extensions==4.5.0
-    # via
-    #   jira
-    #   sqlalchemy
+typing-extensions==4.6.1
+    # via jira
 uritemplate==4.1.1
     # via github3-py
-urllib3==1.26.15
+urllib3==1.26.16
     # via
     #   requests
     #   sentry-sdk
 urlobject==2.4.3
-    # via
-    #   -r requirements/base.in
-    #   flask-dance
+    # via -r requirements/base.in
 vine==5.0.0
     # via
     #   amqp
@@ -172,9 +151,8 @@ vine==5.0.0
 wcwidth==0.2.6
     # via prompt-toolkit
 werkzeug==2.3.4
-    # via
-    #   flask
-    #   flask-dance
+    # via flask
 
 # The following packages are considered to be unsafe in a requirements file:
-# setuptools
+setuptools==67.8.0
+    # via gunicorn
