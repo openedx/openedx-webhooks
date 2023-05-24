@@ -8,8 +8,8 @@ from flask import current_app as app
 from flask import (
     Blueprint, jsonify, render_template, request, url_for
 )
-from flask_dance.contrib.github import github
 
+from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.debug import is_debug, print_long_json
 from openedx_webhooks.info import get_bot_username
 from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
@@ -224,7 +224,7 @@ def process_pr():
         resp.status_code = 400
         return resp
     num = int(num)
-    pr_resp = github.get("/repos/{repo}/pulls/{num}".format(repo=repo, num=num))
+    pr_resp = get_github_session().get("/repos/{repo}/pulls/{num}".format(repo=repo, num=num))
     if not pr_resp.ok:
         resp = jsonify({"error": pr_resp.text})
         resp.status_code = 400

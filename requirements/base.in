@@ -2,8 +2,6 @@
 
 -c constraints.txt
 
-Flask-Dance[sqla]
-Flask-SQLAlchemy
 Flask
 celery
 github3.py
@@ -22,7 +20,6 @@ iso8601
 jira
 logging_tree
 oauthlib[signedtoken]
-psycopg2
 redis
 requests
 requests-oauthlib

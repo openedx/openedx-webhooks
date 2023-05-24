@@ -214,7 +214,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
             current.jira_status = issue["fields"]["status"]["name"]
             current.jira_labels = set(issue["fields"]["labels"])
 
-            custom_fields = get_jira_custom_fields(get_jira_session())
+            custom_fields = get_jira_custom_fields()
             current.jira_epic_key = issue["fields"].get(custom_fields["Epic Link"])
             current.jira_extra_fields = {
                 name: value
@@ -279,7 +279,7 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             blended_epic = find_blended_epic(blended_id)
             if blended_epic is not None:
                 desired.jira_epic = blended_epic
-                custom_fields = get_jira_custom_fields(get_jira_session())
+                custom_fields = get_jira_custom_fields()
                 map_1_2 = blended_epic["fields"].get(custom_fields["Platform Map Area (Levels 1 & 2)"])
                 if map_1_2 is not None:
                     desired.jira_extra_fields["Platform Map Area (Levels 1 & 2)"] = map_1_2
@@ -805,7 +805,7 @@ class FixingActions:
         Returns the JSON describing the issue.
         """
 
-        custom_fields = get_jira_custom_fields(get_jira_session())
+        custom_fields = get_jira_custom_fields()
         new_issue = {
             "fields": {
                 "project": {

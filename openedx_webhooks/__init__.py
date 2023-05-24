@@ -5,7 +5,6 @@ import traceback
 
 from celery import Celery
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_sslify import SSLify
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -25,7 +24,6 @@ logger.setLevel(log_level)
 # Github3 is chatty on info-level, quiet it.
 logging.getLogger("github3").setLevel("WARN")
 
-db = SQLAlchemy()
 celery = Celery(strict_typing=False)
 
 
@@ -46,7 +44,6 @@ def create_app(config=None):
     config_obj = import_string(expand_config(config))()
     app.config.from_object(config_obj)
 
-    db.init_app(app)
     create_celery_app(app)
     if not app.debug:
         SSLify(app)

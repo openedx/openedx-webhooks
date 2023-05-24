@@ -115,7 +115,7 @@ def update_jira_issue(
     """
     fields: Dict[str, Any] = {}
     notify = "false"
-    custom_fields = get_jira_custom_fields(get_jira_session())
+    custom_fields = get_jira_custom_fields()
     if summary is not None:
         fields["summary"] = summary
         notify = "true"

@@ -31,7 +31,6 @@ jobs:
 
     - name: Run Tests
       run: |
-        python manage.py dbcreate
         make test
         cd docs && make html
 
