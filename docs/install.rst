@@ -11,7 +11,6 @@ Install Add-ons
 
 This project uses:
 
-* `Heroku Postgres <https://elements.heroku.com/addons/heroku-postgresql>`_
 * `Heroku Redis <https://elements.heroku.com/addons/heroku-redis>`_
 * `Heroku Scheduler <https://elements.heroku.com/addons/scheduler>`_
 
@@ -110,7 +109,6 @@ Deploy
 
 1. Set up your Heroku git remote to point to your Heroku application
 1. ``git push heroku``
-1. Initialize the database by running ``heroku run python manage.py dbcreate``
 1. Visit your website -- it should load!
 1. Enjoy the sweet, sweet taste of API integration
 

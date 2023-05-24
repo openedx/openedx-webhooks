@@ -52,7 +52,6 @@ Develop
 
 This app relies on the following addons from Heroku:
 
--  PostgreSQL
 -  Redis
 -  Papertrail
 -  Scheduler

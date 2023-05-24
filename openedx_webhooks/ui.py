@@ -1,10 +1,10 @@
 import logging
 
 from flask import Blueprint, render_template
-from flask_dance.contrib.github import github as github_session
-from flask_dance.contrib.jira import jira as jira_session
-from openedx_webhooks.utils import requires_auth
+
 from openedx_webhooks import settings
+from openedx_webhooks.auth import get_github_session, get_jira_session
+from openedx_webhooks.utils import requires_auth
 
 ui = Blueprint('ui', __name__)
 logger = logging.getLogger(__name__)
@@ -17,26 +17,23 @@ def index():
     this application can perform.
     """
     github_username = None
-    if github_session.authorized:
-        gh_user_resp = github_session.get("/user")
-        if gh_user_resp.ok:
-            try:
-                github_username = gh_user_resp.json()["login"]
-            except Exception:
-                logger.error("Failed to process response: {}".format(gh_user_resp.text))
-                raise
-
+    gh_user_resp = get_github_session().get("/user")
+    if gh_user_resp.ok:
+        try:
+            github_username = gh_user_resp.json()["login"]
+        except Exception:
+            logger.error("Failed to process response: {}".format(gh_user_resp.text))
+            raise
 
     jira_username = None
-    if settings.JIRA_SERVER and jira_session.authorized:
-        jira_user_resp = jira_session.get("/rest/api/2/myself")
+    if settings.JIRA_SERVER:
+        jira_user_resp = get_jira_session().get("/rest/api/2/myself")
         if jira_user_resp.ok:
             try:
                 jira_username = jira_user_resp.json()["displayName"]
             except Exception:
                 logger.error("Failed to process response: {}".format(jira_user_resp.text))
                 raise
-
 
     return render_template("main.html",
         github_username=github_username, jira_username=jira_username,

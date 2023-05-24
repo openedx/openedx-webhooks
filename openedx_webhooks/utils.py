@@ -15,7 +15,6 @@ from typing import Dict, Optional
 import cachetools.func
 import requests
 from flask import request, Response
-from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
 from openedx_webhooks import logger, settings
@@ -291,12 +290,12 @@ def sentry_extra_context(data_dict):
 
 
 @memoize_timed(minutes=30)
-def get_jira_custom_fields(session=None):
+def get_jira_custom_fields():
     """
     Return a name-to-id mapping for the custom fields on JIRA.
     """
     if settings.JIRA_SERVER:
-        session = session or jira
+        session = get_jira_session()
         field_resp = session.get("/rest/api/2/field")
         field_resp.raise_for_status()
         fields = field_resp.json()

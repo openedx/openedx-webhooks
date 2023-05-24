@@ -8,10 +8,9 @@ import logging
 from flask import (
     Blueprint, make_response, render_template, request,
 )
-from flask_dance.contrib.github import github
-from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
+from openedx_webhooks.auth import get_github_session, get_jira_session
 from openedx_webhooks.tasks.github_work import get_repo_labels, synchronize_labels
 from openedx_webhooks.utils import (
     jira_get, jira_paginated_get, sentry_extra_context,
@@ -48,7 +47,7 @@ def rescan_issues():
     jql = request.form.get("jql") or 'status = "Needs Triage" ORDER BY key'
     sentry_extra_context({"jql": jql})
     issues = jira_paginated_get(
-        "/rest/api/2/search", jql=jql, obj_name="issues", session=jira,
+        "/rest/api/2/search", jql=jql, obj_name="issues", session=get_jira_session(),
     )
     results = {}
 
@@ -195,7 +194,7 @@ def issue_opened(issue):
                 "id": transitions[new_status],
             }
         }
-        transition_resp = jira.post(transitions_url, json=body)
+        transition_resp = get_jira_session().post(transitions_url, json=body)
         transition_resp.raise_for_status()
 
     logger.info(
@@ -302,6 +301,7 @@ def jira_issue_rejected(issue):
     pr_url = github_pr_url(issue)
     issue_url = pr_url.replace("pulls", "issues")
 
+    github = get_github_session()
     gh_issue_resp = github.get(issue_url)
     gh_issue_resp.raise_for_status()
     gh_issue = gh_issue_resp.json()
@@ -340,6 +340,7 @@ def jira_issue_status_changed(issue, changelog):
     new_status = status_changelog["toString"]
 
     # get github issue
+    github = get_github_session()
     gh_issue_resp = github.get(issue_url)
     gh_issue_resp.raise_for_status()
     gh_issue = gh_issue_resp.json()
