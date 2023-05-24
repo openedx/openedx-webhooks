@@ -176,17 +176,18 @@ def test_rescan_closed_with_wrong_cla(fake_github, fake_jira):
 
 
 @pytest.mark.parametrize("new_jira", [None, "https://new-jira.atlassian.net"])
-def test_close_jira_pr_with_new_jira(fake_github, fake_jira, new_jira, is_merged):
+def test_close_jira_pr_with_new_jira(
+    fake_github, requests_mocker, new_jira, is_merged
+):
     # Open the pull request with a jira server.
     with jira_server("https://my-jira.atlassian.net"):
         pr = fake_github.make_pull_request(user="tusbar")
         issue_id1, _ = pull_request_changed(pr.as_json())
 
     assert issue_id1 is not None
-    fake_jira.reset_mock()
 
     # Later, close it when we have no jira server or a different jira server.
-    with jira_server(new_jira):
+    with jira_server(new_jira) as fake_jira:
         pr.close(merge=is_merged)
         issue_id2, _ = pull_request_changed(pr.as_json())
 

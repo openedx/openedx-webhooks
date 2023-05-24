@@ -4,8 +4,8 @@ Operations on GitHub data.
 
 from typing import Any, Dict
 
+from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.info import get_labels_file
-from openedx_webhooks.oauth import get_github_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.utils import (
     log_check_response,

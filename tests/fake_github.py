@@ -325,7 +325,7 @@ class Flaky404:
 
 class FakeGitHub(faker.Faker):
 
-    def __init__(self, login: str = "some-user", fraction_404=0):
+    def __init__(self, login, fraction_404=0):
         super().__init__(host="https://api.github.com")
         if fraction_404:
             self.add_middleware(Flaky404(fraction_404).middleware)

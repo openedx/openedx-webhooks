@@ -18,9 +18,9 @@ def get_authenticated_jira_client() -> JIRA:
     Create an authenticated JIRA session
     """
     server = environ_get('JIRA_SERVER')
-    oauth_info = dict(
-        consumer_key=environ_get('JIRA_OAUTH_CONSUMER_KEY'),
-        key_cert=environ_get('JIRA_OAUTH_RSA_KEY'),
+    basic_auth = (
+        environ_get("JIRA_USER_EMAIL"),
+        environ_get("JIRA_USER_TOKEN"),
     )
-    jira_client = JIRA(server, oauth=oauth_info)
+    jira_client = JIRA(server=server, basic_auth=basic_auth)
     return jira_client

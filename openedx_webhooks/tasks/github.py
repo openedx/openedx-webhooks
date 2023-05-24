@@ -9,8 +9,8 @@ from typing import Dict, Optional, Tuple
 from urlobject import URLObject
 
 from openedx_webhooks import celery
+from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.info import is_internal_pull_request
-from openedx_webhooks.oauth import get_github_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.pr_tracking import (
     current_support_state,

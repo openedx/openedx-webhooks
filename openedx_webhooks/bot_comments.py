@@ -17,7 +17,7 @@ from openedx_webhooks.info import (
     is_draft_pull_request,
     pull_request_has_cla,
 )
-from openedx_webhooks.oauth import get_jira_session
+from openedx_webhooks.auth import get_jira_session
 from openedx_webhooks.types import JiraDict, PrDict
 from openedx_webhooks.utils import get_jira_custom_fields
 

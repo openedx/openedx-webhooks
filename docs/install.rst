@@ -109,12 +109,10 @@ Deploy
 ------
 
 1. Set up your Heroku git remote to point to your Heroku application
-2. ``git push heroku``
-3. Initialize the database by running ``heroku run python manage.py dbcreate``
-4. Visit your website -- it should load!
-5. Visit ``/login/jira`` and authorize with Jira
-6. Visit ``/login/github`` and authorize with GitHub
-7. Enjoy the sweet, sweet taste of API integration
+1. ``git push heroku``
+1. Initialize the database by running ``heroku run python manage.py dbcreate``
+1. Visit your website -- it should load!
+1. Enjoy the sweet, sweet taste of API integration
 
 Recurring Tasks
 ---------------

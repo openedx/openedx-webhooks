@@ -3,11 +3,9 @@
 import re
 from pathlib import Path
 from typing import Dict
-from unittest import mock
 
 import pytest
 import requests_mock
-from flask_dance.consumer.requests import OAuth2Session
 
 import openedx_webhooks
 import openedx_webhooks.utils
@@ -68,13 +66,6 @@ def hard_cache_yaml_data_files(session_mocker) -> None:
     session_mocker.patch("openedx_webhooks.info._read_yaml_data_file", new_read_yaml_data_file)
 
 
-class FakeBlueprint:
-    def __init__(self, token):
-        self.token = token
-        self.client_id = "FooId"
-        self.client_secret = "FooSecret"
-
-
 def pytest_addoption(parser):
     parser.addoption(
         "--percent-404",
@@ -83,15 +74,12 @@ def pytest_addoption(parser):
         default="0",
     )
 
-TEST_OSPR_PROJECT = ("testorg", 17)
-TEST_BLENDED_PROJECT = ("blendorg", 42)
-TEST_JIRA = "https://test.atlassian.net"
 
 @pytest.fixture(autouse=True)
 def settings_for_tests(mocker):
-    mocker.patch("openedx_webhooks.settings.GITHUB_OSPR_PROJECT", TEST_OSPR_PROJECT)
-    mocker.patch("openedx_webhooks.settings.GITHUB_BLENDED_PROJECT", TEST_BLENDED_PROJECT)
-    mocker.patch("openedx_webhooks.settings.JIRA_SERVER", TEST_JIRA)
+    for name, value in vars(settings.TestSettings).items():
+        if name.isupper():
+            mocker.patch(f"openedx_webhooks.settings.{name}", value)
 
 
 @pytest.fixture
@@ -106,20 +94,7 @@ def fake_github(pytestconfig, mocker, requests_mocker, fake_repo_data):
 
 
 @pytest.fixture
-def mock_jira_bp(mocker):
-    token = {"access_token": "faketoken", "token_type": "bearer"}
-    jira_session = OAuth2Session(
-        base_url=TEST_JIRA,
-        blueprint=FakeBlueprint(token),
-    )
-    mocker.patch("flask_dance.contrib.jira.jira", jira_session)
-    mock_bp = mock.Mock()
-    mock_bp.session = jira_session
-    mocker.patch("openedx_webhooks.oauth.jira_bp", mock_bp)
-
-
-@pytest.fixture
-def fake_jira(mock_jira_bp, requests_mocker):
+def fake_jira(requests_mocker):
     the_fake_jira = FakeJira(settings.JIRA_SERVER)
     the_fake_jira.install_mocks(requests_mocker)
     return the_fake_jira
@@ -157,5 +132,8 @@ def is_merged(request):
 ])
 def has_jira(request, mocker):
     """Makes tests try both with and without accessing Jira."""
-    mocker.patch("openedx_webhooks.settings.JIRA_SERVER", TEST_JIRA if request.param else None)
+    mocker.patch(
+        "openedx_webhooks.settings.JIRA_SERVER",
+        settings.TestSettings.JIRA_SERVER if request.param else None
+    )
     return request.param
