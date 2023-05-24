@@ -12,9 +12,6 @@ docs/_build
 prof
 coverage.xml
 htmlcov
-jira.pem
-jira.pub
-jira.uuid
 openedx_webhooks.db
 openedx_webhooks.egg-info/
 requirements/private.in

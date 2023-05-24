@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 
 import requests
 
-from openedx_webhooks.oauth import get_jira_session
+from openedx_webhooks.auth import get_jira_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.utils import (
     get_jira_custom_fields,

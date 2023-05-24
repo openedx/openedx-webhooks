@@ -19,7 +19,7 @@ from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
 from openedx_webhooks import logger, settings
-from openedx_webhooks.oauth import get_github_session, jira_get
+from openedx_webhooks.auth import get_github_session, jira_get
 from openedx_webhooks.types import JiraDict
 
 

@@ -12,7 +12,7 @@
   {% endif %}
 {% endwith %}
     <p>This is an automated system that synchronizes several different services
-       to make developing <a href="http://openedx.org">Open edX</a> more smooth.
+       to make developing <a href="http://openedx.org">Open edX</a> smoother.
        The code is open source and <a href="https://github.com/openedx/openedx-webhooks">
        hosted on GitHub</a>.
     </p>
@@ -20,10 +20,9 @@
     <ul>
       <li>
         {% if github_username %}
-        Authenticated as <strong>@{{github_username}}</strong>.
-        <a href="{{ url_for("github.login") }}">Re-authenticate?</a>
+            Authenticated as <strong>@{{github_username}}</strong>.
         {% else %}
-        <a href="{{ url_for("github.login") }}">Authenticate</a>
+            Not authenticated.
         {% endif %}
       </li>
       <li><a href="{{ url_for("github_views.rescan_get") }}">Rescan Pull Requests</a></li>
@@ -34,10 +33,9 @@
     <ul>
       <li>
         {% if jira_username %}
-        Authenticated as <strong>{{jira_username}}</strong>.
-        <a href="{{ url_for("jira.login") }}">Re-authenticate?</a>
+            Authenticated as <strong>{{jira_username}}</strong>.
         {% else %}
-        <a href="{{ url_for("jira.login") }}">Authenticate</a>
+            Not authenticated.
         {% endif %}
       </li>
       <li><a href="{{ url_for("jira_views.rescan_issues_get") }}">Rescan Issues</a></li>

@@ -58,8 +58,8 @@ from openedx_webhooks.labels import (
     GITHUB_STATUS_LABELS,
     JIRA_CATEGORY_LABELS,
 )
+from openedx_webhooks.auth import get_github_session, get_jira_session
 from openedx_webhooks.lib.github.models import PrId
-from openedx_webhooks.oauth import get_github_session, get_jira_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks import github_work
 from openedx_webhooks.tasks.jira_work import (

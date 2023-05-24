@@ -51,12 +51,6 @@ def create_app(config=None):
     if not app.debug:
         SSLify(app)
 
-    # attach Flask-Dance blueprints
-    from .oauth import jira_bp as jira_oauth_bp
-    app.register_blueprint(jira_oauth_bp, url_prefix="/login")
-    from .oauth import github_bp as github_oauth_bp
-    app.register_blueprint(github_oauth_bp, url_prefix="/login")
-
     # attach our blueprints
     from .github_views import github_bp
     app.register_blueprint(github_bp, url_prefix="/github")

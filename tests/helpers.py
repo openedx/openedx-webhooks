@@ -6,6 +6,10 @@ import re
 import unittest.mock
 from typing import Optional
 
+import requests_mock
+
+from .fake_jira import FakeJira
+
 
 def check_good_markdown(text: str) -> None:
     """
@@ -107,4 +111,10 @@ def jira_server(server: Optional[str]):
 
     """
     with unittest.mock.patch("openedx_webhooks.settings.JIRA_SERVER", server):
-        yield
+        # This uses real_http=True so that it layers properly on top of the
+        # outer Mocker: https://requests-mock.readthedocs.io/en/latest/mocker.html#nested-mockers
+        mocker = requests_mock.Mocker(real_http=True, case_sensitive=True)
+        the_fake_jira = FakeJira(server)
+        the_fake_jira.install_mocks(mocker)
+        with mocker:
+            yield the_fake_jira
