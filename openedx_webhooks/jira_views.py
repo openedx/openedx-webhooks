@@ -12,10 +12,9 @@ from flask_dance.contrib.github import github
 from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
-from openedx_webhooks.auth import jira_get
 from openedx_webhooks.tasks.github_work import get_repo_labels, synchronize_labels
 from openedx_webhooks.utils import (
-    jira_paginated_get, sentry_extra_context,
+    jira_get, jira_paginated_get, sentry_extra_context,
     github_pr_num, github_pr_url, github_pr_repo,
     requires_auth,
 )

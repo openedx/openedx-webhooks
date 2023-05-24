@@ -19,7 +19,7 @@ from flask_dance.contrib.jira import jira
 from urlobject import URLObject
 
 from openedx_webhooks import logger, settings
-from openedx_webhooks.auth import get_github_session, jira_get
+from openedx_webhooks.auth import get_github_session, get_jira_session
 from openedx_webhooks.types import JiraDict
 
 
@@ -323,6 +323,18 @@ def get_jira_issue(key: str, missing_ok: bool = False) -> Optional[JiraDict]:
         return None
     log_check_response(resp)
     return resp.json()
+
+
+def jira_get(*args, **kwargs):
+    """
+    JIRA sometimes returns an empty response to a perfectly valid GET request,
+    so this will retry it a few times if that happens.
+    """
+    for _ in range(3):
+        resp = get_jira_session().get(*args, **kwargs)
+        if resp.content:
+            return resp
+    return get_jira_session().get(*args, **kwargs)
 
 
 def github_pr_repo(issue):

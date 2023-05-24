@@ -44,17 +44,3 @@ def get_github_session():
     session.headers["Authorization"] = f"token {settings.GITHUB_PERSONAL_TOKEN}"
     session.trust_env = False   # prevent reading the local .netrc
     return session
-
-
-## UTILITY FUNCTIONS ##
-
-def jira_get(*args, **kwargs):
-    """
-    JIRA sometimes returns an empty response to a perfectly valid GET request,
-    so this will retry it a few times if that happens.
-    """
-    for _ in range(3):
-        resp = get_jira_session().get(*args, **kwargs)
-        if resp.content:
-            return resp
-    return get_jira_session().get(*args, **kwargs)
