@@ -44,31 +44,25 @@ Generate a secret key for Flask, so that it can save information into the sessio
   $ export FLASK_SECRET_KEY=`python -c "import os; print(os.urandom(24))"`
   $ heroku config:set FLASK_SECRET_KEY=$FLASK_SECRET_KEY
 
-Setup OAuth
------------
+
+Set Up Authentication Tokens
+----------------------------
 
 Jira
 ~~~~
 
 OAuth authentication for Jira requires a RSA keypair. To set this up:
 
-1.  Run ``openssl genrsa -out jira.pem``. This will generate a private key.
-2.  Run ``openssl rsa -in jira.pem -pubout -out jira.pub``. This will generate the
-    public key.
-3.  Generate a random string to serve as the consumer key. For example, run
-    ``python -c "import uuid; print(uuid.uuid4().hex)" > jira.uuid``.
-4.  Configure an Application Link in Jira. The consumer key is the contents
-    of ``jira.uuid``, and the public key is the contents of ``jira.pub``.
-5.  Set RSA key and consumer key in Heroku environment:
+#. Get a Jira access token. TODO: Explain how to do this.
+
+#. Specify the Jira user email and token:
 
     .. code-block:: bash
 
-        $ export JIRA_OAUTH_RSA_KEY="$(<jira.pem)"
-        $ export JIRA_OAUTH_CONSUMER_KEY="$(<jira.uuid)"
-        $ heroku config:set JIRA_OAUTH_RSA_KEY=$JIRA_OAUTH_RSA_KEY
-        $ heroku config:set JIRA_OAUTH_CONSUMER_KEY=$JIRA_OAUTH_CONSUMER_KEY
+        $ heroku config:set JIRA_USER_EMAIL=service-account@megacorp.com
+        $ heroku config:set JIRA_USER_TOKEN=94LW................51FC
 
-6.  Specify the JIRA server to use:
+#. Specify the Jira server to use:
 
     .. code-block:: bash
 
@@ -77,16 +71,7 @@ OAuth authentication for Jira requires a RSA keypair. To set this up:
 GitHub
 ~~~~~~
 
-1. `Register a new application on GitHub <https://github.com/settings/applications/new>`_.
-
-2. The new application will give you a consumer key and consumer secret. Set
-   these values in the Heroku environment:
-
-   .. code-block:: bash
-
-      $ heroku config:set GITHUB_OAUTH_CLIENT_ID=my-id GITHUB_OAUTH_CLIENT_SECRET=my-secret
-
-3. Create a GitHub personal access token for the bot user.  It will need these
+#. Create a GitHub personal access token for the bot user.  It will need these
    scopes: admin:repo_hook, repo, user:email, workflow, write:org.  Specify it
    as a Heroku setting:
 
@@ -94,7 +79,7 @@ GitHub
 
        $ heroku config:set GITHUB_PERSONAL_TOKEN=my-pat
 
-4. A GitHub project will be needed for blended pull requests, and another for
+#. A GitHub project will be needed for blended pull requests, and another for
    other OSPRs.  Specify them as ``org:number``:
 
    .. code-block:: bash
@@ -103,14 +88,17 @@ GitHub
       $ heroku config:set GITHUB_BLENDED_PROJECT=edx:9
 
 
-
 Deploy
 ------
 
-1. Set up your Heroku git remote to point to your Heroku application
-1. ``git push heroku``
-1. Visit your website -- it should load!
-1. Enjoy the sweet, sweet taste of API integration
+#. Set up your Heroku git remote to point to your Heroku application
+
+#. ``git push heroku``
+
+#. Visit your website -- it should load!
+
+#. Enjoy the sweet, sweet taste of API integration
+
 
 Recurring Tasks
 ---------------
