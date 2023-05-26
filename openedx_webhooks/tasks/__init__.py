@@ -1,3 +1,7 @@
+"""
+Helpers for Celery tasks.
+"""
+
 import os
 
 from celery.utils.log import get_task_logger

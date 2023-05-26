@@ -14,7 +14,7 @@ from typing import Dict, Optional
 
 import cachetools.func
 import requests
-from flask import request, Response
+from flask import jsonify, request, Response, url_for
 from urlobject import URLObject
 
 from openedx_webhooks import logger, settings
@@ -279,6 +279,21 @@ def minimal_wsgi_environ():
     }
     return {key: value for key, value in request.environ.items()
             if key in values}
+
+
+def queue_task(task, *args, **kwargs):
+    """
+    Queue a task to run in the background via Celery.
+
+    Returns the HTTP response to return from a view.
+    """
+    result = task.delay(*args, wsgi_environ=minimal_wsgi_environ(), **kwargs)
+    status_url = url_for("tasks.status", task_id=result.id, _external=True)
+    logger.info(f"Job status URL: {status_url}")
+    resp = jsonify({"message": "queued", "status_url": status_url})
+    resp.status_code = 202
+    resp.headers["Location"] = status_url
+    return resp
 
 
 def sentry_extra_context(data_dict):

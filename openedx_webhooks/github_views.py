@@ -5,9 +5,7 @@ These are the views that process webhook events coming from Github.
 import logging
 
 from flask import current_app as app
-from flask import (
-    Blueprint, jsonify, render_template, request, url_for
-)
+from flask import Blueprint, jsonify, render_template, request
 
 from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.debug import is_debug, print_long_json
@@ -18,7 +16,7 @@ from openedx_webhooks.tasks.github import (
     rescan_organization_task,
 )
 from openedx_webhooks.utils import (
-    is_valid_payload, minimal_wsgi_environ, sentry_extra_context, requires_auth
+    is_valid_payload, queue_task, requires_auth, sentry_extra_context
 )
 
 github_bp = Blueprint('github_views', __name__)
@@ -120,18 +118,10 @@ def handle_pull_request_event(event):
     pr_activity = f"{repo} #{pr_number} {action!r}"
     if action in PR_ACTIONS:
         logger.info(f"{pr_activity}, processing...")
-        result = pull_request_changed_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
+        return queue_task(pull_request_changed_task, pr)
     else:
         logger.info(f"{pr_activity}, ignoring...")
         return "Nothing for me to do", 200
-
-    status_url = url_for("tasks.status", task_id=result.id, _external=True)
-    logger.info(f"Job status URL: {status_url}")
-
-    resp = jsonify({"message": "queued", "status_url": status_url})
-    resp.status_code = 202
-    resp.headers["Location"] = status_url
-    return resp
 
 
 def handle_comment_event(event):
@@ -185,17 +175,11 @@ def rescan():
             return "Don't be silly."
 
         org = repo[4:]
-        result = rescan_organization_task.delay(org, wsgi_environ=minimal_wsgi_environ(), **rescan_kwargs)
+        return queue_task(rescan_organization_task, org, **rescan_kwargs)
     elif inline:
         return jsonify(rescan_repository(repo, **rescan_kwargs))
     else:
-        result = rescan_repository_task.delay(repo, wsgi_environ=minimal_wsgi_environ(), **rescan_kwargs)
-
-    status_url = url_for("tasks.status", task_id=result.id, _external=True)
-    resp = jsonify({"message": "queued", "status_url": status_url})
-    resp.status_code = 202
-    resp.headers["Location"] = status_url
-    return resp
+        return queue_task(rescan_repository_task, repo, **rescan_kwargs)
 
 
 @github_bp.route("/process_pr", methods=("GET",))
@@ -231,12 +215,7 @@ def process_pr():
         return resp
 
     pr = pr_resp.json()
-    result = pull_request_changed_task.delay(pr, wsgi_environ=minimal_wsgi_environ())
-    status_url = url_for("tasks.status", task_id=result.id, _external=True)
-    resp = jsonify({"message": "queued", "status_url": status_url})
-    resp.status_code = 202
-    resp.headers["Location"] = status_url
-    return resp
+    return queue_task(pull_request_changed_task, pr)
 
 
 @github_bp.route("/generate_error", methods=("GET",))
