@@ -27,11 +27,6 @@ from .helpers import check_issue_link_in_markdown
 pytestmark = pytest.mark.flaky_github
 
 
-@pytest.fixture
-def sync_labels_fn(mocker):
-    """A patch on synchronize_labels"""
-    return mocker.patch("openedx_webhooks.tasks.github_work.synchronize_labels")
-
 def close_and_reopen_pr(pr):
     """For testing re-opening, close the pr, process it, then re-open it."""
     pr.close(merge=False)
@@ -96,7 +91,7 @@ def test_pr_opened_by_bot(fake_github, fake_jira):
     assert pull_request_projects(pr.as_json()) == set()
 
 
-def test_external_pr_opened_no_cla(has_jira, sync_labels_fn, fake_github, fake_jira):
+def test_external_pr_opened_no_cla(has_jira, fake_github, fake_jira):
     # No CLA, because this person is not in people.yaml
     fake_github.make_user(login="new_contributor", name="Newb Contributor")
     pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform", user="new_contributor")
@@ -127,9 +122,6 @@ def test_external_pr_opened_no_cla(has_jira, sync_labels_fn, fake_github, fake_j
     else:
         assert issue_id is None
         assert len(fake_jira.issues) == 0
-
-    # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with("openedx/edx-platform")
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -167,7 +159,7 @@ def test_external_pr_opened_no_cla(has_jira, sync_labels_fn, fake_github, fake_j
         assert len(fake_jira.issues) == 0
 
 
-def test_external_pr_opened_with_cla(has_jira, sync_labels_fn, fake_github, fake_jira):
+def test_external_pr_opened_with_cla(has_jira, fake_github, fake_jira):
     pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user="tusbar", number=11235)
     prj = pr.as_json()
 
@@ -196,9 +188,6 @@ def test_external_pr_opened_with_cla(has_jira, sync_labels_fn, fake_github, fake
     else:
         assert issue_id is None
         assert len(fake_jira.issues) == 0
-
-    # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with("openedx/some-code")
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -238,7 +227,7 @@ def test_external_pr_opened_with_cla(has_jira, sync_labels_fn, fake_github, fake
         assert len(fake_jira.issues) == 0
 
 
-def test_psycho_reopening(sync_labels_fn, fake_github, fake_jira):
+def test_psycho_reopening(fake_github, fake_jira):
     # Check that close/re-open/close/re-open etc will properly track the jira status.
     pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user="tusbar", number=11235)
     prj = pr.as_json()
@@ -257,7 +246,7 @@ def test_psycho_reopening(sync_labels_fn, fake_github, fake_jira):
         assert issue.status == status
 
 
-def test_core_committer_pr_opened(has_jira, sync_labels_fn, fake_github, fake_jira):
+def test_core_committer_pr_opened(has_jira, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="felipemontoya", owner="openedx", repo="edx-platform")
     prj = pr.as_json()
 
@@ -287,9 +276,6 @@ def test_core_committer_pr_opened(has_jira, sync_labels_fn, fake_github, fake_ji
         assert issue_id is None
         assert len(fake_jira.issues) == 0
 
-    # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with("openedx/edx-platform")
-
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
@@ -311,7 +297,7 @@ def test_core_committer_pr_opened(has_jira, sync_labels_fn, fake_github, fake_ji
     assert pull_request_projects(pr.as_json()) == {settings.GITHUB_OSPR_PROJECT}
 
 
-def test_old_core_committer_pr_opened(sync_labels_fn, fake_github, fake_jira):
+def test_old_core_committer_pr_opened(fake_github, fake_jira):
     # No-one was a core committer before June 2020.
     # This test only asserts the core-committer things, that they are not cc.
     pr = fake_github.make_pull_request(
@@ -356,7 +342,7 @@ EXAMPLE_PLATFORM_MAP_1_2 = {
     pytest.param(False, id="epic:no"),
     pytest.param(True, id="epic:yes"),
 ])
-def test_blended_pr_opened_with_cla(with_epic, has_jira, sync_labels_fn, fake_github, fake_jira):
+def test_blended_pr_opened_with_cla(with_epic, has_jira, fake_github, fake_jira):
     pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user="tusbar", title="[BD-34] Something good")
     prj = pr.as_json()
     total_issues = 0
@@ -400,9 +386,6 @@ def test_blended_pr_opened_with_cla(with_epic, has_jira, sync_labels_fn, fake_gi
     else:
         assert issue_id is None
         assert len(fake_jira.issues) == total_issues
-
-    # Check that we synchronized labels.
-    sync_labels_fn.assert_called_once_with("openedx/some-code")
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -825,7 +808,7 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, fake_github, fake_
             assert initial_status.lower() in pr.labels
 
 
-def test_handle_closed_pr(is_merged, has_jira, sync_labels_fn, fake_github, fake_jira):
+def test_handle_closed_pr(is_merged, has_jira, fake_github, fake_jira):
     pr = fake_github.make_pull_request(user="tusbar", number=11237, state="closed", merged=is_merged)
     prj = pr.as_json()
     issue_id1, anything_happened = pull_request_changed(prj)

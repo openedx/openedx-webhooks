@@ -104,7 +104,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
         102: [
             "set_cla_status",
             "initial_state",
-            "synchronize_labels",
             "create_ospr_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
@@ -113,7 +112,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
         106: [
             "set_cla_status",
             "initial_state",
-            "synchronize_labels",
             "create_ospr_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
@@ -122,7 +120,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
         108: [
             "set_cla_status",
             "initial_state",
-            "synchronize_labels",
             "create_ospr_issue",
             "transition_jira_issue",
             "update_labels_on_pull_request",
@@ -132,7 +129,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
         110: [
             "set_cla_status",
             "initial_state",
-            "synchronize_labels",
             "transition_jira_issue",
             "update_jira_issue",
             "update_labels_on_pull_request",
