@@ -12,7 +12,6 @@ GITHUB_STATUS_LABELS: set[str] = set()
 
 GITHUB_CATEGORY_LABELS = {
     "blended",
-    "core committer",
     "open-source-contribution",
 }
 
