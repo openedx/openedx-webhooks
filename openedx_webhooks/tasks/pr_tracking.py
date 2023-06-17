@@ -298,7 +298,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             desired.jira_labels.add("core-committer")
             desired.jira_initial_status = "Waiting on Author"
             desired.bot_comments.add(BotComment.CORE_COMMITTER)
-            desired.github_labels.add("core committer")
         desired.bot_comments.add(comment)
 
         assert settings.GITHUB_OSPR_PROJECT, "You must set GITHUB_OSPR_PROJECT"

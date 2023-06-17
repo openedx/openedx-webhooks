@@ -87,10 +87,10 @@ be changed.
   - Blended pull requests get "blended" applied as a GitHub label and Jira
     label.
 
-  - Core committer pull requests get "core-commiter" as a Jira label. They get
-    "core committer" and "open-source-contribution" as GitHub labels.
+  - Core committer pull requests get "core-commiter" as a Jira label and
+    "open-source-contribution" as a GitHub label.
 
-  - Regular pull requests get "open-source-contribution" as a GitHub label.
+  - Regular pull requests just get "open-source-contribution" as a GitHub label.
 
   - The initial Jira status is set as a GitHub label on the pull request.
 
