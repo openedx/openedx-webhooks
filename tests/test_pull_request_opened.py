@@ -287,7 +287,7 @@ def test_core_committer_pr_opened(has_jira, fake_github, fake_jira):
     assert is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
-    expected_labels = {"open-source-contribution", "core committer"}
+    expected_labels = {"open-source-contribution"}
     if has_jira:
         expected_labels.add("waiting on author")
     assert pr.labels == expected_labels
