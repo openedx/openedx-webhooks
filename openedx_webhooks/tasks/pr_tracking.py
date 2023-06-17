@@ -417,8 +417,6 @@ class PrTrackingFixer:
             desired=json_safe_dict(self.desired),
         )
 
-        self.actions.synchronize_labels(repo=self.prid.full_name)
-
         comment_kwargs = {}
 
         make_issue = False
@@ -784,9 +782,6 @@ class FixingActions:
         """
         Does nothing when really fixing, but captures information for dry runs.
         """
-
-    def synchronize_labels(self, *, repo: str) -> None:
-        github_work.synchronize_labels(repo)
 
     def create_ospr_issue(
         self, *,
