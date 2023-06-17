@@ -11,7 +11,7 @@ from flask import (
 from urlobject import URLObject
 
 from openedx_webhooks.auth import get_github_session, get_jira_session
-from openedx_webhooks.tasks.github_work import get_repo_labels, synchronize_labels
+from openedx_webhooks.tasks.github_work import get_repo_labels
 from openedx_webhooks.utils import (
     jira_get, jira_paginated_get, sentry_extra_context,
     github_pr_num, github_pr_url, github_pr_repo,
@@ -271,8 +271,6 @@ def issue_updated():
         fail_msg = '{key} is missing "Repo" field'.format(key=issue_key)
         fail_msg += ' {0}'.format(event["issue"]["fields"]["issuetype"])
         raise Exception(fail_msg)
-
-    synchronize_labels(pr_repo)
 
     repo_labels = get_repo_labels(repo=pr_repo)
     repo_labels_lower = {name.lower() for name in repo_labels}

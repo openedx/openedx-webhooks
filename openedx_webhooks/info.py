@@ -121,15 +121,13 @@ def get_people_file():
             people[p].update(people_data_yaml[p])
     return people
 
+
 def get_orgs_file():
     orgs = _read_yaml_data_file("orgs.yaml")
     for org_data in list(orgs.values()):
         if "name" in org_data:
             orgs[org_data["name"]] = org_data
     return orgs
-
-def get_labels_file():
-    return _read_yaml_data_file("labels.yaml")
 
 def get_person_certain_time(person: Dict, certain_time: datetime.datetime) -> Dict:
     """
