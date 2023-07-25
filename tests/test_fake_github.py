@@ -6,7 +6,7 @@ import requests
 from freezegun import freeze_time
 from glom import glom
 
-from .fake_github import DoesNotExist, FakeGitHub
+from .fake_github import FakeGitHub
 
 
 # pylint: disable=missing-timeout
@@ -35,128 +35,6 @@ class TestRepos:
         assert repo.repo == "a-repo"
         repo2 = fake_github.get_repo("an-org", "a-repo")
         assert repo == repo2
-
-
-class TestRepoLabels:
-    def test_get_default_labels(self, fake_github):
-        fake_github.make_repo("an-org", "a-repo")
-        resp = requests.get("https://api.github.com/repos/an-org/a-repo/labels")
-        assert resp.status_code == 200
-        labels = resp.json()
-        assert isinstance(labels, list)
-        assert len(labels) == 9
-        assert {"name": "invalid", "color": "e4e669", "description": "This doesn't seem right"} in labels
-
-    def test_create_label(self, fake_github):
-        repo = fake_github.make_repo("an-org", "a-repo")
-        # At first, the label doesn't exist.
-        with pytest.raises(DoesNotExist):
-            repo.get_label("nice")
-        # We make a label with the API.
-        resp = requests.post(
-            "https://api.github.com/repos/an-org/a-repo/labels",
-            json={"name": "nice", "color": "ff0000"},
-        )
-        assert resp.status_code == 201
-        label_json = resp.json()
-        assert label_json["name"] == "nice"
-        assert label_json["color"] == "ff0000"
-        assert label_json["description"] is None
-
-        # Now the label does exist.
-        label = repo.get_label("nice")
-        assert label.name == "nice"
-        assert label.color == "ff0000"
-        assert label.description is None
-
-    def test_cant_create_duplicate_label(self, fake_github):
-        fake_github.make_repo("an-org", "a-repo")
-        resp = requests.post(
-            "https://api.github.com/repos/an-org/a-repo/labels",
-            json={"name": "bug", "color": "ff0000"},
-        )
-        assert resp.status_code == 422
-        error_json = resp.json()
-        assert error_json["message"] == "Validation Failed"
-        assert error_json["errors"] == [
-            {"resource": "Label", "code": "already_exists", "field": "name"},
-        ]
-
-    BOGUS_COLORS = ["red please", "#ff000", "f00", "12345g"]
-
-    @pytest.mark.parametrize("bogus_color", BOGUS_COLORS)
-    def test_cant_create_bogus_color(self, fake_github, bogus_color):
-        fake_github.make_repo("an-org", "a-repo")
-        resp = requests.post(
-            "https://api.github.com/repos/an-org/a-repo/labels",
-            json={"name": "bug", "color": bogus_color},
-        )
-        assert resp.status_code == 422
-        error_json = resp.json()
-        assert error_json["message"] == "Validation Failed"
-        assert error_json["errors"] == [
-            {"resource": "Label", "code": "invalid", "field": "color"},
-        ]
-
-    def test_patch_label(self, fake_github):
-        repo = fake_github.make_repo("an-org", "a-repo")
-        resp = requests.patch(
-            "https://api.github.com/repos/an-org/a-repo/labels/help%20wanted",
-            json={"name": "help wanted", "color": "dedbee", "description": "Please?"},
-        )
-        assert resp.status_code == 200
-        label_json = resp.json()
-        assert label_json["name"] == "help wanted"
-        assert label_json["color"] == "dedbee"
-        assert label_json["description"] == "Please?"
-
-        label = repo.get_label("help wanted")
-        assert label.name == "help wanted"
-        assert label.color == "dedbee"
-        assert label.description == "Please?"
-
-    def test_cant_patch_missing_label(self, fake_github):
-        fake_github.make_repo("an-org", "a-repo")
-        resp = requests.patch(
-            "https://api.github.com/repos/an-org/a-repo/labels/xyzzy",
-            json={"name": "xyzzy", "color": "dedbee", "description": "Go away"},
-        )
-        assert resp.status_code == 404
-        assert resp.json()["message"] == "Label an-org/a-repo 'xyzzy' does not exist"
-
-    @pytest.mark.parametrize("bogus_color", BOGUS_COLORS)
-    def test_cant_patch_bogus_color(self, fake_github, bogus_color):
-        fake_github.make_repo("an-org", "a-repo")
-        resp = requests.patch(
-            "https://api.github.com/repos/an-org/a-repo/labels/bug",
-            json={"name": "bug", "color": bogus_color},
-        )
-        assert resp.status_code == 422
-        error_json = resp.json()
-        assert error_json["message"] == "Validation Failed"
-        assert error_json["errors"] == [
-            {"resource": "Label", "code": "invalid", "field": "color"},
-        ]
-
-    def test_delete_label(self, fake_github):
-        repo = fake_github.make_repo("an-org", "a-repo")
-        # At first, the label does exist.
-        assert repo.get_label("help wanted").color == "008672"
-
-        # Delete the label.
-        resp = requests.delete("https://api.github.com/repos/an-org/a-repo/labels/help%20wanted")
-        assert resp.status_code == 204
-        assert resp.text == ""
-
-        # Now the label doesn't exist.
-        with pytest.raises(DoesNotExist):
-            repo.get_label("help wanted")
-
-    def test_cant_delete_missing_label(self, fake_github):
-        fake_github.make_repo("an-org", "a-repo")
-        # Delete the label.
-        resp = requests.delete("https://api.github.com/repos/an-org/a-repo/labels/xyzzy")
-        assert resp.status_code == 404
 
 
 class TestPullRequests:
@@ -441,9 +319,11 @@ class TestFlakyGitHub:
         assert resp.status_code == 200
 
     def test_post(self, flaky_github):
-        flaky_github.make_repo("an-org", "a-repo")
+        repo = flaky_github.make_repo("an-org", "a-repo")
+        pr = repo.make_pull_request()
         resp = requests.post(
-            "https://api.github.com/repos/an-org/a-repo/labels",
-            json={"name": "nice", "color": "ff0000"},
+            f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments",
+            json={"body": "I'm making a comment"},
         )
-        assert resp.status_code == 201
+        # POSTs aren't affected by the flaky fraction.
+        assert resp.status_code == 200

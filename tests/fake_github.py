@@ -9,10 +9,8 @@ import dataclasses
 import datetime
 import itertools
 import random
-import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Set
-from urllib.parse import unquote
 
 from openedx_webhooks.cla_check import CLA_CONTEXT
 from openedx_webhooks.types import GhProject
@@ -22,25 +20,13 @@ from .helpers import check_good_graphql, check_good_markdown
 
 
 class FakeGitHubException(faker.FakerException):
-    def __init__(self, message, errors=None):
-        super().__init__(message)
-        self.errors = errors
-
     def as_json(self) -> Dict:
         j = {"message": str(self)}
-        if self.errors:
-            j["errors"] = self.errors
         return j
 
 class DoesNotExist(FakeGitHubException):
     """A requested object does not exist."""
     status_code = 404
-
-class ValidationError(FakeGitHubException):
-    status_code = 422
-
-    def __init__(self, message="Validation Failed", **kwargs):
-        super().__init__(message=message, errors=[kwargs])
 
 def fake_sha():
     """A realistic stand-in for a commit sha."""
@@ -71,10 +57,6 @@ class Label:
     name: str
     color: Optional[str] = "ededed"
     description: Optional[str] = None
-
-    def __post_init__(self):
-        if self.color is not None and not re.fullmatch(r"[0-9a-fA-F]{6}", self.color):
-            raise ValidationError(resource="Label", code="invalid", field="color")
 
     def as_json(self):
         return dataclasses.asdict(self)
@@ -272,32 +254,15 @@ class Repo:
     def has_label(self, name: str) -> bool:
         return name in self.labels
 
-    def set_labels(self, data: List[Dict]) -> None:
+    def _set_labels(self, data: List[Dict]) -> None:
         self.labels = {}
         for kwargs in data:
             self.add_label(**kwargs)
 
-    def get_labels(self) -> List[Label]:
-        return sorted(self.labels.values(), key=lambda l: l.name)
-
     def add_label(self, **kwargs) -> Label:
         label = Label(**kwargs)
-        if label.name in self.labels:
-            raise ValidationError(resource="Label", code="already_exists", field="name")
         self.labels[label.name] = label
         return label
-
-    def update_label(self, name: str, **kwargs) -> Label:
-        label = self.get_label(name)
-        new_label = dataclasses.replace(label, **kwargs)
-        self.labels[name] = new_label
-        return new_label
-
-    def delete_label(self, name: str) -> None:
-        try:
-            del self.labels[name]
-        except KeyError:
-            raise DoesNotExist(f"Label {self.full_name} {name!r} does not exist")
 
 
 class Flaky404:
@@ -361,7 +326,7 @@ class FakeGitHub(faker.Faker):
 
     def make_repo(self, owner: str, repo: str, private: bool=False) -> Repo:
         r = Repo(self, owner, repo, private)
-        r.set_labels(DEFAULT_LABELS)
+        r._set_labels(DEFAULT_LABELS)
         self.repos[f"{owner}/{repo}"] = r
         return r
 
@@ -445,39 +410,6 @@ class FakeGitHub(faker.Faker):
         assert data['context'] == CLA_CONTEXT
         self.cla_statuses[match['sha']] = data
         return [data]
-
-    # Repo labels
-
-    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels")
-    def _get_labels(self, match, _request, _context) -> List[Dict]:
-        # https://developer.github.com/v3/issues/labels/#list-labels-for-a-repository
-        r = self.get_repo(match["owner"], match["repo"])
-        return [label.as_json() for label in r.labels.values()]
-
-    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels", "POST")
-    def _post_labels(self, match, request, context) -> Dict:
-        # https://developer.github.com/v3/issues/labels/#create-a-label
-        r = self.get_repo(match["owner"], match["repo"])
-        label = r.add_label(**request.json())
-        context.status_code = 201
-        return label.as_json()
-
-    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels/(?P<name>.*)", "PATCH")
-    def _patch_labels(self, match, request, _context) -> Dict:
-        # https://developer.github.com/v3/issues/labels/#update-a-label
-        r = self.get_repo(match["owner"], match["repo"])
-        data = request.json()
-        if "name" in data:
-            data.pop("name")
-        label = r.update_label(unquote(match["name"]), **data)
-        return label.as_json()
-
-    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/labels/(?P<name>.*)", "DELETE")
-    def _delete_labels(self, match, _request, context) -> None:
-        # https://developer.github.com/v3/issues/labels/#delete-a-label
-        r = self.get_repo(match["owner"], match["repo"])
-        r.delete_label(unquote(match["name"]))
-        context.status_code = 204
 
     # Comments
 
