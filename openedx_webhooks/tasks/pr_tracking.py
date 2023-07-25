@@ -61,7 +61,6 @@ from openedx_webhooks.labels import (
 from openedx_webhooks.auth import get_github_session, get_jira_session
 from openedx_webhooks.lib.github.models import PrId
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.tasks import github_work
 from openedx_webhooks.tasks.jira_work import (
     delete_jira_issue,
     transition_jira_issue,
