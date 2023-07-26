@@ -730,8 +730,6 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, fake_github, fake_
     expected_labels.add("blended" if pr_type == "blended" else "open-source-contribution")
     if has_jira:
         expected_labels.add("community manager review" if pr_type == "nocla" else "waiting on author")
-    if pr_type == "committer":
-        expected_labels.add("core committer")
     assert pr.labels == expected_labels
     if pr_type == "normal":
         assert is_comment_kind(BotComment.WELCOME, body)
