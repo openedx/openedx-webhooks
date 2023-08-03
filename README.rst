@@ -177,6 +177,24 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2023-08-03
+~~~~~~~~~~
+
+- Jira authentication now uses the JIRA_USER_EMAIL and JIRA_USER_TOKEN
+  environment variables.  OAuth authentication is removed. These settings are
+  now obsolete and can be deleted:
+
+  - DATABASE_URL
+  - GITHUB_OAUTH_CLIENT_ID
+  - GITHUB_OAUTH_CLIENT_SECRET
+  - JIRA_OAUTH_CONSUMER_KEY
+  - JIRA_OAUTH_RSA_KEY
+  - SQLALCHEMY_DATABASE_URI
+
+- Stopped the bot from updating a repository's labels based on ``labels.yaml``, as this is now handled by the `repo_checks <https://github.com/openedx/repo-tools/tree/master/edx_repo_tools/repo_checks>`_ tool. The ``labels.yaml`` file is now unused and can be safely deleted from any openedx-webhooks data repositories.
+
+- Stopped the bot from adding the ``core committer`` GitHub label to pull requests to repos on which the bot believes the author to have write access. The bot's data source for repository access, ``people.yaml``, is outdated, we do not yet have a strategy for keeping it updated. Until further notice, coding Core Contributors are asked to add the ``core contributor`` label to their pull requests manually.
+
 2023-03-03
 ~~~~~~~~~~
 
