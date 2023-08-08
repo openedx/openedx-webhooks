@@ -1,0 +1,5 @@
+.. A new scriv changelog fragment.
+
+- Removed: the bot no longer understands the past state of users.  This data
+  hasn't been maintained for the last few years.  There's no point relying on
+  stale data, so the capability is removed.

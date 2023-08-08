@@ -2,14 +2,12 @@
 Get information about people, repos, orgs, pull requests, etc.
 """
 import csv
-import datetime
 import logging
 import re
 from typing import Dict, Iterable, Optional, Tuple, Union
 
 import yaml
 from glom import glom
-from iso8601 import parse_date
 
 from openedx_webhooks import settings
 from openedx_webhooks.lib.github.models import PrId
@@ -135,24 +133,6 @@ def get_orgs_file():
             orgs[org_data["name"]] = org_data
     return orgs
 
-def get_person_certain_time(person: Dict, certain_time: datetime.datetime) -> Dict:
-    """
-    Return person data structure for a particular time
-
-    Arguments:
-        person: dict of GitHub user info from people.yaml.
-        certain_time: datetime.datetime object used to determine the state of the person.
-
-    """
-    # Layer together all of the applicable "before" clauses.
-    update_person = person.copy()
-    for before_date in sorted(person.get("before", {}), reverse=True):
-        if certain_time.date() > before_date:
-            break
-        update_person.update(person["before"][before_date])
-    return update_person
-
-
 def is_internal_pull_request(pull_request: PrDict) -> bool:
     """
     Is this pull request's author internal to the PR's GitHub org?
@@ -221,14 +201,7 @@ def _pr_author_data(pull_request: PrDict) -> Optional[Dict]:
     """
     people = get_people_file()
     author = pull_request["user"]["login"]
-    if author not in people:
-        # We don't know this person!
-        return None
-
-    person = people[author]
-    created_at = parse_date(pull_request["created_at"]).replace(tzinfo=None)
-    person = get_person_certain_time(people[author], created_at)
-    return person
+    return people.get(author)
 
 
 def is_committer_pull_request(pull_request: PrDict) -> bool:
