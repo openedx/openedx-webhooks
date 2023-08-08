@@ -16,11 +16,10 @@ from ..exceptions import NotFoundError
 
 class People:
     """
-    Logical representation of `people.yaml`.
+    Logical representation of the people database.
 
     Attributes:
-        _data (Dict[str, Any]): The raw dictionary as parsed from the
-            yaml file
+        _data (Dict[str, Any]): The raw data dictionary.
     """
 
     def __init__(self, data):
@@ -28,8 +27,7 @@ class People:
         Init.
 
         Arguments:
-            data (Dict[str, Any]): The raw dictionary as parsed from
-                the yaml file
+            data (Dict[str, Any]): The raw data dictionary.
         """
         self._data = data
 
@@ -39,7 +37,7 @@ class People:
 
     def get(self, key):
         """
-        Get a specific person by `people.yaml` key.
+        Get a specific person by key.
 
         Arguments:
             key (str)
@@ -61,11 +59,10 @@ class People:
 
 class Person:
     """
-    Logical representation of an entry in `people.yaml`.
+    Logical representation of an entry in the people database.
 
     Attributes:
-        _data (Dict[str, Any]): The raw dictionary as parsed from the
-            yaml file
+        _data (Dict[str, Any]): The raw data dictionary.
         login (str): GitHub login
     """
 
@@ -75,8 +72,7 @@ class Person:
 
         Arguments:
             login (str): GitHub login
-            data (Dict[str, Any]): The raw dictionary as parsed from
-                the yaml file
+            data (Dict[str, Any]): The raw data dictionary.
         """
         self.login = login
         self._data = data

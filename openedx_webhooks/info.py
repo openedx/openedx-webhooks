@@ -82,9 +82,7 @@ def get_people_file():
         github_username: {
             name: "",
             agreement: "",
-            institution: ""
-            committer: {...},
-            before: {...}
+            institution: "",
         },
         ...
     }
@@ -116,13 +114,6 @@ def get_people_file():
             people[github_username]["agreement"] = 'institution'
             people[github_username]["institution"] = acct_name
 
-    people_data_yaml = _read_yaml_data_file("people.yaml")
-    for p in people:        # pylint: disable=consider-using-dict-items
-        # Prioritzes the csv by first updating the yaml's values with csv values
-        # And then updates any missing dict fields using yaml's fields
-        if p in people_data_yaml:
-            people_data_yaml[p].update(people[p])
-            people[p].update(people_data_yaml[p])
     return people
 
 
