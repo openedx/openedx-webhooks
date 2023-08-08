@@ -92,6 +92,12 @@ def get_people_file():
     }
     """
     people_data_csv = _read_csv_data_file("salesforce-export.csv")
+    # Simple assurance that the data is what we expect.
+    assert people_data_csv.fieldnames == [
+        "First Name", "Last Name", "Number of Active Ind. CLA Contracts",
+        "Title", "Account Name", "Number of Active Entity CLA Contracts", "GitHub Username",
+    ]
+
     people = {}
 
     for row in people_data_csv:
