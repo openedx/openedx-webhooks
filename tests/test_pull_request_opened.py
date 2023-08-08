@@ -1,7 +1,5 @@
 """Tests of tasks/github.py:pull_request_changed for opening pull requests."""
 
-from datetime import datetime
-
 import pytest
 
 from openedx_webhooks import settings
@@ -292,35 +290,6 @@ def test_core_committer_pr_opened(has_jira, fake_github, fake_jira):
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
     # It should have been put in the OSPR project.
     assert pull_request_projects(pr.as_json()) == {settings.GITHUB_OSPR_PROJECT}
-
-
-def test_old_core_committer_pr_opened(fake_github, fake_jira):
-    # No-one was a core committer before June 2020.
-    # This test only asserts the core-committer things, that they are not cc.
-    pr = fake_github.make_pull_request(
-        user="felipemontoya", owner="openedx", repo="edx-platform", created_at=datetime(2020, 1, 1),
-    )
-    prj = pr.as_json()
-
-    issue_id, _ = pull_request_changed(prj)
-
-    issue = fake_jira.issues[issue_id]
-    assert issue.labels == set()
-
-    # Check that the Jira issue was started in "Needs Triage"
-    assert issue.status == "Needs Triage"
-
-    # Check the GitHub comment that was created.
-    pr_comments = pr.list_comments()
-    assert len(pr_comments) == 1
-    body = pr_comments[0].body
-    check_issue_link_in_markdown(body, issue_id)
-    assert "Thanks for the pull request, @felipemontoya!" in body
-    assert not is_comment_kind(BotComment.CORE_COMMITTER, body)
-    assert not is_comment_kind(BotComment.NEED_CLA, body)
-
-    # Check the GitHub labels that got applied.
-    assert pr.labels == {"needs triage", "open-source-contribution"}
 
 
 EXAMPLE_PLATFORM_MAP_1_2 = {

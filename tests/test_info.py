@@ -1,14 +1,12 @@
 """
 Tests of the functions in info.py
 """
-from datetime import datetime
 
 import pytest
 
 from openedx_webhooks.info import (
-    get_people_file, get_person_certain_time,
+    get_people_file,
     is_committer_pull_request, is_internal_pull_request, is_draft_pull_request,
-    pull_request_has_cla,
     get_blended_project_id,
 )
 
@@ -48,11 +46,6 @@ def test_tcril_employee(make_pull_request):
 def test_ex_edx_employee(make_pull_request):
     pr = make_pull_request("mmprandom")
     assert not is_internal_pull_request(pr)
-
-def test_ex_edx_employee_old_pr(make_pull_request):
-    created_at = datetime(2014, 1, 1)
-    pr = make_pull_request("jarv", created_at=created_at)
-    assert is_internal_pull_request(pr)
 
 def test_never_heard_of_you(make_pull_request):
     pr = make_pull_request("some_random_guy")
@@ -107,54 +100,14 @@ def test_base_branch_committers(make_pull_request):
 
 def test_current_person_no_institution():
     people = get_people_file()
-    created_at = datetime.today()
-    current_person = get_person_certain_time(people["jarv"], created_at)
+    current_person = people["jarv"]
     assert "institution" not in current_person
     assert current_person["agreement"] == "individual"
 
 def test_current_person():
     people = get_people_file()
-    created_at = datetime.today()
-    current_person = get_person_certain_time(people["raisingarizona"], created_at)
+    current_person = people["raisingarizona"]
     assert current_person["agreement"] == "none"
-
-def test_updated_person_has_institution():
-    people = get_people_file()
-    created_at = datetime(2014, 1, 1)
-    updated_person = get_person_certain_time(people["jarv"], created_at)
-    assert updated_person["institution"] == "edX"
-
-def test_updated_person():
-    # This only works if "before" clauses are layered together properly.
-    people = get_people_file()
-    created_at = datetime(2014, 1, 1)
-    updated_person = get_person_certain_time(people["raisingarizona"], created_at)
-    assert updated_person["agreement"] == "individual"
-
-@pytest.mark.parametrize("who, when, cc", [
-    ("raisingarizona", datetime(2020, 12, 31), False),
-    ("raisingarizona", datetime(2015, 12, 31), False),
-    ("raisingarizona", datetime(2014, 12, 31), True),
-    ("raisingarizona", datetime(2013, 12, 31), False),
-    ("hollyhunter", datetime(2020, 12, 31), True),
-    ("hollyhunter", datetime(2019, 12, 31), False),
-])
-def test_old_committer(make_pull_request, who, when, cc):
-    pr = make_pull_request(who, created_at=when)
-    assert is_committer_pull_request(pr) == cc
-
-@pytest.mark.parametrize("user, created_at_args, has_cla", [
-    ("nedbat", (2020, 7, 2), True),
-    ("raisingarizona", (2020, 7, 2), False),
-    ("raisingarizona", (2017, 1, 1), True),
-    ("raisingarizona", (2016, 1, 1), False),
-    ("raisingarizona", (2015, 1, 1), True),
-    ("never-heard-of-her", (2020, 7, 2), False),
-])
-def test_pull_request_has_cla(make_pull_request, user, created_at_args, has_cla):
-    pr = make_pull_request(user, created_at=datetime(*created_at_args))
-    assert pull_request_has_cla(pr) is has_cla
-
 
 @pytest.mark.parametrize("title, number", [
     ("Please take my change", None),
