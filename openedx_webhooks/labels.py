@@ -19,5 +19,4 @@ GITHUB_CATEGORY_LABELS = {
 
 JIRA_CATEGORY_LABELS = {
     "blended",
-    "core-committer",
 }

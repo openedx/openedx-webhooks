@@ -242,56 +242,6 @@ def test_psycho_reopening(fake_github, fake_jira):
         assert issue.status == status
 
 
-def test_core_committer_pr_opened(has_jira, fake_github, fake_jira):
-    pr = fake_github.make_pull_request(user="felipemontoya", owner="openedx", repo="edx-platform")
-    prj = pr.as_json()
-
-    issue_id, anything_happened = pull_request_changed(prj)
-
-    assert anything_happened is True
-    if has_jira:
-        assert issue_id is not None
-        assert issue_id.startswith("OSPR-")
-
-        # Check the Jira issue that was created.
-        assert len(fake_jira.issues) == 1
-        issue = fake_jira.issues[issue_id]
-        assert issue.contributor_name == "Felipe Montoya"
-        assert issue.customer == ["EduNEXT"]
-        assert issue.pr_number == prj["number"]
-        assert issue.repo == prj["base"]["repo"]["full_name"]
-        assert issue.url == prj["html_url"]
-        assert issue.description == prj["body"]
-        assert issue.issuetype == "Pull Request Review"
-        assert issue.summary == prj["title"]
-        assert issue.labels == {"core-committer"}
-
-        # Check that the Jira issue was moved to Waiting on Author
-        assert issue.status == "Waiting on Author"
-    else:
-        assert issue_id is None
-        assert len(fake_jira.issues) == 0
-
-    # Check the GitHub comment that was created.
-    pr_comments = pr.list_comments()
-    assert len(pr_comments) == 1
-    body = pr_comments[0].body
-    check_issue_link_in_markdown(body, issue_id)
-    assert "Thanks for the pull request, @felipemontoya!" in body
-    assert is_comment_kind(BotComment.CORE_COMMITTER, body)
-    assert not is_comment_kind(BotComment.NEED_CLA, body)
-
-    # Check the GitHub labels that got applied.
-    expected_labels = {"open-source-contribution"}
-    if has_jira:
-        expected_labels.add("waiting on author")
-    assert pr.labels == expected_labels
-    # Check the status check applied to the latest commit.
-    assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
-    # It should have been put in the OSPR project.
-    assert pull_request_projects(pr.as_json()) == {settings.GITHUB_OSPR_PROJECT}
-
-
 EXAMPLE_PLATFORM_MAP_1_2 = {
     "child": {
         "id": "14522",
@@ -613,7 +563,7 @@ def test_title_change_but_issue_already_moved(fake_github, fake_jira):
     assert get_jira_issue_key(prj) == (True, issue_id)
 
 
-@pytest.mark.parametrize("pr_type", ["normal", "blended", "committer", "nocla"])
+@pytest.mark.parametrize("pr_type", ["normal", "blended", "nocla"])
 @pytest.mark.parametrize("jira_got_fiddled", [
     pytest.param(False, id="jira:notfiddled"),
     pytest.param(True, id="jira:fiddled"),
@@ -642,9 +592,6 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, fake_github, fake_
         title2 = "[BD-34] Something good"
         initial_status = "Needs Triage"
         pr = fake_github.make_pull_request(user="tusbar", title=title1)
-    elif pr_type == "committer":
-        initial_status = "Waiting on Author"
-        pr = fake_github.make_pull_request(user="felipemontoya", owner="openedx", repo="edx-platform", title=title1)
     else:
         assert pr_type == "nocla"
         initial_status = "Community Manager Review"
@@ -668,8 +615,6 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, fake_github, fake_
             assert issue.labels == set()
         elif pr_type == "blended":
             assert issue.labels == {"blended"}
-        elif pr_type == "committer":
-            assert issue.labels == {"core-committer"}
         else:
             assert pr_type == "nocla"
             assert issue.labels == set()
@@ -699,8 +644,6 @@ def test_draft_pr_opened(pr_type, jira_got_fiddled, has_jira, fake_github, fake_
         assert is_comment_kind(BotComment.WELCOME, body)
     elif pr_type == "blended":
         assert is_comment_kind(BotComment.BLENDED, body)
-    elif pr_type == "committer":
-        assert is_comment_kind(BotComment.CORE_COMMITTER, body)
     else:
         assert pr_type == "nocla"
         assert is_comment_kind(BotComment.NEED_CLA, body)

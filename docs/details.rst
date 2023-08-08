@@ -35,9 +35,6 @@ handled:
 - If the title of the pull request indicates this is a blended project (with
   "[BD-XXX]" in the title), then this is a blended pull request.
 
-- The author is checked for core committer status in the repo.  If so, this is
-  a core commiter pull request.
-
 - Otherwise, this is a regular pull request.
 
 Additionally, if the pull request is in draft status, or has "WIP" in the
@@ -68,8 +65,6 @@ Now we can decide what to do:
 
 - Initial Jira status:
 
-  - Core committer pull requests get "Waiting on Author".
-
   - Blended pull requests get "Needs Triage".
 
   - For regular pull requests, if the author doesn't have a signed CLA, the
@@ -87,17 +82,13 @@ be changed.
   - Blended pull requests get "blended" applied as a GitHub label and Jira
     label.
 
-  - Core committer pull requests get "core-commiter" as a Jira label and
-    "open-source-contribution" as a GitHub label.
-
   - Regular pull requests just get "open-source-contribution" as a GitHub label.
 
   - The initial Jira status is set as a GitHub label on the pull request.
 
 - Initial bot comment:
 
-  - Each kind of pull request (blended, core committer, and regular) gets
-    different comments.
+  - Each kind of pull request (blended and regular) gets different comments.
 
   - If the user doesn't have a signed CLA, the bot adds a paragraph about
     needing to sign one.
@@ -142,9 +133,6 @@ When a pull request is closed
 
 The bot leaves a comment asking the author to complete a survey about the pull
 request.
-
-If the pull request was a core committer PR, the bot leaves a comment pinging
-the committer's edX champions, to help them stay current.
 
 
 When a pull request is re-opened

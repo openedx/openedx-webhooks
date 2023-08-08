@@ -28,7 +28,6 @@ class BotComment(Enum):
     WELCOME = auto()
     WELCOME_CLOSED = auto()
     NEED_CLA = auto()
-    CORE_COMMITTER = auto()
     BLENDED = auto()
     END_OF_WIP = auto()
     SURVEY = auto()
@@ -46,9 +45,6 @@ BOT_COMMENT_INDICATORS = {
     BotComment.NEED_CLA: [
         "<!-- comment:no_cla -->",
         "We can't start reviewing your pull request until you've submitted",
-    ],
-    BotComment.CORE_COMMITTER: [
-        "<!-- comment:welcome-core-committer -->",
     ],
     BotComment.BLENDED: [
         "<!-- comment:welcome-blended -->",
@@ -72,7 +68,6 @@ BOT_COMMENTS_FIRST = {
     BotComment.WELCOME_CLOSED,
     BotComment.NEED_CLA,
     BotComment.BLENDED,
-    BotComment.CORE_COMMITTER,
     BotComment.END_OF_WIP,
     BotComment.NO_CONTRIBUTIONS,
 }
@@ -114,20 +109,6 @@ def github_community_pr_comment_closed(pull_request: PrDict, issue_key: str, **k
         "github_community_pr_comment_closed.md.j2",
         issue_key=issue_key,
         is_merged=pull_request.get("merged", False),
-        jira_server=settings.JIRA_SERVER,
-        **kwargs
-    )
-
-
-def github_committer_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) -> str:
-    """
-    Create the body of the comment for new pull requests from core committers.
-    """
-    return render_template(
-        "github_committer_pr_comment.md.j2",
-        user=pull_request["user"]["login"],
-        issue_key=issue_key,
-        is_draft=is_draft_pull_request(pull_request),
         jira_server=settings.JIRA_SERVER,
         **kwargs
     )
