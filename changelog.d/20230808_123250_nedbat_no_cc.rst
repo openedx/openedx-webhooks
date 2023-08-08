@@ -1,0 +1,6 @@
+.. A new scriv changelog fragment.
+
+- Removed: any understanding of who is a core contributor.  The bot no longer
+  makes comments or labels particular to core contributors. `Issue 227`_.
+
+.. _issue 227: https://github.com/openedx/openedx-webhooks/issues/227

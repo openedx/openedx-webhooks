@@ -6,7 +6,7 @@ import pytest
 
 from openedx_webhooks.info import (
     get_people_file,
-    is_committer_pull_request, is_internal_pull_request, is_draft_pull_request,
+    is_internal_pull_request, is_draft_pull_request,
     get_blended_project_id,
 )
 
@@ -58,45 +58,6 @@ def test_hourly_worker(make_pull_request):
 def test_left_but_still_a_fan(make_pull_request):
     pr = make_pull_request("jarv")
     assert not is_internal_pull_request(pr)
-
-def test_org_committers(make_pull_request):
-    pr = make_pull_request("felipemontoya", repo="openedx/something")
-    assert not is_internal_pull_request(pr)
-    assert is_committer_pull_request(pr)
-    pr = make_pull_request("felipemontoya", repo="edx/something")
-    assert not is_internal_pull_request(pr)
-    assert not is_committer_pull_request(pr)
-
-def test_repo_committers(make_pull_request):
-    pr = make_pull_request("pdpinch", repo="openedx/ccx-keys")
-    assert not is_internal_pull_request(pr)
-    assert is_committer_pull_request(pr)
-    pr = make_pull_request("pdpinch", repo="openedx/edx-platform")
-    assert not is_internal_pull_request(pr)
-    assert not is_committer_pull_request(pr)
-
-def test_base_branch_committers(make_pull_request):
-    pr = make_pull_request(
-        "hollyhunter",
-        repo="openedx/fake-release-repo",
-        ref="open-release/birch.1"
-    )
-    assert not is_internal_pull_request(pr)
-    assert is_committer_pull_request(pr)
-    pr = make_pull_request(
-        "hollyhunter",
-        repo="openedx/fake-release-repo",
-        ref="master"
-    )
-    assert not is_internal_pull_request(pr)
-    assert not is_committer_pull_request(pr)
-    pr = make_pull_request(
-        "pdpinch",
-        repo="openedx/fake-release-repo",
-        ref="open-release/birch.1"
-    )
-    assert not is_internal_pull_request(pr)
-    assert not is_committer_pull_request(pr)
 
 def test_current_person_no_institution():
     people = get_people_file()

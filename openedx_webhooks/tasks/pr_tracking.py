@@ -18,7 +18,6 @@ from openedx_webhooks.bot_comments import (
     extract_data_from_comment,
     format_data_for_comment,
     github_blended_pr_comment,
-    github_committer_pr_comment,
     github_community_pr_comment,
     github_community_pr_comment_closed,
     github_end_survey_comment,
@@ -43,7 +42,6 @@ from openedx_webhooks.info import (
     get_jira_issue_key,
     get_people_file,
     is_bot_pull_request,
-    is_committer_pull_request,
     is_draft_pull_request,
     is_internal_pull_request,
     is_private_repo_no_cla_pull_request,
@@ -292,12 +290,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             comment = BotComment.WELCOME_CLOSED
         desired.jira_project = jira_project_for_ospr(pr)
         desired.github_labels.add("open-source-contribution")
-        committer = is_committer_pull_request(pr)
-        if committer:
-            comment = BotComment.CORE_COMMITTER
-            desired.jira_labels.add("core-committer")
-            desired.jira_initial_status = "Waiting on Author"
-            desired.bot_comments.add(BotComment.CORE_COMMITTER)
         desired.bot_comments.add(comment)
 
         assert settings.GITHUB_OSPR_PROJECT, "You must set GITHUB_OSPR_PROJECT"
@@ -612,10 +604,6 @@ class PrTrackingFixer:
             needed_comments.remove(BotComment.WELCOME_CLOSED)
             if BotComment.SURVEY in self.desired.bot_comments:
                 self.desired.bot_comments.remove(BotComment.SURVEY)
-
-        if BotComment.CORE_COMMITTER in needed_comments:
-            comment_body += github_committer_pr_comment(self.pr, jira_id, **comment_kwargs)
-            needed_comments.remove(BotComment.CORE_COMMITTER)
 
         if BotComment.BLENDED in needed_comments:
             comment_body += github_blended_pr_comment(
