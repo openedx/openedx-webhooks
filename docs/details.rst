@@ -57,7 +57,7 @@ Now we can decide what to do:
     - PR Number is the number of the pull request.
     - Repo is the name of the repo (like "edx/edx-platform").
     - Contributor Name is the name of the author.
-    - Customer is the author's institution, if one is present in people.yaml.
+    - Customer is the author's institution, if one is present in the database.
     - Blended Jira issues also:
 
       - have a link to their Blended epic

@@ -90,7 +90,7 @@ def test_pr_opened_by_bot(fake_github, fake_jira):
 
 
 def test_external_pr_opened_no_cla(has_jira, fake_github, fake_jira):
-    # No CLA, because this person is not in people.yaml
+    # No CLA, because this person is not in our database.
     fake_github.make_user(login="new_contributor", name="Newb Contributor")
     pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform", user="new_contributor")
     prj = pr.as_json()
