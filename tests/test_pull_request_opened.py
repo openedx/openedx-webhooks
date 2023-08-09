@@ -131,7 +131,6 @@ def test_external_pr_opened_no_cla(has_jira, fake_github, fake_jira):
     assert "Thanks for the pull request, @new_contributor!" in body
     assert is_comment_kind(BotComment.NEED_CLA, body)
     assert is_comment_kind(BotComment.WELCOME, body)
-    assert not is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
     expected_labels = {"open-source-contribution"}
@@ -197,7 +196,6 @@ def test_external_pr_opened_with_cla(has_jira, fake_github, fake_jira):
     assert "Thanks for the pull request, @tusbar!" in body
     assert is_comment_kind(BotComment.WELCOME, body)
     assert not is_comment_kind(BotComment.NEED_CLA, body)
-    assert is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
     expected_labels = {"open-source-contribution"}
@@ -284,7 +282,6 @@ def test_core_committer_pr_opened(has_jira, fake_github, fake_jira):
     assert "Thanks for the pull request, @felipemontoya!" in body
     assert is_comment_kind(BotComment.CORE_COMMITTER, body)
     assert not is_comment_kind(BotComment.NEED_CLA, body)
-    assert is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
     expected_labels = {"open-source-contribution"}
@@ -321,7 +318,6 @@ def test_old_core_committer_pr_opened(fake_github, fake_jira):
     assert "Thanks for the pull request, @felipemontoya!" in body
     assert not is_comment_kind(BotComment.CORE_COMMITTER, body)
     assert not is_comment_kind(BotComment.NEED_CLA, body)
-    assert is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
     assert pr.labels == {"needs triage", "open-source-contribution"}
@@ -397,7 +393,6 @@ def test_blended_pr_opened_with_cla(with_epic, has_jira, fake_github, fake_jira)
     assert has_project_link == (with_epic and has_jira)
     assert is_comment_kind(BotComment.BLENDED, body)
     assert not is_comment_kind(BotComment.NEED_CLA, body)
-    assert is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
     expected_labels = {"blended"}
@@ -846,7 +841,6 @@ def test_handle_closed_pr(is_merged, has_jira, fake_github, fake_jira):
     assert is_comment_kind(BotComment.WELCOME, body)
     assert is_comment_kind(BotComment.WELCOME_CLOSED, body)
     assert not is_comment_kind(BotComment.NEED_CLA, body)
-    assert is_comment_kind(BotComment.OK_TO_TEST, body)
 
     # Check the GitHub labels that got applied.
     expected_labels = {"open-source-contribution"}

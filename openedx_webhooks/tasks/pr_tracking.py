@@ -339,9 +339,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         if state in ["closed", "merged"]:
             desired.bot_comments.add(BotComment.SURVEY)
 
-        if has_signed_agreement:
-            desired.bot_comments.add(BotComment.OK_TO_TEST)
-
         if "additions" in pr:
             desired.jira_extra_fields["Github Lines Added"] = pr["additions"]
         if "deletions" in pr:
@@ -628,11 +625,6 @@ class PrTrackingFixer:
                 **comment_kwargs
             )
             needed_comments.remove(BotComment.BLENDED)
-
-        if BotComment.OK_TO_TEST in needed_comments:
-            if comment_body:
-                comment_body += "\n<!-- jenkins ok to test -->"
-            needed_comments.remove(BotComment.OK_TO_TEST)
 
         if BotComment.NO_CONTRIBUTIONS in needed_comments:
             comment_body += no_contributions_thanks(self.pr)
