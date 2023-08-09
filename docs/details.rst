@@ -102,9 +102,6 @@ be changed.
   - If the user doesn't have a signed CLA, the bot adds a paragraph about
     needing to sign one.
 
-  - If the user has a signed CLA, the bot adds an invisible "ok to test" to get
-    the tests started.
-
 - Other information:
 
   - The number of lines added and deleted in the pull request are recorded in

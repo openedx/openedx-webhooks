@@ -30,7 +30,6 @@ class BotComment(Enum):
     NEED_CLA = auto()
     CORE_COMMITTER = auto()
     BLENDED = auto()
-    OK_TO_TEST = auto()
     END_OF_WIP = auto()
     SURVEY = auto()
     NO_CONTRIBUTIONS = auto()
@@ -54,9 +53,6 @@ BOT_COMMENT_INDICATORS = {
     BotComment.BLENDED: [
         "<!-- comment:welcome-blended -->",
     ],
-    BotComment.OK_TO_TEST: [
-        "<!-- jenkins ok to test -->",
-    ],
     BotComment.END_OF_WIP: [
         "<!-- comment:end_of_wip -->",
     ],
@@ -77,7 +73,6 @@ BOT_COMMENTS_FIRST = {
     BotComment.NEED_CLA,
     BotComment.BLENDED,
     BotComment.CORE_COMMITTER,
-    BotComment.OK_TO_TEST,
     BotComment.END_OF_WIP,
     BotComment.NO_CONTRIBUTIONS,
 }
