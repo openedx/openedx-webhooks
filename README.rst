@@ -177,6 +177,23 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2023-08-11
+~~~~~~~~~~
+
+- Removed: the bot no longer understands the past state of users.  This data
+  hasn't been maintained for the last few years.  There's no point relying on
+  stale data, so the capability is removed.
+
+- Removed: any understanding of who is a core contributor.  The bot no longer
+  makes comments or labels particular to core contributors. `Issue 227`_.
+
+.. _issue 227: https://github.com/openedx/openedx-webhooks/issues/227
+
+- Removed: we no longer read people.yaml.
+
+- Removed: we no longer add "jenkins ok to test" to start testing, since that
+  comment was only read by Jenkins, which we no longer use.
+
 2023-08-03
 ~~~~~~~~~~
 

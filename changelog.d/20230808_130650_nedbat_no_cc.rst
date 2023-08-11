@@ -1,3 +1,0 @@
-.. A new scriv changelog fragment.
-
-- Removed: we no longer read people.yaml.
