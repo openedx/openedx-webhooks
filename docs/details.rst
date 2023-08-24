@@ -128,18 +128,10 @@ fields in the issue. It removes the GitHub label for the old Jira status, and
 adds the GitHub label for the new Jira status.
 
 
-When a pull request is closed
------------------------------
-
-The bot leaves a comment asking the author to complete a survey about the pull
-request.
-
-
 When a pull request is re-opened
 --------------------------------
 
-The bot deletes the "please complete a survey" comment that was added when the
-pull request was closed.  The Jira issue is returned to the state it was in
+The Jira issue is returned to the state it was in
 when the pull request was closed.
 
 

@@ -55,10 +55,6 @@ def test_external_pr_closed(is_merged, has_jira, fake_jira, closed_pull_request)
         # We moved the Jira issue to Merged or Rejected.
         expected_status = "Merged" if is_merged else "Rejected"
         assert fake_jira.issues[issue_key].status == expected_status
-    pr_comments = pr.list_comments()
-    body = pr_comments[-1].body
-    assert "survey" in body
-    assert is_comment_kind(BotComment.SURVEY, body)
 
 
 def test_external_pr_closed_but_issue_deleted(is_merged, has_jira, fake_jira, closed_pull_request):
@@ -73,7 +69,7 @@ def test_external_pr_closed_but_issue_deleted(is_merged, has_jira, fake_jira, cl
     assert anything_happened
 
     pr_comments = pr.list_comments()
-    assert len(pr_comments) == 4    # 1 welcome, closed_pull_request makes two, 1 survey
+    assert len(pr_comments) == 3    # 1 welcome, closed_pull_request makes two
     # We leave the old issue id in the comment.
     body = pr_comments[0].body
     check_issue_link_in_markdown(body, old_issue_key)
@@ -124,13 +120,13 @@ def test_cc_pr_closed(fake_github, fake_jira, is_merged):
     pull_request_changed(pr.as_json())
 
     pr_comments = pr.list_comments()
-    assert len(pr_comments) == 2    # 1 welcome, 1 survey
+    assert len(pr_comments) == 1    # welcome
 
     # Processing it again won't change anything.
     pull_request_changed(pr.as_json())
 
     pr_comments = pr.list_comments()
-    assert len(pr_comments) == 2    # 1 welcome, 1 survey
+    assert len(pr_comments) == 1    # welcome
 
 
 def test_track_additions_deletions(fake_github, fake_jira, is_merged):

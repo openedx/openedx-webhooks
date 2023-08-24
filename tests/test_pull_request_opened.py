@@ -145,9 +145,7 @@ def test_external_pr_opened_no_cla(has_jira, fake_github, fake_jira):
     issue_id2, anything_happened2 = close_and_reopen_pr(pr)
     assert issue_id2 == issue_id
     assert anything_happened2 is True
-    # Now there is one comment: closing the PR added a survey comment, but
-    # re-opening it deleted it.
-    assert len(pr.list_comments()) == 1
+    assert len(pr.list_comments()) == 0
 
     if has_jira:
         issue = fake_jira.issues[issue_id]
@@ -210,10 +208,8 @@ def test_external_pr_opened_with_cla(has_jira, fake_github, fake_jira):
     issue_id2, anything_happened2 = close_and_reopen_pr(pr)
     assert issue_id2 == issue_id
     assert anything_happened2 is True
-    # Now there is one comment: closing the PR added a survey comment, but
-    # re-opening it deleted it.
     pr_comments = pr.list_comments()
-    assert len(pr_comments) == 1
+    assert len(pr_comments) == 0
 
     if has_jira:
         issue = fake_jira.issues[issue_id]

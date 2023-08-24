@@ -1,0 +1,4 @@
+.. A new scriv changelog fragment.
+
+- Removed: The bot on longer posts a survey link when a PR is closed or merged.
+

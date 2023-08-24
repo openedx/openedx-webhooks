@@ -30,7 +30,6 @@ class BotComment(Enum):
     NEED_CLA = auto()
     BLENDED = auto()
     END_OF_WIP = auto()
-    SURVEY = auto()
     NO_CONTRIBUTIONS = auto()
 
 
@@ -51,11 +50,6 @@ BOT_COMMENT_INDICATORS = {
     ],
     BotComment.END_OF_WIP: [
         "<!-- comment:end_of_wip -->",
-    ],
-    BotComment.SURVEY: [
-        "<!-- comment:end_survey -->",
-        "/1FAIpQLSceJOyGJ6JOzfy6lyR3T7EW_71OWUnNQXp68Fymsk3MkNoSDg/viewform",
-        "<!-- comment:no_survey_needed -->",
     ],
     BotComment.NO_CONTRIBUTIONS: [
         "<!-- comment:no-contributions -->",
@@ -141,40 +135,8 @@ def github_blended_pr_comment(
     )
 
 
-SURVEY_URL = (
-    'https://docs.google.com/forms/d/e'
-    '/1FAIpQLSceJOyGJ6JOzfy6lyR3T7EW_71OWUnNQXp68Fymsk3MkNoSDg/viewform'
-    '?usp=pp_url'
-    '&entry.1671973413={repo_full_name}'
-    '&entry.867055334={pull_request_url}'
-    '&entry.1484655318={contributor_url}'
-    '&entry.752974735={created_at}'
-    '&entry.1917517419={closed_at}'
-    '&entry.2133058324={is_merged}'
-)
-
 def _format_datetime(datetime_string):
     return arrow.get(datetime_string).format('YYYY-MM-DD+HH:mm')
-
-def github_end_survey_comment(pull_request: PrDict) -> str:
-    """
-    Create a "please fill out this survey" comment.
-    """
-    is_merged = pull_request.get("merged", False)
-    url = SURVEY_URL.format(
-        repo_full_name=pull_request["base"]["repo"]["full_name"],
-        pull_request_url=pull_request["html_url"],
-        contributor_url=pull_request["user"]["html_url"],
-        created_at=_format_datetime(pull_request["created_at"]),
-        closed_at=_format_datetime(pull_request["closed_at"]),
-        is_merged="Yes" if is_merged else "No",
-    )
-    return render_template(
-        "github_end_survey.md.j2",
-        user=pull_request["user"]["login"],
-        is_merged=is_merged,
-        survey_url=url,
-    )
 
 
 def no_contributions_thanks(pull_request: PrDict) -> str:

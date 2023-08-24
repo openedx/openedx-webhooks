@@ -8,7 +8,6 @@ from openedx_webhooks.bot_comments import (
     BotComment,
     is_comment_kind,
     github_community_pr_comment,
-    github_end_survey_comment,
     extract_data_from_comment,
     format_data_for_comment,
 )
@@ -33,27 +32,6 @@ def test_community_pr_comment_no_cla(fake_github, fake_jira):
     assert "[FOO-1](https://test.atlassian.net/browse/FOO-1)" in comment
     assert is_comment_kind(BotComment.NEED_CLA, comment)
     assert "[signed contributor agreement](https://openedx.org/cla)" in comment
-    check_good_markdown(comment)
-
-
-def test_survey_pr_comment(fake_github, is_merged):
-    with freeze_time("2021-08-31 15:30:12"):
-        pr = fake_github.make_pull_request(user="FakeUser")
-    with freeze_time("2021-09-01 01:02:03"):
-        pr.close(merge=is_merged)
-    prj = pr.as_json()
-    comment = github_end_survey_comment(prj)
-    assert "@FakeUser" in comment
-    assert "/1FAIpQLSceJOyGJ6JOzfy6lyR3T7EW_71OWUnNQXp68Fymsk3MkNoSDg/viewform" in comment
-    assert "&entry.1671973413=an-org/a-repo" in comment
-    assert "&entry.752974735=2021-08-31+15:30" in comment
-    assert "&entry.1917517419=2021-09-01+01:02" in comment
-    if is_merged:
-        assert "Your pull request was merged!" in comment
-        assert "&entry.2133058324=Yes" in comment
-    else:
-        assert "Even though your pull request wasn’t merged" in comment
-        assert "&entry.2133058324=No" in comment
     check_good_markdown(comment)
 
 

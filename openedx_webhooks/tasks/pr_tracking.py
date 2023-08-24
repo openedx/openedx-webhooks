@@ -20,7 +20,6 @@ from openedx_webhooks.bot_comments import (
     github_blended_pr_comment,
     github_community_pr_comment,
     github_community_pr_comment_closed,
-    github_end_survey_comment,
     no_contributions_thanks,
 )
 from openedx_webhooks.cla_check import (
@@ -95,9 +94,6 @@ class PrCurrentInfo:
 
     # The text of the first bot comment.
     bot_comment0_text: Optional[str] = None
-
-    # The comment id of the survey comment, if any.
-    bot_survey_comment_id: Optional[str] = None
 
     # The last-seen state stored in the first bot comment.
     last_seen_state: Dict = field(default_factory=dict)
@@ -192,8 +188,6 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
         for comment_id, snips in BOT_COMMENT_INDICATORS.items():
             if any(snip in body for snip in snips):
                 current.bot_comments.add(comment_id)
-                if comment_id == BotComment.SURVEY:
-                    current.bot_survey_comment_id = comment["id"]
         current.all_bot_state.update(extract_data_from_comment(body))
 
     on_our_jira, jira_id = get_jira_issue_key(prid)
@@ -326,10 +320,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             desired.jira_status = "Merged"
         elif state == "reopened":
             desired.jira_status = "pre-close"   # Not a real Jira status.
-            desired.bot_comments_to_remove.add(BotComment.SURVEY)
-
-        if state in ["closed", "merged"]:
-            desired.bot_comments.add(BotComment.SURVEY)
 
         if "additions" in pr:
             desired.jira_extra_fields["Github Lines Added"] = pr["additions"]
@@ -602,8 +592,6 @@ class PrTrackingFixer:
         if BotComment.WELCOME_CLOSED in needed_comments:
             comment_body += github_community_pr_comment_closed(self.pr, jira_id, **comment_kwargs)
             needed_comments.remove(BotComment.WELCOME_CLOSED)
-            if BotComment.SURVEY in self.desired.bot_comments:
-                self.desired.bot_comments.remove(BotComment.SURVEY)
 
         if BotComment.BLENDED in needed_comments:
             comment_body += github_blended_pr_comment(
@@ -648,19 +636,8 @@ class PrTrackingFixer:
         """
         needed_comments = self.desired.bot_comments - self.current.bot_comments - BOT_COMMENTS_FIRST
 
-        if BotComment.SURVEY in needed_comments:
-            body = github_end_survey_comment(self.pr)
-            if self.desired.jira_status == "Rejected":
-                # For close/re-open cycling, remember what Jira was before the close.
-                body += format_data_for_comment({"jira-pre-close": self.desired.jira_previous_status})
-            self.actions.add_comment_to_pull_request(comment_body=body)
-            needed_comments.remove(BotComment.SURVEY)
-            self.happened = True
-
-        if BotComment.SURVEY in self.desired.bot_comments_to_remove:
-            if self.current.bot_survey_comment_id:
-                self.actions.delete_comment_on_pull_request(comment_id=self.current.bot_survey_comment_id)
-                self.happened = True
+        # Handle needed_comments here. Pop them from the set once handled.
+        # (Currently no comments are handled this way.)
 
         assert needed_comments == set(), f"Couldn't make comments: {needed_comments}"
 
