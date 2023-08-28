@@ -61,11 +61,11 @@ def hook_receiver():
     # Actions and keys we get:
     #   Creating a PR: action=opened, number, pull_request
     #   Editing a PR: action=edited, changes, number, pull_request
-    #   Commenting on a PR: action=created, comment, issue
+    #   Commenting on a PR: action=created, comment, issue, repository, sender
     #       {"issue": { "html_url": "https://github.com/owner/repo/pull/101"}}
     #   Creating an issue: action=opened, issue
     #   Editing a comment: action=edited, changes, comment, issue
-    #   Commenting on an issue: action=created, comment, issue
+    #   Commenting on an issue: action=created, comment, issue, repository, sender
     #       {"issue": { "html_url": "https://github.com/owner/repo/issue/101"}}
 
     match event:
@@ -133,6 +133,19 @@ def handle_comment_event(event):
     who = event.get("sender", {}).get("login", "someone")
     if who == get_bot_username():
         return "No thanks", 202
+
+    match event:
+        case {"issue": {"pull_request": _}}:
+            # The comment is on a pull request.  Re-shape the data to conform to
+            # a pull request reported by a pull request event, and fire
+            # pull_request_changed_task.
+            pr = event["issue"]
+            pr["base"] = {"repo": event["repository"]}
+            pr["hook_action"] = event["action"]
+            return queue_task(pull_request_changed_task, pr)
+
+        case _:
+            pass
 
     # Soon to come: handling comments.
     return "No thanks", 202
