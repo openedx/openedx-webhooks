@@ -141,6 +141,7 @@ def handle_comment_event(event):
             # pull_request_changed_task.
             pr = event["issue"]
             pr["base"] = {"repo": event["repository"]}
+            pr["merged"] = bool(pr["pull_request"]["merged_at"])
             pr["hook_action"] = event["action"]
             return queue_task(pull_request_changed_task, pr)
 
