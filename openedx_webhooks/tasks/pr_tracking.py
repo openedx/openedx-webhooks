@@ -77,8 +77,6 @@ from openedx_webhooks.utils import (
 
 
 JIRA_EXTRA_FIELDS = [
-    "Platform Map Area (Levels 1 & 2)",
-    "Platform Map Area (Levels 3 & 4)",
     "Blended Project Status Page",
     "Blended Project ID",
     "Github Lines Added",
@@ -276,10 +274,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             blended_epic = find_blended_epic(blended_id)
             if blended_epic is not None:
                 desired.jira_epic = blended_epic
-                custom_fields = get_jira_custom_fields()
-                map_1_2 = blended_epic["fields"].get(custom_fields["Platform Map Area (Levels 1 & 2)"])
-                if map_1_2 is not None:
-                    desired.jira_extra_fields["Platform Map Area (Levels 1 & 2)"] = map_1_2
         assert settings.GITHUB_BLENDED_PROJECT, "You must set GITHUB_BLENDED_PROJECT"
         desired.github_projects.add(settings.GITHUB_BLENDED_PROJECT)
 

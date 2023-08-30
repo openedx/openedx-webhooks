@@ -40,8 +40,6 @@ class Issue:
     summary: Optional[str] = None
     labels: Set[str] = field(default_factory=set)
     epic_link: Optional[str] = None
-    platform_map_1_2: Optional[str] = None
-    platform_map_3_4: Optional[str] = None
     blended_project_status_page: Optional[str] = None
     blended_project_id: Optional[str] = None
     lines_added: Optional[float] = None
@@ -63,8 +61,6 @@ class Issue:
                 FakeJira.PR_NUMBER: self.pr_number,
                 FakeJira.REPO: self.repo or None,
                 FakeJira.URL: self.url or None,
-                FakeJira.PLATFORM_MAP_1_2: self.platform_map_1_2 or None,
-                FakeJira.PLATFORM_MAP_3_4: self.platform_map_3_4 or None,
                 FakeJira.BLENDED_PROJECT_STATUS_PAGE: self.blended_project_status_page or None,
                 FakeJira.BLENDED_PROJECT_ID: self.blended_project_id or None,
                 FakeJira.LINES_ADDED: self.lines_added,
@@ -83,8 +79,6 @@ class FakeJira(faker.Faker):
     REPO = "custom_104"
     URL = "customfield_10904"   # This one is hard-coded
     EPIC_LINK = "custom_900"
-    PLATFORM_MAP_1_2 = "custom_105"
-    PLATFORM_MAP_3_4 = "custom_106"
     BLENDED_PROJECT_STATUS_PAGE = "custom_107"
     BLENDED_PROJECT_ID = "custom_108"
     LINES_ADDED = "custom_280"
@@ -132,8 +126,6 @@ class FakeJira(faker.Faker):
             (self.PR_NUMBER, "PR Number"),
             (self.REPO, "Repo"),
             (self.URL, "URL"),
-            (self.PLATFORM_MAP_1_2, "Platform Map Area (Levels 1 & 2)"),
-            (self.PLATFORM_MAP_3_4, "Platform Map Area (Levels 3 & 4)"),
             (self.BLENDED_PROJECT_STATUS_PAGE, "Blended Project Status Page"),
             (self.BLENDED_PROJECT_ID, "Blended Project ID"),
             (self.LINES_ADDED, "Github Lines Added"),
@@ -196,8 +188,6 @@ class FakeJira(faker.Faker):
             pr_number=fields.get(FakeJira.PR_NUMBER),
             repo=fields.get(FakeJira.REPO),
             url=fields.get(FakeJira.URL),
-            platform_map_1_2=fields.get(FakeJira.PLATFORM_MAP_1_2),
-            platform_map_3_4=fields.get(FakeJira.PLATFORM_MAP_3_4),
             lines_added=float_or_none(fields.get(FakeJira.LINES_ADDED)),
             lines_deleted=float_or_none(fields.get(FakeJira.LINES_DELETED)),
         )
@@ -225,8 +215,6 @@ class FakeJira(faker.Faker):
                 kwargs["labels"] = set(fields.pop("labels"))
             if FakeJira.EPIC_LINK in fields:
                 kwargs["epic_link"] = fields.pop(FakeJira.EPIC_LINK)
-            if FakeJira.PLATFORM_MAP_1_2 in fields:
-                kwargs["platform_map_1_2"] = fields.pop(FakeJira.PLATFORM_MAP_1_2)
             if FakeJira.LINES_ADDED in fields:
                 kwargs["lines_added"] = float_or_none(fields.pop(FakeJira.LINES_ADDED))
             if FakeJira.LINES_DELETED in fields:

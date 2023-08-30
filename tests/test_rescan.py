@@ -160,21 +160,10 @@ def test_rescan_blended(fake_github, fake_jira):
     # kept updating the jira issue.
     pr = fake_github.make_pull_request(user="tusbar", title="[BD-34] Something good")
     prj = pr.as_json()
-    map_1_2 = {
-        "child": {
-            "id": "14522",
-            "self": "https://test.atlassian.net/rest/api/2/customFieldOption/14522",
-            "value": "Course Level Insights"
-        },
-        "id": "14209",
-        "self": "https://test.atlassian.net/rest/api/2/customFieldOption/14209",
-        "value": "Researcher & Data Experiences"
-    }
     epic = fake_jira.make_issue(
         project="BLENDED",
         blended_project_id="BD-34",
         blended_project_status_page="https://thewiki/bd-34",
-        platform_map_1_2=map_1_2,
     )
 
     issue_id, anything_happened = pull_request_changed(prj)
@@ -187,7 +176,6 @@ def test_rescan_blended(fake_github, fake_jira):
     assert len(fake_jira.issues) == 2
     issue = fake_jira.issues[issue_id]
     assert issue.epic_link == epic.key
-    assert issue.platform_map_1_2 == map_1_2
 
     # Reset our fakers so we can isolate the effect of the rescan.
     fake_github.reset_mock()

@@ -61,7 +61,6 @@ Now we can decide what to do:
     - Blended Jira issues also:
 
       - have a link to their Blended epic
-      - copy the "Platform Map Area (Levels 1 & 2)" field from the epic.
 
 - Initial Jira status:
 

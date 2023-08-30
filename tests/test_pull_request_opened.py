@@ -242,17 +242,6 @@ def test_psycho_reopening(fake_github, fake_jira):
         assert issue.status == status
 
 
-EXAMPLE_PLATFORM_MAP_1_2 = {
-    "child": {
-        "id": "14522",
-        "self": "https://test.atlassian.net/rest/api/2/customFieldOption/14522",
-        "value": "Course Level Insights"
-    },
-    "id": "14209",
-    "self": "https://test.atlassian.net/rest/api/2/customFieldOption/14209",
-    "value": "Researcher & Data Experiences"
-}
-
 @pytest.mark.parametrize("with_epic", [
     pytest.param(False, id="epic:no"),
     pytest.param(True, id="epic:yes"),
@@ -266,7 +255,6 @@ def test_blended_pr_opened_with_cla(with_epic, has_jira, fake_github, fake_jira)
             project="BLENDED",
             blended_project_id="BD-34",
             blended_project_status_page="https://thewiki/bd-34",
-            platform_map_1_2=EXAMPLE_PLATFORM_MAP_1_2,
         )
         total_issues += 1
 
@@ -291,10 +279,8 @@ def test_blended_pr_opened_with_cla(with_epic, has_jira, fake_github, fake_jira)
         assert issue.labels == {"blended"}
         if with_epic:
             assert issue.epic_link == epic.key
-            assert issue.platform_map_1_2 == EXAMPLE_PLATFORM_MAP_1_2
         else:
             assert issue.epic_link is None
-            assert issue.platform_map_1_2 is None
 
         # Check that the Jira issue is in Needs Triage.
         assert issue.status == "Needs Triage"
@@ -436,7 +422,6 @@ def test_title_change_changes_jira_project(fake_github, fake_jira):
         project="BLENDED",
         blended_project_id="BD-34",
         blended_project_status_page="https://thewiki/bd-34",
-        platform_map_1_2=EXAMPLE_PLATFORM_MAP_1_2,
     )
 
     # The developer makes a pull request, but forgets the right syntax in the title.
@@ -485,7 +470,6 @@ def test_title_change_changes_jira_project(fake_github, fake_jira):
     assert issue.summary == prj["title"]
     assert issue.labels == {"blended"}
     assert issue.epic_link == epic.key
-    assert issue.platform_map_1_2 == EXAMPLE_PLATFORM_MAP_1_2
 
     # Check that the Jira issue is in Needs Triage.
     assert issue.status == "Needs Triage"
@@ -776,7 +760,7 @@ def test_handle_closed_pr(is_merged, has_jira, fake_github, fake_jira):
 
 
 def test_extra_fields_are_ok(fake_github, fake_jira):
-    # If someone adds platform map information to the Jira issue, it won't
+    # If someone adds labels to the Jira issue, it won't
     # trigger an update.
     pr = fake_github.make_pull_request(
         user="tusbar",
@@ -792,8 +776,7 @@ def test_extra_fields_are_ok(fake_github, fake_jira):
     # The bot made one comment on the PR.
     assert len(pr.list_comments()) == 1
 
-    # Someone adds platform map and label to the Jira.
-    issue.platform_map_1_2 = EXAMPLE_PLATFORM_MAP_1_2
+    # Someone adds label to the Jira.
     issue.labels.add("my-label")
 
     # PR gets rescanned.
