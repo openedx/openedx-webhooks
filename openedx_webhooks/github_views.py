@@ -99,17 +99,6 @@ PR_ACTIONS = {
 def handle_pull_request_event(event):
     """Handle a webhook event about a pull request."""
 
-    # This can't authenticate with Jira now, so don't do it:
-    # q.enqueue(
-    #     'openedx_webhooks.github.dispatcher.dispatch',
-    #     dict(request.headers),
-    #     event,
-    # )
-
-    # There used to be two webhook endpoints.  This is the two of them
-    # concatenated, just to combine them in the simplest possible way.
-    # One of them is above this comment, the other is below.
-
     pr = event["pull_request"]
     pr_number = pr["number"]
     repo = event["repository"]["full_name"]
