@@ -79,8 +79,6 @@ from openedx_webhooks.utils import (
 JIRA_EXTRA_FIELDS = [
     "Blended Project Status Page",
     "Blended Project ID",
-    "Github Lines Added",
-    "Github Lines Deleted",
 ]
 
 
@@ -324,11 +322,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
 
         if state in ["closed", "merged"]:
             desired.bot_comments.add(BotComment.SURVEY)
-
-        if "additions" in pr:
-            desired.jira_extra_fields["Github Lines Added"] = pr["additions"]
-        if "deletions" in pr:
-            desired.jira_extra_fields["Github Lines Deleted"] = pr["deletions"]
 
     if desired.is_refused:
         desired.bot_comments.add(BotComment.NO_CONTRIBUTIONS)

@@ -115,7 +115,7 @@ class TestPullRequestList:
         # By default, only open pull requests are listed.
         assert len(prjs) == 3
         # When listing pull requests, not all fields are returned.
-        assert not any(k in prj for prj in prjs for k in ["merged", "additions", "deletions"])
+        assert not any(k in prj for prj in prjs for k in ["merged"])
 
     @pytest.mark.parametrize("state, number, specific", [
         ("open", 3, True),

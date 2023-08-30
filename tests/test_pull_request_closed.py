@@ -133,25 +133,6 @@ def test_cc_pr_closed(fake_github, fake_jira, is_merged):
     assert len(pr_comments) == 2    # 1 welcome, 1 survey
 
 
-def test_track_additions_deletions(fake_github, fake_jira, is_merged):
-    pr = fake_github.make_pull_request(user="tusbar", additions=17, deletions=42)
-    issue_id, _ = pull_request_changed(pr.as_json())
-
-    issue = fake_jira.issues[issue_id]
-    assert issue.lines_added == 17
-    assert issue.lines_deleted == 42
-
-    pr.additions = 34
-    pr.deletions = 1001
-    pr.close(merge=is_merged)
-
-    pull_request_changed(pr.as_json())
-
-    issue = fake_jira.issues[issue_id]
-    assert issue.lines_added == 34
-    assert issue.lines_deleted == 1001
-
-
 @pytest.mark.parametrize("new_jira", [None, "https://new-jira.atlassian.net"])
 def test_close_jira_pr_with_new_jira(
     fake_github, requests_mocker, new_jira, is_merged

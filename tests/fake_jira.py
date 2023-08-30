@@ -42,8 +42,6 @@ class Issue:
     epic_link: Optional[str] = None
     blended_project_status_page: Optional[str] = None
     blended_project_id: Optional[str] = None
-    lines_added: Optional[float] = None
-    lines_deleted: Optional[float] = None
 
     def as_json(self) -> Dict:
         return {
@@ -63,8 +61,6 @@ class Issue:
                 FakeJira.URL: self.url or None,
                 FakeJira.BLENDED_PROJECT_STATUS_PAGE: self.blended_project_status_page or None,
                 FakeJira.BLENDED_PROJECT_ID: self.blended_project_id or None,
-                FakeJira.LINES_ADDED: self.lines_added,
-                FakeJira.LINES_DELETED: self.lines_deleted,
             },
         }
 
@@ -81,8 +77,6 @@ class FakeJira(faker.Faker):
     EPIC_LINK = "custom_900"
     BLENDED_PROJECT_STATUS_PAGE = "custom_107"
     BLENDED_PROJECT_ID = "custom_108"
-    LINES_ADDED = "custom_280"
-    LINES_DELETED = "custom_281"
 
     # Issue states and transitions for OSPR.
     INITIAL_STATE = "Needs Triage"
@@ -128,8 +122,6 @@ class FakeJira(faker.Faker):
             (self.URL, "URL"),
             (self.BLENDED_PROJECT_STATUS_PAGE, "Blended Project Status Page"),
             (self.BLENDED_PROJECT_ID, "Blended Project ID"),
-            (self.LINES_ADDED, "Github Lines Added"),
-            (self.LINES_DELETED, "Github Lines Deleted"),
         ]]
 
     def make_issue(self, key: Optional[str] = None, project: str = "OSPR", **kwargs) -> Issue:
@@ -188,8 +180,6 @@ class FakeJira(faker.Faker):
             pr_number=fields.get(FakeJira.PR_NUMBER),
             repo=fields.get(FakeJira.REPO),
             url=fields.get(FakeJira.URL),
-            lines_added=float_or_none(fields.get(FakeJira.LINES_ADDED)),
-            lines_deleted=float_or_none(fields.get(FakeJira.LINES_DELETED)),
         )
         self.make_issue(key, **kwargs)
         # Response is only some information:
@@ -215,10 +205,6 @@ class FakeJira(faker.Faker):
                 kwargs["labels"] = set(fields.pop("labels"))
             if FakeJira.EPIC_LINK in fields:
                 kwargs["epic_link"] = fields.pop(FakeJira.EPIC_LINK)
-            if FakeJira.LINES_ADDED in fields:
-                kwargs["lines_added"] = float_or_none(fields.pop(FakeJira.LINES_ADDED))
-            if FakeJira.LINES_DELETED in fields:
-                kwargs["lines_deleted"] = float_or_none(fields.pop(FakeJira.LINES_DELETED))
             assert fields == {}, f"Didn't handle requested changes: {fields=}"
             issue = dataclasses.replace(issue, **kwargs)
             self.issues[issue.key] = issue

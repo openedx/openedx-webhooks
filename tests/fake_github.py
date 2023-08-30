@@ -119,8 +119,6 @@ class PullRequest:
     merged: bool = False
     draft: bool = False
     commits: List[str] = field(default_factory=list)
-    additions: Optional[int] = None
-    deletions: Optional[int] = None
     ref: str = ""
 
     def as_json(self, brief=False) -> Dict:
@@ -144,10 +142,6 @@ class PullRequest:
         }
         if not brief:
             j["merged"] = self.merged
-            if self.additions is not None:
-                j["additions"] = self.additions
-            if self.deletions is not None:
-                j["deletions"] = self.deletions
         return j
 
     def close(self, merge=False):

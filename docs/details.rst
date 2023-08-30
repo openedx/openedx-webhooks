@@ -94,9 +94,6 @@ be changed.
 
 - Other information:
 
-  - The number of lines added and deleted in the pull request are recorded in
-    the "Github Lines Added" and "Github Lines Deleted" fields.
-
   - A GitHub status check called "openedx/cla" is added to the latest commit.
     This is applied to all pull requests, even ones by authors internal to the
     pull request's organization.

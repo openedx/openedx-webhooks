@@ -765,8 +765,6 @@ def test_extra_fields_are_ok(fake_github, fake_jira):
     pr = fake_github.make_pull_request(
         user="tusbar",
         title="These are my changes, please take them.",
-        additions=1776,
-        deletions=1492,
     )
 
     issue_id1, _ = pull_request_changed(pr.as_json())
