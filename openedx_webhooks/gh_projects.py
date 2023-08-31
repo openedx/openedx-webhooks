@@ -6,9 +6,8 @@ from typing import Set
 
 from glom import glom
 
-from openedx_webhooks.lib.github.models import PrId
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.types import GhProject, PrDict
+from openedx_webhooks.types import GhProject, PrDict, PrId
 from openedx_webhooks.utils import graphql_query
 
 # The name of the query is used by FakeGitHub while testing.

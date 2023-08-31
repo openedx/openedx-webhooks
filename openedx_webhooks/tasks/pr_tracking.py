@@ -57,14 +57,13 @@ from openedx_webhooks.labels import (
     JIRA_CATEGORY_LABELS,
 )
 from openedx_webhooks.auth import get_github_session, get_jira_session
-from openedx_webhooks.lib.github.models import PrId
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.jira_work import (
     delete_jira_issue,
     transition_jira_issue,
     update_jira_issue,
 )
-from openedx_webhooks.types import GhProject, JiraDict, PrDict
+from openedx_webhooks.types import GhProject, JiraDict, PrDict, PrId
 from openedx_webhooks.utils import (
     get_jira_custom_fields,
     get_jira_issue,

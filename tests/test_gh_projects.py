@@ -4,7 +4,7 @@ from openedx_webhooks.gh_projects import (
     add_pull_request_to_project,
     pull_request_projects,
 )
-from openedx_webhooks.lib.github.models import PrId
+from openedx_webhooks.types import PrId
 
 
 def test_adding_pr_to_project(fake_github):

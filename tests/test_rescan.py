@@ -5,14 +5,14 @@ from datetime import datetime
 
 import pytest
 
+from openedx_webhooks.bot_comments import github_community_pr_comment
 from openedx_webhooks.info import get_bot_username
-from openedx_webhooks.lib.github.models import PrId
 from openedx_webhooks.tasks.github import (
     pull_request_changed,
     rescan_organization,
     rescan_repository,
 )
-from openedx_webhooks.bot_comments import github_community_pr_comment
+from openedx_webhooks.types import PrId
 
 
 @pytest.fixture
