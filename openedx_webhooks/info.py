@@ -10,9 +10,8 @@ import yaml
 from glom import glom
 
 from openedx_webhooks import settings
-from openedx_webhooks.lib.github.models import PrId
 from openedx_webhooks.auth import get_github_session
-from openedx_webhooks.types import GhProject, PrDict, PrCommentDict
+from openedx_webhooks.types import GhProject, PrDict, PrCommentDict, PrId
 from openedx_webhooks.utils import (
     memoize,
     memoize_timed,
