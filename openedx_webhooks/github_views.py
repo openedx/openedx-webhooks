@@ -10,7 +10,6 @@ from flask import Blueprint, jsonify, render_template, request
 from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.debug import is_debug, print_long_json
 from openedx_webhooks.info import get_bot_username
-from openedx_webhooks.lib.github.models import GithubWebHookRequestHeader
 from openedx_webhooks.tasks.github import (
     pull_request_changed_task, rescan_repository, rescan_repository_task,
     rescan_organization_task,
@@ -36,12 +35,9 @@ def hook_receiver():
     Returns:
         A response, or Tuple[str, int]: Message payload and HTTP status code
     """
-    headers = GithubWebHookRequestHeader(request.headers)
-
-    # TODO: Once we adopt payload signature validation for all web hooks,
-    #       add as decorator, or somehow into Blueprint
+    signature = request.headers.get("X-Hub-Signature")
     secret = app.config.get('GITHUB_WEBHOOKS_SECRET')
-    if not is_valid_payload(secret, headers.signature, request.data):
+    if not is_valid_payload(secret, signature, request.data):
         msg = "Rejecting because signature doesn't match!"
         logging.info(msg)
         return msg, 403
