@@ -135,6 +135,9 @@ class PullRequest:
                 "repo": self.repo.as_json(),
                 "ref": self.ref,
             },
+            "head": {
+                "sha": self.commits[-1],
+            },
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "closed_at": self.closed_at.strftime("%Y-%m-%dT%H:%M:%SZ") if self.closed_at else None,
             "url": f"{self.repo.github.host}/repos/{self.repo.full_name}/pulls/{self.number}",
@@ -382,13 +385,6 @@ class FakeGitHub(faker.Faker):
         return pr.as_json()
 
     # Commmits
-
-    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pulls/(?P<number>\d+)/commits(\?.*)?")
-    def _get_pr_commits(self, match, _request, _context) -> List[Dict[str, str]]:
-        r = self.get_repo(match["owner"], match["repo"])
-        pr = r.get_pull_request(int(match["number"]))
-        data = [{'sha': sha} for sha in pr.commits]
-        return data
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?")
     def _get_pr_status_check(self, match, _request, _context) -> List[Dict[str, Any]]:
