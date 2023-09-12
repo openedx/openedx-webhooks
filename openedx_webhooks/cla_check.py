@@ -11,30 +11,15 @@ from openedx_webhooks.utils import log_check_response
 
 def _get_latest_commit_for_pull_request(repo_name_full: str, number: int) -> Optional[str]:
     """
-    Lookup PR commit details and pull out the SHA of the most recent commit.
+    Get the HEAD commit for a pull request.
     """
-    data = _get_latest_commit_for_pull_request_data(repo_name_full, number)
-    commit: Dict[str, Any] = {}
-    if data:
-        commit = data[-1]
-        sha = commit.get('sha')
-    else:
-        sha = None
-    logger.debug("CLA: SHA %s", sha)
-    return sha
-
-
-def _get_latest_commit_for_pull_request_data(repo_name_full: str, number: int) -> List[Dict[str, Any]]:
-    """
-    Lookup the commits for a pull request.
-    """
-    url = f"https://api.github.com/repos/{repo_name_full}/pulls/{number}/commits"
-    logger.debug("CLA: GET %s", url)
-    response = get_github_session().get(url, params={"per_page": 100})
+    url = f"https://api.github.com/repos/{repo_name_full}/pulls/{number}"
+    response = get_github_session().get(url)
     log_check_response(response)
     data = response.json()
-    logger.debug("CLA: GOT %s", data)
-    return data
+    sha = data['head']['sha']
+    logger.debug("CLA: SHA %s", sha)
+    return sha
 
 
 def _get_commit_status_for_cla(url) -> Optional[Dict[str, str]]:
