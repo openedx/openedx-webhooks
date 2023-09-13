@@ -177,6 +177,13 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2023-09-13
+~~~~~~~~~~
+
+- The CLA check used to fail if a pull request had more than 100 commits.  Now
+  the head sha is retrieved directly without listing all commits, so the number
+  is irrelevant.
+
 2023-08-30
 ~~~~~~~~~~
 
