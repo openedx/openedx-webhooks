@@ -10,7 +10,7 @@ import itertools
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
-from openedx_webhooks import settings
+from openedx_webhooks.auth import get_github_session, get_jira_session
 from openedx_webhooks.bot_comments import (
     BOT_COMMENT_INDICATORS,
     BOT_COMMENTS_FIRST,
@@ -54,7 +54,7 @@ from openedx_webhooks.labels import (
     GITHUB_STATUS_LABELS,
     JIRA_CATEGORY_LABELS,
 )
-from openedx_webhooks.auth import get_github_session, get_jira_session
+from openedx_webhooks.settings import settings
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.jira_work import (
     transition_jira_issue,

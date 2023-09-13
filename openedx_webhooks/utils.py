@@ -17,8 +17,9 @@ import requests
 from flask import jsonify, request, Response, url_for
 from urlobject import URLObject
 
-from openedx_webhooks import logger, settings
+from openedx_webhooks import logger
 from openedx_webhooks.auth import get_github_session, get_jira_session
+from openedx_webhooks.settings import settings
 from openedx_webhooks.types import JiraDict
 
 

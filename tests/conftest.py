@@ -8,9 +8,10 @@ import pytest
 import requests_mock
 
 import openedx_webhooks
-import openedx_webhooks.utils
 import openedx_webhooks.info
-from openedx_webhooks import settings
+import openedx_webhooks.utils
+import openedx_webhooks.settings
+from openedx_webhooks.settings import settings
 
 from .fake_github import FakeGitHub
 from .fake_jira import FakeJira
@@ -77,9 +78,9 @@ def pytest_addoption(parser):
 
 @pytest.fixture(autouse=True)
 def settings_for_tests(mocker):
-    for name, value in vars(settings.TestSettings).items():
+    for name, value in vars(openedx_webhooks.settings.TestSettings).items():
         if name.isupper():
-            mocker.patch(f"openedx_webhooks.settings.{name}", value)
+            mocker.patch(f"openedx_webhooks.settings.settings.{name}", value)
 
 
 @pytest.fixture
