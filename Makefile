@@ -20,7 +20,6 @@ TEST_FLAGS = $(TEST_ARGS) -rxefs --cov=openedx_webhooks --cov=tests --cov-report
 test: ## Run tests
 	pytest $(TEST_FLAGS) --cov-context=test
 	coverage html --show-contexts
-	coverage xml
 
 fulltest: ## Run tests with randomness to emulate flaky GitHub
 	pytest $(TEST_FLAGS)

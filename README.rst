@@ -8,7 +8,7 @@ be deployed at `Heroku`_.
 
 `Access the app`_ at https://openedx-webhooks.herokuapp.com.
 
-|Build Status| |Coverage Status| |Documentation badge|
+|Build Status| |Documentation badge|
 
 Set Up Development Environment
 ------------------------------
@@ -610,7 +610,5 @@ TODO
 
 .. |build-status| image:: https://github.com/openedx/openedx-webhooks/workflows/Python%20CI/badge.svg?branch=master
    :target: https://github.com/openedx/openedx-webhooks/actions?query=workflow%3A%22Python+CI%22
-.. |Coverage Status| image:: http://codecov.io/github/edx/openedx-webhooks/coverage.svg?branch=master
-   :target: http://codecov.io/github/edx/openedx-webhooks?branch=master
 .. |Documentation badge| image:: https://readthedocs.org/projects/openedx-webhooks/badge/?version=latest
    :target: http://openedx-webhooks.readthedocs.org/en/latest/
