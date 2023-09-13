@@ -112,14 +112,13 @@ def handle_pull_request_event(event):
 def handle_comment_event(event):
     """Handle a webhook event about a comment."""
 
-    # When the bot comments on a pull request, it causes an event, which gets
-    # sent to webhooks, including us.  We don't have to do anything for our
-    # own comment events.
-    who = event.get("sender", {}).get("login", "someone")
-    if who == get_bot_username():
-        return "No thanks", 202
-
     match event:
+        case {"sender": {"login": who}} if who == get_bot_username():
+            # When the bot comments on a pull request, it causes an event, which
+            # gets sent to webhooks, including us.  We don't have to do anything
+            # for our own comment events.
+            pass
+
         case {"issue": {"pull_request": _}}:
             # The comment is on a pull request.  Re-shape the data to conform to
             # a pull request reported by a pull request event, and fire
@@ -133,7 +132,6 @@ def handle_comment_event(event):
         case _:
             pass
 
-    # Soon to come: handling comments.
     return "No thanks", 202
 
 
