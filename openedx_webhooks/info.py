@@ -9,8 +9,8 @@ from typing import Dict, Iterable, Optional, Tuple, Union
 import yaml
 from glom import glom
 
-from openedx_webhooks import settings
 from openedx_webhooks.auth import get_github_session
+from openedx_webhooks.settings import settings
 from openedx_webhooks.types import GhProject, PrDict, PrCommentDict, PrId
 from openedx_webhooks.utils import (
     memoize,

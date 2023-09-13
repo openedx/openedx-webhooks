@@ -16,6 +16,7 @@ from openedx_webhooks.info import (
     is_draft_pull_request,
     pull_request_has_cla,
 )
+from openedx_webhooks.settings import settings
 from openedx_webhooks.types import PrDict
 
 

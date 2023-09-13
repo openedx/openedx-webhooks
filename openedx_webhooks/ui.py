@@ -2,8 +2,8 @@ import logging
 
 from flask import Blueprint, render_template
 
-from openedx_webhooks import settings
 from openedx_webhooks.auth import get_github_session, get_jira_session
+from openedx_webhooks.settings import settings
 from openedx_webhooks.utils import requires_auth
 
 ui = Blueprint('ui', __name__)

@@ -2,7 +2,6 @@
 
 import pytest
 
-from openedx_webhooks import settings
 from openedx_webhooks.bot_comments import (
     BotComment,
     is_comment_kind,
@@ -16,6 +15,7 @@ from openedx_webhooks.cla_check import (
     CLA_STATUS_PRIVATE,
 )
 from openedx_webhooks.gh_projects import pull_request_projects
+from openedx_webhooks.settings import settings
 from openedx_webhooks.tasks.github import pull_request_changed
 
 from .helpers import check_issue_link_in_markdown

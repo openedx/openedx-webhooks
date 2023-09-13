@@ -5,7 +5,7 @@ Create authenticated sessions for access to GitHub and Jira.
 import requests
 from urlobject import URLObject
 
-from openedx_webhooks import settings
+from openedx_webhooks.settings import settings
 
 
 class BaseUrlSession(requests.Session):
