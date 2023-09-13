@@ -169,7 +169,7 @@ class FakeJira(faker.Faker):
         fields = issue_data["fields"]
         project = fields["project"]["key"]
         key = _make_issue_key(project)
-        kwargs = dict(
+        kwargs = dict(  # pylint: disable=use-dict-literal
             issuetype=fields["issuetype"]["name"],
             summary=fields.get("summary"),
             description=fields.get("description"),

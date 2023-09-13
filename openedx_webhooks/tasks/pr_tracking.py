@@ -441,10 +441,14 @@ class PrTrackingFixer:
             # Check the state of the Jira issue.
             if self.desired.jira_status is not None and self.desired.jira_status != self.current.jira_status:
                 if self.desired.jira_status == "pre-close":
-                    self.desired.jira_status = self.current.all_bot_state.get("jira-pre-close", "Community Manager Review")
+                    self.desired.jira_status = self.current.all_bot_state.get(
+                        "jira-pre-close", "Community Manager Review",
+                    )
                 elif self.desired.jira_status == "Rejected":
                     self.desired.jira_previous_status = self.current.jira_status
-                self.actions.transition_jira_issue(jira_id=self.current.jira_id, jira_status=cast(str, self.desired.jira_status))
+                self.actions.transition_jira_issue(
+                    jira_id=self.current.jira_id, jira_status=cast(str, self.desired.jira_status),
+                )
                 self.current.jira_status = self.desired.jira_status
                 self.happened = True
 
@@ -537,7 +541,9 @@ class PrTrackingFixer:
             try:
                 self.actions.update_jira_issue(jira_id=self.current.jira_id, **update_kwargs)
             except:
-                logger.warning(f"Couldn't update jira: {update_kwargs=}, {self.current.jira_description=}, {current_extra_fields=}")
+                logger.warning(
+                    f"Couldn't update jira: {update_kwargs=}, {self.current.jira_description=}, {current_extra_fields=}"
+                )
                 raise
             self.current.jira_title = self.desired.jira_title
             self.current.jira_description = self.desired.jira_description
@@ -854,7 +860,7 @@ class FixingActions:
         """
         try:
             add_pull_request_to_project(self.prid, pr_node_id, project)
-        except Exception as exc:
+        except Exception as exc:    # pylint: disable=broad-exception-caught
             logger.exception(f"Couldn't add PR to project: {exc}")
 
     def set_cla_status(self, *, status: Dict[str, str]) -> None:
