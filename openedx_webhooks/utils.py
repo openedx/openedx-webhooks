@@ -77,7 +77,7 @@ def log_check_response(response, raise_for_status=True):
     if raise_for_status:
         try:
             response.raise_for_status()
-        except Exception as exc:
+        except Exception:
             req = response.request
             logger.exception(f"HTTP request failed: {req.method} {req.url}. Response body: {response.content}")
             raise
