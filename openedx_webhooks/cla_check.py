@@ -1,7 +1,8 @@
 """
-Utilities for GitHub webhook handler actions.
+Management of the CLA check (actually a commit status).
 """
-from typing import Any, Dict, List, Optional
+
+from typing import Dict, Optional
 
 from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.tasks import logger

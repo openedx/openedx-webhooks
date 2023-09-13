@@ -162,7 +162,7 @@ def rescan():
     repo = request.form.get("repo")
     inline = bool(request.form.get("inline", False))
 
-    rescan_kwargs = dict(
+    rescan_kwargs = dict(   # pylint: disable=use-dict-literal
         allpr=bool(request.form.get("allpr", False)),
         dry_run=bool(request.form.get("dry_run", False)),
         earliest=request.form.get("earliest", ""),

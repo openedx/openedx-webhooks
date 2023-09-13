@@ -177,7 +177,7 @@ def github_end_survey_comment(pull_request: PrDict) -> str:
     )
 
 
-def no_contributions_thanks(pull_request: PrDict) -> str:
+def no_contributions_thanks(pull_request: PrDict) -> str:   # pylint: disable=unused-argument
     """
     Create a "no contributions" comment.
     """
