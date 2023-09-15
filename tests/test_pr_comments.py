@@ -16,21 +16,17 @@ from openedx_webhooks.bot_comments import (
 from .helpers import check_good_markdown
 
 
-def test_community_pr_comment(fake_github, fake_jira):
+def test_community_pr_comment(fake_github):
     # A pull request from a member in good standing.
     pr = fake_github.make_pull_request(user="tusbar")
-    jira = fake_jira.make_issue(key="TNL-12345")
-    comment = github_community_pr_comment(pr.as_json(), jira.key)
-    assert "[TNL-12345](https://test.atlassian.net/browse/TNL-12345)" in comment
+    comment = github_community_pr_comment(pr.as_json())
     assert not is_comment_kind(BotComment.NEED_CLA, comment)
     check_good_markdown(comment)
 
 
-def test_community_pr_comment_no_cla(fake_github, fake_jira):
+def test_community_pr_comment_no_cla(fake_github):
     pr = fake_github.make_pull_request(user="FakeUser")
-    jira = fake_jira.make_issue(key="FOO-1")
-    comment = github_community_pr_comment(pr.as_json(), jira.key)
-    assert "[FOO-1](https://test.atlassian.net/browse/FOO-1)" in comment
+    comment = github_community_pr_comment(pr.as_json())
     assert is_comment_kind(BotComment.NEED_CLA, comment)
     assert "[signed contributor agreement](https://openedx.org/cla)" in comment
     check_good_markdown(comment)

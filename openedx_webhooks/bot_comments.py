@@ -7,18 +7,16 @@ import json
 import re
 
 from enum import Enum, auto
-from typing import Dict, Optional
+from typing import Dict
 
 import arrow
 from flask import render_template
 
-from openedx_webhooks import settings
 from openedx_webhooks.info import (
     is_draft_pull_request,
     pull_request_has_cla,
 )
-from openedx_webhooks.types import JiraDict, PrDict
-from openedx_webhooks.utils import get_jira_custom_fields
+from openedx_webhooks.types import PrDict
 
 
 class BotComment(Enum):
@@ -79,7 +77,7 @@ def is_comment_kind(kind: BotComment, text: str) -> bool:
     return any(snip in text for snip in BOT_COMMENT_INDICATORS[kind])
 
 
-def github_community_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) -> str:
+def github_community_pr_comment(pull_request: PrDict) -> str:
     """
     For a newly-created pull request from an open source contributor,
     write a welcoming comment on the pull request. The comment should:
@@ -91,53 +89,30 @@ def github_community_pr_comment(pull_request: PrDict, issue_key: str, **kwargs) 
     return render_template(
         "github_community_pr_comment.md.j2",
         user=pull_request["user"]["login"],
-        issue_key=issue_key,
         has_signed_agreement=pull_request_has_cla(pull_request),
         is_draft=is_draft_pull_request(pull_request),
         is_merged=pull_request.get("merged", False),
-        jira_server=settings.JIRA_SERVER,
-        **kwargs
     )
 
 
-def github_community_pr_comment_closed(pull_request: PrDict, issue_key: str, **kwargs) -> str:
+def github_community_pr_comment_closed(pull_request: PrDict) -> str:
     """
     For adding a first comment to a closed pull request (happens during
     rescanning).
     """
     return render_template(
         "github_community_pr_comment_closed.md.j2",
-        issue_key=issue_key,
         is_merged=pull_request.get("merged", False),
-        jira_server=settings.JIRA_SERVER,
-        **kwargs
     )
 
 
-def github_blended_pr_comment(
-    pull_request: PrDict,
-    issue_key: str,
-    blended_epic: Optional[JiraDict],
-    **kwargs
-) -> str:
+def github_blended_pr_comment(pull_request: PrDict) -> str:
     """
     Create a Blended PR comment.
     """
-    custom_fields = get_jira_custom_fields()
-    if custom_fields and blended_epic is not None:
-        project_name = blended_epic["fields"].get(custom_fields["Blended Project ID"])
-        project_page = blended_epic["fields"].get(custom_fields["Blended Project Status Page"])
-    else:
-        project_name = project_page = None
-
     return render_template("github_blended_pr_comment.md.j2",
         user=pull_request["user"]["login"],
-        issue_key=issue_key,
-        project_name=project_name,
-        project_page=project_page,
         is_draft=is_draft_pull_request(pull_request),
-        jira_server=settings.JIRA_SERVER,
-        **kwargs
     )
 
 

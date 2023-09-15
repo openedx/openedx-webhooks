@@ -17,14 +17,6 @@ def _make_issue_key(project: str) -> str:
     return f"{project}-{num}"
 
 
-def float_or_none(val) -> Optional[float]:
-    """Convert to float, or leave as None."""
-    if val is None:
-        return val
-    else:
-        return float(val)
-
-
 @dataclass
 class Issue:
     """A Jira issue."""
@@ -39,9 +31,6 @@ class Issue:
     description: Optional[str] = None
     summary: Optional[str] = None
     labels: Set[str] = field(default_factory=set)
-    epic_link: Optional[str] = None
-    blended_project_status_page: Optional[str] = None
-    blended_project_id: Optional[str] = None
 
     def as_json(self) -> Dict:
         return {
@@ -53,14 +42,11 @@ class Issue:
                 "summary": self.summary or None,
                 "description": self.description or None,
                 "labels": sorted(self.labels),
-                FakeJira.EPIC_LINK: self.epic_link,
                 FakeJira.CONTRIBUTOR_NAME: self.contributor_name or None,
                 FakeJira.CUSTOMER: self.customer or None,
                 FakeJira.PR_NUMBER: self.pr_number,
                 FakeJira.REPO: self.repo or None,
                 FakeJira.URL: self.url or None,
-                FakeJira.BLENDED_PROJECT_STATUS_PAGE: self.blended_project_status_page or None,
-                FakeJira.BLENDED_PROJECT_ID: self.blended_project_id or None,
             },
         }
 
@@ -74,9 +60,6 @@ class FakeJira(faker.Faker):
     PR_NUMBER = "custom_103"
     REPO = "custom_104"
     URL = "customfield_10904"   # This one is hard-coded
-    EPIC_LINK = "custom_900"
-    BLENDED_PROJECT_STATUS_PAGE = "custom_107"
-    BLENDED_PROJECT_ID = "custom_108"
 
     # Issue states and transitions for OSPR.
     INITIAL_STATE = "Needs Triage"
@@ -114,14 +97,11 @@ class FakeJira(faker.Faker):
     def _get_field(self, _match, _request, _context) -> List[Dict]:
         # Custom fields particular to the OSPR project.
         return [{"id": i, "name": n, "custom": True} for i, n in [
-            (self.EPIC_LINK, "Epic Link"),
             (self.CONTRIBUTOR_NAME, "Contributor Name"),
             (self.CUSTOMER, "Customer"),
             (self.PR_NUMBER, "PR Number"),
             (self.REPO, "Repo"),
             (self.URL, "URL"),
-            (self.BLENDED_PROJECT_STATUS_PAGE, "Blended Project Status Page"),
-            (self.BLENDED_PROJECT_ID, "Blended Project ID"),
         ]]
 
     def make_issue(self, key: Optional[str] = None, project: str = "OSPR", **kwargs) -> Issue:
@@ -174,7 +154,6 @@ class FakeJira(faker.Faker):
             summary=fields.get("summary"),
             description=fields.get("description"),
             labels=set(fields.get("labels")),
-            epic_link=fields.get(FakeJira.EPIC_LINK),
             contributor_name=fields.get(FakeJira.CONTRIBUTOR_NAME),
             customer=fields.get(FakeJira.CUSTOMER),
             pr_number=fields.get(FakeJira.PR_NUMBER),
@@ -203,22 +182,9 @@ class FakeJira(faker.Faker):
                 kwargs["description"] = fields.pop("description")
             if "labels" in fields:
                 kwargs["labels"] = set(fields.pop("labels"))
-            if FakeJira.EPIC_LINK in fields:
-                kwargs["epic_link"] = fields.pop(FakeJira.EPIC_LINK)
             assert fields == {}, f"Didn't handle requested changes: {fields=}"
             issue = dataclasses.replace(issue, **kwargs)
             self.issues[issue.key] = issue
-            context.status_code = 204
-        else:
-            context.status_code = 404
-
-    @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)", "DELETE")
-    def _delete_issue(self, match, _request, context) -> None:
-        """
-        Implement the endpoint for deleting issues.
-        """
-        if (issue := self.find_issue(match["key"])) is not None:
-            del self.issues[issue.key]
             context.status_code = 204
         else:
             context.status_code = 404

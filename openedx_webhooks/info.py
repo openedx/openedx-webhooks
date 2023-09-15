@@ -277,28 +277,6 @@ def get_jira_issue_key(pr: Union[PrId, PrDict]) -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-def jira_project_for_ospr(_pr: PrDict) -> Optional[str]:
-    """
-    What Jira project should be used for this external pull request?
-
-    Returns a string or None if no Jira should be used.
-    """
-    if settings.JIRA_SERVER is None:
-        return None
-    return "OSPR"
-
-
-def jira_project_for_blended(_pr: PrDict) -> Optional[str]:
-    """
-    What Jira project should be used for this blended pull request?
-
-    Returns a string or None if no Jira should be used.
-    """
-    if settings.JIRA_SERVER is None:
-        return None
-    return "BLENDED"
-
-
 def get_catalog_info(repo_fullname: str) -> Dict:
     """Get the parsed catalog-info.yaml data from a repo, or {} if missing."""
     yml = _read_github_file(repo_fullname, "catalog-info.yaml", not_there="{}")

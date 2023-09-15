@@ -19,9 +19,6 @@ A number of aspects of the pull request are examined:
 
 The bot has to choose:
 
-- The Jira project to create the issue in,
-- The initial status of the Jira issue,
-- The Jira labels to apply to the issue,
 - The GitHub labels to apply to the pull request.
 
 Pull requests fall into a number of categories, which determine how it is
@@ -42,27 +39,7 @@ title, it is a draft pull request.
 
 Now we can decide what to do:
 
-- Create a Jira issue:
-
-  - Blended pull requests use the BLENDED Jira project.
-
-  - Others use OSPR.
-
-  - The Jira ticket has these fields:
-
-    - Issue type is "Pull Request Review".
-    - Summary is the title of the pull request.
-    - Description is the description of the pull request.
-    - URL is the GitHub URL of the pull request.
-    - PR Number is the number of the pull request.
-    - Repo is the name of the repo (like "edx/edx-platform").
-    - Contributor Name is the name of the author.
-    - Customer is the author's institution, if one is present in the database.
-    - Blended Jira issues also:
-
-      - have a link to their Blended epic
-
-- Initial Jira status:
+- Initial status:
 
   - Blended pull requests get "Needs Triage".
 
@@ -71,19 +48,16 @@ Now we can decide what to do:
     CLA, it is "Needs Triage".
 
 Draft pull requests start with a status of "Waiting on Author".  The initial
-Jira status determined above will be set once the pull request is no longer a
-draft, so long as the Jira issue is still in "Waiting for Author".  Note that
-if a pull request is later turned back into a draft, the Jira status will not
-be changed.
+status determined above will be set once the pull request is no longer a
+draft.
 
 - Labels:
 
-  - Blended pull requests get "blended" applied as a GitHub label and Jira
-    label.
+  - Blended pull requests get "blended" applied as a GitHub label.
 
   - Regular pull requests just get "open-source-contribution" as a GitHub label.
 
-  - The initial Jira status is set as a GitHub label on the pull request.
+  - The initial status is set as a GitHub label on the pull request.
 
 - Initial bot comment:
 
@@ -94,34 +68,9 @@ be changed.
 
 - Other information:
 
-  - A GitHub status check called "openedx/cla" is added to the latest commit.
+  - A GitHub commit status called "openedx/cla" is added to the latest commit.
     This is applied to all pull requests, even ones by authors internal to the
     pull request's organization.
-
-
-Updating Jira issue when pull requests change
----------------------------------------------
-
-Changes to pull requests are reflected in the Jira issue.  The titles and
-descriptions are copied over to the Jira issue if they are changed in GitHub.
-The number of lines added and deleted are updated if they have changed.
-
-If a change to a pull request means that a different Jira issue is needed, the
-old issue will be deleted, and a new one created.  For example, if a blended
-pull request doesn't have "[BD-xx]" in the title, an OSPR issue gets made
-initially.  When the developer updates the title, the bot deletes the OSPR
-issue and makes a new BLENDED issue for it.
-
-
-Updating GitHub labels when Jira status changes
------------------------------------------------
-
-The bot gets notifications from Jira when issues in either the OSPR or BLENDED
-project get updated.
-
-If the change is a status change, the bot finds the pull request based on
-fields in the issue. It removes the GitHub label for the old Jira status, and
-adds the GitHub label for the new Jira status.
 
 
 When a pull request is closed
@@ -135,8 +84,7 @@ When a pull request is re-opened
 --------------------------------
 
 The bot deletes the "please complete a survey" comment that was added when the
-pull request was closed.  The Jira issue is returned to the state it was in
-when the pull request was closed.
+pull request was closed.
 
 
 Adding pull requests to GitHub projects
