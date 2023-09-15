@@ -36,25 +36,12 @@ class TestIssues:
         # The body is unchanged.
         assert issue2["fields"]["description"] == "Here are the details so you can see how serious it is."
 
-    def test_delete_issue(self, fake_jira):
-        fake_jira.make_issue(key="HELLO-123", summary="This is a bad bug!")
-        resp = requests.get("https://test.atlassian.net/rest/api/2/issue/HELLO-123")
-        assert resp.status_code == 200
-        assert "HELLO-123" in fake_jira.issues
-
-        resp = requests.delete("https://test.atlassian.net/rest/api/2/issue/HELLO-123")
-        assert resp.status_code == 204
-
-        resp = requests.get("https://test.atlassian.net/rest/api/2/issue/HELLO-123")
-        assert resp.status_code == 404
-        assert "HELLO-123" not in fake_jira.issues
-
     def test_move_issue(self, fake_jira):
         issue1 = fake_jira.make_issue(project="HELLO", summary="This is a bad bug!")
         key1 = issue1.key
-        issue2 = fake_jira.move_issue(issue1, "BLENDED")
+        issue2 = fake_jira.move_issue(issue1, "GOODBYE")
         key2 = issue2.key
-        assert key2.startswith("BLENDED-")
+        assert key2.startswith("GOODBYE-")
 
         # Look it up under the old key.
         resp = requests.get(f"https://test.atlassian.net/rest/api/2/issue/{key1}")
@@ -86,10 +73,6 @@ class TestBadRequests:
     """
     def test_no_such_put(self, fake_jira):
         resp = requests.put("https://test.atlassian.net/rest/api/2/issue/XYZ-999")
-        assert resp.status_code == 404
-
-    def test_no_such_delete(self, fake_jira):
-        resp = requests.delete("https://test.atlassian.net/rest/api/2/issue/XYZ-999")
         assert resp.status_code == 404
 
     def test_no_such_transitions(self, fake_jira):

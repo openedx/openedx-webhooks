@@ -25,12 +25,12 @@ def pull_request_changed_fn(mocker):
 
 
 @pytest.fixture
-def rescannable_repo(fake_github, fake_jira):
+def rescannable_repo(fake_github):
     """Get the rescannable repo."""
-    return make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="a-repo")
+    return make_rescannable_repo(fake_github, org_name="an-org", repo_name="a-repo")
 
 
-def make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="a-repo"):
+def make_rescannable_repo(fake_github, org_name="an-org", repo_name="a-repo"):
     """
     Make a fake repo full of pull requests to rescan.
     """
@@ -47,8 +47,7 @@ def make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="
     # One of the PRs already has a bot comment with a Jira issue.
     pr = repo.make_pull_request(user="tusbar", number=110, state="closed", merged=True, created_at=datetime(2019, 7, 1),
         closed_at=datetime(2020,7,1))
-    pr.add_comment(user=get_bot_username(), body=github_community_pr_comment(pr.as_json(), "OSPR-1234"))
-    fake_jira.make_issue(key="OSPR-1234", summary="An issue")
+    pr.add_comment(user=get_bot_username(), body=github_community_pr_comment(pr.as_json()))
 
     # Issues before 2018 should not be rescanned.
     repo.make_pull_request(user="tusbar", number=98, created_at=datetime(2017, 12, 15))
@@ -64,14 +63,19 @@ def make_rescannable_repo(fake_github, fake_jira, org_name="an-org", repo_name="
 def test_rescan_repository(rescannable_repo, pull_request_changed_fn, allpr):
     ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
     changed = ret["changed"]
+    bad = False
+    for v in changed.values():
+        if isinstance(v, str) and "Traceback" in v: # pragma: no cover
+            print(v)
+            bad = True
+    assert not bad
 
     # Look at the pull request numbers passed to pull_request_changed. Only the
     # external (even) numbers should be there.
     prnums = [c.args[0]["number"] for c in pull_request_changed_fn.call_args_list]
     if allpr:
         assert prnums == [102, 106, 108, 110]
-        assert set(changed.keys()) == {102, 106, 108, 110}
-        assert changed[110] == "OSPR-1234"
+        assert changed == {102: None, 106: None, 108: None, 110: None}
     else:
         assert prnums == [102, 106]
         assert set(changed.keys()) == {102, 106}
@@ -91,10 +95,10 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
 
     # These are the OSPR tickets for the pull requests.
     assert ret["changed"] == {
-        102: "OSPR-9000",
-        106: "OSPR-9001",
-        108: "OSPR-9002",
-        110: "OSPR-1234",
+        102: None,
+        106: None,
+        108: None,
+        110: None,
     }
 
     # Get the names of the actions. We won't worry about the details, those
@@ -104,7 +108,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
         102: [
             "set_cla_status",
             "initial_state",
-            "create_ospr_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
@@ -112,7 +115,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
         106: [
             "set_cla_status",
             "initial_state",
-            "create_ospr_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
@@ -120,8 +122,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
         108: [
             "set_cla_status",
             "initial_state",
-            "create_ospr_issue",
-            "transition_jira_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
@@ -129,8 +129,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
         110: [
             "set_cla_status",
             "initial_state",
-            "transition_jira_issue",
-            "update_jira_issue",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
@@ -155,50 +153,14 @@ def test_rescan_repository_date_limits(rescannable_repo, pull_request_changed_fn
     assert prnums == nums
 
 
-def test_rescan_blended(fake_github, fake_jira):
-    # At one point, we weren't treating epic links right when rescanning, and
-    # kept updating the jira issue.
-    pr = fake_github.make_pull_request(user="tusbar", title="[BD-34] Something good")
-    prj = pr.as_json()
-    epic = fake_jira.make_issue(
-        project="BLENDED",
-        blended_project_id="BD-34",
-        blended_project_status_page="https://thewiki/bd-34",
-    )
-
-    issue_id, anything_happened = pull_request_changed(prj)
-
-    assert issue_id is not None
-    assert issue_id.startswith("BLENDED-")
-    assert anything_happened is True
-
-    # Check the Jira issue that was created.
-    assert len(fake_jira.issues) == 2
-    issue = fake_jira.issues[issue_id]
-    assert issue.epic_link == epic.key
-
-    # Reset our fakers so we can isolate the effect of the rescan.
-    fake_github.reset_mock()
-    fake_jira.reset_mock()
-
-    # Rescan.
-    ret = rescan_repository(pr.repo.full_name, allpr=True)
-
-    assert "changed" not in ret
-
-    # We shouldn't have made any writes to GitHub or Jira.
-    fake_github.assert_readonly()
-    fake_jira.assert_readonly()
-
-
 @pytest.fixture
-def rescannable_org(fake_github, fake_jira):
+def rescannable_org(fake_github):
     """
     Make two orgs with two repos each full of pull requests.
     """
     for org_name in ["org1", "org2"]:
         for repo_name in ["rep1", "rep2"]:
-            make_rescannable_repo(fake_github, fake_jira, org_name, repo_name)
+            make_rescannable_repo(fake_github, org_name, repo_name)
 
 
 @pytest.mark.parametrize("allpr, earliest, latest, nums", [

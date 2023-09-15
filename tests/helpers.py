@@ -1,14 +1,7 @@
 """Helpers for tests."""
 
-import contextlib
 import random
 import re
-import unittest.mock
-from typing import Optional
-
-import requests_mock
-
-from .fake_jira import FakeJira
 
 
 def check_good_markdown(text: str) -> None:
@@ -98,23 +91,3 @@ def check_good_graphql(text: str) -> None:
             stack.pop()
     if stack:
         raise ValueError(f"GraphQL query has unbalanced parens: {text!r}")
-
-
-@contextlib.contextmanager
-def jira_server(server: Optional[str]):
-    """
-    Use a particular JIRA_SERVER for a chunk of code.
-
-    Args:
-        server: a string like "https://myjira.atlassian.net", or None for no
-            JIRA server.
-
-    """
-    with unittest.mock.patch("openedx_webhooks.settings.JIRA_SERVER", server):
-        # This uses real_http=True so that it layers properly on top of the
-        # outer Mocker: https://requests-mock.readthedocs.io/en/latest/mocker.html#nested-mockers
-        mocker = requests_mock.Mocker(real_http=True, case_sensitive=True)
-        the_fake_jira = FakeJira(server)
-        the_fake_jira.install_mocks(mocker)
-        with mocker:
-            yield the_fake_jira

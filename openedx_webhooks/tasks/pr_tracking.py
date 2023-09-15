@@ -45,8 +45,6 @@ from openedx_webhooks.info import (
     is_draft_pull_request,
     is_internal_pull_request,
     is_private_repo_no_cla_pull_request,
-    jira_project_for_blended,
-    jira_project_for_ospr,
     projects_for_pr,
     pull_request_has_cla,
     repo_refuses_contributions,
@@ -59,26 +57,18 @@ from openedx_webhooks.labels import (
 from openedx_webhooks.auth import get_github_session, get_jira_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.jira_work import (
-    delete_jira_issue,
     transition_jira_issue,
     update_jira_issue,
 )
-from openedx_webhooks.types import GhProject, JiraDict, PrDict, PrId
+from openedx_webhooks.types import GhProject, PrDict, PrId
 from openedx_webhooks.utils import (
     get_jira_custom_fields,
     get_jira_issue,
-    jira_paginated_get,
     log_check_response,
     retry_get,
     sentry_extra_context,
     text_summary,
 )
-
-
-JIRA_EXTRA_FIELDS = [
-    "Blended Project Status Page",
-    "Blended Project ID",
-]
 
 
 @dataclass
@@ -112,9 +102,6 @@ class PrCurrentInfo:
     jira_description: Optional[str] = None
     jira_status: Optional[str] = None
     jira_labels: Set[str] = field(default_factory=set)
-    jira_epic_key: Optional[str] = None
-    jira_epic: Optional[JiraDict] = None
-    jira_extra_fields: Dict[str, str] = field(default_factory=dict)
 
     # The actual set of labels on the pull request.
     github_labels: Set[str] = field(default_factory=set)
@@ -157,8 +144,6 @@ class PrDesiredInfo:
     jira_previous_status: Optional[str] = None
 
     jira_labels: Set[str] = field(default_factory=set)
-    jira_epic: Optional[JiraDict] = None
-    jira_extra_fields: Dict[str, str] = field(default_factory=dict)
 
     # The bot-controlled labels we want to on the pull request.
     # See labels.py:CATEGORY_LABELS
@@ -206,13 +191,6 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
             current.jira_status = issue["fields"]["status"]["name"]
             current.jira_labels = set(issue["fields"]["labels"])
 
-            custom_fields = get_jira_custom_fields()
-            current.jira_epic_key = issue["fields"].get(custom_fields["Epic Link"])
-            current.jira_extra_fields = {
-                name: value
-                for name in JIRA_EXTRA_FIELDS
-                if (value := issue["fields"][custom_fields[name]]) is not None
-            }
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
     current.github_projects = set(pull_request_projects(pr))
     current.cla_check = cla_status_on_pr(pr)
@@ -265,12 +243,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
     if blended_id is not None:
         desired.bot_comments.add(BotComment.BLENDED)
         desired.github_labels.add("blended")
-        desired.jira_project = jira_project_for_blended(pr)
-        if desired.jira_project is not None:
-            desired.jira_labels.add("blended")
-            blended_epic = find_blended_epic(blended_id)
-            if blended_epic is not None:
-                desired.jira_epic = blended_epic
         assert settings.GITHUB_BLENDED_PROJECT, "You must set GITHUB_BLENDED_PROJECT"
         desired.github_projects.add(settings.GITHUB_BLENDED_PROJECT)
 
@@ -279,7 +251,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
             comment = BotComment.WELCOME
         else:
             comment = BotComment.WELCOME_CLOSED
-        desired.jira_project = jira_project_for_ospr(pr)
         desired.github_labels.add("open-source-contribution")
         desired.bot_comments.add(comment)
 
@@ -371,14 +342,14 @@ class PrTrackingFixer:
         if self.desired.is_refused:
             self.fix_comments()
 
-    def fix_comments(self, comment_kwargs: Optional[Dict] = None) -> None:
+    def fix_comments(self) -> None:
         fix_comment = True
         if self.pr["state"] == "closed" and self.current.bot_comments:
             # If the PR is closed and already has bot comments, then don't
             # change the bot comment.
             fix_comment = False
         if fix_comment:
-            self._fix_bot_comment(comment_kwargs or {})
+            self._fix_bot_comment()
         self._add_bot_comments()
 
     def fix_ospr(self) -> None:
@@ -389,45 +360,6 @@ class PrTrackingFixer:
             current=json_safe_dict(self.current),
             desired=json_safe_dict(self.desired),
         )
-
-        comment_kwargs = {}
-
-        make_issue = False
-
-        # We might have an issue already, but in the wrong project.
-        if self.current.jira_id is not None and self.current.on_our_jira:
-            assert self.current.jira_mentioned_id is not None
-            mentioned_project = self.current.jira_mentioned_id.partition("-")[0]
-            actual_project = self.current.jira_id.partition("-")[0]
-            if mentioned_project != self.desired.jira_project:
-                if actual_project == self.desired.jira_project:
-                    # Looks like the issue already got moved to the right project.
-                    pass
-                else:
-                    # Delete the existing issue and forget the current state.
-                    self.actions.delete_jira_issue(jira_id=self.current.jira_id)
-                    make_issue = True
-                    comment_kwargs["deleted_issue_key"] = self.current.jira_mentioned_id
-                    self.current.jira_id = None
-                    self.current.jira_title = None
-                    self.current.jira_description = None
-                    self.current.jira_status = None
-
-        # If we want an issue and none is mentioned yet, we need to make one.
-        if self.desired.jira_project is not None:
-            if self.current.jira_mentioned_id is None:
-                make_issue = True
-
-        # If needed, make a Jira issue.
-        if make_issue:
-            self._make_jira_issue()
-        else:
-            # Epics are a bit odd: sometimes we have the full issue, sometimes
-            # just the key. Make sure the full issue is available where we need
-            # it.
-            if self.desired.jira_epic is not None:
-                if self.current.jira_epic_key == self.desired.jira_epic["key"]:
-                    self.current.jira_epic = self.desired.jira_epic
 
         # Draftiness
         self.last_seen_state["draft"] = is_draft_pull_request(self.pr)
@@ -459,7 +391,7 @@ class PrTrackingFixer:
         self._fix_github_labels()
 
         # Check the bot comments.
-        self.fix_comments(comment_kwargs)
+        self.fix_comments()
 
         # Check the GitHub projects.
         for project in (self.desired.github_projects - self.current.github_projects):
@@ -473,9 +405,6 @@ class PrTrackingFixer:
         Make our desired Jira issue.
         """
         assert self.desired.jira_project is not None
-        extra_fields = self.desired.jira_extra_fields
-        if self.desired.jira_epic:
-            extra_fields["Epic Link"] = self.desired.jira_epic["key"]
         user_name, institution = get_name_and_institution_for_pr(self.pr)
         new_issue = self.actions.create_ospr_issue(
             pr_url=self.pr["html_url"],
@@ -485,7 +414,6 @@ class PrTrackingFixer:
             labels=list(self.desired.jira_labels),
             user_name=user_name,
             institution=institution,
-            extra_fields=extra_fields,
         )
         self.current.jira_id = new_issue["key"]
         assert self.current.jira_id is not None
@@ -493,9 +421,6 @@ class PrTrackingFixer:
         self.current.jira_title = self.desired.jira_title
         self.current.jira_description = self.desired.jira_description
         self.current.jira_labels = self.desired.jira_labels
-        self.current.jira_epic = self.desired.jira_epic
-        if self.current.jira_epic is not None:
-            self.current.jira_epic_key = self.current.jira_epic["key"]
 
         if self.desired.jira_initial_status != self.current.jira_status:
             assert self.desired.jira_initial_status is not None
@@ -524,32 +449,18 @@ class PrTrackingFixer:
         if desired_labels != self.current.jira_labels:
             update_kwargs["labels"] = list(self.desired.jira_labels)
 
-        if self.desired.jira_epic is not None:
-            if self.current.jira_epic is None or (self.desired.jira_epic["key"] != self.current.jira_epic["key"]):
-                update_kwargs["epic_link"] = self.desired.jira_epic["key"]
-
-        # Only update extra fields if the fields we want have changed.
-        current_extra_fields = {
-            k: v for k, v in self.current.jira_extra_fields.items()
-            if k in self.desired.jira_extra_fields
-        }
-        if self.desired.jira_extra_fields != current_extra_fields:
-            update_kwargs["extra_fields"] = self.desired.jira_extra_fields
-
         if update_kwargs:
             assert self.current.jira_id is not None
             try:
                 self.actions.update_jira_issue(jira_id=self.current.jira_id, **update_kwargs)
             except:
                 logger.warning(
-                    f"Couldn't update jira: {update_kwargs=}, {self.current.jira_description=}, {current_extra_fields=}"
+                    f"Couldn't update jira: {update_kwargs=}, {self.current.jira_description=}"
                 )
                 raise
             self.current.jira_title = self.desired.jira_title
             self.current.jira_description = self.desired.jira_description
             self.current.jira_labels = self.desired.jira_labels
-            self.current.jira_epic = self.desired.jira_epic
-            self.current.jira_extra_fields = self.desired.jira_extra_fields
             self.happened = True
 
     def _fix_github_labels(self) -> None:
@@ -569,7 +480,7 @@ class PrTrackingFixer:
             )
             self.happened = True
 
-    def _fix_bot_comment(self, comment_kwargs: Dict) -> None:
+    def _fix_bot_comment(self) -> None:
         """
         Reconcile the desired comments from the bot with what the bot has said.
 
@@ -584,26 +495,18 @@ class PrTrackingFixer:
 
         comment_body = ""
 
-        # The issue could have been deleted, we'll continue to talk about the
-        # now-gone issue. it's better than nothing.
-        jira_id = cast(str, self.current.jira_id or self.current.jira_mentioned_id)
         if BotComment.WELCOME in needed_comments:
-            comment_body += github_community_pr_comment(self.pr, jira_id, **comment_kwargs)
+            comment_body += github_community_pr_comment(self.pr)
             needed_comments.remove(BotComment.WELCOME)
 
         if BotComment.WELCOME_CLOSED in needed_comments:
-            comment_body += github_community_pr_comment_closed(self.pr, jira_id, **comment_kwargs)
+            comment_body += github_community_pr_comment_closed(self.pr)
             needed_comments.remove(BotComment.WELCOME_CLOSED)
             if BotComment.SURVEY in self.desired.bot_comments:
                 self.desired.bot_comments.remove(BotComment.SURVEY)
 
         if BotComment.BLENDED in needed_comments:
-            comment_body += github_blended_pr_comment(
-                self.pr,
-                jira_id,
-                self.current.jira_epic,
-                **comment_kwargs
-            )
+            comment_body += github_blended_pr_comment(self.pr)
             needed_comments.remove(BotComment.BLENDED)
 
         if BotComment.NO_CONTRIBUTIONS in needed_comments:
@@ -655,30 +558,6 @@ class PrTrackingFixer:
                 self.happened = True
 
         assert needed_comments == set(), f"Couldn't make comments: {needed_comments}"
-
-
-def find_blended_epic(project_id: int) -> Optional[JiraDict]:
-    """
-    Find the blended epic for a blended project.
-    """
-    jql = (
-        '(' +
-        '"Blended Project ID" ~ "BD-00{id}" OR ' +
-        '"Blended Project ID" ~ "BD-0{id}" OR ' +
-        '"Blended Project ID" ~ "BD-{id}"' +
-        ')' +
-        ' AND project = Blended AND type = Epic'
-    ).format(id=project_id)
-    issues = list(jira_paginated_get("/rest/api/2/search", jql=jql, obj_name="issues", session=get_jira_session()))
-    issue = None
-    if not issues:
-        logger.info(f"Couldn't find a blended epic for {project_id}")
-    elif len(issues) > 1:
-        keys = [iss["key"] for iss in issues]
-        logger.error(f"Found more than one blended epic for {project_id}: {keys}")
-    else:
-        issue = issues[0]
-    return issue
 
 
 def get_name_and_institution_for_pr(pr: PrDict) -> Tuple[str, Optional[str]]:
@@ -762,7 +641,6 @@ class FixingActions:
         labels: List[str],
         user_name: Optional[str],
         institution: Optional[str],
-        extra_fields: Dict[str, str],
     ) -> Dict:
         """
         Create a new OSPR or OSPR-like issue for a pull request.
@@ -790,9 +668,6 @@ class FixingActions:
         }
         if institution:
             new_issue["fields"][custom_fields["Customer"]] = [institution]
-        if extra_fields:
-            for name, value in extra_fields.items():
-                new_issue["fields"][custom_fields[name]] = value
         sentry_extra_context({"new_issue": new_issue})
 
         logger.info(f"Creating new JIRA issue for PR {self.prid}...")
@@ -806,9 +681,6 @@ class FixingActions:
         # Our issues all start as "Needs Triage".
         new_issue["fields"]["status"] = {"name": "Needs Triage"}
         return new_issue
-
-    def delete_jira_issue(self, *, jira_id: str) -> None:
-        delete_jira_issue(jira_id)
 
     def transition_jira_issue(self, *, jira_id: str, jira_status: str) -> None:
         transition_jira_issue(jira_id, jira_status)

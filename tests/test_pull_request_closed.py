@@ -7,13 +7,13 @@ from openedx_webhooks.bot_comments import (
     is_comment_kind,
 )
 from openedx_webhooks.tasks.github import pull_request_changed
-from .helpers import check_issue_link_in_markdown, jira_server, random_text
+from .helpers import check_issue_link_in_markdown, random_text
 
 # These tests should run when we want to test flaky GitHub behavior.
 pytestmark = pytest.mark.flaky_github
 
 
-def test_internal_pr_closed(is_merged, has_jira, fake_github, fake_jira):
+def test_internal_pr_closed(is_merged, fake_github, fake_jira):
     pr = fake_github.make_pull_request("openedx", user="nedbat", state="closed", merged=is_merged)
     pr.add_comment(user="nedbat", body="This is great")
     pr.add_comment(user="feanil", body="Eh, it's ok")
@@ -24,7 +24,7 @@ def test_internal_pr_closed(is_merged, has_jira, fake_github, fake_jira):
 
 
 @pytest.fixture
-def closed_pull_request(is_merged, has_jira, fake_github, fake_jira):
+def closed_pull_request(is_merged, fake_github, fake_jira):
     """
     Create a closed pull request and an issue key for it.
 
@@ -36,8 +36,7 @@ def closed_pull_request(is_merged, has_jira, fake_github, fake_jira):
         )
     issue_key, _ = pull_request_changed(pr.as_json())
 
-    if not has_jira:
-        assert issue_key is None
+    assert issue_key is None
     pr.add_comment(user="nedbat", body="Please make some changes")
     pr.add_comment(user="tusbar", body="OK, I made the changes")
     pr.close(merge=is_merged)
@@ -47,25 +46,19 @@ def closed_pull_request(is_merged, has_jira, fake_github, fake_jira):
     return pr, issue_key
 
 
-def test_external_pr_closed(is_merged, has_jira, fake_jira, closed_pull_request):
-    pr, issue_key = closed_pull_request
+def test_external_pr_closed(fake_jira, closed_pull_request):
+    pr, _ = closed_pull_request
     pull_request_changed(pr.as_json())
 
-    if has_jira:
-        # We moved the Jira issue to Merged or Rejected.
-        expected_status = "Merged" if is_merged else "Rejected"
-        assert fake_jira.issues[issue_key].status == expected_status
     pr_comments = pr.list_comments()
     body = pr_comments[-1].body
     assert "survey" in body
     assert is_comment_kind(BotComment.SURVEY, body)
 
 
-def test_external_pr_closed_but_issue_deleted(is_merged, has_jira, fake_jira, closed_pull_request):
+def test_external_pr_closed_but_issue_deleted(fake_jira, closed_pull_request):
     # A closing pull request, but its Jira issue has been deleted.
     pr, old_issue_key = closed_pull_request
-    if has_jira:
-        del fake_jira.issues[old_issue_key]
 
     issue_id, anything_happened = pull_request_changed(pr.as_json())
 
@@ -79,37 +72,14 @@ def test_external_pr_closed_but_issue_deleted(is_merged, has_jira, fake_jira, cl
     check_issue_link_in_markdown(body, old_issue_key)
 
 
-def test_external_pr_closed_but_issue_in_status(is_merged, has_jira, fake_jira, closed_pull_request):
+def test_external_pr_closed_but_issue_in_status(fake_jira, closed_pull_request):
     # The Jira issue associated with a closing pull request is already in the
     # status we want to move it to.
-    pr, issue_key = closed_pull_request
-    if has_jira:
-        fake_jira.issues[issue_key].status = ("Merged" if is_merged else "Rejected")
+    pr, _ = closed_pull_request
 
     pull_request_changed(pr.as_json())
 
     # Issue is already correct, so nothing was transitioned.
-    assert fake_jira.requests_made(method="POST") == []
-
-
-def test_external_pr_merged_but_issue_cant_transition(has_jira, fake_jira, closed_pull_request):
-    # This test only makes sense when we are using Jira.
-    if not has_jira:
-        return
-
-    # The Jira issue associated with a closing pull request can't transition
-    # to the status we want to move it to.
-    pr, _ = closed_pull_request
-
-    # Make a new set of transitions, but leave out the two we might need.
-    fake_jira.TRANSITIONS = dict(fake_jira.TRANSITIONS)
-    del fake_jira.TRANSITIONS["Merged"]
-    del fake_jira.TRANSITIONS["Rejected"]
-
-    with pytest.raises(Exception, match="cannot be transitioned directly from status Needs Triage to status"):
-        pull_request_changed(pr.as_json())
-
-    # No valid transition, so nothing was transitioned.
     assert fake_jira.requests_made(method="POST") == []
 
 
@@ -131,23 +101,3 @@ def test_cc_pr_closed(fake_github, fake_jira, is_merged):
 
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 2    # 1 welcome, 1 survey
-
-
-@pytest.mark.parametrize("new_jira", [None, "https://new-jira.atlassian.net"])
-def test_close_jira_pr_with_new_jira(
-    fake_github, requests_mocker, new_jira, is_merged
-):
-    # Open the pull request with a jira server.
-    with jira_server("https://my-jira.atlassian.net"):
-        pr = fake_github.make_pull_request(user="tusbar")
-        issue_id1, _ = pull_request_changed(pr.as_json())
-
-    assert issue_id1 is not None
-
-    # Later, close it when we have no jira server or a different jira server.
-    with jira_server(new_jira) as fake_jira:
-        pr.close(merge=is_merged)
-        issue_id2, _ = pull_request_changed(pr.as_json())
-
-    assert issue_id2 == issue_id1
-    assert len(fake_jira.requests_made()) == 0

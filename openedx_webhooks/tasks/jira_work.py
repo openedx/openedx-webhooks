@@ -9,17 +9,9 @@ import requests
 from openedx_webhooks.auth import get_jira_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.utils import (
-    get_jira_custom_fields,
     log_check_response,
     sentry_extra_context,
 )
-
-def delete_jira_issue(issue_key):
-    """
-    Delete an issue from Jira.
-    """
-    resp = get_jira_session().delete(f"/rest/api/2/issue/{issue_key}")
-    log_check_response(resp)
 
 
 def find_issues_for_pull_request(jira, pull_request_url):
@@ -107,15 +99,12 @@ def update_jira_issue(
         summary: Optional[str]=None,
         description: Optional[str]=None,
         labels: Optional[List[str]]=None,
-        epic_link: Optional[str]=None,
-        extra_fields: Optional[Dict[str, str]]=None,
     ):
     """
     Update some fields on a Jira issue.
     """
     fields: Dict[str, Any] = {}
     notify = "false"
-    custom_fields = get_jira_custom_fields()
     if summary is not None:
         fields["summary"] = summary
         notify = "true"
@@ -124,11 +113,6 @@ def update_jira_issue(
         notify = "true"
     if labels is not None:
         fields["labels"] = labels
-    if epic_link is not None:
-        fields[custom_fields["Epic Link"]] = epic_link
-    if extra_fields is not None:
-        for name, value in extra_fields.items():
-            fields[custom_fields[name]] = value
     assert fields
     # Note: notifyUsers=false only works if the bot is an admin in the project.
     # Contrary to the docs, if the bot is not an admin, the setting isn't ignored,
