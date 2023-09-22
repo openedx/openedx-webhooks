@@ -11,7 +11,7 @@ from glom import glom
 
 from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.settings import settings
-from openedx_webhooks.types import GhProject, PrDict, PrCommentDict, PrId
+from openedx_webhooks.types import GhProject, JiraServer, PrDict, PrCommentDict, PrId
 from openedx_webhooks.utils import (
     memoize,
     memoize_timed,
@@ -122,6 +122,21 @@ def get_orgs_file():
         if "name" in org_data:
             orgs[org_data["name"]] = org_data
     return orgs
+
+
+@memoize_timed(minutes=30)
+def get_jira_info():
+    jira_info = {}
+    for key, info in _read_yaml_data_file("jira-info.yaml").items():
+        jira_info[key.lower()] = JiraServer(**info)
+    return jira_info
+
+
+def get_jira_server_info(jira_nick: str) -> JiraServer:
+    jira_info = get_jira_info()
+    jira_server = jira_info[jira_nick.lower()]
+    return jira_server
+
 
 def is_internal_pull_request(pull_request: PrDict) -> bool:
     """

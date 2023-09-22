@@ -35,3 +35,21 @@ class PrId:
     def org(self):
         org, _, _ = self.full_name.partition("/")
         return org
+
+
+@dataclasses.dataclass(frozen=True)
+class JiraServer:
+    """A Jira server and its credentials."""
+    # The URL of the Jira server.
+    server: str
+
+    # The user email and token to use for credentials.
+    email: str
+    token: str
+
+    # A description of the server, suitable for the bot to comment,
+    # "I created an issue in {{ description }}."
+    description: str = "a Jira server"
+
+    mapping: str | None = None
+    project: str | None = None

@@ -97,8 +97,8 @@ def fake_github(pytestconfig, mocker, requests_mocker, fake_repo_data):
 
 
 @pytest.fixture
-def fake_jira(requests_mocker):
-    the_fake_jira = FakeJira(settings.JIRA_SERVER)
+def fake_jira(requests_mocker, fake_repo_data):
+    the_fake_jira = FakeJira("https://test.atlassian.net")
     the_fake_jira.install_mocks(requests_mocker)
     return the_fake_jira
 

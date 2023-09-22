@@ -5,9 +5,11 @@ Tests of the functions in info.py
 import pytest
 
 from openedx_webhooks.info import (
-    get_people_file,
-    is_internal_pull_request, is_draft_pull_request,
     get_blended_project_id,
+    get_jira_info,
+    get_people_file,
+    is_draft_pull_request,
+    is_internal_pull_request,
 )
 
 
@@ -125,3 +127,10 @@ def test_check_people_missing_yaml_fields():
     assert people[user].get('commiter') is None
     assert people[user].get('comments') is None
     assert people[user].get('before') is None
+
+
+def test_jira_info():
+    info = get_jira_info()
+    # These are specific items from our test jira-info.yaml file
+    assert info["test1"].server == "https://test.atlassian.net"
+    assert info["anothertest"].project == "OPEN"
