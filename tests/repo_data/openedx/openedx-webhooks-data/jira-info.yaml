@@ -1,0 +1,14 @@
+# Jira connectivity information for the openedx-webhook
+
+Test1:
+    server: https://test.atlassian.net
+    email: jira-user@test1.com
+    token: asdasdasdasdasd
+    mapping: https://github.com/test1/.github/jira-mapping.yaml
+    description: the private Test1 Jira
+AnotherTest:
+    server: https://anothertest.atlassian.net
+    email: jira-user@anothertest.com
+    token: xyzzyxyzzy
+    project: OPEN
+    description: the Another Test Jira

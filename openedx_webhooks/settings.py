@@ -13,12 +13,6 @@ settings = SimpleNamespace()
 
 def settings_from_environment(env: Mapping) -> None:
     """Update `settings` from a dict of environment variables."""
-    # The Jira server to use.  Missing or "" will become None,
-    # meaning don't use Jira at all.
-    settings.JIRA_SERVER = env.get("JIRA_SERVER", None) or None
-    settings.JIRA_USER_EMAIL = env.get("JIRA_USER_EMAIL", None)
-    settings.JIRA_USER_TOKEN = env.get("JIRA_USER_TOKEN", None)
-
     settings.GITHUB_PERSONAL_TOKEN = env.get("GITHUB_PERSONAL_TOKEN", None)
 
     # The project all OSPRs should be added to.

@@ -26,12 +26,19 @@ class BaseUrlSession(requests.Session):
         )
 
 
-def get_jira_session():
+def get_jira_session(jira_nick):
     """
     Get the Jira session to use, in an easily test-patchable way.
+
+    `jira_nick` is a nickname for one of our configured Jira servers.
     """
-    session = BaseUrlSession(base_url=settings.JIRA_SERVER)
-    session.auth = (settings.JIRA_USER_EMAIL, settings.JIRA_USER_TOKEN)
+    # Avoid a circular import.
+    from openedx_webhooks.info import get_jira_info
+
+    jira_info = get_jira_info()
+    jira_server = jira_info[jira_nick.lower()]
+    session = BaseUrlSession(base_url=jira_server.server)
+    session.auth = (jira_server.email, jira_server.token)
     session.trust_env = False   # prevent reading the local .netrc
     return session
 
