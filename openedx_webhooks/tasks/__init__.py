@@ -2,14 +2,10 @@
 Helpers for Celery tasks.
 """
 
-import os
-
 from celery.utils.log import get_task_logger
 from flask import Blueprint, jsonify
-import logging_tree
 
 from openedx_webhooks import celery, log_level
-from openedx_webhooks.debug import print_long
 from openedx_webhooks.utils import requires_auth
 
 
@@ -18,7 +14,9 @@ logger = get_task_logger(__name__)
 logger.setLevel(log_level)
 
 # Use this to show the logging configuration if you need to debug it.
-# print_long("logging_tree output", logging_tree.format.build_description())
+#  import logging_tree
+#  from openedx_webhooks.debug import print_long
+#  print_long("logging_tree output", logging_tree.format.build_description())
 
 # create a Flask blueprint for getting task status info
 tasks = Blueprint('tasks', __name__)
