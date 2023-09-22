@@ -51,8 +51,6 @@ def create_app(config=None):
     # attach our blueprints
     from .github_views import github_bp
     app.register_blueprint(github_bp, url_prefix="/github")
-    from .jira_views import jira_bp
-    app.register_blueprint(jira_bp, url_prefix="/jira")
     from .ui import ui as ui_blueprint
     app.register_blueprint(ui_blueprint)
     from .tasks import tasks as tasks_blueprint
