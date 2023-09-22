@@ -34,7 +34,7 @@ def close_and_reopen_pr(pr):
     return pull_request_changed(prj)
 
 
-def test_internal_pr_opened(fake_github, fake_jira):
+def test_internal_pr_opened(fake_github):
     pr = fake_github.make_pull_request("openedx", user="nedbat")
     key, anything_happened = pull_request_changed(pr.as_json())
 
@@ -49,7 +49,7 @@ def test_internal_pr_opened(fake_github, fake_jira):
     assert anything_happened2 is False
 
 
-def test_pr_in_private_repo_opened(fake_github, fake_jira):
+def test_pr_in_private_repo_opened(fake_github):
     repo = fake_github.make_repo("edx", "some-private-repo", private=True)
     pr = repo.make_pull_request(user="some_contractor")
     key, anything_happened = pull_request_changed(pr.as_json())
@@ -62,7 +62,7 @@ def test_pr_in_private_repo_opened(fake_github, fake_jira):
 
 
 @pytest.mark.parametrize("user", ["tusbar", "feanil"])
-def test_pr_in_nocontrib_repo_opened(fake_github, fake_jira, user):
+def test_pr_in_nocontrib_repo_opened(fake_github, user):
     repo = fake_github.make_repo("edx", "some-public-repo")
     pr = repo.make_pull_request(user=user)
     key, anything_happened = pull_request_changed(pr.as_json())
@@ -77,7 +77,7 @@ def test_pr_in_nocontrib_repo_opened(fake_github, fake_jira, user):
     assert pull_request_projects(pr.as_json()) == set()
 
 
-def test_pr_opened_by_bot(fake_github, fake_jira):
+def test_pr_opened_by_bot(fake_github):
     fake_github.make_user(login="some_bot", type="Bot")
     pr = fake_github.make_pull_request(user="some_bot")
     key, anything_happened = pull_request_changed(pr.as_json())
@@ -88,7 +88,7 @@ def test_pr_opened_by_bot(fake_github, fake_jira):
     assert pull_request_projects(pr.as_json()) == set()
 
 
-def test_external_pr_opened_no_cla(fake_github, fake_jira):
+def test_external_pr_opened_no_cla(fake_github):
     # No CLA, because this person is not in our database.
     fake_github.make_user(login="new_contributor", name="Newb Contributor")
     pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform", user="new_contributor")
@@ -98,7 +98,6 @@ def test_external_pr_opened_no_cla(fake_github, fake_jira):
 
     assert anything_happened is True
     assert issue_id is None
-    assert len(fake_jira.issues) == 0
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -126,10 +125,8 @@ def test_external_pr_opened_no_cla(fake_github, fake_jira):
     # re-opening it deleted it.
     assert len(pr.list_comments()) == 1
 
-    assert len(fake_jira.issues) == 0
 
-
-def test_external_pr_opened_with_cla(fake_github, fake_jira):
+def test_external_pr_opened_with_cla(fake_github):
     pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user="tusbar", number=11235)
     prj = pr.as_json()
 
@@ -137,7 +134,6 @@ def test_external_pr_opened_with_cla(fake_github, fake_jira):
 
     assert anything_happened is True
     assert issue_id is None
-    assert len(fake_jira.issues) == 0
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -165,17 +161,15 @@ def test_external_pr_opened_with_cla(fake_github, fake_jira):
     # re-opening it deleted it.
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
-    assert len(fake_jira.issues) == 0
 
 
-def test_blended_pr_opened_with_cla(fake_github, fake_jira):
+def test_blended_pr_opened_with_cla(fake_github):
     pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user="tusbar", title="[BD-34] Something good")
     prj = pr.as_json()
     issue_id, anything_happened = pull_request_changed(prj)
 
     assert anything_happened is True
     assert issue_id is None
-    assert len(fake_jira.issues) == 0
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -197,7 +191,7 @@ def test_blended_pr_opened_with_cla(fake_github, fake_jira):
     assert pull_request_projects(pr.as_json()) == {settings.GITHUB_BLENDED_PROJECT}
 
 
-def test_external_pr_rescanned(fake_github, fake_jira):
+def test_external_pr_rescanned(fake_github):
     # Rescanning a pull request shouldn't do anything.
 
     # Make a pull request and process it.
@@ -218,40 +212,8 @@ def test_external_pr_rescanned(fake_github, fake_jira):
     assert len(pr.list_comments()) == 1
 
 
-def test_title_change_changes_jira_project(fake_github, fake_jira):
-    """
-    A blended developer opens a PR, but forgets to put "[BD]" in the title.
-    """
-    # The developer makes a pull request, but forgets the right syntax in the title.
-    pr = fake_github.make_pull_request(user="tusbar", title="This is for BD-34")
-
-    ospr_id, anything_happened = pull_request_changed(pr.as_json())
-
-    # An OSPR issue was not made.
-    assert ospr_id is None
-    assert anything_happened is True
-
-    # Someone assigns an ad-hoc label to the PR.
-    pr.repo.add_label(name="pretty")
-    pr.labels.add("pretty")
-
-    # The developer changes the title.
-    pr.title = "This is for [BD-34]."
-    issue_id, anything_happened = pull_request_changed(pr.as_json())
-
-    assert anything_happened is True
-    assert issue_id is None
-
-    # The bot comment now mentions the new issue.
-    pr_comments = pr.list_comments()
-    assert len(pr_comments) == 1
-
-    # The pull request still has the ad-hoc label.
-    assert "pretty" in pr.labels
-
-
 @pytest.mark.parametrize("pr_type", ["normal", "blended", "nocla"])
-def test_draft_pr_opened(pr_type, fake_github, fake_jira, mocker):
+def test_draft_pr_opened(pr_type, fake_github, mocker):
     # pylint: disable=too-many-statements
 
     # Set the GITHUB_STATUS_LABEL variable with a set() of labels that should map to jira issues.
@@ -283,7 +245,6 @@ def test_draft_pr_opened(pr_type, fake_github, fake_jira, mocker):
 
     assert anything_happened is True
     assert issue_id is None
-    assert len(fake_jira.issues) == 0
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -313,8 +274,7 @@ def test_draft_pr_opened(pr_type, fake_github, fake_jira, mocker):
     pr.title = title2
     issue_id2, _ = pull_request_changed(pr.as_json())
 
-    assert issue_id2 == issue_id
-    assert len(fake_jira.issues) == 0
+    assert issue_id2 is None
 
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
@@ -326,8 +286,7 @@ def test_draft_pr_opened(pr_type, fake_github, fake_jira, mocker):
     pr.title = title1
     issue_id3, _ = pull_request_changed(pr.as_json())
 
-    assert issue_id3 == issue_id
-    assert len(fake_jira.issues) == 0
+    assert issue_id3 is None
 
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
@@ -336,14 +295,13 @@ def test_draft_pr_opened(pr_type, fake_github, fake_jira, mocker):
     assert 'click "Ready for Review"' in body
 
 
-def test_handle_closed_pr(is_merged, fake_github, fake_jira):
+def test_handle_closed_pr(is_merged, fake_github):
     pr = fake_github.make_pull_request(user="tusbar", number=11237, state="closed", merged=is_merged)
     prj = pr.as_json()
     issue_id1, anything_happened = pull_request_changed(prj)
 
     assert anything_happened is True
     assert issue_id1 is None
-    assert len(fake_jira.issues) == 0
 
     # Check the GitHub comment that was created.
     pr_comments = pr.list_comments()
@@ -364,38 +322,34 @@ def test_handle_closed_pr(is_merged, fake_github, fake_jira):
     assert pull_request_projects(pr.as_json()) == {settings.GITHUB_OSPR_PROJECT}
 
     # Rescan the pull request.
-    num_issues = len(fake_jira.issues)
     issue_id2, anything_happened2 = pull_request_changed(pr.as_json())
 
-    assert issue_id2 == issue_id1
+    assert issue_id2 is None
     assert anything_happened2 is False
-
-    # No Jira issue was created.
-    assert len(fake_jira.issues) == num_issues
 
     # No new GitHub comment was created.
     assert len(pr.list_comments()) == 1
 
 
-def test_dont_add_internal_prs_to_project(fake_github, fake_jira):
+def test_dont_add_internal_prs_to_project(fake_github):
     pr = fake_github.make_pull_request(owner="openedx", repo="credentials", user="nedbat")
     pull_request_changed(pr.as_json())
     assert pull_request_projects(pr.as_json()) == set()
 
 
-def test_add_external_prs_to_project(fake_github, fake_jira):
+def test_add_external_prs_to_project(fake_github):
     pr = fake_github.make_pull_request(owner="openedx", repo="credentials", user="tusbar")
     pull_request_changed(pr.as_json())
     assert pull_request_projects(pr.as_json()) == {settings.GITHUB_OSPR_PROJECT, ("openedx", 23)}
 
 
-def test_dont_add_draft_prs_to_project(fake_github, fake_jira):
+def test_dont_add_draft_prs_to_project(fake_github):
     pr = fake_github.make_pull_request(owner="openedx", repo="credentials", user="tusbar", draft=True)
     pull_request_changed(pr.as_json())
     assert pull_request_projects(pr.as_json()) == {settings.GITHUB_OSPR_PROJECT}
 
 
-def test_add_to_multiple_projects(fake_github, fake_jira):
+def test_add_to_multiple_projects(fake_github):
     pr = fake_github.make_pull_request(owner="anotherorg", repo="multi-project", user="tusbar")
     pull_request_changed(pr.as_json())
     assert pull_request_projects(pr.as_json()) == {
