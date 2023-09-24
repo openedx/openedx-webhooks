@@ -33,7 +33,7 @@ def check_good_markdown(text: str) -> None:
         raise ValueError(f"Markdown has a link to a None url: {text!r}")
 
 
-def check_issue_link_in_markdown(text: str, issue_id: str) -> None:
+def check_issue_link_in_markdown(text: str, issue_id: str|None) -> None:
     """
     Check that `text` has properly links to `issue_id`.
 

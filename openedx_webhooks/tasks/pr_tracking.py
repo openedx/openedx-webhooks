@@ -708,7 +708,7 @@ class FixingActions:
         resp = get_github_session().patch(url, json={"body": comment_body})
         log_check_response(resp)
 
-    def delete_comment_on_pull_request(self, *, comment_id: int) -> None:
+    def delete_comment_on_pull_request(self, *, comment_id: str) -> None:
         url = f"/repos/{self.prid.full_name}/issues/comments/{comment_id}"
         logger.info(f"Deleting comment on PR {self.prid}")
         resp = get_github_session().delete(url)

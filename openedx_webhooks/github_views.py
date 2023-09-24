@@ -3,6 +3,7 @@ These are the views that process webhook events coming from Github.
 """
 
 import logging
+from typing import cast
 
 from flask import current_app as app
 from flask import Blueprint, jsonify, render_template, request
@@ -37,7 +38,7 @@ def hook_receiver():
     """
     signature = request.headers.get("X-Hub-Signature")
     secret = app.config.get('GITHUB_WEBHOOKS_SECRET')
-    if not is_valid_payload(secret, signature, request.data):
+    if not is_valid_payload(secret, signature, request.data):   # type: ignore[arg-type]
         msg = "Rejecting because signature doesn't match!"
         logging.info(msg)
         return msg, 403
@@ -157,7 +158,7 @@ def rescan():
     :func:`~openedx_webhooks.tasks.github.pull_request_changed`
     must be idempotent. It could run many times over the same pull request.
     """
-    repo = request.form.get("repo")
+    repo = cast(str, request.form.get("repo"))
     inline = bool(request.form.get("inline", False))
 
     rescan_kwargs = dict(   # pylint: disable=use-dict-literal
@@ -174,7 +175,7 @@ def rescan():
         org = repo[4:]
         return queue_task(rescan_organization_task, org, **rescan_kwargs)
     elif inline:
-        return jsonify(rescan_repository(repo, **rescan_kwargs))
+        return jsonify(rescan_repository(repo, **rescan_kwargs))    # type: ignore[arg-type]
     else:
         return queue_task(rescan_repository_task, repo, **rescan_kwargs)
 
@@ -204,8 +205,7 @@ def process_pr():
         resp = jsonify({"error": "Pull request number required"})
         resp.status_code = 400
         return resp
-    num = int(num)
-    pr_resp = get_github_session().get("/repos/{repo}/pulls/{num}".format(repo=repo, num=num))
+    pr_resp = get_github_session().get(f"/repos/{repo}/pulls/{num}")
     if not pr_resp.ok:
         resp = jsonify({"error": pr_resp.text})
         resp.status_code = 400
