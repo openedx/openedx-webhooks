@@ -130,7 +130,7 @@ class PullRequest:
             "title": self.title,
             "user": self.user.as_json(),
             "body": self.body,
-            "labels": [self.repo.get_label(l).as_json() for l in sorted(self.labels)],
+            "labels": [self.repo.get_label(lbl).as_json() for lbl in sorted(self.labels)],
             "base": {
                 "repo": self.repo.as_json(),
                 "ref": self.ref,

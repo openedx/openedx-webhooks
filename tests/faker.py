@@ -138,6 +138,7 @@ class Faker:
         """
         Clear the `requests_made` history.
         """
+        assert self.requests_mocker is not None
         self.requests_mocker.reset_mock()
 
     def assert_readonly(self) -> None:

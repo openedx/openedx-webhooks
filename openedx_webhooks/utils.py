@@ -357,7 +357,8 @@ def github_pr_repo(issue):
     parent_ref = issue["fields"].get("parent")
     if not pr_repo and parent_ref:
         parent = get_jira_issue(parent_ref["key"])
-        pr_repo = parent["fields"].get(custom_fields["Repo"])
+        if parent is not None:
+            pr_repo = parent["fields"].get(custom_fields["Repo"])
     return pr_repo
 
 
@@ -367,7 +368,8 @@ def github_pr_num(issue):
     parent_ref = issue["fields"].get("parent")
     if not pr_num and parent_ref:
         parent = get_jira_issue(parent_ref["key"])
-        pr_num = parent["fields"].get(custom_fields["PR Number"])
+        if parent is not None:
+            pr_num = parent["fields"].get(custom_fields["PR Number"])
     try:
         return int(pr_num)
     except Exception:       # pylint: disable=broad-except

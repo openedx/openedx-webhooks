@@ -20,7 +20,7 @@ def is_requirement(line):
 def get_requirements(path):
     with open(path) as f:
         lines = f.readlines()
-    return [l.strip() for l in lines if is_requirement(l)]
+    return [line.strip() for line in lines if is_requirement(line)]
 
 
 version = ''

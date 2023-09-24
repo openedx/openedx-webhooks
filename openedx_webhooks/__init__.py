@@ -37,7 +37,7 @@ def expand_config(name=None):
 
 def create_app(config=None):
     app = Flask(__name__)
-    app.wsgi_app = ProxyFix(app.wsgi_app)
+    app.wsgi_app = ProxyFix(app.wsgi_app)   # type: ignore[method-assign]
     config = config or os.environ.get("OPENEDX_WEBHOOKS_CONFIG") or "default"
     # Instantiate the config object because we rely on the __init__
     # function to translate config between heroku and what sqlalchemy wants
@@ -70,7 +70,7 @@ def create_celery_app(app=None, config="worker"):
     app = app or create_app(config=config)
     celery.main = app.import_name
     celery.conf.update(app.config)
-    class ContextTask(celery.Task):
+    class ContextTask(celery.Task): # type: ignore[name-defined]
         abstract = True
         def __call__(self, *args, **kwargs):
             if "wsgi_environ" in kwargs:

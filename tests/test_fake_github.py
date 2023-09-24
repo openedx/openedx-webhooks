@@ -155,7 +155,7 @@ class TestPullRequestLabels:
         assert resp.status_code == 200
         prj = resp.json()
         assert prj["title"] == "Here is a pull request"
-        label_summary = [(l["name"], l["color"]) for l in prj["labels"]]
+        label_summary = [(lbl["name"], lbl["color"]) for lbl in prj["labels"]]
         assert label_summary == [
             ("another label", "ededed"),
             ("bug", "d73a4a"),
@@ -183,7 +183,7 @@ class TestPullRequestLabels:
         assert resp.status_code == 200
         prj = resp.json()
         assert prj["title"] == "Here is a pull request"
-        label_summary = [(l["name"], l["color"]) for l in prj["labels"]]
+        label_summary = [(lbl["name"], lbl["color"]) for lbl in prj["labels"]]
         assert label_summary == [
             ("another label", "ededed"),
             ("bug", "d73a4a"),
