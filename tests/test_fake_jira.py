@@ -78,7 +78,3 @@ class TestBadRequests:
     def test_no_such_transitions(self, fake_jira):
         resp = requests.get("https://test.atlassian.net/rest/api/2/issue/XYZ-999/transitions")
         assert resp.status_code == 404
-
-    def test_baffling_search(self, fake_jira):
-        resp = requests.get("https://test.atlassian.net/rest/api/2/search?jql=xyzzy")
-        assert resp.status_code == 500

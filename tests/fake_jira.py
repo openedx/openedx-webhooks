@@ -2,7 +2,6 @@
 
 import dataclasses
 import itertools
-import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 
@@ -215,21 +214,3 @@ class FakeJira(faker.Faker):
         assert issue is not None
         transition_id = request.json()["transition"]["id"]
         issue.status = self.TRANSITION_IDS[transition_id]
-
-    @faker.route(r"/rest/api/2/search", "GET")
-    def _get_search(self, _match, request, _context):
-        """
-        Implement the search endpoint.
-        """
-        jql = request.qs["jql"][0]
-        # We only handle certain specific queries.
-        if bd_ids := re.findall(r'"Blended Project ID" ~ "(.*?)"', jql):
-            issues = [iss for iss in self.issues.values() if iss.blended_project_id in bd_ids]
-        else:
-            # We don't understand this query.
-            _context.status_code = 500
-            return None
-        return {
-            "issues": [iss.as_json() for iss in issues],
-            "total": len(issues),
-        }
