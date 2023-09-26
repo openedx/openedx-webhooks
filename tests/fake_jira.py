@@ -187,30 +187,3 @@ class FakeJira(faker.Faker):
             context.status_code = 204
         else:
             context.status_code = 404
-
-    @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)/transitions")
-    def _get_issue_transitions(self, match, _request, context) -> Dict:
-        """Responds to the API endpoint for listing transitions between issue states."""
-        if (issue := self.find_issue(match["key"])) is not None:
-            # The transitions don't include the transitions to the current state.
-            return {
-                "transitions": [
-                    {"id": id, "to": {"name": name}}
-                    for name, id in self.TRANSITIONS.items()
-                    if name != issue.status
-                ],
-            }
-        else:
-            # No such issue.
-            context.status_code = 404
-            return {}
-
-    @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)/transitions", "POST")
-    def _post_issue_transitions(self, match, request, _context):
-        """
-        Implement the POST to transition an issue to a new status.
-        """
-        issue = self.find_issue(match["key"])
-        assert issue is not None
-        transition_id = request.json()["transition"]["id"]
-        issue.status = self.TRANSITION_IDS[transition_id]
