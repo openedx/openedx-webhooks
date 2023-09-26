@@ -55,7 +55,6 @@ from openedx_webhooks.labels import (
 from openedx_webhooks.settings import settings
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.jira_work import (
-    transition_jira_issue,
     update_jira_issue,
 )
 from openedx_webhooks.types import GhProject, JiraId, PrDict, PrId
@@ -593,9 +592,6 @@ class FixingActions:
         # Our issues all start as "Needs Triage".
         new_issue["fields"]["status"] = {"name": "Needs Triage"}
         return new_issue
-
-    def transition_jira_issue(self, *, jira_id: str, jira_status: str) -> None:
-        transition_jira_issue(jira_id, jira_status)
 
     def update_jira_issue(self, *, jira_id: str, **update_kwargs) -> None:
         update_jira_issue(jira_id, **update_kwargs)

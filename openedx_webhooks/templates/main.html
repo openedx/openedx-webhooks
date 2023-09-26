@@ -29,15 +29,5 @@
       <li><a href="{{ url_for("github_views.process_pr_get") }}">Process Pull Request</a></li>
       <li><a href="{{ url_for("github_views.generate_error") }}">Generate Error</a></li>
     </ul>
-    <h2>JIRA</h2>
-    <ul>
-      <li>
-        {% if jira_username %}
-            Authenticated as <strong>{{jira_username}}</strong>.
-        {% else %}
-            Not authenticated.
-        {% endif %}
-      </li>
-    </ul>
     </body>
 </html>
