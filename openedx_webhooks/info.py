@@ -4,13 +4,12 @@ Get information about people, repos, orgs, pull requests, etc.
 import csv
 import logging
 import re
-from typing import Dict, Iterable, Optional, Tuple, Union
+from typing import Dict, Iterable, Optional
 
 import yaml
 from glom import glom
 
 from openedx_webhooks.auth import get_github_session
-from openedx_webhooks.settings import settings
 from openedx_webhooks.types import GhProject, JiraServer, PrDict, PrCommentDict, PrId
 from openedx_webhooks.utils import (
     memoize,
@@ -265,31 +264,6 @@ def get_bot_comments(prid: PrId) -> Iterable[PrCommentDict]:
         # I only care about comments I made
         if comment["user"]["login"] == my_username:
             yield comment
-
-
-def get_jira_issue_key(pr: Union[PrId, PrDict]) -> Tuple[bool, Optional[str]]:
-    """
-    Find mention of a Jira issue number in bot-authored comments.
-
-    Returns:
-        on_our_jira (bool): is the Jira issue on the JIRA_SERVER?
-        issue_key (str): the id of the Jira issue. Can be None if no Jira issue
-            is on the pull request.
-    """
-    if isinstance(pr, PrDict):
-        prid = PrId.from_pr_dict(pr)
-    else:
-        prid = pr
-    for comment in get_bot_comments(prid):
-        # search for the first occurrence of a JIRA ticket key in the comment body
-        match = re.search(r"(https://.*?)/browse/([A-Z]{2,}-\d+)\b", comment["body"])
-        if match:
-            on_our_jira = (match[1] == settings.JIRA_SERVER)
-            jira_key = match[2]
-            return on_our_jira, jira_key
-    # If there is no jira id yet, return on_our_jira==True so that we will work
-    # on Jira to make new ids.
-    return True, None
 
 
 def get_catalog_info(repo_fullname: str) -> Dict:

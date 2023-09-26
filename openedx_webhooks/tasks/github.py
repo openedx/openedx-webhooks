@@ -4,7 +4,7 @@ Queuable background tasks to do large work.
 
 import traceback
 
-from typing import Dict, Optional, Tuple
+from typing import Dict, Set
 
 from urlobject import URLObject
 
@@ -16,9 +16,10 @@ from openedx_webhooks.tasks.pr_tracking import (
     current_support_state,
     desired_support_state,
     DryRunFixingActions,
+    FixResult,
     PrTrackingFixer,
 )
-from openedx_webhooks.types import PrDict
+from openedx_webhooks.types import JiraId, PrDict
 from openedx_webhooks.utils import (
     log_rate_limit,
     paginated_get,
@@ -38,7 +39,7 @@ def pull_request_changed_task(_, pull_request):
         raise
 
 
-def pull_request_changed(pr: PrDict, actions=None) -> Tuple[Optional[str], bool]:
+def pull_request_changed(pr: PrDict, actions=None) -> FixResult:
     """
     Process a pull request.
 
@@ -52,10 +53,7 @@ def pull_request_changed(pr: PrDict, actions=None) -> Tuple[Optional[str], bool]
     As a result, it should not comment on the pull request without checking to
     see if it has *already* commented on the pull request.
 
-    Returns a 2-tuple. The first element in the tuple is the key of the JIRA
-    issue associated with the pull request, if any, as a string. The second
-    element in the tuple is a boolean indicating if this function did any
-    work, such as making a JIRA issue or commenting on the pull request.
+    Returns an object with details of the associated Jira issues.
     """
 
     user = pr["user"]["login"]
@@ -65,13 +63,10 @@ def pull_request_changed(pr: PrDict, actions=None) -> Tuple[Optional[str], bool]
     logger.info(f"Processing PR {repo}#{num} by @{user}...")
 
     desired = desired_support_state(pr)
-    if desired is not None:
-        current = current_support_state(pr)
-        fixer = PrTrackingFixer(pr, current, desired, actions=actions)
-        fixer.fix()
-        return fixer.result()
-    else:
-        return None, False
+    current = current_support_state(pr)
+    fixer = PrTrackingFixer(pr, current, desired, actions=actions)
+    fixer.fix()
+    return fixer.result()
 
 
 class PaginateCallback:
@@ -137,7 +132,8 @@ def rescan_repository(
     state = "all" if allpr else "open"
     url = f"/repos/{repo}/pulls?state={state}"
 
-    changed: Dict[int, Optional[str]] = {}
+    changed: Dict[int, Set[JiraId]] = {}
+    errors: Dict[int, str] = {}
     dry_run_actions = {}
 
     # Pull requests before this will not be rescanned. Contractor messages
@@ -167,12 +163,12 @@ def rescan_repository(
             resp.raise_for_status()
             pull_request = resp.json()
 
-            issue_key, anything_happened = pull_request_changed(pull_request, actions=actions)
+            result = pull_request_changed(pull_request, actions=actions)
         except Exception:       # pylint: disable=broad-except
-            changed[pull_request["number"]] = traceback.format_exc()
+            errors[pull_request["number"]] = traceback.format_exc()
         else:
-            if anything_happened:
-                changed[pull_request["number"]] = issue_key
+            if result.changed_jira_issues:
+                changed[pull_request["number"]] = result.changed_jira_issues
                 if dry_run:
                     assert actions is not None
                     dry_run_actions[pull_request["number"]] = actions.action_calls
@@ -184,9 +180,11 @@ def rescan_repository(
             ),
         )
 
-    info: Dict = {"repo": repo}
-    if changed:
-        info["changed"] = changed
+    info: Dict = {
+        "repo": repo,
+        "changed": changed,
+        "errors": errors,
+    }
     if dry_run_actions:
         info["dry_run_actions"] = dry_run_actions
     return info

@@ -34,20 +34,19 @@ def closed_pull_request(is_merged, fake_github, fake_jira):
         user="tusbar",
         title=random_text(),
         )
-    issue_key, _ = pull_request_changed(pr.as_json())
-
-    assert issue_key is None
+    result = pull_request_changed(pr.as_json())
+    assert not result.jira_issues
     pr.add_comment(user="nedbat", body="Please make some changes")
     pr.add_comment(user="tusbar", body="OK, I made the changes")
     pr.close(merge=is_merged)
 
     fake_jira.reset_mock()
 
-    return pr, issue_key
+    return pr
 
 
 def test_external_pr_closed(fake_jira, closed_pull_request):
-    pr, _ = closed_pull_request
+    pr = closed_pull_request
     pull_request_changed(pr.as_json())
 
     pr_comments = pr.list_comments()
@@ -58,24 +57,22 @@ def test_external_pr_closed(fake_jira, closed_pull_request):
 
 def test_external_pr_closed_but_issue_deleted(fake_jira, closed_pull_request):
     # A closing pull request, but its Jira issue has been deleted.
-    pr, old_issue_key = closed_pull_request
+    pr = closed_pull_request
 
-    issue_id, anything_happened = pull_request_changed(pr.as_json())
-
-    assert issue_id is None
-    assert anything_happened
+    result = pull_request_changed(pr.as_json())
+    assert not result.jira_issues
 
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 4    # 1 welcome, closed_pull_request makes two, 1 survey
     # We leave the old issue id in the comment.
     body = pr_comments[0].body
-    check_issue_link_in_markdown(body, old_issue_key)
+    check_issue_link_in_markdown(body, None)
 
 
 def test_external_pr_closed_but_issue_in_status(fake_jira, closed_pull_request):
     # The Jira issue associated with a closing pull request is already in the
     # status we want to move it to.
-    pr, _ = closed_pull_request
+    pr = closed_pull_request
 
     pull_request_changed(pr.as_json())
 

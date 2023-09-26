@@ -14,9 +14,3 @@ GITHUB_CATEGORY_LABELS = {
     "blended",
     "open-source-contribution",
 }
-
-# These are categorization labels the bot assigns.
-
-JIRA_CATEGORY_LABELS = {
-    "blended",
-}

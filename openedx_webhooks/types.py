@@ -53,3 +53,13 @@ class JiraServer:
 
     mapping: str | None = None
     project: str | None = None
+
+
+@dataclasses.dataclass(frozen=True)
+class JiraId:
+    """A JiraServer nickname and an issue key."""
+    nick: str
+    key: str
+
+    def asdict(self):
+        return dataclasses.asdict(self)

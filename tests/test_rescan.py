@@ -63,12 +63,10 @@ def make_rescannable_repo(fake_github, org_name="an-org", repo_name="a-repo"):
 def test_rescan_repository(rescannable_repo, pull_request_changed_fn, allpr):
     ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
     changed = ret["changed"]
-    bad = False
-    for v in changed.values():
-        if isinstance(v, str) and "Traceback" in v: # pragma: no cover
-            print(v)
-            bad = True
-    assert not bad
+    errors = ret["errors"]
+    for err in errors.values():
+        print(err)
+    assert not errors
 
     # Look at the pull request numbers passed to pull_request_changed. Only the
     # external (even) numbers should be there.
@@ -82,7 +80,7 @@ def test_rescan_repository(rescannable_repo, pull_request_changed_fn, allpr):
 
     # If we rescan again, nothing should happen.
     ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
-    assert "changed" not in ret
+    assert not ret["changed"]
 
 
 def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pull_request_changed_fn):
@@ -187,7 +185,7 @@ def test_rescan_failure(mocker, rescannable_repo):
     ret = rescan_repository(rescannable_repo.full_name, allpr=True)
 
     assert list(ret["changed"]) == [102, 106, 108, 110]
-    err = ret["changed"][108]
+    err = ret["errors"][108]
     assert err.startswith("Traceback (most recent call last):\n")
     assert " in flaky_pull_request_changed\n" in err
     assert "1/0 # BOOM" in err
