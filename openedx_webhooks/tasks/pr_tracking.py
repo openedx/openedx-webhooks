@@ -8,7 +8,7 @@ import copy
 import dataclasses
 import itertools
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple, cast
+from typing import Dict, List, Optional, Set, Tuple, cast
 
 from openedx_webhooks.auth import get_github_session, get_jira_session
 from openedx_webhooks.bot_comments import (
@@ -39,7 +39,6 @@ from openedx_webhooks.gh_projects import (
 from openedx_webhooks.info import (
     get_blended_project_id,
     get_bot_comments,
-    get_jira_issue_key,
     get_people_file,
     is_bot_pull_request,
     is_draft_pull_request,
@@ -52,7 +51,6 @@ from openedx_webhooks.info import (
 from openedx_webhooks.labels import (
     GITHUB_CATEGORY_LABELS,
     GITHUB_STATUS_LABELS,
-    JIRA_CATEGORY_LABELS,
 )
 from openedx_webhooks.settings import settings
 from openedx_webhooks.tasks import logger
@@ -60,15 +58,38 @@ from openedx_webhooks.tasks.jira_work import (
     transition_jira_issue,
     update_jira_issue,
 )
-from openedx_webhooks.types import GhProject, PrDict, PrId
+from openedx_webhooks.types import GhProject, JiraId, PrDict, PrId
 from openedx_webhooks.utils import (
     get_jira_custom_fields,
-    get_jira_issue,
     log_check_response,
     retry_get,
     sentry_extra_context,
     text_summary,
 )
+
+
+@dataclass
+class BotData:
+    """
+    The data we store hidden on the first bot comment, to track our work.
+    """
+    # Is this a draft pull request?
+    draft: bool = False
+    # The Jira issues associated with the pull request.
+    jira_issues: Set[JiraId] = field(default_factory=set)
+
+    def asdict(self):
+        return {
+            "draft": self.draft,
+            "jira_issues": [ji.asdict() for ji in self.jira_issues],
+        }
+
+    @classmethod
+    def fromdict(cls, d):
+        return cls(
+            draft=d.get("draft", False),
+            jira_issues=set(JiraId(**jd) for jd in d.get("jira_issues", [])),
+        )
 
 
 @dataclass
@@ -85,23 +106,11 @@ class PrCurrentInfo:
     bot_survey_comment_id: Optional[str] = None
 
     # The last-seen state stored in the first bot comment.
-    last_seen_state: Dict = field(default_factory=dict)
-    # And aggregate of all data stored on all bot comments.
-    all_bot_state: Dict = field(default_factory=dict)
-
-    # The Jira issue id mentioned on the PR if any.
-    jira_mentioned_id: Optional[str] = None
-    # Was the mentioned Jira issue on our Jira server?
-    on_our_jira: bool = False
+    bot_data: BotData = field(default_factory=BotData)
 
     # The actual Jira issue id.  Can differ from jira_mentioned_id if the
     # issue was moved, or can be None if the issue has been deleted.
     jira_id: Optional[str] = None
-
-    jira_title: Optional[str] = None
-    jira_description: Optional[str] = None
-    jira_status: Optional[str] = None
-    jira_labels: Set[str] = field(default_factory=set)
 
     # The actual set of labels on the pull request.
     github_labels: Set[str] = field(default_factory=set)
@@ -111,10 +120,6 @@ class PrCurrentInfo:
 
     # The status of the cla check.
     cla_check: Optional[Dict[str, str]] = None
-
-    # Did the author make a change that could move us out of "Waiting on
-    # Author"?
-    author_acted: bool = False
 
 
 @dataclass
@@ -139,9 +144,6 @@ class PrDesiredInfo:
     # The Jira status we want to set on an existing issue. Can be None if we
     # don't need to force a new status, but can leave the existing status.
     jira_status: Optional[str] = None
-    # If we're closing the pull request, we save away the previous Jira state
-    # in case we need to re-open it.
-    jira_previous_status: Optional[str] = None
 
     jira_labels: Set[str] = field(default_factory=set)
 
@@ -156,6 +158,17 @@ class PrDesiredInfo:
     cla_check: Optional[Dict[str, str]] = None
 
 
+@dataclass
+class FixResult:
+    """
+    Return value from PrTrackingFixer.result.
+    """
+    # The Jira issues associated with the pull request.
+    jira_issues: Set[JiraId] = field(default_factory=set)
+    # The Jira issues that were created or changed.
+    changed_jira_issues: Set[JiraId] = field(default_factory=set)
+
+
 def current_support_state(pr: PrDict) -> PrCurrentInfo:
     """
     Examine the world to determine what the current support state is.
@@ -166,7 +179,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
     full_bot_comments = list(get_bot_comments(prid))
     if full_bot_comments:
         current.bot_comment0_text = cast(str, full_bot_comments[0]["body"])
-        current.last_seen_state = extract_data_from_comment(current.bot_comment0_text)
+        current.bot_data = BotData.fromdict(extract_data_from_comment(current.bot_comment0_text))
     for comment in full_bot_comments:
         body = comment["body"]
         for comment_id, snips in BOT_COMMENT_INDICATORS.items():
@@ -174,35 +187,15 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
                 current.bot_comments.add(comment_id)
                 if comment_id == BotComment.SURVEY:
                     current.bot_survey_comment_id = comment["id"]
-        current.all_bot_state.update(extract_data_from_comment(body))
-
-    on_our_jira, jira_id = get_jira_issue_key(prid)
-    current.jira_id = current.jira_mentioned_id = jira_id
-    current.on_our_jira = on_our_jira
-    if current.jira_id and current.on_our_jira:
-        issue = get_jira_issue(current.jira_id, missing_ok=True)
-        if issue is None:
-            # Issue has been deleted. Forget about it, and we'll make a new one.
-            current.jira_id = None
-        else:
-            current.jira_id = issue["key"]
-            current.jira_title = issue["fields"]["summary"] or ""
-            current.jira_description = issue["fields"]["description"] or ""
-            current.jira_status = issue["fields"]["status"]["name"]
-            current.jira_labels = set(issue["fields"]["labels"])
 
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
     current.github_projects = set(pull_request_projects(pr))
     current.cla_check = cla_status_on_pr(pr)
 
-    if current.last_seen_state.get("draft", False) and not is_draft_pull_request(pr):
-        # It was a draft, but now isn't.  The author acted.
-        current.author_acted = True
-
     return current
 
 
-def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
+def desired_support_state(pr: PrDict) -> PrDesiredInfo:
     """
     Examine a pull request to decide what state we want the world to be in.
     """
@@ -287,7 +280,6 @@ def desired_support_state(pr: PrDict) -> Optional[PrDesiredInfo]:
         elif state == "merged":
             desired.jira_status = "Merged"
         elif state == "reopened":
-            desired.jira_status = "pre-close"   # Not a real Jira status.
             desired.bot_comments_to_remove.add(BotComment.SURVEY)
 
         if state in ["closed", "merged"]:
@@ -324,17 +316,19 @@ class PrTrackingFixer:
         self.prid = PrId.from_pr_dict(self.pr)
         self.actions = actions or FixingActions(self.prid)
 
-        self.last_seen_state = copy.deepcopy(current.last_seen_state)
-        self.happened = False
+        self.bot_data = copy.deepcopy(current.bot_data)
+        self.fix_result: FixResult = FixResult()
 
-    def result(self) -> Tuple[Optional[str], bool]:
-        return self.current.jira_id, self.happened
+    def result(self) -> FixResult:
+        return self.fix_result
 
     def fix(self) -> None:
+        """
+        The main routine for making needed changes.
+        """
         if self.desired.cla_check != self.current.cla_check:
             assert self.desired.cla_check is not None
             self.actions.set_cla_status(status=self.desired.cla_check)
-            self.happened = True
 
         if self.desired.is_ospr:
             self.fix_ospr()
@@ -353,39 +347,13 @@ class PrTrackingFixer:
         self._add_bot_comments()
 
     def fix_ospr(self) -> None:
-        """
-        The main routine for making needed changes.
-        """
         self.actions.initial_state(
             current=json_safe_dict(self.current),
             desired=json_safe_dict(self.desired),
         )
 
         # Draftiness
-        self.last_seen_state["draft"] = is_draft_pull_request(self.pr)
-
-        if self.current.jira_id and self.current.on_our_jira:
-            # If the author acted, and we were waiting on the author, then we
-            # should set the status to this PR's usual initial status.
-            if self.current.author_acted and self.current.jira_status == "Waiting on Author":
-                self.desired.jira_status = self.desired.jira_initial_status
-
-            # Check the state of the Jira issue.
-            if self.desired.jira_status is not None and self.desired.jira_status != self.current.jira_status:
-                if self.desired.jira_status == "pre-close":
-                    self.desired.jira_status = self.current.all_bot_state.get(
-                        "jira-pre-close", "Community Manager Review",
-                    )
-                elif self.desired.jira_status == "Rejected":
-                    self.desired.jira_previous_status = self.current.jira_status
-                self.actions.transition_jira_issue(
-                    jira_id=self.current.jira_id, jira_status=cast(str, self.desired.jira_status),
-                )
-                self.current.jira_status = self.desired.jira_status
-                self.happened = True
-
-            # Update the Jira issue information.
-            self._fix_jira_information()
+        self.bot_data.draft = is_draft_pull_request(self.pr)
 
         # Check the GitHub labels.
         self._fix_github_labels()
@@ -398,15 +366,14 @@ class PrTrackingFixer:
             self.actions.add_pull_request_to_project(
                 pr_node_id=self.pr["node_id"], project=project
             )
-            self.happened = True
 
-    def _make_jira_issue(self) -> None:
+    def _make_jira_issue(self) -> Dict:
         """
         Make our desired Jira issue.
         """
         assert self.desired.jira_project is not None
         user_name, institution = get_name_and_institution_for_pr(self.pr)
-        new_issue = self.actions.create_ospr_issue(
+        issue_data = self.actions.create_ospr_issue(
             pr_url=self.pr["html_url"],
             project=self.desired.jira_project,
             summary=self.desired.jira_title,
@@ -415,53 +382,7 @@ class PrTrackingFixer:
             user_name=user_name,
             institution=institution,
         )
-        self.current.jira_id = new_issue["key"]
-        assert self.current.jira_id is not None
-        self.current.jira_status = new_issue["fields"]["status"]["name"]
-        self.current.jira_title = self.desired.jira_title
-        self.current.jira_description = self.desired.jira_description
-        self.current.jira_labels = self.desired.jira_labels
-
-        if self.desired.jira_initial_status != self.current.jira_status:
-            assert self.desired.jira_initial_status is not None
-            self.actions.transition_jira_issue(
-                jira_id=self.current.jira_id,
-                jira_status=self.desired.jira_initial_status,
-            )
-            self.current.jira_status = self.desired.jira_initial_status
-
-        self.happened = True
-
-    def _fix_jira_information(self) -> None:
-        """
-        Update the information on the Jira issue.
-        """
-        update_kwargs: Dict[str, Any] = {}
-
-        if self.desired.jira_title != self.current.jira_title:
-            update_kwargs["summary"] = self.desired.jira_title
-        if self.desired.jira_description != self.current.jira_description:
-            update_kwargs["description"] = self.desired.jira_description
-
-        desired_labels = set(self.desired.jira_labels)
-        ad_hoc_labels = self.current.jira_labels - JIRA_CATEGORY_LABELS
-        desired_labels.update(ad_hoc_labels)
-        if desired_labels != self.current.jira_labels:
-            update_kwargs["labels"] = list(self.desired.jira_labels)
-
-        if update_kwargs:
-            assert self.current.jira_id is not None
-            try:
-                self.actions.update_jira_issue(jira_id=self.current.jira_id, **update_kwargs)
-            except:
-                logger.warning(
-                    f"Couldn't update jira: {update_kwargs=}, {self.current.jira_description=}"
-                )
-                raise
-            self.current.jira_title = self.desired.jira_title
-            self.current.jira_description = self.desired.jira_description
-            self.current.jira_labels = self.desired.jira_labels
-            self.happened = True
+        return issue_data
 
     def _fix_github_labels(self) -> None:
         """
@@ -469,8 +390,6 @@ class PrTrackingFixer:
         Take care to preserve any label we've never heard of.
         """
         desired_labels = set(self.desired.github_labels)
-        if self.current.jira_status:
-            desired_labels.add(self.current.jira_status.lower())
         ad_hoc_labels = self.current.github_labels - GITHUB_CATEGORY_LABELS - GITHUB_STATUS_LABELS
         desired_labels.update(ad_hoc_labels)
 
@@ -478,7 +397,6 @@ class PrTrackingFixer:
             self.actions.update_labels_on_pull_request(
                 labels=list(desired_labels),
             )
-            self.happened = True
 
     def _fix_bot_comment(self) -> None:
         """
@@ -520,7 +438,7 @@ class PrTrackingFixer:
             needed_comments.remove(BotComment.END_OF_WIP)
         # BTW, we never have WELCOME_CLOSED in desired.bot_comments
 
-        comment_body += format_data_for_comment(self.last_seen_state)
+        comment_body += format_data_for_comment(self.bot_data.asdict())
 
         if comment_body != self.current.bot_comment0_text:
             # If there are current-state comments, then we need to edit the
@@ -529,7 +447,6 @@ class PrTrackingFixer:
                 self.actions.edit_comment_on_pull_request(comment_body=comment_body)
             else:
                 self.actions.add_comment_to_pull_request(comment_body=comment_body)
-            self.happened = True
 
         assert needed_comments == set(), f"Couldn't make first comments: {needed_comments}"
 
@@ -545,17 +462,12 @@ class PrTrackingFixer:
 
         if BotComment.SURVEY in needed_comments:
             body = github_end_survey_comment(self.pr)
-            if self.desired.jira_status == "Rejected":
-                # For close/re-open cycling, remember what Jira was before the close.
-                body += format_data_for_comment({"jira-pre-close": self.desired.jira_previous_status})
             self.actions.add_comment_to_pull_request(comment_body=body)
             needed_comments.remove(BotComment.SURVEY)
-            self.happened = True
 
         if BotComment.SURVEY in self.desired.bot_comments_to_remove:
             if self.current.bot_survey_comment_id:
                 self.actions.delete_comment_on_pull_request(comment_id=self.current.bot_survey_comment_id)
-                self.happened = True
 
         assert needed_comments == set(), f"Couldn't make comments: {needed_comments}"
 
