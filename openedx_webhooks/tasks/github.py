@@ -169,9 +169,9 @@ def rescan_repository(
         else:
             if result.changed_jira_issues:
                 changed[pull_request["number"]] = result.changed_jira_issues
-                if dry_run:
-                    assert actions is not None
-                    dry_run_actions[pull_request["number"]] = actions.action_calls
+            if dry_run:
+                assert actions is not None
+                dry_run_actions[pull_request["number"]] = actions.action_calls
 
     if not dry_run:
         logger.info(
