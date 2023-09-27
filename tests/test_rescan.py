@@ -73,10 +73,10 @@ def test_rescan_repository(rescannable_repo, pull_request_changed_fn, allpr):
     prnums = [c.args[0]["number"] for c in pull_request_changed_fn.call_args_list]
     if allpr:
         assert prnums == [102, 106, 108, 110]
-        assert changed == {102: None, 106: None, 108: None, 110: None}
+        assert changed == {}
     else:
         assert prnums == [102, 106]
-        assert set(changed.keys()) == {102, 106}
+        assert changed == {}
 
     # If we rescan again, nothing should happen.
     ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
@@ -92,41 +92,36 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
     fake_jira.assert_readonly()
 
     # These are the OSPR tickets for the pull requests.
-    assert ret["changed"] == {
-        102: None,
-        106: None,
-        108: None,
-        110: None,
-    }
+    assert ret["changed"] == {}
 
     # Get the names of the actions. We won't worry about the details, those
     # are tested in the non-dry-run tests of rescanning pull requests.
     actions = {k: [name for name, kwargs in actions] for k, actions in ret["dry_run_actions"].items()}
     assert actions == {
         102: [
-            "set_cla_status",
             "initial_state",
+            "set_cla_status",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
         ],
         106: [
-            "set_cla_status",
             "initial_state",
+            "set_cla_status",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
         ],
         108: [
-            "set_cla_status",
             "initial_state",
+            "set_cla_status",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
         ],
         110: [
-            "set_cla_status",
             "initial_state",
+            "set_cla_status",
             "update_labels_on_pull_request",
             "add_comment_to_pull_request",
             "add_pull_request_to_project",
@@ -135,7 +130,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
 
     # The value returned should be json-encodable.
     json.dumps(ret)
-
 
 @pytest.mark.parametrize("earliest, latest, nums", [
     ("", "", [102, 106, 108, 110]),
@@ -184,7 +178,7 @@ def test_rescan_failure(mocker, rescannable_repo):
     mocker.patch("openedx_webhooks.tasks.github.pull_request_changed", flaky_pull_request_changed)
     ret = rescan_repository(rescannable_repo.full_name, allpr=True)
 
-    assert list(ret["changed"]) == [102, 106, 108, 110]
+    assert list(ret["changed"]) == []
     err = ret["errors"][108]
     assert err.startswith("Traceback (most recent call last):\n")
     assert " in flaky_pull_request_changed\n" in err
