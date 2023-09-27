@@ -20,7 +20,7 @@ GhProject = Tuple[str, int]
 
 @dataclasses.dataclass(frozen=True)
 class PrId:
-    """An id of a pull request, with three parts used by GitHub."""
+    """An id of a pull request, with a repo full_name and an id."""
     full_name: str
     number: int
 

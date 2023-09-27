@@ -21,6 +21,7 @@ from openedx_webhooks.bot_comments import (
     github_community_pr_comment,
     github_community_pr_comment_closed,
     github_end_survey_comment,
+    jira_issue_comment,
     no_contributions_thanks,
 )
 from openedx_webhooks.cla_check import (
@@ -70,25 +71,19 @@ from openedx_webhooks.utils import (
 @dataclass
 class BotData:
     """
-    The data we store hidden on the first bot comment, to track our work.
+    The data we store hidden in bot comments, to track our work.
     """
     # Is this a draft pull request?
     draft: bool = False
     # The Jira issues associated with the pull request.
     jira_issues: Set[JiraId] = field(default_factory=set)
 
-    def asdict(self):
-        return {
-            "draft": self.draft,
-            "jira_issues": [ji.asdict() for ji in self.jira_issues],
-        }
-
-    @classmethod
-    def fromdict(cls, d):
-        return cls(
-            draft=d.get("draft", False),
-            jira_issues=set(JiraId(**jd) for jd in d.get("jira_issues", [])),
-        )
+    def update(self, data: dict) -> None:
+        """Add data from `data` to this BotData."""
+        if "draft" in data:
+            self.draft = data["draft"]
+        if "jira_issues" in data:
+            self.jira_issues.update(JiraId(**jd) for jd in data["jira_issues"])
 
 
 @dataclass
@@ -137,6 +132,9 @@ class PrDesiredInfo:
     jira_title: Optional[str] = None
     jira_description: Optional[str] = None
 
+    # The Jira instances we want to have issues on.
+    jira_nicks: Set[str] = field(default_factory=set)
+
     # The Jira status to start a new issue at.
     jira_initial_status: Optional[str] = None
 
@@ -178,7 +176,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
     full_bot_comments = list(get_bot_comments(prid))
     if full_bot_comments:
         current.bot_comment0_text = cast(str, full_bot_comments[0]["body"])
-        current.bot_data = BotData.fromdict(extract_data_from_comment(current.bot_comment0_text))
+        current.bot_data.update(extract_data_from_comment(current.bot_comment0_text))
     for comment in full_bot_comments:
         body = comment["body"]
         for comment_id, snips in BOT_COMMENT_INDICATORS.items():
@@ -186,6 +184,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
                 current.bot_comments.add(comment_id)
                 if comment_id == BotComment.SURVEY:
                     current.bot_survey_comment_id = comment["id"]
+        current.bot_data.update(extract_data_from_comment(body))
 
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
     current.github_projects = set(pull_request_projects(pr))
@@ -226,6 +225,10 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
         state = "merged"
     else:
         state = "closed"
+
+    # A label of jira:xyz means we want a Jira issue in the xyz Jira.
+    label_names = set(lbl["name"] for lbl in pr["labels"])
+    desired.jira_nicks = {name.partition(":")[-1] for name in label_names if name.startswith("jira:")}
 
     desired.jira_initial_status = "Needs Triage"
     desired.jira_title = pr["title"]
@@ -325,6 +328,13 @@ class PrTrackingFixer:
         """
         The main routine for making needed changes.
         """
+        self.actions.initial_state(
+            current=json_safe_dict(self.current),
+            desired=json_safe_dict(self.desired),
+        )
+
+        self.fix_result.jira_issues = set(self.current.bot_data.jira_issues)
+
         if self.desired.cla_check != self.current.cla_check:
             assert self.desired.cla_check is not None
             self.actions.set_cla_status(status=self.desired.cla_check)
@@ -334,6 +344,12 @@ class PrTrackingFixer:
 
         if self.desired.is_refused:
             self.fix_comments()
+
+        # Make needed Jira issues.
+        current_jira_nicks = {ji.nick for ji in self.current.bot_data.jira_issues}
+        for jira_nick in self.desired.jira_nicks:
+            if jira_nick not in current_jira_nicks:
+                self._make_jira_issue(jira_nick)
 
     def fix_comments(self) -> None:
         fix_comment = True
@@ -346,11 +362,6 @@ class PrTrackingFixer:
         self._add_bot_comments()
 
     def fix_ospr(self) -> None:
-        self.actions.initial_state(
-            current=json_safe_dict(self.current),
-            desired=json_safe_dict(self.desired),
-        )
-
         # Draftiness
         self.bot_data.draft = is_draft_pull_request(self.pr)
 
@@ -366,22 +377,32 @@ class PrTrackingFixer:
                 pr_node_id=self.pr["node_id"], project=project
             )
 
-    def _make_jira_issue(self) -> Dict:
+    def _make_jira_issue(self, jira_nick) -> None:
         """
-        Make our desired Jira issue.
+        Make a Jira issue in a particular Jira server.
         """
-        assert self.desired.jira_project is not None
         user_name, institution = get_name_and_institution_for_pr(self.pr)
-        issue_data = self.actions.create_ospr_issue(
+        issue_data = self.actions.create_jira_issue(
+            jira_nick=jira_nick,
             pr_url=self.pr["html_url"],
-            project=self.desired.jira_project,
+            project="TODOXXX",  # TODO: get the real project
             summary=self.desired.jira_title,
             description=self.desired.jira_description,
             labels=list(self.desired.jira_labels),
             user_name=user_name,
             institution=institution,
         )
-        return issue_data
+
+        jira_id = JiraId(jira_nick, issue_data["key"])
+        self.current.bot_data.jira_issues.add(jira_id)
+        self.fix_result.jira_issues.add(jira_id)
+        self.fix_result.changed_jira_issues.add(jira_id)
+
+        comment_body = jira_issue_comment(self.pr, jira_id)
+        comment_body += format_data_for_comment({
+            "jira_issues": [jira_id.asdict()],
+        })
+        self.actions.add_comment_to_pull_request(comment_body=comment_body)
 
     def _fix_github_labels(self) -> None:
         """
@@ -437,7 +458,9 @@ class PrTrackingFixer:
             needed_comments.remove(BotComment.END_OF_WIP)
         # BTW, we never have WELCOME_CLOSED in desired.bot_comments
 
-        comment_body += format_data_for_comment(self.bot_data.asdict())
+        comment_body += format_data_for_comment({
+            "draft": is_draft_pull_request(self.pr)
+        })
 
         if comment_body != self.current.bot_comment0_text:
             # If there are current-state comments, then we need to edit the
@@ -507,9 +530,9 @@ class DryRunFixingActions:
     def __init__(self):
         self.action_calls = []
 
-    def create_ospr_issue(self, **kwargs):
+    def create_jira_issue(self, **kwargs):
         # This needs a special override because it has to return a Jira key.
-        self.action_calls.append(("create_ospr_issue", kwargs))
+        self.action_calls.append(("create_jira_issue", kwargs))
         return {
             "key": f"OSPR-{next(self.jira_ids)}",
             "fields": {
@@ -543,8 +566,9 @@ class FixingActions:
         Does nothing when really fixing, but captures information for dry runs.
         """
 
-    def create_ospr_issue(
+    def create_jira_issue(
         self, *,
+        jira_nick: str,
         pr_url: str,
         project: str,
         summary: Optional[str],
@@ -554,12 +578,12 @@ class FixingActions:
         institution: Optional[str],
     ) -> Dict:
         """
-        Create a new OSPR or OSPR-like issue for a pull request.
+        Create a new Jira issue for a pull request.
 
         Returns the JSON describing the issue.
         """
 
-        custom_fields = get_jira_custom_fields()
+        custom_fields = get_jira_custom_fields(jira_nick)
         new_issue = {
             "fields": {
                 "project": {
@@ -582,7 +606,7 @@ class FixingActions:
         sentry_extra_context({"new_issue": new_issue})
 
         logger.info(f"Creating new JIRA issue for PR {self.prid}...")
-        resp = get_jira_session().post("/rest/api/2/issue", json=new_issue)
+        resp = get_jira_session(jira_nick).post("/rest/api/2/issue", json=new_issue)
         log_check_response(resp)
 
         # Jira only sends the key.  Put it into the JSON we started with, and
