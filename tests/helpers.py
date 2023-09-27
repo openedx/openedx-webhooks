@@ -3,6 +3,9 @@
 import random
 import re
 
+from openedx_webhooks.info import get_jira_server_info
+from openedx_webhooks.types import JiraId
+
 
 def check_good_markdown(text: str) -> None:
     """
@@ -33,21 +36,22 @@ def check_good_markdown(text: str) -> None:
         raise ValueError(f"Markdown has a link to a None url: {text!r}")
 
 
-def check_issue_link_in_markdown(text: str, issue_id: str|None) -> None:
+def check_issue_link_in_markdown(text: str, jira_id: JiraId|None) -> None:
     """
-    Check that `text` has properly links to `issue_id`.
+    Check that `text` has properly formatted links to `jira_id`.
 
     Args:
         text: Markdown text.
-        issue_id: A JIRA issue id, which can be None.
+        jira_id: A JiraId (nick, key) pair, which can be None.
 
     Returns:
         Nothing.  Will raise an exception with a failure message if something
         is wrong.
     """
-    if issue_id is not None:
-        jira_link = "[{id}](https://test.atlassian.net/browse/{id})".format(id=issue_id)
-        assert jira_link in text, f"Markdown is missing a link to {issue_id}"
+    if jira_id is not None:
+        jira_server = get_jira_server_info(jira_id.nick)
+        jira_link = f"[{jira_id.key}]({jira_server.server}/browse/{jira_id.key})"
+        assert jira_link in text, f"Markdown is missing a link to {jira_id}"
     else:
         assert "/browse/" not in text, "Markdown links to JIRA when we have no issue id"
 

@@ -11,11 +11,12 @@ from openedx_webhooks.utils import (
 
 
 def update_jira_issue(
+        jira_nick: str,
         issue_key: str,
         summary: Optional[str]=None,
         description: Optional[str]=None,
         labels: Optional[List[str]]=None,
-    ):
+    ) -> None:
     """
     Update some fields on a Jira issue.
     """
@@ -34,5 +35,5 @@ def update_jira_issue(
     # Contrary to the docs, if the bot is not an admin, the setting isn't ignored,
     # the request fails.
     url = f"/rest/api/2/issue/{issue_key}?notifyUsers={notify}"
-    resp = get_jira_session().put(url, json={"fields": fields})
+    resp = get_jira_session(jira_nick).put(url, json={"fields": fields})
     log_check_response(resp)

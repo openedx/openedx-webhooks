@@ -91,6 +91,7 @@ PR_ACTIONS = {
     "converted_to_draft",
     "reopened",
     "enqueued",
+    "labeled",
 }
 
 def handle_pull_request_event(event):

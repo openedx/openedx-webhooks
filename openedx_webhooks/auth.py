@@ -33,10 +33,9 @@ def get_jira_session(jira_nick):
     `jira_nick` is a nickname for one of our configured Jira servers.
     """
     # Avoid a circular import.
-    from openedx_webhooks.info import get_jira_info
+    from openedx_webhooks.info import get_jira_server_info
 
-    jira_info = get_jira_info()
-    jira_server = jira_info[jira_nick.lower()]
+    jira_server = get_jira_server_info(jira_nick)
     session = BaseUrlSession(base_url=jira_server.server)
     session.auth = (jira_server.email, jira_server.token)
     session.trust_env = False   # prevent reading the local .netrc

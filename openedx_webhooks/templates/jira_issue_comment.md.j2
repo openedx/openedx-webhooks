@@ -1,0 +1,4 @@
+{% filter replace("\n", " ")|trim %}
+{# The bot makes this comment when it creates a label-triggered Jira issue. #}
+I've created issue [{{ key }}]({{ server_url }}/browse/{{ key }}) in {{ server_description }}.
+{% endfilter %}

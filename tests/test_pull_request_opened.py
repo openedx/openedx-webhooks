@@ -332,3 +332,69 @@ def test_add_to_multiple_projects(fake_github):
     assert pull_request_projects(pr.as_json()) == {
         settings.GITHUB_OSPR_PROJECT, ("openedx", 23), ("anotherorg", 17),
     }
+
+
+def test_jira_labelling(fake_github, fake_jira, fake_jira2):
+    # A PR with a "jira:" label makes a Jira issue.
+    pr = fake_github.make_pull_request("openedx", user="nedbat", title="Ned's PR")
+    pr.set_labels(["jira:test1"])
+    assert len(pr.list_comments()) == 0
+
+    result = pull_request_changed(pr.as_json())
+    assert len(result.jira_issues) == 1
+    assert len(result.changed_jira_issues) == 1
+    assert len(fake_jira.issues) == 1
+    assert len(fake_jira2.issues) == 0
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[-1].body
+    jira_id = result.changed_jira_issues.pop()
+    check_issue_link_in_markdown(body, jira_id)
+    assert "in the private Test1 Jira" in body
+    jira_issue = fake_jira.issues[jira_id.key]
+    assert jira_issue.summary == "Ned's PR"
+
+    # Processing the pull request again won't make another issue.
+    result = pull_request_changed(pr.as_json())
+    assert len(result.jira_issues) == 1
+    assert len(result.changed_jira_issues) == 0
+    assert len(fake_jira.issues) == 1
+    assert len(fake_jira2.issues) == 0
+    assert len(pr.list_comments()) == 1
+
+
+def test_jira_labelling_later(fake_github, fake_jira, fake_jira2):
+    # You can add the label later, and get a Jira issue.
+    # At first, no labels, so no Jira issues:
+    pr = fake_github.make_pull_request("openedx", user="nedbat", title="Yet another PR")
+    result = pull_request_changed(pr.as_json())
+    assert len(result.jira_issues) == 0
+    assert len(result.changed_jira_issues) == 0
+    assert len(fake_jira.issues) == 0
+    assert len(fake_jira2.issues) == 0
+
+    # Make a label, get an issue:
+    pr.set_labels(["jira:test1"])
+    result = pull_request_changed(pr.as_json())
+    assert len(result.jira_issues) == 1
+    assert len(result.changed_jira_issues) == 1
+    assert len(fake_jira.issues) == 1
+    assert len(fake_jira2.issues) == 0
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+
+    # You can add a second label for another Jira server.
+    pr.set_labels(["jira:AnotherTest"])
+    result = pull_request_changed(pr.as_json())
+    assert len(result.jira_issues) == 2
+    assert len(result.changed_jira_issues) == 1
+    assert len(fake_jira.issues) == 1
+    assert len(fake_jira2.issues) == 1
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 2
+    body = pr_comments[-1].body
+    jira_id = result.changed_jira_issues.pop()
+    check_issue_link_in_markdown(body, jira_id)
+    assert "in the Another Test Jira" in body
+    jira_issue = fake_jira2.issues[jira_id.key]
+    assert jira_issue.summary == "Yet another PR"

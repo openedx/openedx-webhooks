@@ -19,7 +19,6 @@ from urlobject import URLObject
 
 from openedx_webhooks import logger
 from openedx_webhooks.auth import get_github_session, get_jira_session
-from openedx_webhooks.settings import settings
 from openedx_webhooks.types import JiraDict
 
 
@@ -306,21 +305,18 @@ def sentry_extra_context(data_dict):
 
 
 @memoize_timed(minutes=30)
-def get_jira_custom_fields():
+def get_jira_custom_fields(jira_nick: str):
     """
     Return a name-to-id mapping for the custom fields on JIRA.
     """
-    if settings.JIRA_SERVER:
-        session = get_jira_session()
-        field_resp = session.get("/rest/api/2/field")
-        field_resp.raise_for_status()
-        fields = field_resp.json()
-        return {f["name"]: f["id"] for f in fields if f["custom"]}
-    else:
-        return {}
+    session = get_jira_session(jira_nick)
+    field_resp = session.get("/rest/api/2/field")
+    field_resp.raise_for_status()
+    fields = field_resp.json()
+    return {f["name"]: f["id"] for f in fields if f["custom"]}
 
 
-def get_jira_issue(key: str, missing_ok: bool = False) -> Optional[JiraDict]:
+def get_jira_issue(jira_nick: str, key: str, missing_ok: bool = False) -> Optional[JiraDict]:
     """
     Get the dictionary for a Jira issue, from its key.
 
@@ -333,20 +329,20 @@ def get_jira_issue(key: str, missing_ok: bool = False) -> Optional[JiraDict]:
         is missing.
 
     """
-    resp = jira_get("/rest/api/2/issue/{key}".format(key=key))
+    resp = jira_get(jira_nick, "/rest/api/2/issue/{key}".format(key=key))
     if resp.status_code == 404 and missing_ok:
         return None
     log_check_response(resp)
     return resp.json()
 
 
-def jira_get(*args, **kwargs):
+def jira_get(jira_nick, *args, **kwargs):
     """
     JIRA sometimes returns an empty response to a perfectly valid GET request,
     so this will retry it a few times if that happens.
     """
     for _ in range(3):
-        resp = get_jira_session().get(*args, **kwargs)
+        resp = get_jira_session(jira_nick).get(*args, **kwargs)
         if resp.content:
             return resp
-    return get_jira_session().get(*args, **kwargs)
+    return get_jira_session(jira_nick).get(*args, **kwargs)

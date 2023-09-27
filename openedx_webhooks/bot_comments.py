@@ -13,10 +13,11 @@ import arrow
 from flask import render_template
 
 from openedx_webhooks.info import (
+    get_jira_server_info,
     is_draft_pull_request,
     pull_request_has_cla,
 )
-from openedx_webhooks.types import PrDict
+from openedx_webhooks.types import JiraId, PrDict
 
 
 class BotComment(Enum):
@@ -149,6 +150,17 @@ def github_end_survey_comment(pull_request: PrDict) -> str:
         user=pull_request["user"]["login"],
         is_merged=is_merged,
         survey_url=url,
+    )
+
+
+def jira_issue_comment(pull_request: PrDict, jira_id: JiraId) -> str:   # pylint: disable=unused-argument
+    """Render a comment about making a new Jira issue."""
+    jira_server = get_jira_server_info(jira_id.nick)
+    return render_template(
+        "jira_issue_comment.md.j2",
+        server_url=jira_server.server,
+        server_description=jira_server.description,
+        key=jira_id.key,
     )
 
 
