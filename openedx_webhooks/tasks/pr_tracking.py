@@ -53,7 +53,7 @@ from openedx_webhooks.labels import (
     GITHUB_CATEGORY_LABELS,
     GITHUB_STATUS_LABELS,
 )
-from openedx_webhooks.settings import settings
+from openedx_webhooks import settings
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.jira_work import (
     update_jira_issue,
