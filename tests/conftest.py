@@ -10,8 +10,6 @@ import requests_mock
 import openedx_webhooks
 import openedx_webhooks.info
 import openedx_webhooks.utils
-import openedx_webhooks.settings
-from openedx_webhooks.settings import settings
 
 from . import settings as test_settings
 from .fake_github import FakeGitHub
@@ -79,11 +77,9 @@ def pytest_addoption(parser):
 
 @pytest.fixture(autouse=True)
 def settings_for_tests(mocker):
-    # This patch will restore the real settings when the fixture is done, even
-    # though the patch itself doesn't change any.
-    mocker.patch.dict(settings.__dict__, {})
-    # Update the real settings from our test environment variables.
-    openedx_webhooks.settings.settings_from_environment(test_settings.__dict__)
+    for name, value in vars(test_settings).items():
+        if name.isupper():
+            mocker.patch(f"openedx_webhooks.settings.{name}", value)
 
 @pytest.fixture
 def fake_github(pytestconfig, mocker, requests_mocker, fake_repo_data):
