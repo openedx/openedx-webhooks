@@ -135,9 +135,6 @@ class PrDesiredInfo:
     # The Jira instances we want to have issues on.
     jira_nicks: Set[str] = field(default_factory=set)
 
-    # The Jira status to start a new issue at.
-    jira_initial_status: Optional[str] = None
-
     # The Jira status we want to set on an existing issue. Can be None if we
     # don't need to force a new status, but can leave the existing status.
     jira_status: Optional[str] = None
@@ -230,7 +227,6 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
     label_names = set(lbl["name"] for lbl in pr["labels"])
     desired.jira_nicks = {name.partition(":")[-1] for name in label_names if name.startswith("jira:")}
 
-    desired.jira_initial_status = "Needs Triage"
     desired.jira_title = pr["title"]
     desired.jira_description = pr["body"] or ""
 
@@ -270,12 +266,10 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
     if desired.is_ospr:
         # Some PR states mean we want to insist on a Jira status.
         if is_draft_pull_request(pr):
-            desired.jira_initial_status = "Waiting on Author"
             desired.bot_comments.add(BotComment.END_OF_WIP)
 
         if not has_signed_agreement:
             desired.bot_comments.add(BotComment.NEED_CLA)
-            desired.jira_initial_status = "Community Manager Review"
 
         if state == "closed":
             desired.jira_status = "Rejected"
