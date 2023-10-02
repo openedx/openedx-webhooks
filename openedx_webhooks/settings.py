@@ -30,3 +30,6 @@ GITHUB_OSPR_PROJECT = read_project_setting("GITHUB_OSPR_PROJECT")
 
 # The project all Blended pull requests should be added to.
 GITHUB_BLENDED_PROJECT = read_project_setting("GITHUB_BLENDED_PROJECT")
+
+# The name of the jira-info.yaml file in the openedx-webhooks-data repo.
+JIRA_INFO_FILE = os.environ.get("JIRA_INFO_FILE", "jira-info.yaml")

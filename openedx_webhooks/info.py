@@ -9,6 +9,7 @@ from typing import Dict, Iterable, Optional
 import yaml
 from glom import glom
 
+from openedx_webhooks import settings
 from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.types import GhProject, JiraServer, PrDict, PrCommentDict, PrId
 from openedx_webhooks.utils import (
@@ -126,7 +127,7 @@ def get_orgs_file():
 @memoize_timed(minutes=30)
 def get_jira_info():
     jira_info = {}
-    for key, info in _read_yaml_data_file("jira-info.yaml").items():
+    for key, info in _read_yaml_data_file(settings.JIRA_INFO_FILE).items():
         jira_info[key.lower()] = JiraServer(**info)
     return jira_info
 
