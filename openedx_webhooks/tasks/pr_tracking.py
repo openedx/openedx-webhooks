@@ -334,10 +334,10 @@ class PrTrackingFixer:
             self.actions.set_cla_status(status=self.desired.cla_check)
 
         if self.desired.is_ospr:
-            self.fix_ospr()
+            self._fix_ospr()
 
         if self.desired.is_refused:
-            self.fix_comments()
+            self._fix_comments()
 
         # Make needed Jira issues.
         current_jira_nicks = {ji.nick for ji in self.current.bot_data.jira_issues}
@@ -345,7 +345,7 @@ class PrTrackingFixer:
             if jira_nick not in current_jira_nicks:
                 self._make_jira_issue(jira_nick)
 
-    def fix_comments(self) -> None:
+    def _fix_comments(self) -> None:
         fix_comment = True
         if self.pr["state"] == "closed" and self.current.bot_comments:
             # If the PR is closed and already has bot comments, then don't
@@ -355,7 +355,7 @@ class PrTrackingFixer:
             self._fix_bot_comment()
         self._add_bot_comments()
 
-    def fix_ospr(self) -> None:
+    def _fix_ospr(self) -> None:
         # Draftiness
         self.bot_data.draft = is_draft_pull_request(self.pr)
 
@@ -363,7 +363,7 @@ class PrTrackingFixer:
         self._fix_github_labels()
 
         # Check the bot comments.
-        self.fix_comments()
+        self._fix_comments()
 
         # Check the GitHub projects.
         for project in (self.desired.github_projects - self.current.github_projects):
