@@ -304,18 +304,6 @@ def sentry_extra_context(data_dict):
             scope.set_extra(key, value)
 
 
-@memoize_timed(minutes=30)
-def get_jira_custom_fields(jira_nick: str):
-    """
-    Return a name-to-id mapping for the custom fields on JIRA.
-    """
-    session = get_jira_session(jira_nick)
-    field_resp = session.get("/rest/api/2/field")
-    field_resp.raise_for_status()
-    fields = field_resp.json()
-    return {f["name"]: f["id"] for f in fields if f["custom"]}
-
-
 def get_jira_issue(jira_nick: str, key: str, missing_ok: bool = False) -> Optional[JiraDict]:
     """
     Get the dictionary for a Jira issue, from its key.
