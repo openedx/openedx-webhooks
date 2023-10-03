@@ -9,7 +9,7 @@ import copy
 import dataclasses
 import itertools
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple, cast
+from typing import Dict, List, Optional, Set, cast
 
 from openedx_webhooks.auth import get_github_session, get_jira_session
 from openedx_webhooks.bot_comments import (
@@ -41,7 +41,6 @@ from openedx_webhooks.gh_projects import (
 from openedx_webhooks.info import (
     get_blended_project_id,
     get_bot_comments,
-    get_people_file,
     is_bot_pull_request,
     is_draft_pull_request,
     is_internal_pull_request,
@@ -61,7 +60,6 @@ from openedx_webhooks.tasks.jira_work import (
 )
 from openedx_webhooks.types import GhProject, JiraId, PrDict, PrId
 from openedx_webhooks.utils import (
-    get_jira_custom_fields,
     log_check_response,
     retry_get,
     sentry_extra_context,
@@ -233,7 +231,14 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
         raise Exception(f"A crash label was applied by {user}")
 
     desired.jira_title = pr["title"]
-    desired.jira_description = pr["body"] or ""
+    print(pr)
+    desired.jira_description = (
+        "(From {url} by {user_url})\n------\n\n{body}"
+        ).format(
+            url=pr["html_url"],
+            body=(pr["body"] or ""),
+            user_url=pr["user"]["html_url"],
+        )
 
     blended_id = get_blended_project_id(pr)
     if blended_id is not None:
@@ -400,16 +405,13 @@ class PrTrackingFixer:
         """
         Make a Jira issue in a particular Jira server.
         """
-        user_name, institution = get_name_and_institution_for_pr(self.pr)
         issue_data = self.actions.create_jira_issue(
             jira_nick=jira_nick,
-            pr_url=self.pr["html_url"],
-            project="TODOXXX",  # TODO: get the real project
+            project=project,
+            issuetype=issuetype,
             summary=self.desired.jira_title,
             description=self.desired.jira_description,
             labels=list(self.desired.jira_labels),
-            user_name=user_name,
-            institution=institution,
         )
 
         jira_id = JiraId(jira_nick, issue_data["key"])
@@ -513,33 +515,6 @@ class PrTrackingFixer:
         assert needed_comments == set(), f"Couldn't make comments: {needed_comments}"
 
 
-def get_name_and_institution_for_pr(pr: PrDict) -> Tuple[str, Optional[str]]:
-    """
-    Get the author name and institution for a pull request.
-
-    The returned name will always be a string. The institution might be None.
-
-    Returns:
-        name, institution
-    """
-    user = pr["user"]["login"]
-    people = get_people_file()
-
-    user_name = None
-    if user in people:
-        user_name = people[user].get("name", "")
-    if not user_name:
-        resp = retry_get(get_github_session(), pr["user"]["url"])
-        if resp.ok:
-            user_name = resp.json().get("name", user)
-        else:
-            user_name = user
-
-    institution = people.get(user, {}).get("institution", None)
-
-    return user_name, institution
-
-
 class DryRunFixingActions:
     """
     Implementation of actions for dry runs.
@@ -588,13 +563,10 @@ class FixingActions:
     def create_jira_issue(
         self, *,
         jira_nick: str,
-        pr_url: str,
         project: str,
         summary: Optional[str],
         description: Optional[str],
         labels: List[str],
-        user_name: Optional[str],
-        institution: Optional[str],
     ) -> Dict:
         """
         Create a new Jira issue for a pull request.
@@ -602,26 +574,19 @@ class FixingActions:
         Returns the JSON describing the issue.
         """
 
-        custom_fields = get_jira_custom_fields(jira_nick)
         new_issue = {
             "fields": {
                 "project": {
                     "key": project,
                 },
                 "issuetype": {
-                    "name": "Pull Request Review",
+                    "name": "Task",
                 },
                 "summary": summary,
                 "description": description,
                 "labels": labels,
-                "customfield_10904": pr_url,            # "URL" is ambiguous, use the internal name.
-                custom_fields["PR Number"]: self.prid.number,
-                custom_fields["Repo"]: self.prid.full_name,
-                custom_fields["Contributor Name"]: user_name,
             }
         }
-        if institution:
-            new_issue["fields"][custom_fields["Customer"]] = [institution]
         sentry_extra_context({"new_issue": new_issue})
 
         logger.info(f"Creating new JIRA issue for PR {self.prid}...")

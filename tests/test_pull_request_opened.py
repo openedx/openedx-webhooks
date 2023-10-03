@@ -1,5 +1,7 @@
 """Tests of tasks/github.py:pull_request_changed for opening pull requests."""
 
+import textwrap
+
 import pytest
 
 from openedx_webhooks.bot_comments import (
@@ -343,7 +345,7 @@ def test_crash_label(fake_github):
 
 def test_jira_labelling(fake_github, fake_jira, fake_jira2):
     # A PR with a "jira:" label makes a Jira issue.
-    pr = fake_github.make_pull_request("openedx", user="nedbat", title="Ned's PR")
+    pr = fake_github.make_pull_request("openedx", user="nedbat", number=99, title="Ned's PR", body="Line1\nLine2\n")
     pr.set_labels(["jira:test1"])
     assert len(pr.list_comments()) == 0
 
@@ -360,6 +362,14 @@ def test_jira_labelling(fake_github, fake_jira, fake_jira2):
     assert "in the private Test1 Jira" in body
     jira_issue = fake_jira.issues[jira_id.key]
     assert jira_issue.summary == "Ned's PR"
+    assert jira_issue.description == textwrap.dedent("""\
+        (From https://github.com/openedx/a-repo/pull/99 by https://github.com/nedbat)
+        ------
+
+        Line1
+        Line2
+        """
+    )
 
     # Processing the pull request again won't make another issue.
     result = pull_request_changed(pr.as_json())
