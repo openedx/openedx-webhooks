@@ -27,7 +27,12 @@
       </li>
       <li><a href="{{ url_for("github_views.rescan_get") }}">Rescan Pull Requests</a></li>
       <li><a href="{{ url_for("github_views.process_pr_get") }}">Process Pull Request</a></li>
-      <li><a href="{{ url_for("github_views.generate_error") }}">Generate Error</a></li>
+    </ul>
+
+    <h2>Other</h2>
+    <ul>
+      <li><a href="{{ url_for("github_views.generate_error") }}">Generate Immediate Error</a></li>
+      <li><a href="{{ url_for("github_views.generate_task_error") }}">Generate Task Error</a></li>
     </ul>
     </body>
 </html>
