@@ -8,6 +8,7 @@ from typing import cast
 from flask import current_app as app
 from flask import Blueprint, jsonify, render_template, request
 
+from openedx_webhooks import celery
 from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.debug import is_debug, print_long_json
 from openedx_webhooks.info import get_bot_username
@@ -223,3 +224,17 @@ def generate_error():
     Used to generate an error message to test error handling
     """
     raise Exception("Error from generate_error")
+
+
+@github_bp.route("/generate_task_error", methods=("GET",))
+@requires_auth
+def generate_task_error():
+    """
+    Used to generate an error message to test error handling
+    """
+    return queue_task(generate_task_error_task)
+
+
+@celery.task(bind=True)
+def generate_task_error_task(_):
+    raise Exception("Error from generate_task_error")
