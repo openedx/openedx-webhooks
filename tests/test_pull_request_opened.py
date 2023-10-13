@@ -334,6 +334,13 @@ def test_add_to_multiple_projects(fake_github):
     }
 
 
+def test_crash_label(fake_github):
+    pr = fake_github.make_pull_request("openedx", user="nedbat")
+    pr.set_labels(["crash!123"])
+    with pytest.raises(Exception, match="A crash label was applied by nedbat"):
+        pull_request_changed(pr.as_json())
+
+
 def test_jira_labelling(fake_github, fake_jira, fake_jira2):
     # A PR with a "jira:" label makes a Jira issue.
     pr = fake_github.make_pull_request("openedx", user="nedbat", title="Ned's PR")

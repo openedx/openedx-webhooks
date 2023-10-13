@@ -227,6 +227,10 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
     label_names = set(lbl["name"] for lbl in pr["labels"])
     desired.jira_nicks = {name.partition(":")[-1] for name in label_names if name.startswith("jira:")}
 
+    if "crash!123" in label_names:
+        # Low-tech backdoor way to test error handling and reporting.
+        raise Exception(f"A crash label was applied by {user}")
+
     desired.jira_title = pr["title"]
     desired.jira_description = pr["body"] or ""
 
