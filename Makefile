@@ -37,9 +37,9 @@ TYPEABLE = openedx_webhooks tests
 mypy: ## Run mypy to check type annotations
 	-mypy $(TYPEABLE)
 
-PIP_COMPILE = pip-compile --upgrade --allow-unsafe --resolver=backtracking
-upgrade: export CUSTOM_COMPILE_COMMAND=make upgrade
-upgrade: ## Update the requirements/*.txt files with the latest packages satisfying requirements/*.in
+PIP_COMPILE = pip-compile --allow-unsafe --resolver=backtracking ${COMPILE_OPTS}
+compile-requirements: export CUSTOM_COMPILE_COMMAND=make upgrade
+compile-requirements: ## Update the requirements/*.txt files with the latest packages satisfying requirements/*.in
 	pip install -qr requirements/pip-tools.txt
 	# Make sure to compile files after any other files they include!
 	$(PIP_COMPILE) --rebuild -o requirements/pip.txt requirements/pip.in
@@ -51,6 +51,12 @@ upgrade: ## Update the requirements/*.txt files with the latest packages satisfy
 	$(PIP_COMPILE) -o requirements/dev.txt requirements/dev.in
 	$(PIP_COMPILE) -o requirements/doc.txt requirements/doc.in
 
+upgrade: ## Update the requirements/*.txt files with the latest packages satisfying requirements/*.in
+	$(MAKE) compile-requirements COMPILE_OPTS="--upgrade"
+
+upgrade-package: ## Update just one package to the latest usable release
+	@test -n "$(package)" || { echo "\nUsage: make upgrade-package package=...\n"; exit 1; }
+	$(MAKE) compile-requirements COMPILE_OPTS="--upgrade-package $(package)"
 
 PRIVATE_IN = requirements/private.in
 PRIVATE_OUT = requirements/private.txt
