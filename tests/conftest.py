@@ -102,7 +102,7 @@ def fake_jira(requests_mocker, fake_repo_data):
 @pytest.fixture
 def fake_jira2(requests_mocker, fake_repo_data):
     """A FakeJira for the second server configured in our jira-info.yaml."""
-    the_fake_jira = FakeJira("https://anothertest.atlassian.net")
+    the_fake_jira = FakeJira("https://anotherorg.atlassian.net")
     the_fake_jira.install_mocks(requests_mocker)
     return the_fake_jira
 

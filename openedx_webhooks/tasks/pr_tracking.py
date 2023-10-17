@@ -45,6 +45,7 @@ from openedx_webhooks.info import (
     is_draft_pull_request,
     is_internal_pull_request,
     is_private_repo_no_cla_pull_request,
+    jira_details_for_pr,
     projects_for_pr,
     pull_request_has_cla,
     repo_refuses_contributions,
@@ -61,7 +62,6 @@ from openedx_webhooks.tasks.jira_work import (
 from openedx_webhooks.types import GhProject, JiraId, PrDict, PrId
 from openedx_webhooks.utils import (
     log_check_response,
-    retry_get,
     sentry_extra_context,
     text_summary,
 )
@@ -405,6 +405,7 @@ class PrTrackingFixer:
         """
         Make a Jira issue in a particular Jira server.
         """
+        project, issuetype = jira_details_for_pr(jira_nick, self.pr)
         issue_data = self.actions.create_jira_issue(
             jira_nick=jira_nick,
             project=project,
@@ -564,6 +565,7 @@ class FixingActions:
         self, *,
         jira_nick: str,
         project: str,
+        issuetype: str,
         summary: Optional[str],
         description: Optional[str],
         labels: List[str],
@@ -580,7 +582,7 @@ class FixingActions:
                     "key": project,
                 },
                 "issuetype": {
-                    "name": "Task",
+                    "name": issuetype,
                 },
                 "summary": summary,
                 "description": description,
