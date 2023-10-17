@@ -4,11 +4,11 @@ Test1:
     server: https://test.atlassian.net
     email: jira-user@test1.com
     token: asdasdasdasdasd
-    mapping: https://github.com/test1/.github/jira-mapping.yaml
+    mapping: https://raw.githubusercontent.com/test1/dot-github/HEAD/jira-mapping.yaml
     description: the private Test1 Jira
-AnotherTest:
-    server: https://anothertest.atlassian.net
-    email: jira-user@anothertest.com
+AnotherOrg:
+    server: https://anotherorg.atlassian.net
+    email: jira-user@anotherorg.com
     token: xyzzyxyzzy
-    project: OPEN
-    description: the Another Test Jira
+    mapping: https://raw.githubusercontent.com/anotherorg/dot-github/HEAD/jira-mapping.yaml
+    description: the Another Org Jira

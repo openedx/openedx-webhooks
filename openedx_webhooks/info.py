@@ -2,6 +2,7 @@
 Get information about people, repos, orgs, pull requests, etc.
 """
 import csv
+import fnmatch
 import logging
 import re
 from typing import Dict, Iterable, Optional
@@ -64,14 +65,30 @@ def _read_github_file(repo_fullname: str, file_path: str, not_there: Optional[st
     Returns:
         The text of the file, or `not_there` if provided.
     """
+    return _read_github_url(_github_file_url(repo_fullname, file_path), not_there)
+
+def _read_github_url(url: str, not_there: Optional[str] = None) -> str:
+    """
+    Read the content of a GitHub URL.
+
+    `not_there` is for handling missing files.  All other errors trying to
+    access the file are raised as exceptions.
+
+    Arguments:
+        `url`: the complete GitHub URL to read.
+        `not_there`: if provided, text to return if the file (or repo) doesn't exist.
+
+    Returns:
+        The text of the file, or `not_there` if provided.
+    """
     github = get_github_session()
-    data_file_url = _github_file_url(repo_fullname, file_path)
-    logger.debug(f"Grabbing data file from: {data_file_url}")
-    resp = github.get(data_file_url)
+    logger.debug(f"Grabbing data file from: {url}")
+    resp = github.get(url)
     if resp.status_code == 404 and not_there is not None:
         return not_there
     resp.raise_for_status()
     return resp.text
+
 
 @memoize_timed(minutes=15)
 def get_people_file():
@@ -125,7 +142,10 @@ def get_orgs_file():
 
 
 @memoize_timed(minutes=30)
-def get_jira_info():
+def get_jira_info() -> dict[str, JiraServer]:
+    """
+    Get the dict mapping Jira nicknames to JiraServer objects.
+    """
     jira_info = {}
     for key, info in _read_yaml_data_file(settings.JIRA_INFO_FILE).items():
         jira_info[key.lower()] = JiraServer(**info)
@@ -133,6 +153,9 @@ def get_jira_info():
 
 
 def get_jira_server_info(jira_nick: str) -> JiraServer:
+    """
+    Given a Jira nickname, get the JiraServer info about it.
+    """
     jira_info = get_jira_info()
     jira_server = jira_info[jira_nick.lower()]
     return jira_server
@@ -300,3 +323,36 @@ def projects_for_pr(pull_request: PrDict) -> Iterable[GhProject]:
             org, number = spec.strip().split(":")
             gh_projects.append((org, int(number)))
     return gh_projects
+
+
+def jira_details_for_pr(jira_nick: str, pr: PrDict) -> tuple[str, str]:
+    """
+    Determine what Jira project and issuetype should be used.
+
+    The jira mapping file looks like this::
+
+        # Mapping from repo to Jira.
+        defaults:
+          type: Task
+        repos:
+          - name: openedx/edx-platform
+            project: ARCHBOM
+            type: Task
+          - name: nedbat/*
+            project: ARCHBOM
+          - name: "*"
+            project: CATCHALL
+            type: OtherType
+
+    """
+
+    jira_info = get_jira_server_info(jira_nick)
+    mapping = yaml.safe_load(_read_github_url(jira_info.mapping))
+    repo_name = pr["base"]["repo"]["full_name"]
+    details = mapping.get("defaults", {})
+    for repo_info in mapping.get("repos", []):
+        if fnmatch.fnmatch(repo_name, repo_info["name"]):
+            details.update(repo_info)
+            break
+
+    return details["project"], details["type"]

@@ -1,0 +1,13 @@
+# Mapping from repo to Jira.
+defaults:
+  type: Task
+repos:
+  - name: openedx/edx-platform
+    project: ARCHBOM
+    type: Bug
+
+  - name: nedbat/*
+    project: NEDBAT
+
+  - name: "*"
+    project: EVERYTHING

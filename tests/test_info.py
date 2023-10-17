@@ -10,6 +10,7 @@ from openedx_webhooks.info import (
     get_people_file,
     is_draft_pull_request,
     is_internal_pull_request,
+    jira_details_for_pr,
 )
 
 
@@ -133,4 +134,22 @@ def test_jira_info():
     info = get_jira_info()
     # These are specific items from our test jira-info.yaml file
     assert info["test1"].server == "https://test.atlassian.net"
-    assert info["anothertest"].project == "OPEN"
+    assert (
+        info["anotherorg"].mapping ==
+        "https://raw.githubusercontent.com/anotherorg/dot-github/HEAD/jira-mapping.yaml"
+    )
+
+
+@pytest.mark.parametrize(
+    "owner, repo, project, issuetype",
+    [
+        ("openedx", "edx-platform", "ARCHBOM", "Bug"),
+        ("nedbat", "anything", "NEDBAT", "Task"),
+        ("another", "something", "EVERYTHING", "Task"),
+    ]
+)
+def test_jira_details_for_pr(fake_github, owner, repo, project, issuetype):
+    pr = fake_github.make_pull_request(owner=owner, repo=repo)
+    actual_project, actual_issuetype = jira_details_for_pr("test1", pr.as_json())
+    assert project == actual_project
+    assert issuetype == actual_issuetype

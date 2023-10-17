@@ -49,10 +49,10 @@ class JiraServer:
 
     # A description of the server, suitable for the bot to comment,
     # "I created an issue in {{ description }}."
-    description: str = "a Jira server"
+    description: str
 
-    mapping: str | None = None
-    project: str | None = None
+    # The URL to get jira-mapping.yaml from.
+    mapping: str
 
 
 @dataclasses.dataclass(frozen=True)

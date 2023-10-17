@@ -401,7 +401,7 @@ def test_jira_labelling_later(fake_github, fake_jira, fake_jira2):
     assert len(pr_comments) == 1
 
     # You can add a second label for another Jira server.
-    pr.set_labels(["jira:AnotherTest"])
+    pr.set_labels(["jira:AnotherOrg"])
     result = pull_request_changed(pr.as_json())
     assert len(result.jira_issues) == 2
     assert len(result.changed_jira_issues) == 1
@@ -412,6 +412,6 @@ def test_jira_labelling_later(fake_github, fake_jira, fake_jira2):
     body = pr_comments[-1].body
     jira_id = result.changed_jira_issues.pop()
     check_issue_link_in_markdown(body, jira_id)
-    assert "in the Another Test Jira" in body
+    assert "in the Another Org Jira" in body
     jira_issue = fake_jira2.issues[jira_id.key]
     assert jira_issue.summary == "Yet another PR"
