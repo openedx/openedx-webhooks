@@ -4,6 +4,7 @@ State-based updating of the information surrounding pull requests.
 
 from __future__ import annotations
 
+import contextlib
 import copy
 import dataclasses
 import itertools
@@ -318,9 +319,22 @@ class PrTrackingFixer:
 
         self.bot_data = copy.deepcopy(current.bot_data)
         self.fix_result: FixResult = FixResult()
+        self.exceptions: List[Exception] = []
 
     def result(self) -> FixResult:
         return self.fix_result
+
+    @contextlib.contextmanager
+    def saved_exceptions(self):
+        """
+        A context manager to wrap around isolatable steps.
+
+        An exception raised in the with-block will be added to `self.exceptions`.
+        """
+        try:
+            yield
+        except Exception as exc:
+            self.exceptions.append(exc)
 
     def fix(self) -> None:
         """
@@ -335,19 +349,26 @@ class PrTrackingFixer:
 
         if self.desired.cla_check != self.current.cla_check:
             assert self.desired.cla_check is not None
-            self.actions.set_cla_status(status=self.desired.cla_check)
+            with self.saved_exceptions():
+                self.actions.set_cla_status(status=self.desired.cla_check)
 
         if self.desired.is_ospr:
-            self._fix_ospr()
+            with self.saved_exceptions():
+                self._fix_ospr()
 
         if self.desired.is_refused:
-            self._fix_comments()
+            with self.saved_exceptions():
+                self._fix_comments()
 
         # Make needed Jira issues.
         current_jira_nicks = {ji.nick for ji in self.current.bot_data.jira_issues}
         for jira_nick in self.desired.jira_nicks:
             if jira_nick not in current_jira_nicks:
-                self._make_jira_issue(jira_nick)
+                with self.saved_exceptions():
+                    self._make_jira_issue(jira_nick)
+
+        if self.exceptions:
+            raise ExceptionGroup("Some actions failed", self.exceptions)
 
     def _fix_comments(self) -> None:
         fix_comment = True
