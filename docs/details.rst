@@ -5,8 +5,8 @@ Here are the details of what the bot does.
 
 .. _pr_to_jira:
 
-Making a Jira issue for a pull request
---------------------------------------
+When a pull request is opened
+-----------------------------
 
 The bot gets notifications from GitHub when a pull request is created in the
 organizations and/or repos where it is configured.  It's currently configured
@@ -113,3 +113,18 @@ organization.
         openedx.org/add-to-projects: "openedx:23"
 
 The bot never removes pull requests from projects.
+
+
+Making a Jira issue for a pull request
+--------------------------------------
+
+The bot used to automatically make Jira issues for pull requests, but no longer
+does.  Now a Jira issue will be created if a specific label is added to the
+pull request.
+
+The bot is configured to know about a small handful of Jira servers, each with
+a short "nickname".  If you add a label of ``jira:xyz`` to a pull request, the
+bot will create a Jira issue in the Jira server with the "xyz" nickname.
+
+Each Jira server can specify a mapping of repos to other Jira details such as
+the Jira project for the issue, and the issue type to create.
