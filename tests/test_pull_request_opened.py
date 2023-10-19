@@ -415,3 +415,14 @@ def test_jira_labelling_later(fake_github, fake_jira, fake_jira2):
     assert "in the Another Org Jira" in body
     jira_issue = fake_jira2.issues[jira_id.key]
     assert jira_issue.summary == "Yet another PR"
+
+def test_bad_jira_labelling(fake_github, fake_jira, fake_jira2):
+    # What if the jira: label doesn't match one of our configured servers?
+    pr = fake_github.make_pull_request("openedx", user="nedbat", title="Ned's PR")
+    pr.set_labels(["jira:bogus"])
+    with pytest.raises(ExceptionGroup) as exc_info:
+        pull_request_changed(pr.as_json())
+    assert len(exc_info.value.exceptions) == 1
+    exc = exc_info.value.exceptions[0]
+    assert isinstance(exc, KeyError)
+    assert exc.args == ("bogus",)
