@@ -22,11 +22,6 @@ class Issue:
     key: str
     status: str
     issuetype: Optional[str] = None
-    contributor_name: Optional[str] = None
-    customer: Optional[str] = None
-    pr_number: Optional[int] = None
-    repo: Optional[str] = None
-    url: Optional[str] = None
     description: Optional[str] = None
     summary: Optional[str] = None
     labels: Set[str] = field(default_factory=set)
@@ -41,24 +36,12 @@ class Issue:
                 "summary": self.summary or None,
                 "description": self.description or None,
                 "labels": sorted(self.labels),
-                FakeJira.CONTRIBUTOR_NAME: self.contributor_name or None,
-                FakeJira.CUSTOMER: self.customer or None,
-                FakeJira.PR_NUMBER: self.pr_number,
-                FakeJira.REPO: self.repo or None,
-                FakeJira.URL: self.url or None,
             },
         }
 
 
 class FakeJira(faker.Faker):
     """A fake implementation of the Jira API, specialized to the OSPR project."""
-
-    # Custom fields for OSPR. The values are arbitrary.
-    CONTRIBUTOR_NAME = "custom_101"
-    CUSTOMER = "custom_102"
-    PR_NUMBER = "custom_103"
-    REPO = "custom_104"
-    URL = "customfield_10904"   # This one is hard-coded
 
     # Issue states and transitions for OSPR.
     INITIAL_STATE = "Needs Triage"
@@ -91,17 +74,6 @@ class FakeJira(faker.Faker):
         self.issues: Dict[str, Issue] = {}
         # Map from old keys to new keys for moved issues.
         self.moves: Dict[str, str] = {}
-
-    @faker.route(r"/rest/api/2/field")
-    def _get_field(self, _match, _request, _context) -> List[Dict]:
-        # Custom fields particular to the OSPR project.
-        return [{"id": i, "name": n, "custom": True} for i, n in [
-            (self.CONTRIBUTOR_NAME, "Contributor Name"),
-            (self.CUSTOMER, "Customer"),
-            (self.PR_NUMBER, "PR Number"),
-            (self.REPO, "Repo"),
-            (self.URL, "URL"),
-        ]]
 
     def make_issue(self, key: Optional[str] = None, project: str = "OSPR", **kwargs) -> Issue:
         """Make fake issue data."""
@@ -153,11 +125,6 @@ class FakeJira(faker.Faker):
             summary=fields.get("summary"),
             description=fields.get("description"),
             labels=set(fields.get("labels")),
-            contributor_name=fields.get(FakeJira.CONTRIBUTOR_NAME),
-            customer=fields.get(FakeJira.CUSTOMER),
-            pr_number=fields.get(FakeJira.PR_NUMBER),
-            repo=fields.get(FakeJira.REPO),
-            url=fields.get(FakeJira.URL),
         )
         self.make_issue(key, **kwargs)
         # Response is only some information:
