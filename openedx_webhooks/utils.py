@@ -61,6 +61,9 @@ def requires_auth(f):
     return decorated
 
 
+class RequestFailed(Exception):
+    pass
+
 def log_check_response(response, raise_for_status=True):
     """
     Logs HTTP request and response at debug level and checks if it succeeded.
@@ -77,10 +80,9 @@ def log_check_response(response, raise_for_status=True):
     if raise_for_status:
         try:
             response.raise_for_status()
-        except Exception:
+        except Exception as exc:
             req = response.request
-            logger.exception(f"HTTP request failed: {req.method} {req.url}. Response body: {response.content}")
-            raise
+            raise RequestFailed(f"HTTP request failed: {req.method} {req.url}. Response body: {response.content}") from exc
 
 
 def log_rate_limit():
