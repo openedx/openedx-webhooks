@@ -416,7 +416,7 @@ def test_jira_labelling_later(fake_github, fake_jira, fake_jira2):
     jira_issue = fake_jira2.issues[jira_id.key]
     assert jira_issue.summary == "Yet another PR"
 
-def test_bad_jira_labelling(fake_github, fake_jira, fake_jira2):
+def test_bad_jira_labelling_no_server(fake_github, fake_jira, fake_jira2):
     # What if the jira: label doesn't match one of our configured servers?
     pr = fake_github.make_pull_request("openedx", user="nedbat", title="Ned's PR")
     pr.set_labels(["jira:bogus"])
@@ -424,5 +424,14 @@ def test_bad_jira_labelling(fake_github, fake_jira, fake_jira2):
         pull_request_changed(pr.as_json())
     assert len(exc_info.value.exceptions) == 1
     exc = exc_info.value.exceptions[0]
-    assert isinstance(exc, KeyError)
-    assert exc.args == ("bogus",)
+    assert exc.args == ("No Jira server configured with nick 'bogus'",)
+
+def test_bad_jira_labelling_no_repo_map(fake_github, fake_jira, fake_jira2):
+    # What if the jira: label is good, but the repo has no mapping to a project?
+    pr = fake_github.make_pull_request("openedx", user="nedbat", title="Ned's PR")
+    pr.set_labels(["jira:test2"])
+    with pytest.raises(ExceptionGroup) as exc_info:
+        pull_request_changed(pr.as_json())
+    assert len(exc_info.value.exceptions) == 1
+    exc = exc_info.value.exceptions[0]
+    assert exc.args[0].startswith("No Jira project mapping for 'openedx/a-repo':")
