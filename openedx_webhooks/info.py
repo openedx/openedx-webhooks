@@ -157,7 +157,10 @@ def get_jira_server_info(jira_nick: str) -> JiraServer:
     Given a Jira nickname, get the JiraServer info about it.
     """
     jira_info = get_jira_info()
-    jira_server = jira_info[jira_nick.lower()]
+    try:
+        jira_server = jira_info[jira_nick.lower()]
+    except KeyError:
+        raise KeyError(f"No Jira server configured with nick {jira_nick!r}")
     return jira_server
 
 
@@ -355,4 +358,7 @@ def jira_details_for_pr(jira_nick: str, pr: PrDict) -> tuple[str, str]:
             details.update(repo_info)
             break
 
-    return details["project"], details["type"]
+    try:
+        return details["project"], details["type"]
+    except KeyError:
+        raise ValueError(f"No Jira project mapping for {repo_name!r}: {details=}")

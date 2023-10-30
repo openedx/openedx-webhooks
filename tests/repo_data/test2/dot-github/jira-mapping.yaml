@@ -1,0 +1,6 @@
+# Mapping from repo to Jira.
+defaults:
+  type: Task
+repos:
+  - name: nedbat/*
+    project: NEDBAT

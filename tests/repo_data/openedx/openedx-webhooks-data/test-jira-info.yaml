@@ -6,6 +6,12 @@ Test1:
     token: asdasdasdasdasd
     mapping: https://raw.githubusercontent.com/test1/dot-github/HEAD/jira-mapping.yaml
     description: the private Test1 Jira
+Test2:
+    server: https://test2.atlassian.net
+    email: jira-user@test2.com
+    token: asdasdasdasdasd
+    mapping: https://raw.githubusercontent.com/test2/dot-github/HEAD/jira-mapping.yaml
+    description: the private Test2 Jira
 AnotherOrg:
     server: https://anotherorg.atlassian.net
     email: jira-user@anotherorg.com
