@@ -231,7 +231,6 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
         raise Exception(f"A crash label was applied by {user}")
 
     desired.jira_title = pr["title"]
-    print(pr)
     desired.jira_description = (
         "(From {url} by {user_url})\n------\n\n{body}"
         ).format(
