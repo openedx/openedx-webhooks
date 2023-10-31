@@ -177,6 +177,13 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2023-10-31
+~~~~~~~~~~
+
+- Adding a label like ``jira:xyz`` to a pull request will look in a private
+  registry of Jira servers for one nicknamed ``xyz``, and then create a Jira
+  issue there to correspond to the pull request.
+
 2023-09-13
 ~~~~~~~~~~
 
