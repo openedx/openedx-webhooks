@@ -70,7 +70,7 @@ def test_pr_in_nocontrib_repo_opened(fake_github, user):
     assert len(pr_comments) == 1
     body = pr_comments[0].body
     assert is_comment_kind(BotComment.NO_CONTRIBUTIONS, body)
-    # tusbar has a cla, but we aren't accepting contributions.
+    # User has a cla, but we aren't accepting contributions.
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_NO_CONTRIBUTIONS
     assert pull_request_projects(pr.as_json()) == set()
 

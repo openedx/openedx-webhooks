@@ -290,7 +290,7 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
         if state in ["closed", "merged"]:
             desired.bot_comments.add(BotComment.SURVEY)
 
-    if desired.is_refused:
+    if desired.is_refused and state not in ["closed", "merged"]:
         desired.bot_comments.add(BotComment.NO_CONTRIBUTIONS)
 
     return desired
@@ -478,6 +478,10 @@ class PrTrackingFixer:
         if BotComment.END_OF_WIP in needed_comments:
             needed_comments.remove(BotComment.END_OF_WIP)
         # BTW, we never have WELCOME_CLOSED in desired.bot_comments
+
+        if not comment_body:
+            # No body, no comment to make.
+            return
 
         comment_body += format_data_for_comment({
             "draft": is_draft_pull_request(self.pr)
