@@ -48,26 +48,6 @@ Generate a secret key for Flask, so that it can save information into the sessio
 Set Up Authentication Tokens
 ----------------------------
 
-Jira
-~~~~
-
-OAuth authentication for Jira requires a RSA keypair. To set this up:
-
-#. Get a Jira access token. TODO: Explain how to do this.
-
-#. Specify the Jira user email and token:
-
-    .. code-block:: bash
-
-        $ heroku config:set JIRA_USER_EMAIL=service-account@megacorp.com
-        $ heroku config:set JIRA_USER_TOKEN=94LW................51FC
-
-#. Specify the Jira server to use:
-
-    .. code-block:: bash
-
-        $ heroku config:set JIRA_SERVER=https://somejira.atlassian.net/
-
 GitHub
 ~~~~~~
 
@@ -86,6 +66,56 @@ GitHub
 
       $ heroku config:set GITHUB_OSPR_PROJECT=openedx:19
       $ heroku config:set GITHUB_BLENDED_PROJECT=edx:9
+
+
+Jira
+~~~~
+
+The bot can be configured to work with many Jira servers.
+
+The JIRA_INFO_FILE setting specifies a YAML file name in openedx-webhooks-data repo.
+For a hypothetical organization named MegaCorp, it might look like this:
+
+    .. code-block:: yaml
+
+        # The key is a short name that will be looked up from the label.
+        # This configures the settings for a "jira:mega" label.
+        Mega:
+            # The URL of the Jira instance.
+            server: https://megacorp.atlassian.net
+            # The email address and user token for the account that will make
+            # Jira issues.  Be sure it has the privileges needed.
+            email: bot-account@megacorp.com
+            token: 84Ma................z1FC
+            # The URL of a YAML file mapping repos to Jira project details.
+            mapping: https://raw.githubusercontent.com/megacorp/.github/HEAD/jira-mapping-prod.yaml
+            # A textual description of the Jira instance, to use in comments.
+            # It will be used in a sentence like this:
+            # "I've created issue PROJ-123 in {description}."
+            description: the private MegaCorp Jira
+
+The mapping file is YAML that maps a repo name to two pieces of information: a
+Jira project and an issue type to create in that project. The file can be at
+any URL.  As shown above, a raw GitHub URL is convenient.  The file specifies
+repos, possibly with wildcards, and for each provides the project and issue
+type to use:
+
+    .. code-block:: yaml
+
+        defaults:
+          type: Task
+        repos:
+          # The repo name is an org/repo string from GitHub.
+          - name: openedx/edx-platform
+            project: ARCHBOM
+          - name: nedbat/webhook-testing    # For Ned to test the bot on stage
+            project: NEDBAT
+            type: TestIssue
+          # The repo name can have shell-like wildcards
+          - name: openedx/*
+            project: OPENSOURCE
+          - name: *
+            project: ENGR
 
 
 Deploy
