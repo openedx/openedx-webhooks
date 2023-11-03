@@ -1,4 +1,0 @@
-.. A new scriv changelog fragment.
-
-- Don't add a "no contributions accepted" comment if the pull request is being
-  closed. It's needlessly discouraging. Fixed #273.

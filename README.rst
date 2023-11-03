@@ -177,6 +177,12 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2023-11-03
+~~~~~~~~~~
+
+- Don't add a "no contributions accepted" comment if the pull request is being
+  closed. It's needlessly discouraging. Fixed #273.
+
 2023-10-31
 ~~~~~~~~~~
 
