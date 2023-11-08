@@ -96,9 +96,11 @@ For a hypothetical organization named MegaCorp, it might look like this:
 
 The mapping file is YAML that maps a repo name to two pieces of information: a
 Jira project and an issue type to create in that project. The file can be at
-any URL.  As shown above, a raw GitHub URL is convenient.  The file specifies
-repos, possibly with wildcards, and for each provides the project and issue
-type to use:
+any URL.  As shown above, a raw GitHub URL is convenient.  The reason this is 
+separate from other config is so that this mapping file can be managed by Megacorp
+while the info file above with credentials in it is managed by the team running 
+openedx-webhooks. The file specifies repos, possibly with wildcards, and for each
+provides the project and issue type to use:
 
     .. code-block:: yaml
 
