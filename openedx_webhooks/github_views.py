@@ -122,6 +122,16 @@ def handle_comment_event(event):
             # for our own comment events.
             pass
 
+        case {
+            "issue": {"closed_at": closed}, 
+            "comment": {"created_at": commented},
+            } if closed == commented:
+
+            # This is a "Close with comment" comment. Don't do anything for the
+            # comment, because we'll also get a "pull request closed" event at
+            # the same time, and it will do whatever we need.
+            pass
+
         case {"issue": {"pull_request": _}}:
             # The comment is on a pull request.  Re-shape the data to conform to
             # a pull request reported by a pull request event, and fire
@@ -131,9 +141,6 @@ def handle_comment_event(event):
             pr["merged"] = bool(pr["pull_request"]["merged_at"])
             pr["hook_action"] = event["action"]
             return queue_task(pull_request_changed_task, pr)
-
-        case _:
-            pass
 
     return "No thanks", 202
 
