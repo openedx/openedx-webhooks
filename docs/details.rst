@@ -128,3 +128,5 @@ bot will create a Jira issue in the Jira server with the "xyz" nickname.
 
 Each Jira server can specify a mapping of repos to other Jira details such as
 the Jira project for the issue, and the issue type to create.
+
+Jira issues created this way will have a "from-GitHub" Jira label applied.

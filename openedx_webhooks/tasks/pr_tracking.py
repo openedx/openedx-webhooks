@@ -138,8 +138,6 @@ class PrDesiredInfo:
     # don't need to force a new status, but can leave the existing status.
     jira_status: Optional[str] = None
 
-    jira_labels: Set[str] = field(default_factory=set)
-
     # The bot-controlled labels we want to on the pull request.
     # See labels.py:CATEGORY_LABELS
     github_labels: Set[str] = field(default_factory=set)
@@ -411,7 +409,7 @@ class PrTrackingFixer:
             issuetype=issuetype,
             summary=self.desired.jira_title,
             description=self.desired.jira_description,
-            labels=list(self.desired.jira_labels),
+            labels=["from-GitHub"],
         )
 
         jira_id = JiraId(jira_nick, issue_data["key"])

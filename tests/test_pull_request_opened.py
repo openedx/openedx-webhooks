@@ -370,6 +370,7 @@ def test_jira_labelling(fake_github, fake_jira, fake_jira2):
         Line2
         """
     )
+    assert jira_issue.labels == {"from-GitHub"}
 
     # Processing the pull request again won't make another issue.
     result = pull_request_changed(pr.as_json())
