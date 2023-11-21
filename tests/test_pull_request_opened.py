@@ -343,7 +343,7 @@ def test_crash_label(fake_github):
         pull_request_changed(pr.as_json())
 
 
-def test_jira_labelling(fake_github, fake_jira, fake_jira2):
+def test_jira_labelling(fake_github, fake_jira, fake_jira_another):
     # A PR with a "jira:" label makes a Jira issue.
     pr = fake_github.make_pull_request("openedx", user="nedbat", number=99, title="Ned's PR", body="Line1\nLine2\n")
     pr.set_labels(["jira:test1"])
@@ -353,7 +353,7 @@ def test_jira_labelling(fake_github, fake_jira, fake_jira2):
     assert len(result.jira_issues) == 1
     assert len(result.changed_jira_issues) == 1
     assert len(fake_jira.issues) == 1
-    assert len(fake_jira2.issues) == 0
+    assert len(fake_jira_another.issues) == 0
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[-1].body
@@ -377,11 +377,11 @@ def test_jira_labelling(fake_github, fake_jira, fake_jira2):
     assert len(result.jira_issues) == 1
     assert len(result.changed_jira_issues) == 0
     assert len(fake_jira.issues) == 1
-    assert len(fake_jira2.issues) == 0
+    assert len(fake_jira_another.issues) == 0
     assert len(pr.list_comments()) == 1
 
 
-def test_jira_labelling_later(fake_github, fake_jira, fake_jira2):
+def test_jira_labelling_later(fake_github, fake_jira, fake_jira_another):
     # You can add the label later, and get a Jira issue.
     # At first, no labels, so no Jira issues:
     pr = fake_github.make_pull_request("openedx", user="nedbat", title="Yet another PR")
@@ -389,7 +389,7 @@ def test_jira_labelling_later(fake_github, fake_jira, fake_jira2):
     assert len(result.jira_issues) == 0
     assert len(result.changed_jira_issues) == 0
     assert len(fake_jira.issues) == 0
-    assert len(fake_jira2.issues) == 0
+    assert len(fake_jira_another.issues) == 0
 
     # Make a label, get an issue:
     pr.set_labels(["jira:test1"])
@@ -397,7 +397,7 @@ def test_jira_labelling_later(fake_github, fake_jira, fake_jira2):
     assert len(result.jira_issues) == 1
     assert len(result.changed_jira_issues) == 1
     assert len(fake_jira.issues) == 1
-    assert len(fake_jira2.issues) == 0
+    assert len(fake_jira_another.issues) == 0
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
 
@@ -407,17 +407,17 @@ def test_jira_labelling_later(fake_github, fake_jira, fake_jira2):
     assert len(result.jira_issues) == 2
     assert len(result.changed_jira_issues) == 1
     assert len(fake_jira.issues) == 1
-    assert len(fake_jira2.issues) == 1
+    assert len(fake_jira_another.issues) == 1
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 2
     body = pr_comments[-1].body
     jira_id = result.changed_jira_issues.pop()
     check_issue_link_in_markdown(body, jira_id)
     assert "in the Another Org Jira" in body
-    jira_issue = fake_jira2.issues[jira_id.key]
+    jira_issue = fake_jira_another.issues[jira_id.key]
     assert jira_issue.summary == "Yet another PR"
 
-def test_bad_jira_labelling_no_server(fake_github, fake_jira, fake_jira2):
+def test_bad_jira_labelling_no_server(fake_github):
     # What if the jira: label doesn't match one of our configured servers?
     pr = fake_github.make_pull_request("openedx", user="nedbat", title="Ned's PR")
     pr.set_labels(["jira:bogus"])

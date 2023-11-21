@@ -92,19 +92,19 @@ def fake_github(pytestconfig, mocker, requests_mocker, fake_repo_data):
     return the_fake_github
 
 
-@pytest.fixture
-def fake_jira(requests_mocker, fake_repo_data):
-    """A FakeJira for the first server configured in our jira-info.yaml."""
-    the_fake_jira = FakeJira("https://test.atlassian.net")
-    the_fake_jira.install_mocks(requests_mocker)
-    return the_fake_jira
+def fake_jira_fixture(url):
+    """A function to make fake Jira fixtures!"""
+    @pytest.fixture
+    def _fake_jira(requests_mocker, fake_repo_data):
+        """A FakeJira for the first server configured in our jira-info.yaml."""
+        the_fake_jira = FakeJira(url)
+        the_fake_jira.install_mocks(requests_mocker)
+        return the_fake_jira
+    return _fake_jira
 
-@pytest.fixture
-def fake_jira2(requests_mocker, fake_repo_data):
-    """A FakeJira for the second server configured in our jira-info.yaml."""
-    the_fake_jira = FakeJira("https://anotherorg.atlassian.net")
-    the_fake_jira.install_mocks(requests_mocker)
-    return the_fake_jira
+fake_jira = fake_jira_fixture("https://test.atlassian.net")
+fake_jira2 = fake_jira_fixture("https://test2.atlassian.net")
+fake_jira_another = fake_jira_fixture("https://anotherorg.atlassian.net")
 
 
 @pytest.fixture(autouse=True)
