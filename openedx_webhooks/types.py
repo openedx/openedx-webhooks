@@ -48,11 +48,16 @@ class JiraServer:
     token: str
 
     # A description of the server, suitable for the bot to comment,
-    # "I created an issue in {{ description }}."
+    # "I created an issue in {{ description }}." or
+    # "There's no project in {{ description }}."
     description: str
 
     # The URL to get jira-mapping.yaml from.
     mapping: str
+
+    # A textual description of how to contact the admin of the server, suitable
+    # for use in a bot comment: "Contact {{ contact }} to add a mapping."
+    contact: str = ""
 
 
 @dataclasses.dataclass(frozen=True)

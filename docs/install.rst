@@ -93,12 +93,15 @@ For a hypothetical organization named MegaCorp, it might look like this:
             # It will be used in a sentence like this:
             # "I've created issue PROJ-123 in {description}."
             description: the private MegaCorp Jira
+            # The person to contact for updating the Jira project settings.
+            # It will be used like: "Contact {contact} for help."
+            contact: Wes Admin (wes@megacorp.com)
 
 The mapping file is YAML that maps a repo name to two pieces of information: a
 Jira project and an issue type to create in that project. The file can be at
-any URL.  As shown above, a raw GitHub URL is convenient.  The reason this is 
+any URL.  As shown above, a raw GitHub URL is convenient.  The reason this is
 separate from other config is so that this mapping file can be managed by Megacorp
-while the info file above with credentials in it is managed by the team running 
+while the info file above with credentials in it is managed by the team running
 openedx-webhooks. The file specifies repos, possibly with wildcards, and for each
 provides the project and issue type to use:
 

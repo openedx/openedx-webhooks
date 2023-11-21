@@ -18,6 +18,7 @@ from openedx_webhooks.cla_check import (
 )
 from openedx_webhooks import settings
 from openedx_webhooks.gh_projects import pull_request_projects
+from openedx_webhooks.info import get_jira_server_info
 from openedx_webhooks.tasks.github import pull_request_changed
 
 from .helpers import check_issue_link_in_markdown
@@ -421,18 +422,57 @@ def test_bad_jira_labelling_no_server(fake_github):
     # What if the jira: label doesn't match one of our configured servers?
     pr = fake_github.make_pull_request("openedx", user="nedbat", title="Ned's PR")
     pr.set_labels(["jira:bogus"])
-    with pytest.raises(ExceptionGroup) as exc_info:
-        pull_request_changed(pr.as_json())
-    assert len(exc_info.value.exceptions) == 1
-    exc = exc_info.value.exceptions[0]
-    assert exc.args == ("No Jira server configured with nick 'bogus'",)
+    pull_request_changed(pr.as_json())
 
-def test_bad_jira_labelling_no_repo_map(fake_github, fake_jira, fake_jira2):
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    assert is_comment_kind(BotComment.NO_JIRA_SERVER, body)
+
+    # Processing the PR again won't add another comment.
+    pull_request_changed(pr.as_json())
+    assert len(pr.list_comments()) == 1
+
+def test_bad_jira_labelling_no_repo_map(fake_github, fake_jira2, mocker):
     # What if the jira: label is good, but the repo has no mapping to a project?
-    pr = fake_github.make_pull_request("openedx", user="nedbat", title="Ned's PR")
+    pr = fake_github.make_pull_request("openedx", repo="nomap", user="nedbat", title="Ned's PR")
     pr.set_labels(["jira:test2"])
-    with pytest.raises(ExceptionGroup) as exc_info:
-        pull_request_changed(pr.as_json())
-    assert len(exc_info.value.exceptions) == 1
-    exc = exc_info.value.exceptions[0]
-    assert exc.args[0].startswith("No Jira project mapping for 'openedx/a-repo':")
+    result = pull_request_changed(pr.as_json())
+    assert len(result.jira_issues) == 0
+    assert len(result.changed_jira_issues) == 0
+
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    assert is_comment_kind(BotComment.NO_JIRA_MAPPING, body)
+    assert "Contact Wes Admin (@wesadmin) to set up a project." in body
+
+    # Processing the PR again won't add another comment.
+    pull_request_changed(pr.as_json())
+    assert len(pr.list_comments()) == 1
+
+    # The repo gets a mapping to a project.
+    mocker.patch(
+        "openedx_webhooks.tasks.pr_tracking.jira_details_for_pr",
+        lambda nick, pr: ("NEWPROJ", "Task")
+    )
+
+    # Processing the PR again won't add another comment.
+    pull_request_changed(pr.as_json())
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+
+    # If we delete the bot's error comment and process the PR, we get a Jira issue.
+    pr.delete_comment(pr_comments[0].id)
+    assert len(pr.list_comments()) == 0
+    result = pull_request_changed(pr.as_json())
+    assert len(result.jira_issues) == 1
+    assert len(result.changed_jira_issues) == 1
+
+    assert len(fake_jira2.issues) == 1
+
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    jira_id = result.changed_jira_issues.pop()
+    check_issue_link_in_markdown(body, jira_id)
