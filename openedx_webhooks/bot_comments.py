@@ -31,6 +31,8 @@ class BotComment(Enum):
     END_OF_WIP = auto()
     SURVEY = auto()
     NO_CONTRIBUTIONS = auto()
+    NO_JIRA_SERVER = auto()
+    NO_JIRA_MAPPING = auto()
 
 
 BOT_COMMENT_INDICATORS = {
@@ -58,6 +60,12 @@ BOT_COMMENT_INDICATORS = {
     ],
     BotComment.NO_CONTRIBUTIONS: [
         "<!-- comment:no-contributions -->",
+    ],
+    BotComment.NO_JIRA_MAPPING: [
+        "<!-- comment:no-jira-mapping -->",
+    ],
+    BotComment.NO_JIRA_SERVER: [
+        "<!-- comment:no-jira-server -->",
     ],
 }
 
@@ -156,12 +164,14 @@ def github_end_survey_comment(pull_request: PrDict) -> str:
 def jira_issue_comment(pull_request: PrDict, jira_id: JiraId) -> str:   # pylint: disable=unused-argument
     """Render a comment about making a new Jira issue."""
     jira_server = get_jira_server_info(jira_id.nick)
-    return render_template(
+    body = render_template(
         "jira_issue_comment.md.j2",
         server_url=jira_server.server,
         server_description=jira_server.description,
         key=jira_id.key,
     )
+    body += format_data_for_comment({"jira_issues": [jira_id.asdict()]})
+    return body
 
 
 def no_contributions_thanks(pull_request: PrDict) -> str:   # pylint: disable=unused-argument
@@ -169,6 +179,31 @@ def no_contributions_thanks(pull_request: PrDict) -> str:   # pylint: disable=un
     Create a "no contributions" comment.
     """
     return render_template("no_contributions.md.j2")
+
+
+def no_jira_mapping_comment(jira_nick: str) -> str:
+    """
+    Create a comment for the error of not having a Jira project mapping for this repo.
+    """
+    jira_server = get_jira_server_info(jira_nick)
+    body = render_template(
+        "no_jira_mapping.md.j2",
+        jira_server=jira_server,
+    )
+    body += format_data_for_comment({"jira_errors": [jira_nick]})
+    return body
+
+
+def no_jira_server_comment(jira_nick: str) -> str:
+    """
+    Create a comment for the error of not knowing this particular Jira server.
+    """
+    body = render_template(
+        "no_jira_server.md.j2",
+        jira_nick=jira_nick,
+    )
+    body += format_data_for_comment({"jira_errors": [jira_nick]})
+    return body
 
 
 def extract_data_from_comment(text: str) -> Dict:

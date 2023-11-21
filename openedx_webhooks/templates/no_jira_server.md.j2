@@ -1,0 +1,8 @@
+{% filter replace("\n", " ")|trim %}
+{# The bot makes this comment when an unknown "jira:foo" label is applied to a pull request. #}
+I don't have a Jira server configured for the "jira:{{ jira_nick }}" label.
+If you need it configured, open an [Axim Engineering issue](https://github.com/openedx/axim-engineering/issues/new/choose)
+to start the process.
+{% endfilter %}
+
+<!-- comment:no-jira-server -->

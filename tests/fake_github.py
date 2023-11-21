@@ -171,6 +171,9 @@ class PullRequest:
     def list_comments(self) -> List[Comment]:
         return [com for cid in self.comments if (com := self.repo.comments.get(cid))]
 
+    def delete_comment(self, comment_number) -> None:
+        del self.repo.comments[comment_number]
+
     def set_labels(self, labels: Iterable[str]) -> None:
         """
         Set the labels on this pull request.

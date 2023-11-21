@@ -12,6 +12,7 @@ Test2:
     token: asdasdasdasdasd
     mapping: https://raw.githubusercontent.com/test2/dot-github/HEAD/jira-mapping.yaml
     description: the private Test2 Jira
+    contact: Wes Admin (@wesadmin)
 AnotherOrg:
     server: https://anotherorg.atlassian.net
     email: jira-user@anotherorg.com

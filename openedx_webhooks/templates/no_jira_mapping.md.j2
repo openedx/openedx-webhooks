@@ -1,0 +1,9 @@
+{% filter replace("\n", " ")|trim %}
+{# The bot makes this comment when a "jira:foo" label is applied, and foo is known, but the repo has no mapping defined. #}
+I don't have a Jira project configured for this repo in {{ jira_server.description }}.
+{% if jira_server.contact %}
+Contact {{ jira_server.contact }} to set up a project.
+{% endif %}
+{% endfilter %}
+
+<!-- comment:no-jira-mapping -->

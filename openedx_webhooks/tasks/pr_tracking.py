@@ -24,6 +24,8 @@ from openedx_webhooks.bot_comments import (
     github_end_survey_comment,
     jira_issue_comment,
     no_contributions_thanks,
+    no_jira_mapping_comment,
+    no_jira_server_comment,
 )
 from openedx_webhooks.cla_check import (
     CLA_STATUS_BAD,
@@ -39,6 +41,8 @@ from openedx_webhooks.gh_projects import (
     pull_request_projects,
 )
 from openedx_webhooks.info import (
+    NoJiraMapping,
+    NoJiraServer,
     get_blended_project_id,
     get_bot_comments,
     is_bot_pull_request,
@@ -76,6 +80,8 @@ class BotData:
     draft: bool = False
     # The Jira issues associated with the pull request.
     jira_issues: Set[JiraId] = field(default_factory=set)
+    # Jira nick labels that have created error comments.
+    jira_errors: Set[str] = field(default_factory=set)
 
     def update(self, data: dict) -> None:
         """Add data from `data` to this BotData."""
@@ -83,6 +89,8 @@ class BotData:
             self.draft = data["draft"]
         if "jira_issues" in data:
             self.jira_issues.update(JiraId(**jd) for jd in data["jira_issues"])
+        if "jira_errors" in data:
+            self.jira_errors.update(data["jira_errors"])
 
 
 @dataclass
@@ -335,7 +343,7 @@ class PrTrackingFixer:
         """
         try:
             yield
-        except Exception as exc:
+        except Exception as exc:    # pylint: disable=broad-exception-caught
             self.exceptions.append(exc)
 
     def fix(self) -> None:
@@ -364,6 +372,7 @@ class PrTrackingFixer:
 
         # Make needed Jira issues.
         current_jira_nicks = {ji.nick for ji in self.current.bot_data.jira_issues}
+        current_jira_nicks.update(self.current.bot_data.jira_errors)
         for jira_nick in self.desired.jira_nicks:
             if jira_nick not in current_jira_nicks:
                 with self.saved_exceptions():
@@ -402,25 +411,30 @@ class PrTrackingFixer:
         """
         Make a Jira issue in a particular Jira server.
         """
-        project, issuetype = jira_details_for_pr(jira_nick, self.pr)
-        issue_data = self.actions.create_jira_issue(
-            jira_nick=jira_nick,
-            project=project,
-            issuetype=issuetype,
-            summary=self.desired.jira_title,
-            description=self.desired.jira_description,
-            labels=["from-GitHub"],
-        )
+        try:
+            project, issuetype = jira_details_for_pr(jira_nick, self.pr)
+        except NoJiraServer:
+            self.current.bot_data.jira_errors.add(jira_nick)
+            comment_body = no_jira_server_comment(jira_nick)
+        except NoJiraMapping:
+            self.current.bot_data.jira_errors.add(jira_nick)
+            comment_body = no_jira_mapping_comment(jira_nick)
+        else:
+            issue_data = self.actions.create_jira_issue(
+                jira_nick=jira_nick,
+                project=project,
+                issuetype=issuetype,
+                summary=self.desired.jira_title,
+                description=self.desired.jira_description,
+                labels=["from-GitHub"],
+            )
 
-        jira_id = JiraId(jira_nick, issue_data["key"])
-        self.current.bot_data.jira_issues.add(jira_id)
-        self.fix_result.jira_issues.add(jira_id)
-        self.fix_result.changed_jira_issues.add(jira_id)
+            jira_id = JiraId(jira_nick, issue_data["key"])
+            self.current.bot_data.jira_issues.add(jira_id)
+            self.fix_result.jira_issues.add(jira_id)
+            self.fix_result.changed_jira_issues.add(jira_id)
+            comment_body = jira_issue_comment(self.pr, jira_id)
 
-        comment_body = jira_issue_comment(self.pr, jira_id)
-        comment_body += format_data_for_comment({
-            "jira_issues": [jira_id.asdict()],
-        })
         self.actions.add_comment_to_pull_request(comment_body=comment_body)
 
     def _fix_github_labels(self) -> None:

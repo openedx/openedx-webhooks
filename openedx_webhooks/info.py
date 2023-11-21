@@ -152,6 +152,13 @@ def get_jira_info() -> dict[str, JiraServer]:
     return jira_info
 
 
+class NoJiraServer(Exception):
+    """Raised when there is no Jira with a given nickname."""
+
+class NoJiraMapping(Exception):
+    """Raised when the repo isn't mapped to a Jira project."""
+
+
 def get_jira_server_info(jira_nick: str) -> JiraServer:
     """
     Given a Jira nickname, get the JiraServer info about it.
@@ -159,8 +166,8 @@ def get_jira_server_info(jira_nick: str) -> JiraServer:
     jira_info = get_jira_info()
     try:
         jira_server = jira_info[jira_nick.lower()]
-    except KeyError:
-        raise KeyError(f"No Jira server configured with nick {jira_nick!r}")
+    except KeyError as exc:
+        raise NoJiraServer(f"No Jira server configured with nick {jira_nick!r}") from exc
     return jira_server
 
 
@@ -360,5 +367,5 @@ def jira_details_for_pr(jira_nick: str, pr: PrDict) -> tuple[str, str]:
 
     try:
         return details["project"], details["type"]
-    except KeyError:
-        raise ValueError(f"No Jira project mapping for {repo_name!r}: {details=}")
+    except KeyError as exc:
+        raise NoJiraMapping(f"No Jira project mapping for {repo_name!r}: {details=}") from exc
