@@ -1,3 +1,0 @@
-.. A new scriv changelog fragment.
-
-- Fix: we no longer comment twice on a pull request closed with a comment. #277

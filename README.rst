@@ -177,6 +177,23 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2023-11-27
+~~~~~~~~~~
+
+- Now issues created in Jira will have a label of "from-GitHub" on them. Closes
+  `issue 279`_.
+
+- Two possible errors with "jira:foo" labels now create bot comments so people
+  understand why there's no Jira issue. Closes `issue 280`_.
+
+- Fix: we no longer comment twice on a pull request closed with a comment.
+  Closes `issue 277`_.
+
+.. _issue 277: https://github.com/openedx/openedx-webhooks/issues/277
+.. _issue 279: https://github.com/openedx/openedx-webhooks/issues/279
+.. _issue 280: https://github.com/openedx/openedx-webhooks/issues/280
+
+
 2023-11-03
 ~~~~~~~~~~
 
