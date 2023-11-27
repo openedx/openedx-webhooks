@@ -1,5 +1,6 @@
 """Tests of FakeJira."""
 
+import pytest
 import requests
 
 
@@ -10,7 +11,7 @@ class TestIssues:
     Tests of the correct behavior of issuees.
     """
     def test_get_issue(self, fake_jira):
-        fake_jira.make_issue(key="HELLO-123", summary="This is a bad bug!")
+        fake_jira.make_issue(key="HELLO-123", summary="This is a bad bug!", labels=["bad-bug"])
         resp = requests.get("https://test.atlassian.net/rest/api/2/issue/HELLO-123")
         assert resp.status_code == 200
         issue = resp.json()
@@ -74,3 +75,9 @@ class TestBadRequests:
     def test_no_such_put(self, fake_jira):
         resp = requests.put("https://test.atlassian.net/rest/api/2/issue/XYZ-999")
         assert resp.status_code == 404
+
+    def test_bad_label(self, fake_jira):
+        with pytest.raises(ValueError, match="Label 'a bug' has invalid characters"):
+            fake_jira.make_issue(key="HELLO-123", summary="a bug!", labels=["a bug"])
+        with pytest.raises(ValueError, match="Label 'a' is too short"):
+            fake_jira.make_issue(key="HELLO-123", summary="a bug!", labels="a bug")

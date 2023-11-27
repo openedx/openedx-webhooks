@@ -2,6 +2,7 @@
 
 import dataclasses
 import itertools
+import re
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Set
 
@@ -25,6 +26,15 @@ class Issue:
     description: Optional[str] = None
     summary: Optional[str] = None
     labels: Set[str] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        # Jira labels can't have spaces in them. Check that they are only
+        # letters, numbers, dashes.
+        for label in self.labels:
+            if re.search(r"[^a-zA-Z0-9-]", label):
+                raise ValueError(f"Label {label!r} has invalid characters")
+            if len(label) < 3:
+                raise ValueError(f"Label {label!r} is too short")
 
     def as_json(self) -> Dict:
         return {
