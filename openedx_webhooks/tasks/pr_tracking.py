@@ -135,16 +135,11 @@ class PrDesiredInfo:
 
     bot_comments: Set[BotComment] = field(default_factory=set)
     bot_comments_to_remove: Set[BotComment] = field(default_factory=set)
-    jira_project: Optional[str] = None
     jira_title: Optional[str] = None
     jira_description: Optional[str] = None
 
     # The Jira instances we want to have issues on.
     jira_nicks: Set[str] = field(default_factory=set)
-
-    # The Jira status we want to set on an existing issue. Can be None if we
-    # don't need to force a new status, but can leave the existing status.
-    jira_status: Optional[str] = None
 
     # The bot-controlled labels we want to on the pull request.
     # See labels.py:CATEGORY_LABELS
@@ -286,11 +281,7 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
         if not has_signed_agreement:
             desired.bot_comments.add(BotComment.NEED_CLA)
 
-        if state == "closed":
-            desired.jira_status = "Rejected"
-        elif state == "merged":
-            desired.jira_status = "Merged"
-        elif state == "reopened":
+        if state == "reopened":
             desired.bot_comments_to_remove.add(BotComment.SURVEY)
 
         if state in ["closed", "merged"]:
