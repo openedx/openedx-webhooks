@@ -18,7 +18,6 @@ from openedx_webhooks.cla_check import (
 )
 from openedx_webhooks import settings
 from openedx_webhooks.gh_projects import pull_request_projects
-from openedx_webhooks.info import get_jira_server_info
 from openedx_webhooks.tasks.github import pull_request_changed
 
 from .helpers import check_issue_link_in_markdown
