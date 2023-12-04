@@ -31,7 +31,7 @@ test-html-coverage-report: test ## Run tests and show coverage report in browser
 	open htmlcov/index.html
 
 pylint: ## Run pylint
-	-pylint --rcfile=pylintrc openedx_webhooks tests bin setup.py
+	-pylint --rcfile=pylintrc openedx_webhooks tests setup.py
 
 TYPEABLE = openedx_webhooks tests
 mypy: ## Run mypy to check type annotations
