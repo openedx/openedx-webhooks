@@ -11,6 +11,7 @@ from openedx_webhooks.cla_check import (
     CLA_STATUS_GOOD,
     CLA_STATUS_NO_CONTRIBUTIONS,
 )
+from openedx_webhooks.gh_projects import pull_request_projects
 from openedx_webhooks.tasks.github import pull_request_changed
 from .helpers import check_issue_link_in_markdown, random_text
 
@@ -36,6 +37,7 @@ def closed_pull_request(is_merged, fake_github, fake_jira):
     Returns (pr, issue_key)
     """
     pr = fake_github.make_pull_request(
+        owner="openedx",
         user="tusbar",
         title=random_text(),
         )
@@ -105,36 +107,29 @@ def test_cc_pr_closed(fake_github, fake_jira, is_merged):
     assert len(pr_comments) == 2    # 1 welcome, 1 survey
 
 
-@pytest.mark.parametrize("user", ["tusbar", "feanil"])
-def test_pr_in_nocontrib_repo_closed(fake_github, user):
-    repo = fake_github.make_repo("edx", "some-public-repo")
-    pr = repo.make_pull_request(user=user)
-    pr.close(merge=False)
-    result = pull_request_changed(pr.as_json())
-    assert not result.jira_issues
-    # We don't want the bot to write a comment on a closed pull request.
-    assert len(pr.list_comments()) == 0
-    # User has a cla, but we aren't accepting contributions.
-    assert pr.status(CLA_CONTEXT) == CLA_STATUS_NO_CONTRIBUTIONS
-
-
-def test_pr_closed_after_employee_leaves(fake_github, mocker):
+@pytest.mark.parametrize("org", ["openedx", "edx"])
+def test_pr_closed_after_employee_leaves(org, is_merged, fake_github, mocker):
     # Ned is internal.
-    pr = fake_github.make_pull_request("edx", user="nedbat")
+    pr = fake_github.make_pull_request(org, user="nedbat")
     result = pull_request_changed(pr.as_json())
 
     assert not result.jira_issues
+    # No comments, labels or projects because Ned is internal.
     assert len(pr.list_comments()) == 0
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
+    assert pr.labels == set()
+    assert pull_request_projects(pr.as_json()) == set()
 
     # Ned is fired for malfeasance.
     mocker.patch("openedx_webhooks.tasks.pr_tracking.is_internal_pull_request", lambda pr: False)
 
     # His PR is closed.
-    pr.close(merge=False)
+    pr.close(merge=is_merged)
     result = pull_request_changed(pr.as_json())
 
     assert not result.jira_issues
     # We don't want the bot to write a comment on a closed pull request.
     assert len(pr.list_comments()) == 0
-    assert pr.status(CLA_CONTEXT) == CLA_STATUS_NO_CONTRIBUTIONS
+    assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
+    assert pr.labels == set()
+    assert pull_request_projects(pr.as_json()) == set()

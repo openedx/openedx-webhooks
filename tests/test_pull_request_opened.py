@@ -278,38 +278,6 @@ def test_draft_pr_opened(pr_type, fake_github, mocker):
     assert 'click "Ready for Review"' in body
 
 
-def test_handle_closed_pr(is_merged, fake_github):
-    pr = fake_github.make_pull_request(user="tusbar", number=11237, state="closed", merged=is_merged)
-    prj = pr.as_json()
-    result = pull_request_changed(prj)
-    assert not result.jira_issues
-
-    # Check the GitHub comment that was created.
-    pr_comments = pr.list_comments()
-    assert len(pr_comments) == 1
-    body = pr_comments[0].body
-    check_issue_link_in_markdown(body, None)
-    if is_merged:
-        assert "Although this pull request is already merged," in body
-    else:
-        assert "Although this pull request is already closed," in body
-    assert is_comment_kind(BotComment.WELCOME, body)
-    assert is_comment_kind(BotComment.WELCOME_CLOSED, body)
-    assert not is_comment_kind(BotComment.NEED_CLA, body)
-
-    # Check the GitHub labels that got applied.
-    expected_labels = {"open-source-contribution"}
-    assert pr.labels == expected_labels
-    assert pull_request_projects(pr.as_json()) == {settings.GITHUB_OSPR_PROJECT}
-
-    # Rescan the pull request.
-    result2 = pull_request_changed(pr.as_json())
-    assert not result2.jira_issues
-
-    # No new GitHub comment was created.
-    assert len(pr.list_comments()) == 1
-
-
 def test_dont_add_internal_prs_to_project(fake_github):
     pr = fake_github.make_pull_request(owner="openedx", repo="credentials", user="nedbat")
     pull_request_changed(pr.as_json())
