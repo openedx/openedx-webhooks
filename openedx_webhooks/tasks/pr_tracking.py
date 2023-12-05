@@ -199,10 +199,18 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
     user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
+    label_names = set(lbl["name"] for lbl in pr["labels"])
 
     user_is_bot = is_bot_pull_request(pr)
     no_cla_is_needed = is_private_repo_no_cla_pull_request(pr)
     is_internal = is_internal_pull_request(pr)
+    if not is_internal:
+        if pr["state"] == "closed" and "open-source-contribution" not in label_names:
+            # If we are closing a PR, and it isn't already an OSPR, then it
+            # shouldn't be considered one now.
+            logger.info(f"{repo}#{num} is closing, but seemed to be internal originally")
+            is_internal = True
+
     if user_is_bot:
         logger.info(f"@{user} is a bot, not an ospr.")
     elif no_cla_is_needed:
@@ -224,7 +232,6 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
         state = "closed"
 
     # A label of jira:xyz means we want a Jira issue in the xyz Jira.
-    label_names = set(lbl["name"] for lbl in pr["labels"])
     desired.jira_nicks = {name.partition(":")[-1] for name in label_names if name.startswith("jira:")}
 
     if "crash!123" in label_names:

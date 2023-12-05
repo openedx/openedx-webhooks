@@ -42,8 +42,10 @@ def make_rescannable_repo(fake_github, org_name="an-org", repo_name="a-repo"):
         closed_at=datetime(2020,7,1))
     repo.make_pull_request(user="feanil", number=105, created_at=datetime(2019, 4, 1))
     repo.make_pull_request(user="tusbar", number=106, created_at=datetime(2019, 5, 1))
-    repo.make_pull_request(user="tusbar", number=108, state="closed", created_at=datetime(2019, 6, 1),
-        closed_at=datetime(2020,7,1))
+    # A closed PR that had been processed when it opened.
+    pr = repo.make_pull_request(user="tusbar", number=108, created_at=datetime(2019, 6, 1), closed_at=datetime(2020,7,1))
+    pull_request_changed(pr.as_json())
+    pr.close(merge=False)
     # One of the PRs already has a bot comment with a Jira issue.
     pr = repo.make_pull_request(user="tusbar", number=110, state="closed", merged=True, created_at=datetime(2019, 7, 1),
         closed_at=datetime(2020,7,1))
@@ -84,10 +86,14 @@ def test_rescan_repository(rescannable_repo, pull_request_changed_fn, allpr):
 
 
 def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pull_request_changed_fn):
+    # The fixtures could have made GitHub or Jira writes, reset them.
+    fake_github.reset_mock()
+    fake_jira.reset_mock()
+
     # Rescan as a dry run.
     ret = rescan_repository(rescannable_repo.full_name, allpr=True, dry_run=True)
 
-    # We shouldn't have made any writes to GitHub or Jira.
+    # We shouldn't have made any writes to GitHub or Jira because dry_run=True.
     fake_github.assert_readonly()
     fake_jira.assert_readonly()
 
@@ -96,35 +102,30 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
 
     # Get the names of the actions. We won't worry about the details, those
     # are tested in the non-dry-run tests of rescanning pull requests.
+    import json,sys; json.dump(ret["dry_run_actions"], sys.stdout, indent=4)
     actions = {k: [name for name, kwargs in actions] for k, actions in ret["dry_run_actions"].items()}
     assert actions == {
         102: [
             "initial_state",
-            "set_cla_status",
-            "update_labels_on_pull_request",
-            "add_comment_to_pull_request",
+            "set_cla_status",                   # "The author is authorized to contribute"
+            "update_labels_on_pull_request",    # ["open-source-contribution"]
+            "add_comment_to_pull_request",      # "Thanks for the pull request, @tusbar!"
             "add_pull_request_to_project",
         ],
         106: [
             "initial_state",
-            "set_cla_status",
-            "update_labels_on_pull_request",
-            "add_comment_to_pull_request",
+            "set_cla_status",                   # "The author is authorized to contribute"
+            "update_labels_on_pull_request",    # ["open-source-contribution"]
+            "add_comment_to_pull_request",      # "Thanks for the pull request, @tusbar!"
             "add_pull_request_to_project",
         ],
         108: [
             "initial_state",
-            "set_cla_status",
-            "update_labels_on_pull_request",
-            "add_comment_to_pull_request",
-            "add_pull_request_to_project",
+            "add_comment_to_pull_request",      # "Even though your pull request wasn't merged"
         ],
         110: [
             "initial_state",
-            "set_cla_status",
-            "update_labels_on_pull_request",
-            "add_comment_to_pull_request",
-            "add_pull_request_to_project",
+            "set_cla_status",                   # "The author is authorized to contribute"
         ],
     }
 

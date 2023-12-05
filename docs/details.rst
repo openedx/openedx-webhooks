@@ -76,8 +76,13 @@ draft.
 When a pull request is closed
 -----------------------------
 
-The bot leaves a comment asking the author to complete a survey about the pull
-request.
+On internal pull requests, the bot leaves a comment asking the author to
+complete a survey about the pull request.
+
+When a pull request is being closed, it will be considered an internal pull
+request if it has no "open-source-contribution" label, on the assumption that
+it was processed when it was opened, so the lack of a label means the author
+was internal at the time the pull request was created.
 
 
 When a pull request is re-opened
