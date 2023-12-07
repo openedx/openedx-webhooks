@@ -177,6 +177,14 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
+2023-12-07
+~~~~~~~~~~
+
+- When a pull request is closed, if it doesn't have a
+  "open-source-contribution" label on it, it is considered an internal pull
+  request.  We assume that it was processed when it was opened, and since it
+  didn't get the label then, the author must have been internal at the time.
+
 2023-11-27
 ~~~~~~~~~~
 
