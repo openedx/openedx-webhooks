@@ -99,7 +99,7 @@ def test_external_pr_opened_no_cla(fake_github):
     assert len(pr_comments) == 1
     body = pr_comments[0].body
     check_issue_link_in_markdown(body, None)
-    assert "Thanks for the pull request, @new_contributor!" in body
+    assert "Thanks for the pull request, `@new_contributor`!" in body
     assert is_comment_kind(BotComment.NEED_CLA, body)
     assert is_comment_kind(BotComment.WELCOME, body)
 
@@ -132,7 +132,7 @@ def test_external_pr_opened_with_cla(fake_github):
     assert len(pr_comments) == 1
     body = pr_comments[0].body
     check_issue_link_in_markdown(body, None)
-    assert "Thanks for the pull request, @tusbar!" in body
+    assert "Thanks for the pull request, `@tusbar`!" in body
     assert is_comment_kind(BotComment.WELCOME, body)
     assert not is_comment_kind(BotComment.NEED_CLA, body)
 
@@ -235,8 +235,7 @@ def test_draft_pr_opened(pr_type, fake_github, mocker):
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert 'This is currently a draft pull request' in body
-    assert 'click "Ready for Review"' in body
+    assert is_comment_kind(BotComment.END_OF_WIP, body)
     expected_labels = set()
     expected_labels.add("blended" if pr_type == "blended" else "open-source-contribution")
     assert pr.labels == expected_labels
@@ -263,8 +262,7 @@ def test_draft_pr_opened(pr_type, fake_github, mocker):
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert 'This is currently a draft pull request' not in body
-    assert 'click "Ready for Review"' not in body
+    assert not is_comment_kind(BotComment.END_OF_WIP, body)
 
     # Oops, it goes back to draft!
     pr.title = title1
@@ -274,8 +272,7 @@ def test_draft_pr_opened(pr_type, fake_github, mocker):
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert 'This is currently a draft pull request' in body
-    assert 'click "Ready for Review"' in body
+    assert is_comment_kind(BotComment.END_OF_WIP, body)
 
 
 def test_dont_add_internal_prs_to_project(fake_github):
