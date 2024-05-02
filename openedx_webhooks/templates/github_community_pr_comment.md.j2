@@ -1,4 +1,4 @@
-Thanks for the pull request, `@{{ user }}`!
+Thanks for the pull request, @{{ user }}!
 
 ### What's next?
 
@@ -70,8 +70,13 @@ Your PR is currently marked as a draft.  After completing the steps above, updat
 
 {% if owner %}
 This repository is currently maintained by `@{{ owner }}`.  Tag them in a comment and let them know that your changes are ready for review.
-{%  else %}
-This repository is currently unmaintained.  To get help with finding a technical reviewer, tag the community contributions project manager for this PR in a comment and let them know that your changes are ready for review:
+{% else %}
+{% if lifecycle == 'production' %}
+This repository has no maintainer (yet).
+{% else %}
+This repository is currently unmaintained.
+{% endif %}
+To get help with finding a technical reviewer, tag the community contributions project manager for this PR in a comment and let them know that your changes are ready for review:
 
 1. On the right-hand side of the PR, find the Contributions project, click the caret in the top right corner to expand it, and check the "Primary PM" field for the name of your PM.
 2. Find their GitHub handle [here](https://openedx.atlassian.net/wiki/spaces/COMM/pages/3548807177/Community+Contributions+Project+Manager#Current-OSPR-Project-Managers).

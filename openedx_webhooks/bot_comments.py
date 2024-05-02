@@ -5,21 +5,21 @@ The bot makes comments on pull requests. This is stuff needed to do it well.
 import binascii
 import json
 import re
+from collections import namedtuple
 
 from enum import Enum, auto
-from typing import Dict
+from typing import Dict, Literal
 
 import arrow
-import yaml
 from flask import render_template
 
 from openedx_webhooks.info import (
     get_jira_server_info,
     is_draft_pull_request,
-    pull_request_has_cla, read_github_file,
+    pull_request_has_cla,
+    get_catalog_info,
 )
 from openedx_webhooks.types import JiraId, PrDict
-from openedx_webhooks.utils import memoize_timed
 
 # Author association values for which we should consider the author new
 GITHUB_NEW_AUTHOR_ASSOCIATIONS = (
@@ -94,28 +94,24 @@ def is_comment_kind(kind: BotComment, text: str) -> bool:
     return any(snip in text for snip in BOT_COMMENT_INDICATORS[kind])
 
 
-@memoize_timed(minutes=30)
-def get_repo_catalog(repo_full_name: str) -> dict:
-    """
-    Get and load the catalog-info.yaml file for the repo.
-    """
-    return yaml.safe_load(read_github_file(repo_full_name, "catalog-info.yaml", ""))
+Lifecycle = Literal["experimental", "production", "deprecated"]
+RepoSpec: (str | None, Lifecycle | None) = namedtuple('RepoSpec', ['owner', 'lifecycle'])
 
 
-def _get_repo_owner(repo_full_name: str) -> str | None:
+def _get_repo_spec(repo_full_name: str) -> RepoSpec:
     """
     Get the owner of the repo from its catalog-info.yaml file.
     """
-    repo_catalog = get_repo_catalog(repo_full_name)
-    if not repo_catalog:
-        return None
-    owner = repo_catalog["spec"]["owner"]
-    owner_type = "group"
+    catalog_info = get_catalog_info(repo_full_name)
+    if not catalog_info:
+        return RepoSpec(None, None)
+    owner = catalog_info["spec"].get("owner", "")
+    owner_type = None
     if ":" in owner:
         owner_type, owner = owner.split(":")
     if owner_type == "group":
         owner = f"openedx/{owner}"
-    return owner
+    return RepoSpec(owner, catalog_info["spec"]["lifecycle"])
 
 
 def github_community_pr_comment(pull_request: PrDict) -> str:
@@ -128,7 +124,7 @@ def github_community_pr_comment(pull_request: PrDict) -> str:
     * contain a link to our process documentation
     """
     is_first_time = pull_request.get("author_association", None) in GITHUB_NEW_AUTHOR_ASSOCIATIONS
-    owner = _get_repo_owner(pull_request["base"]["repo"]["full_name"])
+    spec = _get_repo_spec(pull_request["base"]["repo"]["full_name"])
 
     return render_template(
         "github_community_pr_comment.md.j2",
@@ -137,7 +133,8 @@ def github_community_pr_comment(pull_request: PrDict) -> str:
         is_draft=is_draft_pull_request(pull_request),
         is_merged=pull_request.get("merged", False),
         is_first_time=is_first_time,
-        owner=owner,
+        owner=spec.owner,
+        lifecycle=spec.lifecycle,
     )
 
 

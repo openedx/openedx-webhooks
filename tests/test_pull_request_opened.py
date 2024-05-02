@@ -1,9 +1,11 @@
 """Tests of tasks/github.py:pull_request_changed for opening pull requests."""
 
 import textwrap
+from unittest import mock
 
 import pytest
 
+from openedx_webhooks import settings
 from openedx_webhooks.bot_comments import (
     BotComment,
     is_comment_kind,
@@ -16,10 +18,8 @@ from openedx_webhooks.cla_check import (
     CLA_STATUS_NO_CONTRIBUTIONS,
     CLA_STATUS_PRIVATE,
 )
-from openedx_webhooks import settings
 from openedx_webhooks.gh_projects import pull_request_projects
 from openedx_webhooks.tasks.github import pull_request_changed
-
 from .helpers import check_issue_link_in_markdown
 
 # These tests should run when we want to test flaky GitHub behavior.
@@ -75,6 +75,42 @@ def test_pr_in_nocontrib_repo_opened(fake_github, user):
     assert pull_request_projects(pr.as_json()) == set()
 
 
+@pytest.mark.parametrize("owner,tag", [
+    ("group:arch-bom", "@openedx/arch-bom"),
+    ("user:feanil", "@feanil"),
+    ("feanil", "@feanil"),
+])
+@mock.patch("openedx_webhooks.bot_comments.get_catalog_info")
+def test_pr_with_owner_repo_opened(get_catalog_info, fake_github, owner, tag):
+    get_catalog_info.return_value = {
+        'spec': {'owner': owner, 'lifecycle': 'production'}
+    }
+    pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform")
+    result = pull_request_changed(pr.as_json())
+    assert not result.jira_issues
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    assert f"This repository is currently maintained by `{tag}`" in body
+
+@pytest.mark.parametrize("lifecycle", ["production", "deprecated", None])
+@mock.patch("openedx_webhooks.bot_comments.get_catalog_info")
+def test_pr_without_owner_repo_opened(get_catalog_info, fake_github, lifecycle):
+    get_catalog_info.return_value = {
+        'spec': {'lifecycle': lifecycle}
+    } if lifecycle else None
+    pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform")
+    result = pull_request_changed(pr.as_json())
+    assert not result.jira_issues
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    if lifecycle == "production":
+        assert f"This repository has no maintainer (yet)." in body
+    else:
+        assert f"This repository is currently unmaintained." in body
+
+
 def test_pr_opened_by_bot(fake_github):
     fake_github.make_user(login="some_bot", type="Bot")
     pr = fake_github.make_pull_request(user="some_bot")
@@ -99,7 +135,7 @@ def test_external_pr_opened_no_cla(fake_github):
     assert len(pr_comments) == 1
     body = pr_comments[0].body
     check_issue_link_in_markdown(body, None)
-    assert "Thanks for the pull request, `@new_contributor`!" in body
+    assert "Thanks for the pull request, @new_contributor!" in body
     assert is_comment_kind(BotComment.NEED_CLA, body)
     assert is_comment_kind(BotComment.WELCOME, body)
 
@@ -132,7 +168,7 @@ def test_external_pr_opened_with_cla(fake_github):
     assert len(pr_comments) == 1
     body = pr_comments[0].body
     check_issue_link_in_markdown(body, None)
-    assert "Thanks for the pull request, `@tusbar`!" in body
+    assert "Thanks for the pull request, @tusbar!" in body
     assert is_comment_kind(BotComment.WELCOME, body)
     assert not is_comment_kind(BotComment.NEED_CLA, body)
 
