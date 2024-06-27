@@ -5,9 +5,10 @@ The bot makes comments on pull requests. This is stuff needed to do it well.
 import binascii
 import json
 import re
+from collections import namedtuple
 
 from enum import Enum, auto
-from typing import Dict
+from typing import Dict, Literal
 
 import arrow
 from flask import render_template
@@ -16,9 +17,15 @@ from openedx_webhooks.info import (
     get_jira_server_info,
     is_draft_pull_request,
     pull_request_has_cla,
+    get_catalog_info,
 )
 from openedx_webhooks.types import JiraId, PrDict
 
+# Author association values for which we should consider the author new
+GITHUB_NEW_AUTHOR_ASSOCIATIONS = (
+    "FIRST_TIMER",  # Author has not previously committed to GitHub.
+    "FIRST_TIME_CONTRIBUTOR",  # Author has not previously committed to the repository.
+)
 
 class BotComment(Enum):
     """
@@ -79,11 +86,32 @@ BOT_COMMENTS_FIRST = {
     BotComment.NO_CONTRIBUTIONS,
 }
 
+
 def is_comment_kind(kind: BotComment, text: str) -> bool:
     """
     Is this `text` a comment of this `kind`?
     """
     return any(snip in text for snip in BOT_COMMENT_INDICATORS[kind])
+
+
+Lifecycle = Literal["experimental", "production", "deprecated"]
+RepoSpec: (str | None, Lifecycle | None) = namedtuple('RepoSpec', ['owner', 'lifecycle'])
+
+
+def _get_repo_spec(repo_full_name: str) -> RepoSpec:
+    """
+    Get the owner of the repo from its catalog-info.yaml file.
+    """
+    catalog_info = get_catalog_info(repo_full_name)
+    if not catalog_info:
+        return RepoSpec(None, None)
+    owner = catalog_info["spec"].get("owner", "")
+    owner_type = None
+    if ":" in owner:
+        owner_type, owner = owner.split(":")
+    if owner_type == "group":
+        owner = f"openedx/{owner}"
+    return RepoSpec(owner, catalog_info["spec"]["lifecycle"])
 
 
 def github_community_pr_comment(pull_request: PrDict) -> str:
@@ -95,12 +123,18 @@ def github_community_pr_comment(pull_request: PrDict) -> str:
     * check for contributor agreement
     * contain a link to our process documentation
     """
+    is_first_time = pull_request.get("author_association", None) in GITHUB_NEW_AUTHOR_ASSOCIATIONS
+    spec = _get_repo_spec(pull_request["base"]["repo"]["full_name"])
+
     return render_template(
         "github_community_pr_comment.md.j2",
         user=pull_request["user"]["login"],
         has_signed_agreement=pull_request_has_cla(pull_request),
         is_draft=is_draft_pull_request(pull_request),
         is_merged=pull_request.get("merged", False),
+        is_first_time=is_first_time,
+        owner=spec.owner,
+        lifecycle=spec.lifecycle,
     )
 
 

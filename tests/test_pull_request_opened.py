@@ -1,9 +1,11 @@
 """Tests of tasks/github.py:pull_request_changed for opening pull requests."""
 
 import textwrap
+from unittest import mock
 
 import pytest
 
+from openedx_webhooks import settings
 from openedx_webhooks.bot_comments import (
     BotComment,
     is_comment_kind,
@@ -16,10 +18,8 @@ from openedx_webhooks.cla_check import (
     CLA_STATUS_NO_CONTRIBUTIONS,
     CLA_STATUS_PRIVATE,
 )
-from openedx_webhooks import settings
 from openedx_webhooks.gh_projects import pull_request_projects
 from openedx_webhooks.tasks.github import pull_request_changed
-
 from .helpers import check_issue_link_in_markdown
 
 # These tests should run when we want to test flaky GitHub behavior.
@@ -73,6 +73,42 @@ def test_pr_in_nocontrib_repo_opened(fake_github, user):
     # User has a cla, but we aren't accepting contributions.
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_NO_CONTRIBUTIONS
     assert pull_request_projects(pr.as_json()) == set()
+
+
+@pytest.mark.parametrize("owner,tag", [
+    ("group:arch-bom", "@openedx/arch-bom"),
+    ("user:feanil", "@feanil"),
+    ("feanil", "@feanil"),
+])
+@mock.patch("openedx_webhooks.bot_comments.get_catalog_info")
+def test_pr_with_owner_repo_opened(get_catalog_info, fake_github, owner, tag):
+    get_catalog_info.return_value = {
+        'spec': {'owner': owner, 'lifecycle': 'production'}
+    }
+    pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform")
+    result = pull_request_changed(pr.as_json())
+    assert not result.jira_issues
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    assert f"This repository is currently maintained by `{tag}`" in body
+
+@pytest.mark.parametrize("lifecycle", ["production", "deprecated", None])
+@mock.patch("openedx_webhooks.bot_comments.get_catalog_info")
+def test_pr_without_owner_repo_opened(get_catalog_info, fake_github, lifecycle):
+    get_catalog_info.return_value = {
+        'spec': {'lifecycle': lifecycle}
+    } if lifecycle else None
+    pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform")
+    result = pull_request_changed(pr.as_json())
+    assert not result.jira_issues
+    pr_comments = pr.list_comments()
+    assert len(pr_comments) == 1
+    body = pr_comments[0].body
+    if lifecycle == "production":
+        assert f"This repository has no maintainer (yet)." in body
+    else:
+        assert f"This repository is currently unmaintained." in body
 
 
 def test_pr_opened_by_bot(fake_github):
@@ -235,8 +271,7 @@ def test_draft_pr_opened(pr_type, fake_github, mocker):
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert 'This is currently a draft pull request' in body
-    assert 'click "Ready for Review"' in body
+    assert is_comment_kind(BotComment.END_OF_WIP, body)
     expected_labels = set()
     expected_labels.add("blended" if pr_type == "blended" else "open-source-contribution")
     assert pr.labels == expected_labels
@@ -263,8 +298,7 @@ def test_draft_pr_opened(pr_type, fake_github, mocker):
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert 'This is currently a draft pull request' not in body
-    assert 'click "Ready for Review"' not in body
+    assert not is_comment_kind(BotComment.END_OF_WIP, body)
 
     # Oops, it goes back to draft!
     pr.title = title1
@@ -274,8 +308,7 @@ def test_draft_pr_opened(pr_type, fake_github, mocker):
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert 'This is currently a draft pull request' in body
-    assert 'click "Ready for Review"' in body
+    assert is_comment_kind(BotComment.END_OF_WIP, body)
 
 
 def test_dont_add_internal_prs_to_project(fake_github):
