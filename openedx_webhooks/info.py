@@ -47,10 +47,10 @@ def _read_data_file(filename):
     """
     Read the text of an openedx-webhooks-data file.
     """
-    return _read_github_file("openedx/openedx-webhooks-data", filename)
+    return read_github_file("openedx/openedx-webhooks-data", filename)
 
 
-def _read_github_file(repo_fullname: str, file_path: str, not_there: Optional[str] = None) -> str:
+def read_github_file(repo_fullname: str, file_path: str, not_there: Optional[str] = None) -> str:
     """
     Read a GitHub file from the main or master branch of a repo.
 
@@ -66,6 +66,7 @@ def _read_github_file(repo_fullname: str, file_path: str, not_there: Optional[st
         The text of the file, or `not_there` if provided.
     """
     return _read_github_url(_github_file_url(repo_fullname, file_path), not_there)
+
 
 def _read_github_url(url: str, not_there: Optional[str] = None) -> str:
     """
@@ -302,7 +303,7 @@ def get_bot_comments(prid: PrId) -> Iterable[PrCommentDict]:
 
 def get_catalog_info(repo_fullname: str) -> Dict:
     """Get the parsed catalog-info.yaml data from a repo, or {} if missing."""
-    yml = _read_github_file(repo_fullname, "catalog-info.yaml", not_there="{}")
+    yml = read_github_file(repo_fullname, "catalog-info.yaml", not_there="{}")
     return yaml.safe_load(yml)
 
 
