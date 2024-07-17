@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: 'openedx-webhooks'
+  description: "The CLA bot and new PR welcome message."
+  links: []
+  annotations:
+    openedx.org/arch-interest-groups: "feanil"
+spec:
+  owner: user:feanil
+  type: 'website'
+  lifecycle: 'production'
