@@ -4,36 +4,36 @@
 #
 #    make upgrade
 #
-amqp==5.1.1
+amqp==5.2.0
     # via kombu
-arrow==1.2.3
+arrow==1.3.0
     # via -r requirements/base.in
-attrs==23.1.0
+attrs==23.2.0
     # via glom
-billiard==3.6.4.0
+billiard==4.2.0
     # via celery
-blinker==1.6.2
+blinker==1.8.2
     # via
     #   -r requirements/base.in
     #   flask
     #   sentry-sdk
-boltons==23.0.0
+boltons==24.0.0
     # via
     #   face
     #   glom
-cachetools==5.3.0
+cachetools==5.4.0
     # via -r requirements/base.in
-celery==5.2.7
+celery==5.4.0
     # via -r requirements/base.in
-certifi==2023.5.7
+certifi==2024.7.4
     # via
     #   requests
     #   sentry-sdk
-cffi==1.15.1
+cffi==1.16.0
     # via cryptography
-charset-normalizer==3.1.0
+charset-normalizer==3.3.2
     # via requests
-click==8.1.3
+click==8.1.7
     # via
     #   -r requirements/base.in
     #   celery
@@ -41,13 +41,13 @@ click==8.1.3
     #   click-plugins
     #   click-repl
     #   flask
-click-didyoumean==0.3.0
+click-didyoumean==0.3.1
     # via celery
 click-plugins==1.1.1
     # via celery
-click-repl==0.2.0
+click-repl==0.3.0
     # via celery
-cryptography==40.0.2
+cryptography==43.0.0
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -56,7 +56,7 @@ defusedxml==0.7.1
     # via jira
 face==20.1.1
     # via glom
-flask==2.3.2
+flask==3.0.3
     # via
     #   -r requirements/base.in
     #   flask-sslify
@@ -65,23 +65,23 @@ flask-sslify==0.1.5
     # via -r requirements/base.in
 github3-py==4.0.1
     # via -r requirements/base.in
-glom==23.3.0
+glom==23.5.0
     # via -r requirements/base.in
-gunicorn==20.1.0
+gunicorn==22.0.0
     # via -r requirements/base.in
-idna==3.4
+idna==3.7
     # via requests
-itsdangerous==2.1.2
+itsdangerous==2.2.0
     # via flask
-jinja2==3.1.2
+jinja2==3.1.4
     # via flask
-jira==3.5.0
+jira==3.8.0
     # via -r requirements/base.in
-kombu==5.2.4
+kombu==5.3.7
     # via celery
-logging-tree==1.9
+logging-tree==1.10
     # via -r requirements/base.in
-markupsafe==2.1.2
+markupsafe==2.1.5
     # via
     #   jinja2
     #   sentry-sdk
@@ -90,65 +90,66 @@ oauthlib[signedtoken]==3.2.2
     # via
     #   -r requirements/base.in
     #   requests-oauthlib
-packaging==23.1
+packaging==24.1
+    # via
+    #   gunicorn
+    #   jira
+pillow==10.4.0
     # via jira
-prompt-toolkit==3.0.38
+prompt-toolkit==3.0.47
     # via click-repl
-pycparser==2.21
+pycparser==2.22
     # via cffi
-pyjwt[crypto]==2.7.0
+pyjwt[crypto]==2.8.0
     # via
     #   github3-py
     #   oauthlib
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   arrow
+    #   celery
     #   github3-py
-pytz==2023.3
-    # via celery
-pyyaml==6.0
+pyyaml==6.0.1
     # via -r requirements/base.in
-redis==4.5.5
+redis==5.0.7
     # via -r requirements/base.in
-requests==2.31.0
+requests==2.32.3
     # via
     #   -r requirements/base.in
     #   github3-py
     #   jira
     #   requests-oauthlib
     #   requests-toolbelt
-requests-oauthlib==1.3.1
+requests-oauthlib==2.0.0
     # via
     #   -r requirements/base.in
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==1.24.0
+sentry-sdk[flask]==2.10.0
     # via -r requirements/base.in
 six==1.16.0
-    # via
-    #   click-repl
-    #   python-dateutil
-typing-extensions==4.6.1
+    # via python-dateutil
+types-python-dateutil==2.9.0.20240316
+    # via arrow
+typing-extensions==4.12.2
     # via jira
+tzdata==2024.1
+    # via celery
 uritemplate==4.1.1
     # via github3-py
-urllib3==1.26.16
+urllib3==2.2.2
     # via
     #   requests
     #   sentry-sdk
 urlobject==2.4.3
     # via -r requirements/base.in
-vine==5.0.0
+vine==5.1.0
     # via
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.6
+wcwidth==0.2.13
     # via prompt-toolkit
-werkzeug==2.3.4
+werkzeug==3.0.3
     # via flask
-
-# The following packages are considered to be unsafe in a requirements file:
-setuptools==67.8.0
-    # via gunicorn
