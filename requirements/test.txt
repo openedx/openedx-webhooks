@@ -132,7 +132,7 @@ pyjwt[crypto]==2.8.0
     # via
     #   github3-py
     #   oauthlib
-pytest==8.3.1
+pytest==8.3.2
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -181,7 +181,7 @@ requests-toolbelt==1.0.0
     # via jira
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.10.0
+sentry-sdk[flask]==2.11.0
     # via -r requirements/base.in
 six==1.16.0
     # via
