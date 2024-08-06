@@ -4,7 +4,7 @@
 #
 #    make upgrade
 #
-alabaster==0.7.16
+alabaster==1.0.0
     # via sphinx
 amqp==5.2.0
     # via kombu
@@ -16,7 +16,7 @@ astroid==3.2.4
     # via
     #   pylint
     #   pylint-celery
-attrs==23.2.0
+attrs==24.1.0
     # via
     #   glom
     #   scriv
@@ -73,7 +73,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==1.8.0
     # via edx-lint
-coverage[toml]==7.6.0
+coverage[toml]==7.6.1
     # via pytest-cov
 cryptography==43.0.0
     # via
@@ -143,7 +143,7 @@ mccabe==0.7.0
     # via pylint
 mdurl==0.1.2
     # via markdown-it-py
-mypy==1.11.0
+mypy==1.11.1
     # via -r requirements/dev.in
 mypy-extensions==1.0.0
     # via mypy
@@ -178,7 +178,7 @@ pygments==2.18.0
     # via
     #   readme-renderer
     #   sphinx
-pyjwt[crypto]==2.8.0
+pyjwt[crypto]==2.9.0
     # via
     #   github3-py
     #   oauthlib
@@ -235,7 +235,7 @@ pyyaml==6.0.1
     #   repo-tools-data-schema
 readme-renderer==44.0
     # via -r requirements/doc.in
-redis==5.0.7
+redis==5.0.8
     # via
     #   -r requirements/base.in
     #   redis-sentinel-url
@@ -271,7 +271,7 @@ schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.5.1
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.11.0
+sentry-sdk[flask]==2.12.0
     # via -r requirements/base.in
 six==1.16.0
     # via
@@ -280,26 +280,26 @@ six==1.16.0
     #   sphinxcontrib-httpdomain
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==7.4.7
+sphinx==8.0.2
     # via
     #   -r requirements/doc.in
     #   sphinx-rtd-theme
     #   sphinxcontrib-httpdomain
 sphinx-rtd-theme==0.5.1
     # via -r requirements/doc.in
-sphinxcontrib-applehelp==1.0.8
+sphinxcontrib-applehelp==2.0.0
     # via sphinx
-sphinxcontrib-devhelp==1.0.6
+sphinxcontrib-devhelp==2.0.0
     # via sphinx
-sphinxcontrib-htmlhelp==2.0.6
+sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-httpdomain==1.8.1
     # via -r requirements/doc.in
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
-sphinxcontrib-qthelp==1.0.8
+sphinxcontrib-qthelp==2.0.0
     # via sphinx
-sphinxcontrib-serializinghtml==1.1.10
+sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 stevedore==5.2.0
     # via code-annotations
@@ -339,11 +339,11 @@ wcwidth==0.2.13
     # via prompt-toolkit
 werkzeug==3.0.3
     # via flask
-wheel==0.43.0
+wheel==0.44.0
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==24.2
     # via pip-tools
-setuptools==71.1.0
+setuptools==72.1.0
     # via pip-tools
