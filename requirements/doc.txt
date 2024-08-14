@@ -6,7 +6,7 @@
 #
 alabaster==1.0.0
     # via sphinx
-babel==2.15.0
+babel==2.16.0
     # via sphinx
 certifi==2024.7.4
     # via requests

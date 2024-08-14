@@ -16,11 +16,11 @@ astroid==3.2.4
     # via
     #   pylint
     #   pylint-celery
-attrs==24.1.0
+attrs==24.2.0
     # via
     #   glom
     #   scriv
-babel==2.15.0
+babel==2.16.0
     # via sphinx
 billiard==4.2.0
     # via celery
@@ -43,7 +43,7 @@ certifi==2024.7.4
     # via
     #   requests
     #   sentry-sdk
-cffi==1.16.0
+cffi==1.17.0
     # via cryptography
 charset-normalizer==3.3.2
     # via requests
@@ -106,7 +106,7 @@ github3-py==4.0.1
     # via -r requirements/base.in
 glom==23.5.0
     # via -r requirements/base.in
-gunicorn==22.0.0
+gunicorn==23.0.0
     # via -r requirements/base.in
 idna==3.7
     # via requests
@@ -128,7 +128,7 @@ jinja2==3.1.4
     #   sphinx
 jira==3.8.0
     # via -r requirements/base.in
-kombu==5.3.7
+kombu==5.4.0
     # via celery
 logging-tree==1.10
     # via -r requirements/base.in
@@ -228,7 +228,7 @@ python-slugify==8.0.4
     # via code-annotations
 pytz==2024.1
     # via -r requirements/test.in
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via
     #   -r requirements/base.in
     #   code-annotations
@@ -311,7 +311,7 @@ types-cachetools==5.4.0.20240717
     # via -r requirements/dev.in
 types-python-dateutil==2.9.0.20240316
     # via arrow
-types-pyyaml==6.0.12.20240724
+types-pyyaml==6.0.12.20240808
     # via -r requirements/dev.in
 types-requests==2.32.0.20240712
     # via -r requirements/dev.in
