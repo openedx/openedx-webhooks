@@ -291,8 +291,9 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
         if state == "reopened":
             desired.bot_comments_to_remove.add(BotComment.SURVEY)
 
-        if state in ["closed", "merged"]:
-            desired.bot_comments.add(BotComment.SURVEY)
+#        # temp: Disable survey link on pull requests
+#        if state in ["closed", "merged"]:
+#            desired.bot_comments.add(BotComment.SURVEY)
 
     if desired.is_refused and state not in ["closed", "merged"]:
         desired.bot_comments.add(BotComment.NO_CONTRIBUTIONS)
