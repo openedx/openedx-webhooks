@@ -4,7 +4,6 @@ import pytest
 
 from openedx_webhooks.bot_comments import (
     BotComment,
-    is_comment_kind,
 )
 from openedx_webhooks.cla_check import (
     CLA_CONTEXT,
@@ -52,16 +51,6 @@ def closed_pull_request(is_merged, fake_github, fake_jira):
     return pr
 
 
-def test_external_pr_closed(fake_jira, closed_pull_request):
-    pr = closed_pull_request
-    pull_request_changed(pr.as_json())
-
-    pr_comments = pr.list_comments()
-    body = pr_comments[-1].body
-    assert "survey" in body
-    assert is_comment_kind(BotComment.SURVEY, body)
-
-
 def test_external_pr_closed_but_issue_deleted(fake_jira, closed_pull_request):
     # A closing pull request, but its Jira issue has been deleted.
     pr = closed_pull_request
@@ -70,7 +59,7 @@ def test_external_pr_closed_but_issue_deleted(fake_jira, closed_pull_request):
     assert not result.jira_issues
 
     pr_comments = pr.list_comments()
-    assert len(pr_comments) == 4    # 1 welcome, closed_pull_request makes two, 1 survey
+    assert len(pr_comments) == 3    # 1 welcome, closed_pull_request makes two
     # We leave the old issue id in the comment.
     body = pr_comments[0].body
     check_issue_link_in_markdown(body, None)
@@ -98,13 +87,13 @@ def test_cc_pr_closed(fake_github, fake_jira, is_merged):
     pull_request_changed(pr.as_json())
 
     pr_comments = pr.list_comments()
-    assert len(pr_comments) == 2    # 1 welcome, 1 survey
+    assert len(pr_comments) == 1    # welcome comment
 
     # Processing it again won't change anything.
     pull_request_changed(pr.as_json())
 
     pr_comments = pr.list_comments()
-    assert len(pr_comments) == 2    # 1 welcome, 1 survey
+    assert len(pr_comments) == 1    # welcome comment
 
 
 @pytest.mark.parametrize("org", ["openedx", "edx"])
