@@ -121,7 +121,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
         ],
         108: [
             "initial_state",
-            "add_comment_to_pull_request",      # "Even though your pull request wasn't merged"
         ],
         110: [
             "initial_state",
