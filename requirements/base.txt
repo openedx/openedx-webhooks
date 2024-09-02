@@ -25,7 +25,7 @@ cachetools==5.5.0
     # via -r requirements/base.in
 celery==5.4.0
     # via -r requirements/base.in
-certifi==2024.7.4
+certifi==2024.8.30
     # via
     #   requests
     #   sentry-sdk
@@ -69,7 +69,7 @@ glom==23.5.0
     # via -r requirements/base.in
 gunicorn==23.0.0
     # via -r requirements/base.in
-idna==3.7
+idna==3.8
     # via requests
 itsdangerous==2.2.0
     # via flask
@@ -130,7 +130,7 @@ sentry-sdk[flask]==2.13.0
     # via -r requirements/base.in
 six==1.16.0
     # via python-dateutil
-types-python-dateutil==2.9.0.20240316
+types-python-dateutil==2.9.0.20240821
     # via arrow
 typing-extensions==4.12.2
     # via jira
@@ -151,5 +151,5 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-werkzeug==3.0.3
+werkzeug==3.0.4
     # via flask
