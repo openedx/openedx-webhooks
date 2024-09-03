@@ -39,7 +39,7 @@ cachetools==5.5.0
     # via -r requirements/base.in
 celery==5.4.0
     # via -r requirements/base.in
-certifi==2024.7.4
+certifi==2024.8.30
     # via
     #   requests
     #   sentry-sdk
@@ -88,7 +88,7 @@ docutils==0.21.2
     # via
     #   readme-renderer
     #   sphinx
-edx-lint==5.3.7
+edx-lint==5.4.0
     # via -r requirements/dev.in
 face==20.1.1
     # via glom
@@ -108,7 +108,7 @@ glom==23.5.0
     # via -r requirements/base.in
 gunicorn==23.0.0
     # via -r requirements/base.in
-idna==3.7
+idna==3.8
     # via requests
 imagesize==1.4.1
     # via sphinx
@@ -143,7 +143,7 @@ mccabe==0.7.0
     # via pylint
 mdurl==0.1.2
     # via markdown-it-py
-mypy==1.11.1
+mypy==1.11.2
     # via -r requirements/dev.in
 mypy-extensions==1.0.0
     # via mypy
@@ -160,7 +160,7 @@ packaging==24.1
     #   jira
     #   pytest
     #   sphinx
-pbr==6.0.0
+pbr==6.1.0
     # via stevedore
 pillow==10.4.0
     # via jira
@@ -182,7 +182,7 @@ pyjwt[crypto]==2.9.0
     # via
     #   github3-py
     #   oauthlib
-pylint==3.2.6
+pylint==3.2.7
     # via
     #   edx-lint
     #   pylint-celery
@@ -301,15 +301,15 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-stevedore==5.2.0
+stevedore==5.3.0
     # via code-annotations
 text-unidecode==1.3
     # via python-slugify
 tomlkit==0.13.2
     # via pylint
-types-cachetools==5.4.0.20240717
+types-cachetools==5.5.0.20240820
     # via -r requirements/dev.in
-types-python-dateutil==2.9.0.20240316
+types-python-dateutil==2.9.0.20240821
     # via arrow
 types-pyyaml==6.0.12.20240808
     # via -r requirements/dev.in
@@ -337,7 +337,7 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-werkzeug==3.0.3
+werkzeug==3.0.4
     # via flask
 wheel==0.44.0
     # via pip-tools
@@ -345,5 +345,5 @@ wheel==0.44.0
 # The following packages are considered to be unsafe in a requirements file:
 pip==24.2
     # via pip-tools
-setuptools==72.2.0
+setuptools==74.0.0
     # via pip-tools
