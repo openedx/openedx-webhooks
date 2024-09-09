@@ -33,7 +33,7 @@ boltons==24.0.0
     # via
     #   face
     #   glom
-build==1.2.1
+build==1.2.2
     # via pip-tools
 cachetools==5.5.0
     # via -r requirements/base.in
@@ -43,7 +43,7 @@ certifi==2024.8.30
     # via
     #   requests
     #   sentry-sdk
-cffi==1.17.0
+cffi==1.17.1
     # via cryptography
 charset-normalizer==3.3.2
     # via requests
@@ -75,7 +75,7 @@ code-annotations==1.8.0
     # via edx-lint
 coverage[toml]==7.6.1
     # via pytest-cov
-cryptography==43.0.0
+cryptography==43.0.1
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -166,7 +166,7 @@ pillow==10.4.0
     # via jira
 pip-tools==7.4.1
     # via -r requirements/dev.in
-platformdirs==4.2.2
+platformdirs==4.3.2
     # via pylint
 pluggy==1.5.0
     # via pytest
@@ -265,7 +265,7 @@ requests-toolbelt==1.0.0
     # via jira
 rq==1.16.2
     # via rq-dashboard
-rq-dashboard==0.7.1.2
+rq-dashboard==0.8.0.2
     # via -r requirements/dev.in
 schema==0.7.7
     # via repo-tools-data-schema
@@ -309,11 +309,11 @@ tomlkit==0.13.2
     # via pylint
 types-cachetools==5.5.0.20240820
     # via -r requirements/dev.in
-types-python-dateutil==2.9.0.20240821
+types-python-dateutil==2.9.0.20240906
     # via arrow
 types-pyyaml==6.0.12.20240808
     # via -r requirements/dev.in
-types-requests==2.32.0.20240712
+types-requests==2.32.0.20240907
     # via -r requirements/dev.in
 typing-extensions==4.12.2
     # via
@@ -345,5 +345,5 @@ wheel==0.44.0
 # The following packages are considered to be unsafe in a requirements file:
 pip==24.2
     # via pip-tools
-setuptools==74.0.0
+setuptools==74.1.2
     # via pip-tools
