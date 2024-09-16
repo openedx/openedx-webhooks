@@ -81,7 +81,7 @@ glom==23.5.0
     # via -r requirements/base.in
 gunicorn==23.0.0
     # via -r requirements/base.in
-idna==3.8
+idna==3.10
     # via requests
 imagesize==1.4.1
     # via sphinx
@@ -95,7 +95,7 @@ jinja2==3.1.4
     #   sphinx
 jira==3.8.0
     # via -r requirements/base.in
-kombu==5.4.0
+kombu==5.4.1
     # via celery
 logging-tree==1.10
     # via -r requirements/base.in
@@ -132,7 +132,7 @@ pyjwt[crypto]==2.9.0
     # via
     #   github3-py
     #   oauthlib
-pytest==8.3.2
+pytest==8.3.3
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -150,7 +150,7 @@ python-dateutil==2.9.0.post0
     #   celery
     #   freezegun
     #   github3-py
-pytz==2024.1
+pytz==2024.2
     # via -r requirements/test.in
 pyyaml==6.0.2
     # via
@@ -181,7 +181,7 @@ requests-toolbelt==1.0.0
     # via jira
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.13.0
+sentry-sdk[flask]==2.14.0
     # via -r requirements/base.in
 six==1.16.0
     # via
@@ -218,7 +218,7 @@ tzdata==2024.1
     # via celery
 uritemplate==4.1.1
     # via github3-py
-urllib3==2.2.2
+urllib3==2.2.3
     # via
     #   requests
     #   sentry-sdk

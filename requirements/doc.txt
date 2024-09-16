@@ -16,7 +16,7 @@ docutils==0.21.2
     # via
     #   readme-renderer
     #   sphinx
-idna==3.8
+idna==3.10
     # via requests
 imagesize==1.4.1
     # via sphinx
@@ -61,5 +61,5 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-urllib3==2.2.2
+urllib3==2.2.3
     # via requests
