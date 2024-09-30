@@ -96,7 +96,7 @@ packaging==24.1
     #   jira
 pillow==10.4.0
     # via jira
-prompt-toolkit==3.0.47
+prompt-toolkit==3.0.48
     # via click-repl
 pycparser==2.22
     # via cffi
@@ -111,7 +111,7 @@ python-dateutil==2.9.0.post0
     #   github3-py
 pyyaml==6.0.2
     # via -r requirements/base.in
-redis==5.0.8
+redis==5.1.0
     # via -r requirements/base.in
 requests==2.32.3
     # via
@@ -134,7 +134,7 @@ types-python-dateutil==2.9.0.20240906
     # via arrow
 typing-extensions==4.12.2
     # via jira
-tzdata==2024.1
+tzdata==2024.2
     # via
     #   celery
     #   kombu
