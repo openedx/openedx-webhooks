@@ -31,7 +31,7 @@ certifi==2024.8.30
     #   sentry-sdk
 cffi==1.17.1
     # via cryptography
-charset-normalizer==3.3.2
+charset-normalizer==3.4.0
     # via requests
 click==8.1.7
     # via
@@ -81,7 +81,7 @@ kombu==5.4.2
     # via celery
 logging-tree==1.10
     # via -r requirements/base.in
-markupsafe==2.1.5
+markupsafe==3.0.1
     # via
     #   jinja2
     #   sentry-sdk
@@ -111,7 +111,7 @@ python-dateutil==2.9.0.post0
     #   github3-py
 pyyaml==6.0.2
     # via -r requirements/base.in
-redis==5.1.0
+redis==5.1.1
     # via -r requirements/base.in
 requests==2.32.3
     # via
@@ -126,11 +126,11 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.14.0
+sentry-sdk[flask]==2.16.0
     # via -r requirements/base.in
 six==1.16.0
     # via python-dateutil
-types-python-dateutil==2.9.0.20240906
+types-python-dateutil==2.9.0.20241003
     # via arrow
 typing-extensions==4.12.2
     # via jira
