@@ -35,7 +35,7 @@ certifi==2024.8.30
     #   sentry-sdk
 cffi==1.17.1
     # via cryptography
-charset-normalizer==3.3.2
+charset-normalizer==3.4.0
     # via requests
 click==8.1.7
     # via
@@ -51,9 +51,9 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-coverage[toml]==7.6.1
+coverage[toml]==7.6.4
     # via pytest-cov
-cryptography==43.0.1
+cryptography==43.0.3
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -64,6 +64,7 @@ docutils==0.21.2
     # via
     #   readme-renderer
     #   sphinx
+    #   sphinx-rtd-theme
 face==20.1.1
     # via glom
 flask==3.0.3
@@ -99,7 +100,7 @@ kombu==5.4.2
     # via celery
 logging-tree==1.10
     # via -r requirements/base.in
-markupsafe==2.1.5
+markupsafe==3.0.2
     # via
     #   jinja2
     #   sentry-sdk
@@ -116,7 +117,7 @@ packaging==24.1
     #   jira
     #   pytest
     #   sphinx
-pillow==10.4.0
+pillow==11.0.0
     # via jira
 pluggy==1.5.0
     # via pytest
@@ -158,7 +159,7 @@ pyyaml==6.0.2
     #   repo-tools-data-schema
 readme-renderer==44.0
     # via -r requirements/doc.in
-redis==5.1.0
+redis==5.1.1
     # via -r requirements/base.in
 repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.git
     # via -r requirements/test.in
@@ -181,7 +182,7 @@ requests-toolbelt==1.0.0
     # via jira
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.14.0
+sentry-sdk[flask]==2.17.0
     # via -r requirements/base.in
 six==1.16.0
     # via
@@ -189,12 +190,13 @@ six==1.16.0
     #   sphinxcontrib-httpdomain
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==8.0.2
+sphinx==8.1.3
     # via
     #   -r requirements/doc.in
     #   sphinx-rtd-theme
     #   sphinxcontrib-httpdomain
-sphinx-rtd-theme==0.5.1
+    #   sphinxcontrib-jquery
+sphinx-rtd-theme==3.0.1
     # via -r requirements/doc.in
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
@@ -204,13 +206,15 @@ sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-httpdomain==1.8.1
     # via -r requirements/doc.in
+sphinxcontrib-jquery==4.1
+    # via sphinx-rtd-theme
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
 sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-types-python-dateutil==2.9.0.20240906
+types-python-dateutil==2.9.0.20241003
     # via arrow
 typing-extensions==4.12.2
     # via jira
