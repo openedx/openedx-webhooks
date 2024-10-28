@@ -111,7 +111,7 @@ python-dateutil==2.9.0.post0
     #   github3-py
 pyyaml==6.0.2
     # via -r requirements/base.in
-redis==5.1.1
+redis==5.2.0
     # via -r requirements/base.in
 requests==2.32.3
     # via
@@ -153,5 +153,5 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-werkzeug==3.0.4
+werkzeug==3.0.6
     # via flask
