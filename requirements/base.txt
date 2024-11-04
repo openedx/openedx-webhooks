@@ -126,7 +126,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.17.0
+sentry-sdk[flask]==2.18.0
     # via -r requirements/base.in
 six==1.16.0
     # via python-dateutil
