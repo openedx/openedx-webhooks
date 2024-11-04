@@ -17,7 +17,7 @@ blinker==1.8.2
     #   -r requirements/base.in
     #   flask
     #   sentry-sdk
-boltons==24.0.0
+boltons==24.1.0
     # via
     #   face
     #   glom
@@ -54,7 +54,7 @@ cryptography==43.0.3
     #   pyjwt
 defusedxml==0.7.1
     # via jira
-face==20.1.1
+face==24.0.0
     # via glom
 flask==3.0.3
     # via
@@ -65,7 +65,7 @@ flask-sslify==0.1.5
     # via -r requirements/base.in
 github3-py==4.0.1
     # via -r requirements/base.in
-glom==23.5.0
+glom==24.11.0
     # via -r requirements/base.in
 gunicorn==23.0.0
     # via -r requirements/base.in
@@ -111,7 +111,7 @@ python-dateutil==2.9.0.post0
     #   github3-py
 pyyaml==6.0.2
     # via -r requirements/base.in
-redis==5.1.1
+redis==5.2.0
     # via -r requirements/base.in
 requests==2.32.3
     # via
@@ -126,7 +126,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.17.0
+sentry-sdk[flask]==2.18.0
     # via -r requirements/base.in
 six==1.16.0
     # via python-dateutil
@@ -153,5 +153,5 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-werkzeug==3.0.4
+werkzeug==3.1.1
     # via flask
