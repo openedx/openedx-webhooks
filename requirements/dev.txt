@@ -9,9 +9,7 @@ alabaster==1.0.0
 amqp==5.2.0
     # via kombu
 arrow==1.3.0
-    # via
-    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
-    #   rq-dashboard
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 astroid==3.3.5
     # via
     #   pylint
@@ -59,7 +57,6 @@ click==8.1.7
     #   edx-lint
     #   flask
     #   pip-tools
-    #   rq
     #   scriv
 click-didyoumean==0.3.1
     # via celery
@@ -97,7 +94,6 @@ flask==3.0.3
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   flask-sslify
-    #   rq-dashboard
     #   sentry-sdk
 flask-sslify==0.1.5
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
@@ -237,13 +233,7 @@ pyyaml==6.0.2
 readme-renderer==44.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/doc.in
 redis==5.2.0
-    # via
-    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
-    #   redis-sentinel-url
-    #   rq
-    #   rq-dashboard
-redis-sentinel-url==1.0.1
-    # via rq-dashboard
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.git
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/test.in
 requests==2.32.3
@@ -264,15 +254,11 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-rq==2.0.0
-    # via rq-dashboard
-rq-dashboard==0.8.2.2
-    # via -r requirements/dev.in
 schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.5.1
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.17.0
+sentry-sdk[flask]==2.18.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 six==1.16.0
     # via
