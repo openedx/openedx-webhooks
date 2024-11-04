@@ -10,7 +10,7 @@ amqp==5.2.0
     # via kombu
 arrow==1.3.0
     # via
-    #   -r requirements/base.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   rq-dashboard
 astroid==3.3.5
     # via
@@ -26,19 +26,19 @@ billiard==4.2.1
     # via celery
 blinker==1.8.2
     # via
-    #   -r requirements/base.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   flask
     #   sentry-sdk
-boltons==24.0.0
+boltons==24.1.0
     # via
     #   face
     #   glom
 build==1.2.2.post1
     # via pip-tools
 cachetools==5.5.0
-    # via -r requirements/base.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 celery==5.4.0
-    # via -r requirements/base.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 certifi==2024.8.30
     # via
     #   requests
@@ -49,7 +49,7 @@ charset-normalizer==3.4.0
     # via requests
 click==8.1.7
     # via
-    #   -r requirements/base.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   celery
     #   click-didyoumean
     #   click-log
@@ -77,7 +77,7 @@ coverage[toml]==7.6.4
     # via pytest-cov
 cryptography==43.0.3
     # via
-    #   -r requirements/base.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   oauthlib
     #   pyjwt
 defusedxml==0.7.1
@@ -89,26 +89,26 @@ docutils==0.21.2
     #   readme-renderer
     #   sphinx
     #   sphinx-rtd-theme
-edx-lint==5.4.0
+edx-lint==5.4.1
     # via -r requirements/dev.in
-face==20.1.1
+face==24.0.0
     # via glom
 flask==3.0.3
     # via
-    #   -r requirements/base.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   flask-sslify
     #   rq-dashboard
     #   sentry-sdk
 flask-sslify==0.1.5
-    # via -r requirements/base.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 freezegun==1.5.1
-    # via -r requirements/test.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/test.in
 github3-py==4.0.1
-    # via -r requirements/base.in
-glom==23.5.0
-    # via -r requirements/base.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
+glom==24.11.0
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 gunicorn==23.0.0
-    # via -r requirements/base.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 idna==3.10
     # via requests
 imagesize==1.4.1
@@ -128,11 +128,11 @@ jinja2==3.1.4
     #   scriv
     #   sphinx
 jira==3.8.0
-    # via -r requirements/base.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 kombu==5.4.2
     # via celery
 logging-tree==1.10
-    # via -r requirements/base.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 markdown-it-py==3.0.0
     # via scriv
 markupsafe==3.0.2
@@ -144,7 +144,7 @@ mccabe==0.7.0
     # via pylint
 mdurl==0.1.2
     # via markdown-it-py
-mypy==1.12.1
+mypy==1.13.0
     # via -r requirements/dev.in
 mypy-extensions==1.0.0
     # via mypy
@@ -152,7 +152,7 @@ nh3==0.2.18
     # via readme-renderer
 oauthlib[signedtoken]==3.2.2
     # via
-    #   -r requirements/base.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   requests-oauthlib
 packaging==24.1
     # via
@@ -206,17 +206,17 @@ pyproject-hooks==1.2.0
     #   pip-tools
 pytest==8.2.0
     # via
-    #   -r requirements/test.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/test.in
     #   pylint-pytest
     #   pytest-cov
     #   pytest-mock
     #   pytest-repeat
-pytest-cov==5.0.0
-    # via -r requirements/test.in
+pytest-cov==6.0.0
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/test.in
 pytest-mock==3.14.0
-    # via -r requirements/test.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/test.in
 pytest-repeat==0.9.3
-    # via -r requirements/test.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/test.in
 python-dateutil==2.9.0.post0
     # via
     #   arrow
@@ -228,27 +228,27 @@ python-dotenv==1.0.1
 python-slugify==8.0.4
     # via code-annotations
 pytz==2024.2
-    # via -r requirements/test.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/test.in
 pyyaml==6.0.2
     # via
-    #   -r requirements/base.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   code-annotations
     #   repo-tools-data-schema
 readme-renderer==44.0
-    # via -r requirements/doc.in
-redis==5.1.1
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/doc.in
+redis==5.2.0
     # via
-    #   -r requirements/base.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   redis-sentinel-url
     #   rq
     #   rq-dashboard
 redis-sentinel-url==1.0.1
     # via rq-dashboard
 repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.git
-    # via -r requirements/test.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/test.in
 requests==2.32.3
     # via
-    #   -r requirements/base.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   github3-py
     #   jira
     #   requests-mock
@@ -257,23 +257,23 @@ requests==2.32.3
     #   scriv
     #   sphinx
 requests-mock==1.12.1
-    # via -r requirements/test.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/test.in
 requests-oauthlib==2.0.0
     # via
-    #   -r requirements/base.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-rq==1.16.2
+rq==2.0.0
     # via rq-dashboard
-rq-dashboard==0.8.0.2
+rq-dashboard==0.8.2.2
     # via -r requirements/dev.in
 schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.5.1
     # via -r requirements/dev.in
 sentry-sdk[flask]==2.17.0
-    # via -r requirements/base.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 six==1.16.0
     # via
     #   edx-lint
@@ -283,12 +283,12 @@ snowballstemmer==2.2.0
     # via sphinx
 sphinx==8.1.3
     # via
-    #   -r requirements/doc.in
+    #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/doc.in
     #   sphinx-rtd-theme
     #   sphinxcontrib-httpdomain
     #   sphinxcontrib-jquery
 sphinx-rtd-theme==3.0.1
-    # via -r requirements/doc.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/doc.in
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
 sphinxcontrib-devhelp==2.0.0
@@ -296,7 +296,7 @@ sphinxcontrib-devhelp==2.0.0
 sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-httpdomain==1.8.1
-    # via -r requirements/doc.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/doc.in
 sphinxcontrib-jquery==4.1
     # via sphinx-rtd-theme
 sphinxcontrib-jsmath==1.0.1
@@ -335,7 +335,7 @@ urllib3==2.2.3
     #   sentry-sdk
     #   types-requests
 urlobject==2.4.3
-    # via -r requirements/base.in
+    # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 vine==5.1.0
     # via
     #   amqp
@@ -343,13 +343,15 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-werkzeug==3.0.4
+werkzeug==3.1.1
     # via flask
 wheel==0.44.0
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==24.2
-    # via pip-tools
-setuptools==75.2.0
+    # via
+    #   -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
+    #   pip-tools
+setuptools==75.3.0
     # via pip-tools
