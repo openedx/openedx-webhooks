@@ -22,7 +22,7 @@ babel==2.16.0
     # via sphinx
 billiard==4.2.1
     # via celery
-blinker==1.8.2
+blinker==1.9.0
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   flask
@@ -150,7 +150,7 @@ oauthlib[signedtoken]==3.2.2
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   requests-oauthlib
-packaging==24.1
+packaging==24.2
     # via
     #   build
     #   gunicorn
@@ -329,9 +329,9 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-werkzeug==3.1.1
+werkzeug==3.1.3
     # via flask
-wheel==0.44.0
+wheel==0.45.0
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
