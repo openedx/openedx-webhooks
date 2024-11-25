@@ -6,7 +6,7 @@
 #
 alabaster==1.0.0
     # via sphinx
-amqp==5.2.0
+amqp==5.3.1
     # via kombu
 arrow==1.3.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
@@ -68,9 +68,9 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-code-annotations==1.8.0
+code-annotations==1.8.2
     # via edx-lint
-coverage[toml]==7.6.4
+coverage[toml]==7.6.8
     # via pytest-cov
 cryptography==43.0.3
     # via
@@ -90,7 +90,7 @@ edx-lint==5.4.1
     # via -r requirements/dev.in
 face==24.0.0
     # via glom
-flask==3.0.3
+flask==3.1.0
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   flask-sslify
@@ -175,7 +175,7 @@ pygments==2.18.0
     # via
     #   readme-renderer
     #   sphinx
-pyjwt[crypto]==2.9.0
+pyjwt[crypto]==2.10.0
     # via
     #   github3-py
     #   oauthlib
@@ -258,7 +258,7 @@ schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.5.1
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.18.0
+sentry-sdk[flask]==2.19.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 six==1.16.0
     # via
@@ -273,7 +273,7 @@ sphinx==8.1.3
     #   sphinx-rtd-theme
     #   sphinxcontrib-httpdomain
     #   sphinxcontrib-jquery
-sphinx-rtd-theme==3.0.1
+sphinx-rtd-theme==3.0.2
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/doc.in
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
@@ -291,7 +291,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-stevedore==5.3.0
+stevedore==5.4.0
     # via code-annotations
 text-unidecode==1.3
     # via python-slugify
@@ -331,7 +331,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 werkzeug==3.1.3
     # via flask
-wheel==0.45.0
+wheel==0.45.1
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
@@ -339,5 +339,5 @@ pip==24.2
     # via
     #   -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   pip-tools
-setuptools==75.3.0
+setuptools==75.6.0
     # via pip-tools
