@@ -53,7 +53,7 @@ click-repl==0.3.0
     # via celery
 coverage[toml]==7.6.8
     # via pytest-cov
-cryptography==43.0.3
+cryptography==44.0.0
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   oauthlib
@@ -105,7 +105,7 @@ markupsafe==3.0.2
     #   jinja2
     #   sentry-sdk
     #   werkzeug
-nh3==0.2.18
+nh3==0.2.19
     # via readme-renderer
 oauthlib[signedtoken]==3.2.2
     # via
@@ -129,11 +129,11 @@ pygments==2.18.0
     # via
     #   readme-renderer
     #   sphinx
-pyjwt[crypto]==2.10.0
+pyjwt[crypto]==2.10.1
     # via
     #   github3-py
     #   oauthlib
-pytest==8.3.3
+pytest==8.3.4
     # via
     #   -r requirements/test.in
     #   pytest-cov
