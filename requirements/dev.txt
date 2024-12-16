@@ -37,7 +37,7 @@ cachetools==5.5.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 celery==5.4.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
-certifi==2024.8.30
+certifi==2024.12.14
     # via
     #   requests
     #   sentry-sdk
@@ -68,7 +68,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-code-annotations==2.0.0
+code-annotations==2.1.0
     # via edx-lint
 coverage[toml]==7.6.9
     # via pytest-cov
