@@ -25,7 +25,7 @@ cachetools==5.5.0
     # via -r requirements/base.in
 celery==5.4.0
     # via -r requirements/base.in
-certifi==2024.8.30
+certifi==2024.12.14
     # via
     #   requests
     #   sentry-sdk
