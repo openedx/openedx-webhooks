@@ -491,4 +491,36 @@ class FakeGitHub(faker.Faker):
     def _graphql_AddProjectItem(self, projectId: str, prNodeId: str) -> Dict:
         self.project_items[projectId].add(prNodeId)
         self.project_items[prNodeId].add(projectId)
-        return {"data": "saul goodman"}
+        return {
+            'data': {
+                'addProjectV2ItemById': {
+                    'item': {'id': 'saul goodman'}
+                }
+            }
+        }
+
+    def _graphql_UpdateProjectItem(self, projectId: str, itemId: str, fieldId: str, value) -> dict:
+        self.project_items[projectId].add(itemId)
+        self.project_items[fieldId].add(value)
+        return {'data': {}}
+
+    def _graphql_OrgProjectMetadata(self, orgname: str, number: int) -> dict:
+        proj_id = f"PROJECT:{orgname}.{number}"
+        self.project_nodes[proj_id] = (orgname, number)
+        self.projects[(orgname, number)] = proj_id
+        return {
+            "data": {
+                "organization": {
+                    "projectV2": {
+                        "id": proj_id,
+                        "fields": {
+                            "nodes": [
+                                {"name": "Name", "id": "name-id", "dataType": "text"},
+                                {"name": "Date opened", "id": "date-opened-id", "dataType": "date"},
+                                {"name": "Repo Owner / Owning Team", "id": "repo-owner-id", "dataType": "text"},
+                            ]
+                        }
+                    }
+                }
+            }
+        }

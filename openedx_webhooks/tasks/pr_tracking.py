@@ -39,12 +39,15 @@ from openedx_webhooks.cla_check import (
 from openedx_webhooks.gh_projects import (
     add_pull_request_to_project,
     pull_request_projects,
+    update_project_pr_custom_field,
 )
 from openedx_webhooks.info import (
     NoJiraMapping,
     NoJiraServer,
     get_blended_project_id,
     get_bot_comments,
+    get_github_user_info,
+    get_repo_spec,
     is_bot_pull_request,
     is_draft_pull_request,
     is_internal_pull_request,
@@ -402,9 +405,39 @@ class PrTrackingFixer:
         self._fix_comments()
 
         # Check the GitHub projects.
+        self._fix_projects()
+
+    def _fix_projects(self) -> None:
+        """
+        Update projects for pr.
+        """
         for project in (self.desired.github_projects - self.current.github_projects):
-            self.actions.add_pull_request_to_project(
+            project_item_id = self.actions.add_pull_request_to_project(
                 pr_node_id=self.pr["node_id"], project=project
+            )
+            if not project_item_id:
+                continue
+            self.actions.update_project_pr_custom_field(
+                field_name="Date opened",
+                field_value=self.pr["created_at"],
+                item_id=project_item_id,
+                project=project
+            )
+            # get base repo owner info
+            repo_spec = get_repo_spec(self.pr["base"]["repo"]["full_name"])
+            owner = repo_spec.owner
+            if not owner:
+                continue
+            # get user info if owner is an individual
+            if repo_spec.is_owner_individual:
+                owner_info = get_github_user_info(owner)
+                if owner_info:
+                    owner = f"{owner_info['name']} (@{owner})"
+            self.actions.update_project_pr_custom_field(
+                field_name="Repo Owner / Owning Team",
+                field_value=owner,
+                item_id=project_item_id,
+                project=project
             )
 
     def _make_jira_issue(self, jira_nick) -> None:
@@ -659,14 +692,24 @@ class FixingActions:
         resp = get_github_session().patch(url, json={"labels": labels})
         log_check_response(resp)
 
-    def add_pull_request_to_project(self, *, pr_node_id: str, project: GhProject) -> None:
+    def add_pull_request_to_project(self, *, pr_node_id: str, project: GhProject) -> str | None:
         """
         Add a pull request to a project.
         """
         try:
-            add_pull_request_to_project(self.prid, pr_node_id, project)
-        except Exception as exc:    # pylint: disable=broad-exception-caught
-            logger.exception(f"Couldn't add PR to project: {exc}")
+            return add_pull_request_to_project(self.prid, pr_node_id, project)
+        except Exception:    # pylint: disable=broad-exception-caught
+            logger.exception("Couldn't add PR to project")
+        return None
+
+    def update_project_pr_custom_field(self, *, field_name: str, field_value, item_id: str, project: GhProject) -> None:
+        """
+        Add a pull request to a project.
+        """
+        try:
+            update_project_pr_custom_field(field_name, field_value, item_id, project)
+        except Exception:    # pylint: disable=broad-exception-caught
+            logger.exception(f"Couldn't update: {field_name} for a PR in project")
 
     def set_cla_status(self, *, status: Dict[str, str]) -> None:
         set_cla_status_on_pr(self.prid.full_name, self.prid.number, status)
