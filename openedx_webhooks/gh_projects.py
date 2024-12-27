@@ -37,6 +37,7 @@ query ProjectsForPr (
 }
 """
 
+
 def pull_request_projects(pr: PrDict) -> Set[GhProject]:
     """Return the projects this PR is in.
 
@@ -90,6 +91,7 @@ mutation AddProjectItem (
 }
 """
 
+
 def add_pull_request_to_project(prid: PrId, pr_node_id: str, project: GhProject) -> None:
     """Add a pull request to a project.
 
@@ -104,3 +106,73 @@ def add_pull_request_to_project(prid: PrId, pr_node_id: str, project: GhProject)
     # Add the pull request.
     variables = {"projectId": proj_id, "prNodeId": pr_node_id}
     data = graphql_query(query=ADD_PROJECT_ITEM, variables=variables)
+
+
+ORG_PROJECT_METADATA = """\
+query ($orgname: String!, $number: Int!) {
+  organization(login: $orgname) {
+    projectV2(number: $number) {
+      id
+      fields(first: 100) {
+        nodes {
+          ... on ProjectV2FieldCommon {
+            id
+            name
+            dataType
+          }
+          ... on ProjectV2SingleSelectField {
+            options {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+UPDATE_PROJECT_ITEM = """\
+mutation UpdateProjectItem (
+  $projectId: ID!
+  $itemId: ID!
+  $fieldId: ID!
+  $value: {fieldType}
+) {
+  updateProjectV2ItemFieldValue (input: {projectId: $projectId, contentId: $prNodeId}) {
+    item {
+      id
+    }
+  }
+}
+"""
+
+
+def update_project_custom_field(field_name: str, field_value, itemId: str, project: GhProject) -> None:
+    """Add a pull request to a project.
+
+    The project is a tuple: (orgname, number)
+    """
+    logger.info(f"Updating project {project} field {field_name} to {field_value}")
+    # Find the project metadata.
+    variables = {"orgname": project[0], "number": project[1]}
+    data = graphql_query(query=ORG_PROJECT_METADATA, variables=variables)
+    data = glom(data, {"id": "organization.projectV2.id", "fields": "organization.projectV2.fields.nodes"})
+
+    target_field = None
+    for field in data["fields"]:
+        if field["name"] == field_name:
+            target_field = field
+            break
+    else:
+        logger.error(f"Could not find field with name: {field_name} in project: {project}")
+        return
+
+    # Update field value
+    variables = {"projectId": data["id"], "fieldId": target_field["id"], "itemId": "< rowId >"}
+    data = graphql_query(query=UPDATE_PROJECT_ITEM, variables=variables)
+
+
+if __name__ == '__main__':
+    update_project_custom_field('Date opened', '1', ('openedx', 19))
