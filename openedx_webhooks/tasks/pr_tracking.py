@@ -39,6 +39,7 @@ from openedx_webhooks.cla_check import (
 from openedx_webhooks.gh_projects import (
     add_pull_request_to_project,
     pull_request_projects,
+    update_project_pr_custom_field,
 )
 from openedx_webhooks.info import (
     NoJiraMapping,
@@ -403,9 +404,22 @@ class PrTrackingFixer:
 
         # Check the GitHub projects.
         for project in (self.desired.github_projects - self.current.github_projects):
-            self.actions.add_pull_request_to_project(
+            project_item_id = self.actions.add_pull_request_to_project(
                 pr_node_id=self.pr["node_id"], project=project
             )
+            if project_item_id:
+                self.actions.update_project_pr_custom_field(
+                    field_name="Date opened",
+                    field_value=self.pr["created_at"],
+                    item_id=project_item_id,
+                    project=project
+                )
+                self.actions.update_project_pr_custom_field(
+                    field_name="Date opened",
+                    field_value=self.pr["created_at"],
+                    item_id=project_item_id,
+                    project=project
+                )
 
     def _make_jira_issue(self, jira_nick) -> None:
         """
@@ -659,14 +673,24 @@ class FixingActions:
         resp = get_github_session().patch(url, json={"labels": labels})
         log_check_response(resp)
 
-    def add_pull_request_to_project(self, *, pr_node_id: str, project: GhProject) -> None:
+    def add_pull_request_to_project(self, *, pr_node_id: str, project: GhProject) -> str | None:
         """
         Add a pull request to a project.
         """
         try:
-            add_pull_request_to_project(self.prid, pr_node_id, project)
+            return add_pull_request_to_project(self.prid, pr_node_id, project)
         except Exception as exc:    # pylint: disable=broad-exception-caught
             logger.exception(f"Couldn't add PR to project: {exc}")
+        return None
+
+    def update_project_pr_custom_field(self, *, field_name: str, field_value, item_id: str, project: GhProject) -> None:
+        """
+        Add a pull request to a project.
+        """
+        try:
+            update_project_pr_custom_field(field_name, field_value, item_id, project)
+        except Exception as exc:    # pylint: disable=broad-exception-caught
+            logger.exception(f"Couldn't update: {field_name} for a PR in project: {exc}")
 
     def set_cla_status(self, *, status: Dict[str, str]) -> None:
         set_cla_status_on_pr(self.prid.full_name, self.prid.number, status)
