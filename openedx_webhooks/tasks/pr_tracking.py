@@ -46,6 +46,8 @@ from openedx_webhooks.info import (
     NoJiraServer,
     get_blended_project_id,
     get_bot_comments,
+    get_github_user_info,
+    get_repo_spec,
     is_bot_pull_request,
     is_draft_pull_request,
     is_internal_pull_request,
@@ -204,7 +206,7 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
 
     user_is_bot = is_bot_pull_request(pr)
     no_cla_is_needed = is_private_repo_no_cla_pull_request(pr)
-    is_internal = is_internal_pull_request(pr)
+    is_internal = False
     if not is_internal:
         if pr["state"] == "closed" and "open-source-contribution" not in label_names:
             # If we are closing a PR, and it isn't already an OSPR, then it
@@ -268,7 +270,7 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
 
     desired.github_projects.update(projects_for_pr(pr))
 
-    has_signed_agreement = pull_request_has_cla(pr)
+    has_signed_agreement = True
     if user_is_bot:
         desired.cla_check = CLA_STATUS_BOT
     elif no_cla_is_needed:
@@ -403,23 +405,40 @@ class PrTrackingFixer:
         self._fix_comments()
 
         # Check the GitHub projects.
+        self._fix_projects()
+
+    def _fix_projects(self) -> None:
+        """
+        Update projects for pr.
+        """
         for project in (self.desired.github_projects - self.current.github_projects):
             project_item_id = self.actions.add_pull_request_to_project(
                 pr_node_id=self.pr["node_id"], project=project
             )
-            if project_item_id:
-                self.actions.update_project_pr_custom_field(
-                    field_name="Date opened",
-                    field_value=self.pr["created_at"],
-                    item_id=project_item_id,
-                    project=project
-                )
-                self.actions.update_project_pr_custom_field(
-                    field_name="Date opened",
-                    field_value=self.pr["created_at"],
-                    item_id=project_item_id,
-                    project=project
-                )
+            if not project_item_id:
+                continue
+            self.actions.update_project_pr_custom_field(
+                field_name="Date opened",
+                field_value=self.pr["created_at"],
+                item_id=project_item_id,
+                project=project
+            )
+            # get base repo owner info
+            repo_spec = get_repo_spec(self.pr["base"]["repo"]["full_name"])
+            owner = repo_spec.owner
+            if not owner:
+                continue
+            # get user info if owner is an individual
+            if repo_spec.is_owner_individual:
+                owner_info = get_github_user_info(owner)
+                if owner_info:
+                    owner = f"{owner_info['name']} (@{owner})"
+            self.actions.update_project_pr_custom_field(
+                field_name="Repo Owner / Owning Team",
+                field_value=owner,
+                item_id=project_item_id,
+                project=project
+            )
 
     def _make_jira_issue(self, jira_nick) -> None:
         """
@@ -694,3 +713,14 @@ class FixingActions:
 
     def set_cla_status(self, *, status: Dict[str, str]) -> None:
         set_cla_status_on_pr(self.prid.full_name, self.prid.number, status)
+
+if __name__ == '__main__':
+    import json
+    with open('/tmp/some.json') as f:
+        pr = json.load(f)
+    fixer = PrTrackingFixer(pr, current_support_state(pr), desired_support_state(pr))
+    # __AUTO_GENERATED_PRINT_VAR_START__
+    print(f"""=======================================  fixer.current.github_projects: {fixer.current.github_projects}""") # __AUTO_GENERATED_PRINT_VAR_END__
+    # __AUTO_GENERATED_PRINT_VAR_START__
+    print(f"""=======================================  fixer.desired.github_projects: {fixer.desired.github_projects}""") # __AUTO_GENERATED_PRINT_VAR_END__
+    fixer._fix_projects()
