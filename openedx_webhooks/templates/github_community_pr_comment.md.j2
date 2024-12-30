@@ -1,18 +1,32 @@
 Thanks for the pull request, @{{ user }}!
 
-### What's next?
+{% if owner %}
+This repository is currently maintained by @{{ owner }}.
+{% else %}
+{% if lifecycle == 'production' %}
+This repository has no maintainer (yet).
+{% else %}
+This repository is currently unmaintained.
+{% endif %}
+<details><summary><h4>:radio_button: Find a technical reviewer</h4></summary>
+To get help with finding a technical reviewer, tag the community contributions project manager for this PR in a comment and let them know that your changes are ready for review:
 
-*Please work through the following steps to get your changes ready for engineering review:*
+1. On the right-hand side of the PR, find the Contributions project, click the caret in the top right corner to expand it, and check the "Primary PM" field for the name of your PM.
+2. Find their GitHub handle [here](https://openedx.atlassian.net/wiki/spaces/COMM/pages/3548807177/Community+Contributions+Project+Manager#Current-OSPR-Project-Managers).
+</details>
+{%  endif %}
 
-#### :radio_button: Get product approval
+Once you've gone through the following steps feel free to tag them in a comment and let them know that your changes are ready for engineering review.
+
+<details><summary><h4>:radio_button: Get product approval</h4></summary>
 
 If you haven't already, [check this list](https://openedx.atlassian.net/wiki/spaces/COMM/pages/3875962884/How+to+submit+an+open+source+contribution+for+Product+Review#Does-my-contribution-require-Product-Review%3F) to see if your contribution needs to go through the product review process.
 
 - If it does, you'll need to submit a product proposal for your contribution, and have it reviewed by the [Product Working Group](https://openedx.atlassian.net/wiki/spaces/COMM/pages/3449028609/Product+Working+Group).
     - This process (including the steps you'll need to take) is documented [here](https://openedx.atlassian.net/wiki/spaces/COMM/pages/3875962884/How+to+submit+an+open+source+contribution+for+Product+Review#Product-Review-Process).
 - If it doesn't, simply proceed with the next step.
-
-#### :radio_button: Provide context
+</details><details>
+<summary><h4>:radio_button: Provide context</h4></summary>
 
 To help your reviewers and other members of the community understand the purpose and larger context of your changes, feel free to add as much of the following information to the PR description as you can:
 
@@ -26,9 +40,9 @@ To help your reviewers and other members of the community understand the purpose
   > This is for a course on edx.org.
 - Supporting documentation
 - Relevant [Open edX discussion forum](https://discuss.openedx.org/) threads
-
+</details><details>
 {% if not has_signed_agreement %}
-#### :radio_button: Submit a signed contributor agreement (CLA)
+<summary><h4>:radio_button: Submit a signed contributor agreement (CLA)</h4></summary>
 
 :warning: We ask all contributors to the Open edX project to submit a [signed contributor agreement](https://openedx.org/cla) or indicate their institutional affiliation.
 Please see the [CONTRIBUTING](https://github.com/openedx/.github/blob/master/CONTRIBUTING.md) file for more information.
@@ -39,58 +53,43 @@ See [The New Home of the Open edX Codebase](https://open.edx.org/blog/the-new-ho
 Once you've signed the CLA, please allow 1 business day for it to be processed.
 After this time, you can re-run the CLA check by adding a comment below that you have signed it.
 If the CLA check continues to fail, you can tag the `@openedx/cla-problems` team in a comment for further assistance.
-
+</details><details>
 <!-- comment:no_cla -->
 {% endif %}
 
 {% if is_first_time %}
-#### :radio_button: Wait for tests to be enabled
+<summary><h4>:radio_button: Wait for tests to be enabled</h4></summary>
 
 It looks like you are contributing to this repository for the first time.
 This means that automated tests won't run automatically, and that you'll need to wait for a test run to be authorized.
 
 If you're experiencing a delay of two weeks or more at this step, tag the [community contributions project managers](https://openedx.atlassian.net/wiki/spaces/COMM/pages/3548807177/Community+Contributions+Project+Manager#Current-OSPR-Project-Managers) in a comment and ask for help.
+</details><details>
 {% endif %}
 
-#### :radio_button: Get a green build
+<summary><h4>:radio_button: Get a green build</h4></summary>
 
 If one or more checks are failing, continue working on your changes until this is no longer the case and your build turns green.
-
+</details><details>
 {% if is_draft %}
-#### :radio_button: Update the status of your PR
+<summary><h4>:radio_button: Update the status of your PR</h4></summary>
 
 Your PR is currently marked as a draft.  After completing the steps above, update its status by clicking "Ready for Review", or removing "WIP" from the title, as appropriate.
-
+</details><details>
 <!-- comment:end_of_wip -->
 {% endif %}
 
-#### :radio_button: Let us know that your PR is ready for review:
+---
 
-### Who will review my changes?
-
-{% if owner %}
-This repository is currently maintained by `@{{ owner }}`.  Tag them in a comment and let them know that your changes are ready for review.
-{% else %}
-{% if lifecycle == 'production' %}
-This repository has no maintainer (yet).
-{% else %}
-This repository is currently unmaintained.
-{% endif %}
-To get help with finding a technical reviewer, tag the community contributions project manager for this PR in a comment and let them know that your changes are ready for review:
-
-1. On the right-hand side of the PR, find the Contributions project, click the caret in the top right corner to expand it, and check the "Primary PM" field for the name of your PM.
-2. Find their GitHub handle [here](https://openedx.atlassian.net/wiki/spaces/COMM/pages/3548807177/Community+Contributions+Project+Manager#Current-OSPR-Project-Managers).
-{%  endif %}
-
-### Where can I find more information?
+<summary><h3>Where can I find more information? </h3></summary>
 
 If you'd like to get more details on all aspects of the review process for open source pull requests (OSPRs), check out the following resources:
 
 - [Overview of Review Process for Community Contributions](https://docs.openedx.org/en/latest/developers/references/developer_guide/process/FAQ-about-pull-requests.html)
 - [Pull Request Status Guide](https://docs.openedx.org/en/latest/developers/references/developer_guide/process/pull-request-statuses.html)
 - [Making changes to your pull request](https://docs.openedx.org/en/latest/documentors/how-tos/make_changes_to_your_pull_request.html)
-
-### When can I expect my changes to be merged?
+</details><details>
+<summary><h3>When can I expect my changes to be merged?</h3></summary>
 
 Our goal is to get community contributions seen and reviewed as efficiently as possible.
 
@@ -101,5 +100,5 @@ However, the amount of time that it takes to review and merge a PR can vary sign
 - Maintenance status of the parent repository
 
 :bulb: *As a result it may take up to several weeks or months to complete a review and merge your PR.*
-
+</details>
 <!-- comment:external_pr -->
