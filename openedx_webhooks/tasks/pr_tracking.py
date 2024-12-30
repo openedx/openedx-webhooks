@@ -206,7 +206,7 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
 
     user_is_bot = is_bot_pull_request(pr)
     no_cla_is_needed = is_private_repo_no_cla_pull_request(pr)
-    is_internal = False
+    is_internal = is_internal_pull_request(pr)
     if not is_internal:
         if pr["state"] == "closed" and "open-source-contribution" not in label_names:
             # If we are closing a PR, and it isn't already an OSPR, then it
@@ -270,7 +270,7 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
 
     desired.github_projects.update(projects_for_pr(pr))
 
-    has_signed_agreement = True
+    has_signed_agreement = pull_request_has_cla(pr)
     if user_is_bot:
         desired.cla_check = CLA_STATUS_BOT
     elif no_cla_is_needed:
@@ -713,14 +713,3 @@ class FixingActions:
 
     def set_cla_status(self, *, status: Dict[str, str]) -> None:
         set_cla_status_on_pr(self.prid.full_name, self.prid.number, status)
-
-if __name__ == '__main__':
-    import json
-    with open('/tmp/some.json') as f:
-        pr = json.load(f)
-    fixer = PrTrackingFixer(pr, current_support_state(pr), desired_support_state(pr))
-    # __AUTO_GENERATED_PRINT_VAR_START__
-    print(f"""=======================================  fixer.current.github_projects: {fixer.current.github_projects}""") # __AUTO_GENERATED_PRINT_VAR_END__
-    # __AUTO_GENERATED_PRINT_VAR_START__
-    print(f"""=======================================  fixer.desired.github_projects: {fixer.desired.github_projects}""") # __AUTO_GENERATED_PRINT_VAR_END__
-    fixer._fix_projects()

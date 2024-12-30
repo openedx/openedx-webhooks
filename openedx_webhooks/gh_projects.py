@@ -6,8 +6,6 @@ from typing import Set
 
 from glom import glom
 
-from openedx_webhooks.auth import get_github_session
-from openedx_webhooks.bot_comments import get_repo_spec
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.types import GhPrMetaDict, GhProject, PrDict, PrId
 from openedx_webhooks.utils import graphql_query, memoize_timed, value_graphql_type
@@ -201,17 +199,3 @@ def update_project_pr_custom_field(field_name: str, field_value, item_id: str, p
         query=UPDATE_PROJECT_ITEM.format(fieldType=field_type, fieldTypeName=field_type_name),
         variables=variables
     )
-
-
-if __name__ == '__main__':
-    import json
-    with open('tmp.json') as f:
-        pr = json.load(f)
-    pr_id = PrId.from_pr_dict(pr)
-    # item_id = add_pull_request_to_project(pr_id, pr["node_id"], project=("openedx", 19))
-    item_id = "PVTI_lADOAmUX2M4AB6NgzgV8nRU"
-    # update_project_pr_custom_field('Date opened', pr["created_at"], item_id, ('openedx', 19))
-    spec = get_repo_spec("openedx/Recommenderxblock")
-    owner_info = get_github_session().get(f"/users/{spec.owner}")
-    # __AUTO_GENERATED_PRINT_VAR_START__
-    print(f"""=======================================  owner_info: {owner_info.json()}""") # __AUTO_GENERATED_PRINT_VAR_END__
