@@ -95,7 +95,7 @@ def test_pr_with_owner_repo_opened(get_catalog_info, fake_github, owner, tag, mo
     pr_comments = pr.list_comments()
     assert len(pr_comments) == 1
     body = pr_comments[0].body
-    assert f"This repository is currently maintained by `{tag}`" in body
+    assert f"This repository is currently maintained by {tag}" in body
 
 
 @pytest.mark.parametrize("lifecycle", ["production", "deprecated", None])
