@@ -112,7 +112,7 @@ def add_pull_request_to_project(prid: PrId, pr_node_id: str, project: GhProject)
 
 
 ORG_PROJECT_METADATA = """\
-query ($orgname: String!, $number: Int!) {
+query OrgProjectMetadata ($orgname: String!, $number: Int!) {
   organization(login: $orgname) {
     projectV2(number: $number) {
       id
