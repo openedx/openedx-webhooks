@@ -698,8 +698,8 @@ class FixingActions:
         """
         try:
             return add_pull_request_to_project(self.prid, pr_node_id, project)
-        except Exception as exc:    # pylint: disable=broad-exception-caught
-            logger.exception(f"Couldn't add PR to project: {exc}")
+        except Exception:    # pylint: disable=broad-exception-caught
+            logger.exception("Couldn't add PR to project")
         return None
 
     def update_project_pr_custom_field(self, *, field_name: str, field_value, item_id: str, project: GhProject) -> None:
@@ -708,8 +708,8 @@ class FixingActions:
         """
         try:
             update_project_pr_custom_field(field_name, field_value, item_id, project)
-        except Exception as exc:    # pylint: disable=broad-exception-caught
-            logger.exception(f"Couldn't update: {field_name} for a PR in project: {exc}")
+        except Exception:    # pylint: disable=broad-exception-caught
+            logger.exception(f"Couldn't update: {field_name} for a PR in project")
 
     def set_cla_status(self, *, status: Dict[str, str]) -> None:
         set_cla_status_on_pr(self.prid.full_name, self.prid.number, status)

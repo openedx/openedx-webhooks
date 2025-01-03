@@ -1,5 +1,6 @@
 """Tests of tasks/github.py:pull_request_changed for opening pull requests."""
 
+import logging
 import textwrap
 from datetime import datetime
 from unittest import mock
@@ -503,3 +504,36 @@ def test_pr_project_fields_data(fake_github, mocker, owner):
         assert pr.repo.github.project_items['repo-owner-id'] == {f"{owner_name.title()} (@{owner_name})"}
     else:
         assert pr.repo.github.project_items['repo-owner-id'] == {f"openedx/{owner_name}"}
+
+
+def test_pr_project_fields_invalid_field_name(fake_github, mocker, caplog):
+    # Create user "navin" to fake `get_github_user_info` api.
+    fake_github.make_user(login='navin', name='Navin')
+    mocker.patch(
+        "openedx_webhooks.info.get_catalog_info",
+        lambda _: {
+            'spec': {'owner': "user:navin", 'lifecycle': 'production'}
+        }
+    )
+    # mock project metadata
+    mocker.patch(
+        "openedx_webhooks.gh_projects.get_project_metadata",
+        lambda _: {
+            "id": "some-project-id",
+            "fields": [
+                {"name": "Name", "id": "name-id", "dataType": "text"},
+            ]
+        }
+    )
+    created_at = datetime(2024, 12, 1)
+    pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform", created_at=created_at)
+    pull_request_changed(pr.as_json())
+    assert pr.repo.github.project_items['date-opened-id'] == set()
+    assert pr.repo.github.project_items['repo-owner-id'] == set()
+    error_logs = [log for log in caplog.records if log.levelno == logging.ERROR]
+    expected_msgs = (
+        f"Could not find field with name: Date opened in project: {settings.GITHUB_OSPR_PROJECT}",
+        f"Could not find field with name: Repo Owner / Owning Team in project: {settings.GITHUB_OSPR_PROJECT}"
+    )
+    assert error_logs[0].msg == expected_msgs[0]
+    assert error_logs[1].msg == expected_msgs[1]
