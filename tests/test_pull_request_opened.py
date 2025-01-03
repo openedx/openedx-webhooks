@@ -486,7 +486,8 @@ def test_bad_jira_labelling_no_repo_map(fake_github, fake_jira2, mocker):
 
 @pytest.mark.parametrize("owner", ["user:navin", "group:auth-group"])
 def test_pr_project_fields_data(fake_github, mocker, owner):
-    mocker.patch("openedx_webhooks.tasks.pr_tracking.get_github_user_info", lambda x: {"name": x.title()})
+    # Create user "navin" to fake `get_github_user_info` api.
+    fake_github.make_user(login='navin', name='Navin')
     mocker.patch(
         "openedx_webhooks.info.get_catalog_info",
         lambda _: {
