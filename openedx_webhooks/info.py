@@ -1,11 +1,12 @@
 """
 Get information about people, repos, orgs, pull requests, etc.
 """
+from collections import namedtuple
 import csv
 import fnmatch
 import logging
 import re
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Literal, Optional
 
 import yaml
 from glom import glom
@@ -301,10 +302,44 @@ def get_bot_comments(prid: PrId) -> Iterable[PrCommentDict]:
             yield comment
 
 
+@memoize_timed(minutes=15)
 def get_catalog_info(repo_fullname: str) -> Dict:
     """Get the parsed catalog-info.yaml data from a repo, or {} if missing."""
     yml = read_github_file(repo_fullname, "catalog-info.yaml", not_there="{}")
     return yaml.safe_load(yml)
+
+
+@memoize_timed(minutes=60)
+def get_github_user_info(username: str) -> Dict | None:
+    """Get github user information"""
+    resp = get_github_session().get(f"/users/{username}")
+    if resp.ok:
+        return resp.json()
+    logger.error(f"Could not find user information for user: {username} on github")
+    return None
+
+
+Lifecycle = Literal["experimental", "production", "deprecated"]
+RepoSpec: (str | None, Lifecycle | None, bool) = namedtuple('RepoSpec', ['owner', 'lifecycle', 'is_owner_individual'])
+
+
+def get_repo_spec(repo_full_name: str) -> RepoSpec:
+    """
+    Get the owner of the repo from its catalog-info.yaml file.
+    """
+    catalog_info = get_catalog_info(repo_full_name)
+    if not catalog_info:
+        return RepoSpec(None, None, False)
+    owner = catalog_info["spec"].get("owner", "")
+    owner_type = None
+    is_owner_individual = False
+    if ":" in owner:
+        owner_type, owner = owner.split(":")
+    if owner_type == "group":
+        owner = f"openedx/{owner}"
+    elif owner_type == "user":
+        is_owner_individual = True
+    return RepoSpec(owner, catalog_info["spec"]["lifecycle"], is_owner_individual)
 
 
 def projects_for_pr(pull_request: PrDict) -> Iterable[GhProject]:

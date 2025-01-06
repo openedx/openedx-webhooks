@@ -15,3 +15,4 @@ htmlcov
 openedx_webhooks.egg-info/
 requirements/private.in
 requirements/private.txt
+.mise.toml

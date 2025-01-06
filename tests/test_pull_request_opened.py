@@ -1,6 +1,8 @@
 """Tests of tasks/github.py:pull_request_changed for opening pull requests."""
 
+import logging
 import textwrap
+from datetime import datetime
 from unittest import mock
 
 import pytest
@@ -20,6 +22,7 @@ from openedx_webhooks.cla_check import (
 )
 from openedx_webhooks.gh_projects import pull_request_projects
 from openedx_webhooks.tasks.github import pull_request_changed
+
 from .helpers import check_issue_link_in_markdown
 
 # These tests should run when we want to test flaky GitHub behavior.
@@ -80,8 +83,9 @@ def test_pr_in_nocontrib_repo_opened(fake_github, user):
     ("user:feanil", "@feanil"),
     ("feanil", "@feanil"),
 ])
-@mock.patch("openedx_webhooks.bot_comments.get_catalog_info")
-def test_pr_with_owner_repo_opened(get_catalog_info, fake_github, owner, tag):
+@mock.patch("openedx_webhooks.info.get_catalog_info")
+def test_pr_with_owner_repo_opened(get_catalog_info, fake_github, owner, tag, mocker):
+    mocker.patch("openedx_webhooks.tasks.pr_tracking.get_github_user_info", lambda x: {"name": x})
     get_catalog_info.return_value = {
         'spec': {'owner': owner, 'lifecycle': 'production'}
     }
@@ -93,8 +97,9 @@ def test_pr_with_owner_repo_opened(get_catalog_info, fake_github, owner, tag):
     body = pr_comments[0].body
     assert f"This repository is currently maintained by `{tag}`" in body
 
+
 @pytest.mark.parametrize("lifecycle", ["production", "deprecated", None])
-@mock.patch("openedx_webhooks.bot_comments.get_catalog_info")
+@mock.patch("openedx_webhooks.info.get_catalog_info")
 def test_pr_without_owner_repo_opened(get_catalog_info, fake_github, lifecycle):
     get_catalog_info.return_value = {
         'spec': {'lifecycle': lifecycle}
@@ -106,9 +111,9 @@ def test_pr_without_owner_repo_opened(get_catalog_info, fake_github, lifecycle):
     assert len(pr_comments) == 1
     body = pr_comments[0].body
     if lifecycle == "production":
-        assert f"This repository has no maintainer (yet)." in body
+        assert "This repository has no maintainer (yet)." in body
     else:
-        assert f"This repository is currently unmaintained." in body
+        assert "This repository is currently unmaintained." in body
 
 
 def test_pr_opened_by_bot(fake_github):
@@ -418,6 +423,7 @@ def test_jira_labelling_later(fake_github, fake_jira, fake_jira_another):
     jira_issue = fake_jira_another.issues[jira_id.key]
     assert jira_issue.summary == "Yet another PR"
 
+
 def test_bad_jira_labelling_no_server(fake_github):
     # What if the jira: label doesn't match one of our configured servers?
     pr = fake_github.make_pull_request("openedx", user="nedbat", title="Ned's PR")
@@ -432,6 +438,7 @@ def test_bad_jira_labelling_no_server(fake_github):
     # Processing the PR again won't add another comment.
     pull_request_changed(pr.as_json())
     assert len(pr.list_comments()) == 1
+
 
 def test_bad_jira_labelling_no_repo_map(fake_github, fake_jira2, mocker):
     # What if the jira: label is good, but the repo has no mapping to a project?
@@ -476,3 +483,57 @@ def test_bad_jira_labelling_no_repo_map(fake_github, fake_jira2, mocker):
     body = pr_comments[0].body
     jira_id = result.changed_jira_issues.pop()
     check_issue_link_in_markdown(body, jira_id)
+
+
+@pytest.mark.parametrize("owner", ["user:navin", "group:auth-group"])
+def test_pr_project_fields_data(fake_github, mocker, owner):
+    # Create user "navin" to fake `get_github_user_info` api.
+    fake_github.make_user(login='navin', name='Navin')
+    mocker.patch(
+        "openedx_webhooks.info.get_catalog_info",
+        lambda _: {
+            'spec': {'owner': owner, 'lifecycle': 'production'}
+        }
+    )
+    created_at = datetime(2024, 12, 1)
+    pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform", created_at=created_at)
+    pull_request_changed(pr.as_json())
+    assert pr.repo.github.project_items['date-opened-id'] == {created_at.isoformat() + 'Z'}
+    owner_type, owner_name = owner.split(":")
+    if owner_type == "user":
+        assert pr.repo.github.project_items['repo-owner-id'] == {f"{owner_name.title()} (@{owner_name})"}
+    else:
+        assert pr.repo.github.project_items['repo-owner-id'] == {f"openedx/{owner_name}"}
+
+
+def test_pr_project_fields_invalid_field_name(fake_github, mocker, caplog):
+    # Create user "navin" to fake `get_github_user_info` api.
+    fake_github.make_user(login='navin', name='Navin')
+    mocker.patch(
+        "openedx_webhooks.info.get_catalog_info",
+        lambda _: {
+            'spec': {'owner': "user:navin", 'lifecycle': 'production'}
+        }
+    )
+    # mock project metadata
+    mocker.patch(
+        "openedx_webhooks.gh_projects.get_project_metadata",
+        lambda _: {
+            "id": "some-project-id",
+            "fields": [
+                {"name": "Name", "id": "name-id", "dataType": "text"},
+            ]
+        }
+    )
+    created_at = datetime(2024, 12, 1)
+    pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform", created_at=created_at)
+    pull_request_changed(pr.as_json())
+    assert pr.repo.github.project_items['date-opened-id'] == set()
+    assert pr.repo.github.project_items['repo-owner-id'] == set()
+    error_logs = [log for log in caplog.records if log.levelno == logging.ERROR]
+    expected_msgs = (
+        f"Could not find field with name: Date opened in project: {settings.GITHUB_OSPR_PROJECT}",
+        f"Could not find field with name: Repo Owner / Owning Team in project: {settings.GITHUB_OSPR_PROJECT}"
+    )
+    assert error_logs[0].msg == expected_msgs[0]
+    assert error_logs[1].msg == expected_msgs[1]

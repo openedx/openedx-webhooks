@@ -17,6 +17,9 @@ JiraDict = Dict
 # A GitHub project: org name, and number.
 GhProject = Tuple[str, int]
 
+# A GitHub project metadata json object.
+GhPrMetaDict = Dict
+
 
 @dataclasses.dataclass(frozen=True)
 class PrId:

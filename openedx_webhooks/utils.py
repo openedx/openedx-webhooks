@@ -228,6 +228,15 @@ def jira_paginated_get(url, session=None,
             more_results = True  # just keep going until there are no more results.
 
 
+def value_graphql_type(field_type: str) -> str:
+    if field_type == "date":
+        return "Date"
+    elif field_type == "number":
+        return "Float"
+    else:
+        return "String"
+
+
 def graphql_query(query: str, variables: Dict = {}) -> Dict:    # pylint: disable=dangerous-default-value
     """
     Make a GraphQL query against GitHub.
