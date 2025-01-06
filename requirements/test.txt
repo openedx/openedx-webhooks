@@ -10,7 +10,7 @@ amqp==5.3.1
     # via kombu
 arrow==1.3.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
-attrs==24.2.0
+attrs==24.3.0
     # via glom
 babel==2.16.0
     # via sphinx
@@ -35,9 +35,9 @@ certifi==2024.12.14
     #   sentry-sdk
 cffi==1.17.1
     # via cryptography
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via requests
-click==8.1.7
+click==8.1.8
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   celery
@@ -51,7 +51,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-coverage[toml]==7.6.9
+coverage[toml]==7.6.10
     # via pytest-cov
 cryptography==44.0.0
     # via
@@ -90,7 +90,7 @@ iniconfig==2.0.0
     # via pytest
 itsdangerous==2.2.0
     # via flask
-jinja2==3.1.4
+jinja2==3.1.5
     # via
     #   flask
     #   sphinx
@@ -105,7 +105,7 @@ markupsafe==3.0.2
     #   jinja2
     #   sentry-sdk
     #   werkzeug
-nh3==0.2.19
+nh3==0.2.20
     # via readme-renderer
 oauthlib[signedtoken]==3.2.2
     # via
@@ -117,7 +117,7 @@ packaging==24.2
     #   jira
     #   pytest
     #   sphinx
-pillow==11.0.0
+pillow==11.1.0
     # via jira
 pluggy==1.5.0
     # via pytest
@@ -125,7 +125,7 @@ prompt-toolkit==3.0.48
     # via click-repl
 pycparser==2.22
     # via cffi
-pygments==2.18.0
+pygments==2.19.0
     # via
     #   readme-renderer
     #   sphinx
@@ -224,7 +224,7 @@ tzdata==2024.2
     #   kombu
 uritemplate==4.1.1
     # via github3-py
-urllib3==2.2.3
+urllib3==2.3.0
     # via
     #   requests
     #   sentry-sdk
