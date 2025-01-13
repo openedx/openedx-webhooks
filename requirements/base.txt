@@ -140,8 +140,9 @@ tzdata==2024.2
     #   kombu
 uritemplate==4.1.1
     # via github3-py
-urllib3==2.3.0
+urllib3==2.2.3
     # via
+    #   -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   requests
     #   sentry-sdk
 urlobject==2.4.3
