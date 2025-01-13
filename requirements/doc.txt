@@ -29,7 +29,7 @@ nh3==0.2.20
     # via readme-renderer
 packaging==24.2
     # via sphinx
-pygments==2.19.0
+pygments==2.19.1
     # via
     #   readme-renderer
     #   sphinx
@@ -65,5 +65,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-urllib3==2.3.0
-    # via requests
+urllib3==2.2.3
+    # via
+    #   -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
+    #   requests
