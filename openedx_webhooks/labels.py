@@ -14,3 +14,24 @@ GITHUB_CATEGORY_LABELS = {
     "blended",
     "open-source-contribution",
 }
+
+GITHUB_MERGED_PR_OBSOLETE_LABELS = {
+    "blocked by other work",
+    "changes requested",
+    "inactive",
+    "needs maintainer attention",
+    "needs more product information",
+    "needs rescoping",
+    "needs reviewer assigned",
+    "needs test run",
+    "waiting for eng review",
+    "waiting on author",
+}
+
+GITHUB_CLOSED_PR_OBSOLETE_LABELS = {
+    "needs maintainer attention",
+    "needs reviewer assigned",
+    "needs test run",
+    "waiting for eng review",
+    "waiting on author",
+}

@@ -59,6 +59,8 @@ from openedx_webhooks.info import (
 )
 from openedx_webhooks.labels import (
     GITHUB_CATEGORY_LABELS,
+    GITHUB_CLOSED_PR_OBSOLETE_LABELS,
+    GITHUB_MERGED_PR_OBSOLETE_LABELS,
     GITHUB_STATUS_LABELS,
 )
 from openedx_webhooks import settings
@@ -477,6 +479,10 @@ class PrTrackingFixer:
         """
         desired_labels = set(self.desired.github_labels)
         ad_hoc_labels = self.current.github_labels - GITHUB_CATEGORY_LABELS - GITHUB_STATUS_LABELS
+        if self.pr["state"] == "closed":
+            ad_hoc_labels -= GITHUB_CLOSED_PR_OBSOLETE_LABELS
+        elif self.pr["state"] == "merged":
+            ad_hoc_labels -= GITHUB_MERGED_PR_OBSOLETE_LABELS
         desired_labels.update(ad_hoc_labels)
 
         if desired_labels != self.current.github_labels:
