@@ -70,6 +70,7 @@ from openedx_webhooks.tasks.jira_work import (
 )
 from openedx_webhooks.types import GhProject, JiraId, PrDict, PrId
 from openedx_webhooks.utils import (
+    get_pr_state,
     log_check_response,
     sentry_extra_context,
     text_summary,
@@ -227,15 +228,7 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
     else:
         desired.is_ospr = True
 
-    if pr.get("hook_action") == "reopened":
-        state = "reopened"
-    elif pr["state"] == "open":
-        state = "open"
-    elif pr["merged"]:
-        state = "merged"
-    else:
-        state = "closed"
-
+    state = get_pr_state(pr)
     # A label of jira:xyz means we want a Jira issue in the xyz Jira.
     desired.jira_nicks = {name.partition(":")[-1] for name in label_names if name.startswith("jira:")}
 
@@ -479,9 +472,10 @@ class PrTrackingFixer:
         """
         desired_labels = set(self.desired.github_labels)
         ad_hoc_labels = self.current.github_labels - GITHUB_CATEGORY_LABELS - GITHUB_STATUS_LABELS
-        if self.pr["state"] == "closed":
+        state = get_pr_state(self.pr)
+        if state == "closed":
             ad_hoc_labels -= GITHUB_CLOSED_PR_OBSOLETE_LABELS
-        elif self.pr["state"] == "merged":
+        elif state == "merged":
             ad_hoc_labels -= GITHUB_MERGED_PR_OBSOLETE_LABELS
         desired_labels.update(ad_hoc_labels)
 
