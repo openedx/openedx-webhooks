@@ -19,7 +19,7 @@ from urlobject import URLObject
 
 from openedx_webhooks import logger
 from openedx_webhooks.auth import get_github_session, get_jira_session
-from openedx_webhooks.types import JiraDict
+from openedx_webhooks.types import JiraDict, PrDict
 
 
 def environ_get(name: str, default=None) -> str:
@@ -345,3 +345,18 @@ def jira_get(jira_nick, *args, **kwargs):
         if resp.content:
             return resp
     return get_jira_session(jira_nick).get(*args, **kwargs)
+
+
+def get_pr_state(pr: PrDict):
+    """
+    Get gthub pull request state.
+    """
+    if pr.get("hook_action") == "reopened":
+        state = "reopened"
+    elif pr["state"] == "open":
+        state = "open"
+    elif pr["merged"]:
+        state = "merged"
+    else:
+        state = "closed"
+    return state

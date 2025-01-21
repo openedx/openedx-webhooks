@@ -385,6 +385,7 @@ class FakeGitHub(faker.Faker):
         patch = request.json()
         if "labels" in patch:
             pr.set_labels(patch["labels"])
+        r.pull_requests[pr.number] = pr
         return pr.as_json()
 
     # Commmits

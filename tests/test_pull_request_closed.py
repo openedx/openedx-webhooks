@@ -122,3 +122,20 @@ def test_pr_closed_after_employee_leaves(org, is_merged, fake_github, mocker):
     assert pr.status(CLA_CONTEXT) == CLA_STATUS_GOOD
     assert pr.labels == set()
     assert pull_request_projects(pr.as_json()) == set()
+
+
+def test_pr_closed_labels(fake_github, is_merged):
+    """
+    Test whether obsolete labels are removed on closing merge requests
+    """
+    pr = fake_github.make_pull_request(
+        user="newuser",
+        owner="openedx",
+        repo="edx-platform",
+        body=None,
+    )
+    pr.set_labels({"open-source-contribution", "waiting on author", "needs test run", "custom label 1"})
+
+    pr.close(merge=is_merged)
+    pull_request_changed(pr.as_json())
+    assert pr.labels == {"open-source-contribution", "custom label 1"}
