@@ -14,7 +14,7 @@ astroid==3.3.8
     # via
     #   pylint
     #   pylint-celery
-attrs==24.3.0
+attrs==25.1.0
     # via
     #   glom
     #   scriv
@@ -33,7 +33,7 @@ boltons==24.1.0
     #   glom
 build==1.2.2.post1
     # via pip-tools
-cachetools==5.5.0
+cachetools==5.5.1
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 celery==5.4.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
@@ -86,7 +86,7 @@ docutils==0.21.2
     #   readme-renderer
     #   sphinx
     #   sphinx-rtd-theme
-edx-lint==5.4.1
+edx-lint==5.6.0
     # via -r requirements/dev.in
 face==24.0.0
     # via glom
@@ -167,7 +167,7 @@ platformdirs==4.3.6
     # via pylint
 pluggy==1.5.0
     # via pytest
-prompt-toolkit==3.0.48
+prompt-toolkit==3.0.50
     # via click-repl
 pycparser==2.22
     # via cffi
@@ -309,7 +309,7 @@ typing-extensions==4.12.2
     # via
     #   jira
     #   mypy
-tzdata==2024.2
+tzdata==2025.1
     # via
     #   celery
     #   kombu
