@@ -109,7 +109,7 @@ def get_people_file():
     # Simple assurance that the data is what we expect.
     assert people_data_csv.fieldnames == [
         "First Name", "Last Name", "Number of Active Ind. CLA Contracts",
-        "Title", "Account Name", "Number of Active Entity CLA Contracts", "GitHub Username",
+        "Title", "Account Name", "Number of Active Entity CLA Contracts", "GitHub Username","Is Core Contributor"
     ]
 
     people = {}
