@@ -27,7 +27,7 @@ blinker==1.9.0
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   flask
     #   sentry-sdk
-boltons==24.1.0
+boltons==25.0.0
     # via
     #   face
     #   glom
@@ -70,7 +70,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==2.2.0
     # via edx-lint
-coverage[toml]==7.6.10
+coverage[toml]==7.6.11
     # via pytest-cov
 cryptography==44.0.0
     # via
@@ -140,7 +140,7 @@ mccabe==0.7.0
     # via pylint
 mdurl==0.1.2
     # via markdown-it-py
-mypy==1.14.1
+mypy==1.15.0
     # via -r requirements/dev.in
 mypy-extensions==1.0.0
     # via mypy
@@ -157,7 +157,7 @@ packaging==24.2
     #   jira
     #   pytest
     #   sphinx
-pbr==6.1.0
+pbr==6.1.1
     # via stevedore
 pillow==11.1.0
     # via jira
@@ -341,4 +341,6 @@ pip==24.2
     #   -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   pip-tools
 setuptools==75.8.0
-    # via pip-tools
+    # via
+    #   pbr
+    #   pip-tools

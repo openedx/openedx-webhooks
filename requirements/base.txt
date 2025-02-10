@@ -17,7 +17,7 @@ blinker==1.9.0
     #   -r requirements/base.in
     #   flask
     #   sentry-sdk
-boltons==24.1.0
+boltons==25.0.0
     # via
     #   face
     #   glom
