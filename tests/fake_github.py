@@ -461,7 +461,7 @@ class FakeGitHub(faker.Faker):
         for node_id in project_node_ids:
             org, num = self.project_nodes[node_id]
             nodes.append(
-                {"project": {"owner": {"login": org}, "number": num}}
+                {"project": {"owner": {"login": org}, "number": num}, "id": node_id}
             )
         return {
             "data": {
