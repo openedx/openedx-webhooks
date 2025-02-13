@@ -7,7 +7,7 @@ from typing import Set
 from glom import glom
 
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.types import GhPrMetaDict, GhProject, PrDict, PrId
+from openedx_webhooks.types import GhPrMetaDict, GhProject, PrDict, PrGhProject, PrId
 from openedx_webhooks.utils import graphql_query, memoize_timed, value_graphql_type
 
 # The name of the query is used by FakeGitHub while testing.
@@ -39,12 +39,10 @@ query ProjectsForPr (
 """
 
 
-def pull_request_projects(pr: PrDict) -> Set[GhProject]:
-    """Return the projects this PR is in.
+def pull_request_projects_info(pr: PrDict) -> list[PrGhProject]:
+    """Return the projects info this PR is in.
 
-    The projects are expressed as sets of tuples with owning org and number:
-    {("openedx", 19)}
-
+    example: [{"id": "some-id", "org": "login_id", "number": "1"}]
     """
     variables = glom(pr, {
         "owner": "base.repo.owner.login",
@@ -58,11 +56,20 @@ def pull_request_projects(pr: PrDict) -> Set[GhProject]:
         (
             "repository.pullRequest.projectItems.nodes",
             [
-                {"org": "project.owner.login", "number": "project.number"}
+                {"id": "id", "org": "project.owner.login", "number": "project.number"}
             ]
         )
     )
-    # I can't figure out how to get glom to make a tuple directly...
+    return projects
+
+
+def pull_request_projects(pr: PrDict, projects: list[PrGhProject] | None = None) -> Set[GhProject]:
+    """
+    Helper method for expressing projects info as sets of tuples with owning org and number:
+    {("openedx", 19)}
+    """
+    if projects is None:
+        projects = pull_request_projects_info(pr)
     return {(p["org"], p["number"]) for p in projects}
 
 
