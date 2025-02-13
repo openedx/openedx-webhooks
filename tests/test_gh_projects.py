@@ -3,6 +3,7 @@
 from openedx_webhooks.gh_projects import (
     add_pull_request_to_project,
     pull_request_projects,
+    pull_request_projects_info,
 )
 from openedx_webhooks.types import PrId
 
@@ -16,7 +17,9 @@ def test_adding_pr_to_project(fake_github):
     assert not pr.is_in_project(("myorg", 23))
 
     add_pull_request_to_project(prid, pr.node_id, ("myorg", 23))
-    projects = set(pull_request_projects(prj))
+    project_info = pull_request_projects_info(prj)
+    assert project_info == [{'id': 'PROJECT:myorg.23', 'org': 'myorg', 'number': 23}]
+    projects = set(pull_request_projects(prj, project_info))
     assert projects == {("myorg", 23)}
     assert pr.is_in_project(("myorg", 23))
     assert not pr.is_in_project(("anotherorg", 27))

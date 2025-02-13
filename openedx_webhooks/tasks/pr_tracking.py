@@ -11,6 +11,7 @@ import itertools
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, cast
 
+from openedx_webhooks import settings
 from openedx_webhooks.auth import get_github_session, get_jira_session
 from openedx_webhooks.bot_comments import (
     BOT_COMMENT_INDICATORS,
@@ -39,6 +40,7 @@ from openedx_webhooks.cla_check import (
 from openedx_webhooks.gh_projects import (
     add_pull_request_to_project,
     pull_request_projects,
+    pull_request_projects_info,
     update_project_pr_custom_field,
 )
 from openedx_webhooks.info import (
@@ -63,12 +65,11 @@ from openedx_webhooks.labels import (
     GITHUB_MERGED_PR_OBSOLETE_LABELS,
     GITHUB_STATUS_LABELS,
 )
-from openedx_webhooks import settings
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.jira_work import (
     update_jira_issue,
 )
-from openedx_webhooks.types import GhProject, JiraId, PrDict, PrId
+from openedx_webhooks.types import GhProject, JiraId, PrDict, PrGhProject, PrId
 from openedx_webhooks.utils import (
     get_pr_state,
     log_check_response,
@@ -124,6 +125,9 @@ class PrCurrentInfo:
 
     # The GitHub projects the PR is in.
     github_projects: Set[GhProject] = field(default_factory=set)
+
+    # The GitHub projects the PR is in.
+    github_projects_info: list[PrGhProject] = field(default_factory=list)
 
     # The status of the cla check.
     cla_check: Optional[Dict[str, str]] = None
@@ -190,7 +194,8 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
         current.bot_data.update(extract_data_from_comment(body))
 
     current.github_labels = set(lbl["name"] for lbl in pr["labels"])
-    current.github_projects = set(pull_request_projects(pr))
+    current.github_projects_info = pull_request_projects_info(pr)
+    current.github_projects = pull_request_projects(pr, current.github_projects_info)
     current.cla_check = cla_status_on_pr(pr)
 
     return current
@@ -402,6 +407,9 @@ class PrTrackingFixer:
         # Check the GitHub projects.
         self._fix_projects()
 
+        # Update fields in project for this PR
+        self._fix_project_node_fields()
+
     def _fix_projects(self) -> None:
         """
         Update projects for pr.
@@ -410,19 +418,38 @@ class PrTrackingFixer:
             project_item_id = self.actions.add_pull_request_to_project(
                 pr_node_id=self.pr["node_id"], project=project
             )
-            if not project_item_id:
-                continue
+            self.current.github_projects_info.append({
+                "id": project_item_id,
+                "org": project[0],
+                "number": project[1],
+            })
+
+    def _fix_project_node_fields(self) -> None:
+        """
+        Update pr fields in OSPR project board.
+        """
+        for project in self.current.github_projects_info:
+            if (
+                project["org"] == settings.GITHUB_OSPR_PROJECT[0]
+                and project["number"] == settings.GITHUB_OSPR_PROJECT[1]
+            ):
+                project_item_id = project["id"]
+                break
+        else:
+            return
+        state = get_pr_state(self.pr)
+        if state == "open":
             self.actions.update_project_pr_custom_field(
                 field_name="Date opened",
                 field_value=self.pr["created_at"],
                 item_id=project_item_id,
-                project=project
+                project=settings.GITHUB_OSPR_PROJECT
             )
             # get base repo owner info
             repo_spec = get_repo_spec(self.pr["base"]["repo"]["full_name"])
             owner = repo_spec.owner
             if not owner:
-                continue
+                return
             # get user info if owner is an individual
             if repo_spec.is_owner_individual:
                 owner_info = get_github_user_info(owner)
@@ -432,7 +459,21 @@ class PrTrackingFixer:
                 field_name="Repo Owner / Owning Team",
                 field_value=owner,
                 item_id=project_item_id,
-                project=project
+                project=settings.GITHUB_OSPR_PROJECT
+            )
+        elif state == "merged":
+            self.actions.update_project_pr_custom_field(
+                field_name="Date merged/closed",
+                field_value=self.pr["merged_at"],
+                item_id=project_item_id,
+                project=settings.GITHUB_OSPR_PROJECT
+            )
+        elif state == "closed":
+            self.actions.update_project_pr_custom_field(
+                field_name="Date merged/closed",
+                field_value=self.pr["closed_at"],
+                item_id=project_item_id,
+                project=settings.GITHUB_OSPR_PROJECT
             )
 
     def _make_jira_issue(self, jira_nick) -> None:

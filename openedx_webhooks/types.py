@@ -17,6 +17,9 @@ JiraDict = Dict
 # A GitHub project: org name, and number.
 GhProject = Tuple[str, int]
 
+# A GitHub project info: org name, number and pr node id in project.
+PrGhProject = Dict
+
 # A GitHub project metadata json object.
 GhPrMetaDict = Dict
 
