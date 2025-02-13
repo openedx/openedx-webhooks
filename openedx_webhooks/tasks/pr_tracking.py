@@ -434,6 +434,21 @@ class PrTrackingFixer:
                 item_id=project_item_id,
                 project=project
             )
+            state = get_pr_state(self.pr)
+            if state == "merged":
+                self.actions.update_project_pr_custom_field(
+                    field_name="Date merged/closed",
+                    field_value=self.pr["merged_at"],
+                    item_id=project_item_id,
+                    project=project
+                )
+            elif state == "closed":
+                self.actions.update_project_pr_custom_field(
+                    field_name="Date merged/closed",
+                    field_value=self.pr["closed_at"],
+                    item_id=project_item_id,
+                    project=project
+                )
 
     def _make_jira_issue(self, jira_nick) -> None:
         """
