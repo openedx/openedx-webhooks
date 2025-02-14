@@ -111,6 +111,7 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
             "update_labels_on_pull_request",    # ["open-source-contribution"]
             "add_comment_to_pull_request",      # "Thanks for the pull request, @tusbar!"
             "add_pull_request_to_project",
+            "update_project_pr_custom_field",
         ],
         106: [
             "initial_state",
@@ -118,9 +119,11 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
             "update_labels_on_pull_request",    # ["open-source-contribution"]
             "add_comment_to_pull_request",      # "Thanks for the pull request, @tusbar!"
             "add_pull_request_to_project",
+            "update_project_pr_custom_field",
         ],
         108: [
             "initial_state",
+            "update_project_pr_custom_field",
         ],
         110: [
             "initial_state",
