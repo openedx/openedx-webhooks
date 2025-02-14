@@ -415,9 +415,14 @@ class PrTrackingFixer:
         Update projects for pr.
         """
         for project in (self.desired.github_projects - self.current.github_projects):
-            self.actions.add_pull_request_to_project(
+            project_item_id = self.actions.add_pull_request_to_project(
                 pr_node_id=self.pr["node_id"], project=project
             )
+            self.current.github_projects_info.append({
+                "id": project_item_id,
+                "org": project[0],
+                "number": project[1],
+            })
 
     def _fix_project_node_fields(self) -> None:
         """
