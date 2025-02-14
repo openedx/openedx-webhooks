@@ -499,6 +499,7 @@ def test_pr_project_fields_data(fake_github, mocker, owner):
     pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform", created_at=created_at)
     pull_request_changed(pr.as_json())
     assert pr.repo.github.project_items['date-opened-id'] == {created_at.isoformat() + 'Z'}
+    assert pr.repo.github.project_items['date-closed-id'] == set()
     owner_type, owner_name = owner.split(":")
     if owner_type == "user":
         assert pr.repo.github.project_items['repo-owner-id'] == {f"{owner_name.title()} (@{owner_name})"}
