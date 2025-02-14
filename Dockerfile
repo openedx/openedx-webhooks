@@ -5,9 +5,9 @@ RUN apt-get update && apt-get upgrade -qy
 RUN apt-get install -qy \
 	git-core \
 	language-pack-en \
-	python3.11 \
+	python3.12 \
 	python3-pip \
-	python3.11-dev \
+	python3.12-dev \
 	libssl-dev
 RUN pip3 install --upgrade pip setuptools
 
