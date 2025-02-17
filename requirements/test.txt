@@ -51,9 +51,9 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-coverage[toml]==7.6.11
+coverage[toml]==7.6.12
     # via pytest-cov
-cryptography==44.0.0
+cryptography==44.0.1
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   oauthlib
@@ -182,7 +182,7 @@ requests-toolbelt==1.0.0
     # via jira
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.20.0
+sentry-sdk[flask]==2.21.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 six==1.17.0
     # via
