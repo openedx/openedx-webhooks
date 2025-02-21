@@ -118,7 +118,7 @@ def get_people_file():
         first_name = row['First Name']
         last_name = row['Last Name']
         acct_name = row['Account Name']
-        github_username = row['GitHub Username']
+        github_username = row['GitHub Username'].lower()
 
         people[github_username] = {
             "name": f"{first_name} {last_name}"
@@ -240,7 +240,7 @@ def _pr_author_data(pull_request: PrDict) -> Optional[Dict]:
     Returns None if the author had no CLA.
     """
     people = get_people_file()
-    author = pull_request["user"]["login"]
+    author = pull_request["user"]["login"].lower()
     return people.get(author)
 
 
