@@ -177,7 +177,7 @@ See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
 
-2025-02-13
+2025-02-24
 ~~~~~~~~~~
 
 - Add support for Python 3.12
