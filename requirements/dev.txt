@@ -33,7 +33,7 @@ boltons==25.0.0
     #   glom
 build==1.2.2.post1
     # via pip-tools
-cachetools==5.5.1
+cachetools==5.5.2
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 celery==5.4.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
@@ -254,11 +254,13 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
+roman-numerals-py==3.1.0
+    # via sphinx
 schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.5.1
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.21.0
+sentry-sdk[flask]==2.22.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 six==1.17.0
     # via
@@ -267,7 +269,7 @@ six==1.17.0
     #   sphinxcontrib-httpdomain
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==8.1.3
+sphinx==8.2.1
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/doc.in
     #   sphinx-rtd-theme
@@ -291,7 +293,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-stevedore==5.4.0
+stevedore==5.4.1
     # via code-annotations
 text-unidecode==1.3
     # via python-slugify
