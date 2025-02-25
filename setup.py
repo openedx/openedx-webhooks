@@ -47,7 +47,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Framework :: Flask',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
     ),
     zip_safe=False,
