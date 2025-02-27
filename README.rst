@@ -18,7 +18,7 @@ Prerequisites
 
 Make sure you've installed:
 
--  Python 3.10.x development environment
+-  Python 3.12.x development environment
    (virtualenv strongly recommended)
 -  `Heroku Command Line`_
 
@@ -176,6 +176,11 @@ Unreleased
 See the fragment files (if any) in the changelog.d directory.
 
 .. scriv-insert-here
+
+2025-02-24
+~~~~~~~~~~
+
+- Add support for Python 3.12
 
 2023-12-07
 ~~~~~~~~~~
