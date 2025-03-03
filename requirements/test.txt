@@ -25,7 +25,7 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-cachetools==5.5.1
+cachetools==5.5.2
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 celery==5.4.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
@@ -53,7 +53,7 @@ click-repl==0.3.0
     # via celery
 coverage[toml]==7.6.12
     # via pytest-cov
-cryptography==44.0.1
+cryptography==44.0.2
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   oauthlib
@@ -105,7 +105,7 @@ markupsafe==3.0.2
     #   jinja2
     #   sentry-sdk
     #   werkzeug
-nh3==0.2.20
+nh3==0.2.21
     # via readme-renderer
 oauthlib[signedtoken]==3.2.2
     # via
@@ -133,7 +133,7 @@ pyjwt[crypto]==2.10.1
     # via
     #   github3-py
     #   oauthlib
-pytest==8.3.4
+pytest==8.3.5
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -180,9 +180,11 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
+roman-numerals-py==3.1.0
+    # via sphinx
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.21.0
+sentry-sdk[flask]==2.22.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 six==1.17.0
     # via
@@ -190,7 +192,7 @@ six==1.17.0
     #   sphinxcontrib-httpdomain
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==8.1.3
+sphinx==8.2.3
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/doc.in
     #   sphinx-rtd-theme
