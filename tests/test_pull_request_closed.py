@@ -2,16 +2,13 @@
 
 import pytest
 
-from openedx_webhooks.bot_comments import (
-    BotComment,
-)
 from openedx_webhooks.cla_check import (
     CLA_CONTEXT,
     CLA_STATUS_GOOD,
-    CLA_STATUS_NO_CONTRIBUTIONS,
 )
 from openedx_webhooks.gh_projects import pull_request_projects
 from openedx_webhooks.tasks.github import pull_request_changed
+
 from .helpers import check_issue_link_in_markdown, random_text
 
 # These tests should run when we want to test flaky GitHub behavior.
@@ -139,3 +136,11 @@ def test_pr_closed_labels(fake_github, is_merged):
     pr.close(merge=is_merged)
     pull_request_changed(pr.as_json())
     assert pr.labels == {"open-source-contribution", "custom label 1"}
+
+
+def test_pr_closed_date_on_close(closed_pull_request):
+    pr = closed_pull_request
+    pull_request_changed(pr.as_json())
+    assert pr.repo.github.project_items['date-closed-id'] == {
+        pr.closed_at.isoformat(timespec='seconds') + 'Z',
+    }

@@ -113,6 +113,7 @@ class PullRequest:
     node_id: str = field(default_factory=fake_node_id)
     created_at: datetime.datetime = field(default_factory=patchable_now)
     closed_at: Optional[datetime.datetime] = None
+    merged_at: Optional[datetime.datetime] = None
     comments: List[int] = field(default_factory=list)
     labels: Set[str] = field(default_factory=set)
     state: str = "open"
@@ -140,6 +141,7 @@ class PullRequest:
             },
             "created_at": self.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "closed_at": self.closed_at.strftime("%Y-%m-%dT%H:%M:%SZ") if self.closed_at else None,
+            "merged_at": self.merged_at.strftime("%Y-%m-%dT%H:%M:%SZ") if self.merged_at else None,
             "url": f"{self.repo.github.host}/repos/{self.repo.full_name}/pulls/{self.number}",
             "html_url": f"https://github.com/{self.repo.full_name}/pull/{self.number}",
         }
@@ -154,6 +156,7 @@ class PullRequest:
         self.state = "closed"
         self.merged = merge
         self.closed_at = datetime.datetime.now()
+        self.merged_at = datetime.datetime.now()
 
     def reopen(self):
         """
@@ -162,6 +165,7 @@ class PullRequest:
         self.state = "open"
         self.merged = False
         self.closed_at = None
+        self.merged_at = None
 
     def add_comment(self, user="someone", **kwargs) -> Comment:
         comment = self.repo.make_comment(user, **kwargs)
@@ -461,7 +465,7 @@ class FakeGitHub(faker.Faker):
         for node_id in project_node_ids:
             org, num = self.project_nodes[node_id]
             nodes.append(
-                {"project": {"owner": {"login": org}, "number": num}}
+                {"project": {"owner": {"login": org}, "number": num}, "id": node_id}
             )
         return {
             "data": {
@@ -518,6 +522,7 @@ class FakeGitHub(faker.Faker):
                             "nodes": [
                                 {"name": "Name", "id": "name-id", "dataType": "text"},
                                 {"name": "Date opened", "id": "date-opened-id", "dataType": "date"},
+                                {"name": "Date merged/closed", "id": "date-closed-id", "dataType": "date"},
                                 {"name": "Repo Owner / Owning Team", "id": "repo-owner-id", "dataType": "text"},
                             ]
                         }
