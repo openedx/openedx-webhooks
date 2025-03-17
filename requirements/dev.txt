@@ -14,7 +14,7 @@ astroid==3.3.9
     # via
     #   pylint
     #   pylint-celery
-attrs==25.1.0
+attrs==25.3.0
     # via
     #   glom
     #   scriv
@@ -70,7 +70,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==2.2.0
     # via edx-lint
-coverage[toml]==7.6.12
+coverage[toml]==7.7.0
     # via pytest-cov
 cryptography==44.0.2
     # via
@@ -125,7 +125,7 @@ jinja2==3.1.6
     #   sphinx
 jira==3.8.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
-kombu==5.4.2
+kombu==5.5.0
     # via celery
 logging-tree==1.10
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
