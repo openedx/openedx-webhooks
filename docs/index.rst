@@ -6,7 +6,7 @@
 Open edX Webhooks Bot
 =====================
 
-Open edX uses this bot to help manage the `pull request process`_.
+The Open edX community uses this bot to help manage the `pull request process`_.
 
 Contents:
 
@@ -21,4 +21,4 @@ Contents:
    testing
 
 
-.. _pull request process: http://edx.readthedocs.org/projects/edx-developer-guide/en/latest/process/overview.html
+.. _pull request process: https://docs.openedx.org/en/latest/developers/references/developer_guide/process/index.html
