@@ -70,7 +70,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==2.2.0
     # via edx-lint
-coverage[toml]==7.7.0
+coverage[toml]==7.7.1
     # via pytest-cov
 cryptography==44.0.2
     # via
@@ -109,7 +109,7 @@ idna==3.10
     # via requests
 imagesize==1.4.1
     # via sphinx
-iniconfig==2.0.0
+iniconfig==2.1.0
     # via pytest
 isort==6.0.1
     # via
@@ -163,7 +163,7 @@ pillow==11.1.0
     # via jira
 pip-tools==7.4.1
     # via -r requirements/dev.in
-platformdirs==4.3.6
+platformdirs==4.3.7
     # via pylint
 pluggy==1.5.0
     # via pytest
@@ -179,7 +179,7 @@ pyjwt[crypto]==2.10.1
     # via
     #   github3-py
     #   oauthlib
-pylint==3.3.5
+pylint==3.3.6
     # via
     #   edx-lint
     #   pylint-celery
@@ -260,7 +260,7 @@ schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.5.1
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.22.0
+sentry-sdk[flask]==2.24.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 six==1.17.0
     # via
@@ -342,7 +342,7 @@ pip==24.2
     # via
     #   -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   pip-tools
-setuptools==76.0.0
+setuptools==77.0.3
     # via
     #   pbr
     #   pip-tools
