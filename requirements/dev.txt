@@ -35,7 +35,7 @@ build==1.2.2.post1
     # via pip-tools
 cachetools==5.5.2
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
-celery==5.4.0
+celery==5.5.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 certifi==2025.1.31
     # via
@@ -207,7 +207,7 @@ pytest==8.2.0
     #   pytest-cov
     #   pytest-mock
     #   pytest-repeat
-pytest-cov==6.0.0
+pytest-cov==6.1.1
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/test.in
 pytest-mock==3.14.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/test.in
@@ -260,7 +260,7 @@ schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.6.2
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.24.1
+sentry-sdk[flask]==2.25.1
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 six==1.17.0
     # via
@@ -303,18 +303,16 @@ types-cachetools==5.5.0.20240820
     # via -r requirements/dev.in
 types-python-dateutil==2.9.0.20241206
     # via arrow
-types-pyyaml==6.0.12.20250326
+types-pyyaml==6.0.12.20250402
     # via -r requirements/dev.in
 types-requests==2.32.0.20250328
     # via -r requirements/dev.in
-typing-extensions==4.13.0
+typing-extensions==4.13.1
     # via
     #   jira
     #   mypy
 tzdata==2025.2
-    # via
-    #   celery
-    #   kombu
+    # via kombu
 uritemplate==4.1.1
     # via github3-py
 urllib3==2.2.3

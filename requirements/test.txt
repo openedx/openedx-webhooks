@@ -27,7 +27,7 @@ boltons==25.0.0
     #   glom
 cachetools==5.5.2
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
-celery==5.4.0
+celery==5.5.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 certifi==2025.1.31
     # via
@@ -139,7 +139,7 @@ pytest==8.3.5
     #   pytest-cov
     #   pytest-mock
     #   pytest-repeat
-pytest-cov==6.0.0
+pytest-cov==6.1.1
     # via -r requirements/test.in
 pytest-mock==3.14.0
     # via -r requirements/test.in
@@ -184,7 +184,7 @@ roman-numerals-py==3.1.0
     # via sphinx
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.24.1
+sentry-sdk[flask]==2.25.1
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 six==1.17.0
     # via
@@ -218,12 +218,10 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 types-python-dateutil==2.9.0.20241206
     # via arrow
-typing-extensions==4.13.0
+typing-extensions==4.13.1
     # via jira
 tzdata==2025.2
-    # via
-    #   celery
-    #   kombu
+    # via kombu
 uritemplate==4.1.1
     # via github3-py
 urllib3==2.2.3
