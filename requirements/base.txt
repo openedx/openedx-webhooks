@@ -23,7 +23,7 @@ boltons==25.0.0
     #   glom
 cachetools==5.5.2
     # via -r requirements/base.in
-celery==5.5.0
+celery==5.5.1
     # via -r requirements/base.in
 certifi==2025.1.31
     # via
@@ -94,7 +94,7 @@ packaging==24.2
     # via
     #   gunicorn
     #   jira
-pillow==11.1.0
+pillow==11.2.1
     # via jira
 prompt-toolkit==3.0.50
     # via click-repl
@@ -132,7 +132,7 @@ six==1.17.0
     # via python-dateutil
 types-python-dateutil==2.9.0.20241206
     # via arrow
-typing-extensions==4.13.1
+typing-extensions==4.13.2
     # via jira
 tzdata==2025.2
     # via kombu

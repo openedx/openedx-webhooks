@@ -27,7 +27,7 @@ boltons==25.0.0
     #   glom
 cachetools==5.5.2
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
-celery==5.5.0
+celery==5.5.1
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 certifi==2025.1.31
     # via
@@ -117,7 +117,7 @@ packaging==24.2
     #   jira
     #   pytest
     #   sphinx
-pillow==11.1.0
+pillow==11.2.1
     # via jira
 pluggy==1.5.0
     # via pytest
@@ -143,7 +143,7 @@ pytest-cov==6.1.1
     # via -r requirements/test.in
 pytest-mock==3.14.0
     # via -r requirements/test.in
-pytest-repeat==0.9.3
+pytest-repeat==0.9.4
     # via -r requirements/test.in
 python-dateutil==2.9.0.post0
     # via
@@ -218,7 +218,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 types-python-dateutil==2.9.0.20241206
     # via arrow
-typing-extensions==4.13.1
+typing-extensions==4.13.2
     # via jira
 tzdata==2025.2
     # via kombu
