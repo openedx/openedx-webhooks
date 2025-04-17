@@ -341,6 +341,19 @@ def test_add_to_multiple_projects(fake_github):
         settings.GITHUB_OSPR_PROJECT, ("openedx", 23), ("anotherorg", 17),
     }
 
+@pytest.mark.parametrize("username, cc_label", [
+    ("feanil", False),  # CC but not OSPR
+    ("pdpinch", True),  # CC
+    ("jarv", False),    # Not CC
+])
+def test_core_contributor_label(fake_github, username, cc_label):
+    pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user=username, title="fix: XYZ")
+    prj = pr.as_json()
+    result = pull_request_changed(prj)
+    if cc_label:
+        assert "core contributor" in pr.labels
+    else:
+        assert "core contributor" not in pr.labels
 
 def test_crash_label(fake_github):
     pr = fake_github.make_pull_request("openedx", user="nedbat")

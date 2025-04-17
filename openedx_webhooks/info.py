@@ -119,9 +119,11 @@ def get_people_file():
         last_name = row['Last Name']
         acct_name = row['Account Name']
         github_username = row['GitHub Username'].lower()
+        is_cc = row['Is Core Contributor'] == '1'
 
         people[github_username] = {
-            "name": f"{first_name} {last_name}"
+            "name": f"{first_name} {last_name}",
+            "is_core_contributor": is_cc,
         }
 
         if acct_name == "Individual Contributors":
@@ -171,6 +173,15 @@ def get_jira_server_info(jira_nick: str) -> JiraServer:
     except KeyError as exc:
         raise NoJiraServer(f"No Jira server configured with nick {jira_nick!r}") from exc
     return jira_server
+
+def is_pr_author_cc(pull_request: PrDict) -> bool:
+    """
+    Is this pull request's author a core contributor?
+    """
+    person = _pr_author_data(pull_request)
+    if person is None:
+        return False
+    return person.get("is_core_contributor", False)
 
 
 def is_internal_pull_request(pull_request: PrDict) -> bool:

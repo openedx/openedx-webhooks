@@ -68,6 +68,16 @@ def test_current_person_no_institution():
     assert "institution" not in current_person
     assert current_person["agreement"] == "individual"
 
+@pytest.mark.parametrize("username, is_cc", [
+    ("feanil", True),
+    ("jarv", False),
+])
+def test_person_is_core_contributor(username, is_cc):
+    people = get_people_file()
+    current_person = people[username]
+    assert current_person["is_core_contributor"] == is_cc
+
+
 def test_current_person():
     people = get_people_file()
     current_person = people["raisingarizona"]
