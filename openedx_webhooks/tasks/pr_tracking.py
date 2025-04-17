@@ -58,6 +58,7 @@ from openedx_webhooks.info import (
     projects_for_pr,
     pull_request_has_cla,
     repo_refuses_contributions,
+    is_pr_author_cc,
 )
 from openedx_webhooks.labels import (
     GITHUB_CATEGORY_LABELS,
@@ -215,6 +216,7 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
     user_is_bot = is_bot_pull_request(pr)
     no_cla_is_needed = is_private_repo_no_cla_pull_request(pr)
     is_internal = is_internal_pull_request(pr)
+    user_is_cc = is_pr_author_cc(pr)
     if not is_internal:
         if pr["state"] == "closed" and "open-source-contribution" not in label_names:
             # If we are closing a PR, and it isn't already an OSPR, then it
@@ -271,6 +273,8 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
     desired.github_projects.update(projects_for_pr(pr))
 
     has_signed_agreement = pull_request_has_cla(pr)
+    if user_is_cc:
+        desired.github_labels.add("core contributor")
     if user_is_bot:
         desired.cla_check = CLA_STATUS_BOT
     elif no_cla_is_needed:
@@ -520,6 +524,7 @@ class PrTrackingFixer:
             ad_hoc_labels -= GITHUB_MERGED_PR_OBSOLETE_LABELS
         desired_labels.update(ad_hoc_labels)
 
+        logger.info(f"{desired_labels=} {self.current.github_labels=}")
         if desired_labels != self.current.github_labels:
             self.actions.update_labels_on_pull_request(
                 labels=list(desired_labels),
