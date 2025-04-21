@@ -79,7 +79,7 @@ cryptography==44.0.2
     #   pyjwt
 defusedxml==0.7.1
     # via jira
-dill==0.3.9
+dill==0.4.0
     # via pylint
 docutils==0.21.2
     # via
@@ -125,7 +125,7 @@ jinja2==3.1.6
     #   sphinx
 jira==3.8.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
-kombu==5.5.2
+kombu==5.5.3
     # via celery
 logging-tree==1.10
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
@@ -150,7 +150,7 @@ oauthlib[signedtoken]==3.2.2
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   requests-oauthlib
-packaging==24.2
+packaging==25.0
     # via
     #   build
     #   gunicorn
@@ -167,7 +167,7 @@ platformdirs==4.3.7
     # via pylint
 pluggy==1.5.0
     # via pytest
-prompt-toolkit==3.0.50
+prompt-toolkit==3.0.51
     # via click-repl
 pycparser==2.22
     # via cffi
@@ -258,9 +258,9 @@ roman-numerals-py==3.1.0
     # via sphinx
 schema==0.7.7
     # via repo-tools-data-schema
-scriv==1.6.2
+scriv==1.7.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.25.1
+sentry-sdk[flask]==2.26.1
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 six==1.17.0
     # via
@@ -340,7 +340,7 @@ pip==24.2
     # via
     #   -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   pip-tools
-setuptools==78.1.0
+setuptools==79.0.0
     # via
     #   pbr
     #   pip-tools

@@ -77,7 +77,7 @@ jinja2==3.1.6
     # via flask
 jira==3.8.0
     # via -r requirements/base.in
-kombu==5.5.2
+kombu==5.5.3
     # via celery
 logging-tree==1.10
     # via -r requirements/base.in
@@ -90,13 +90,13 @@ oauthlib[signedtoken]==3.2.2
     # via
     #   -r requirements/base.in
     #   requests-oauthlib
-packaging==24.2
+packaging==25.0
     # via
     #   gunicorn
     #   jira
 pillow==11.2.1
     # via jira
-prompt-toolkit==3.0.50
+prompt-toolkit==3.0.51
     # via click-repl
 pycparser==2.22
     # via cffi
@@ -126,7 +126,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.25.1
+sentry-sdk[flask]==2.26.1
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
