@@ -96,7 +96,7 @@ jinja2==3.1.6
     #   sphinx
 jira==3.8.0
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
-kombu==5.5.2
+kombu==5.5.3
     # via celery
 logging-tree==1.10
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
@@ -111,7 +111,7 @@ oauthlib[signedtoken]==3.2.2
     # via
     #   -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
     #   requests-oauthlib
-packaging==24.2
+packaging==25.0
     # via
     #   gunicorn
     #   jira
@@ -121,7 +121,7 @@ pillow==11.2.1
     # via jira
 pluggy==1.5.0
     # via pytest
-prompt-toolkit==3.0.50
+prompt-toolkit==3.0.51
     # via click-repl
 pycparser==2.22
     # via cffi
@@ -184,7 +184,7 @@ roman-numerals-py==3.1.0
     # via sphinx
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.25.1
+sentry-sdk[flask]==2.26.1
     # via -r /home/runner/work/openedx-webhooks/openedx-webhooks/requirements/base.in
 six==1.17.0
     # via
