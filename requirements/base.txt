@@ -23,9 +23,9 @@ boltons==25.0.0
     #   glom
 cachetools==5.5.2
     # via -r requirements/base.in
-celery==5.5.1
+celery==5.5.2
     # via -r requirements/base.in
-certifi==2025.1.31
+certifi==2025.4.26
     # via
     #   requests
     #   sentry-sdk
@@ -126,7 +126,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.26.1
+sentry-sdk[flask]==2.27.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
