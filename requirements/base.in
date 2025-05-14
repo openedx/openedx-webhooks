@@ -3,7 +3,7 @@
 -c constraints.txt
 
 Flask
-celery
+celery[redis]
 github3.py
 
 Flask-SSLify
