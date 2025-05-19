@@ -53,7 +53,7 @@ click-repl==0.3.0
     # via celery
 coverage[toml]==7.8.0
     # via pytest-cov
-cryptography==44.0.3
+cryptography==45.0.2
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -120,7 +120,7 @@ packaging==25.0
     #   sphinx
 pillow==11.2.1
     # via jira
-pluggy==1.5.0
+pluggy==1.6.0
     # via pytest
 prompt-toolkit==3.0.51
     # via click-repl
@@ -220,7 +220,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-types-python-dateutil==2.9.0.20241206
+types-python-dateutil==2.9.0.20250516
     # via arrow
 typing-extensions==4.13.2
     # via jira
