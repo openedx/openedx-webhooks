@@ -25,7 +25,7 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-cachetools==5.5.2
+cachetools==6.0.0
     # via -r requirements/base.in
 celery[redis]==5.5.2
     # via -r requirements/base.in
@@ -37,7 +37,7 @@ cffi==1.17.1
     # via cryptography
 charset-normalizer==3.4.2
     # via requests
-click==8.2.0
+click==8.2.1
     # via
     #   -r requirements/base.in
     #   celery
@@ -51,9 +51,9 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-coverage[toml]==7.8.0
+coverage[toml]==7.8.2
     # via pytest-cov
-cryptography==44.0.3
+cryptography==45.0.3
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -74,7 +74,7 @@ flask==3.1.1
     #   sentry-sdk
 flask-sslify==0.1.5
     # via -r requirements/base.in
-freezegun==1.5.1
+freezegun==1.5.2
     # via -r requirements/test.in
 github3-py==4.0.1
     # via -r requirements/base.in
@@ -120,7 +120,7 @@ packaging==25.0
     #   sphinx
 pillow==11.2.1
     # via jira
-pluggy==1.5.0
+pluggy==1.6.0
     # via pytest
 prompt-toolkit==3.0.51
     # via click-repl
@@ -188,7 +188,7 @@ roman-numerals-py==3.1.0
     # via sphinx
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.28.0
+sentry-sdk[flask]==2.29.1
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -220,7 +220,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-types-python-dateutil==2.9.0.20241206
+types-python-dateutil==2.9.0.20250516
     # via arrow
 typing-extensions==4.13.2
     # via jira
