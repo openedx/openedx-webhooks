@@ -136,11 +136,11 @@ six==1.17.0
     # via python-dateutil
 types-python-dateutil==2.9.0.20250516
     # via arrow
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via jira
 tzdata==2025.2
     # via kombu
-uritemplate==4.1.1
+uritemplate==4.2.0
     # via github3-py
 urllib3==2.2.3
     # via
