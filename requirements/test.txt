@@ -29,7 +29,7 @@ cachetools==6.0.0
     # via -r requirements/base.in
 celery[redis]==5.5.3
     # via -r requirements/base.in
-certifi==2025.4.26
+certifi==2025.6.15
     # via
     #   requests
     #   sentry-sdk
@@ -51,9 +51,9 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-coverage[toml]==7.8.2
+coverage[toml]==7.9.1
     # via pytest-cov
-cryptography==45.0.3
+cryptography==45.0.4
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -122,7 +122,9 @@ packaging==25.0
 pillow==11.2.1
     # via jira
 pluggy==1.6.0
-    # via pytest
+    # via
+    #   pytest
+    #   pytest-cov
 prompt-toolkit==3.0.51
     # via click-repl
 pycparser==2.22
@@ -142,7 +144,7 @@ pytest==8.4.0
     #   pytest-cov
     #   pytest-mock
     #   pytest-repeat
-pytest-cov==6.1.1
+pytest-cov==6.2.1
     # via -r requirements/test.in
 pytest-mock==3.14.1
     # via -r requirements/test.in
@@ -168,7 +170,7 @@ redis==5.2.1
     #   kombu
 repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.git
     # via -r requirements/test.in
-requests==2.32.3
+requests==2.32.4
     # via
     #   -r requirements/base.in
     #   github3-py
@@ -189,7 +191,7 @@ roman-numerals-py==3.1.0
     # via sphinx
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.29.1
+sentry-sdk[flask]==2.30.0
     # via -r requirements/base.in
 six==1.17.0
     # via
