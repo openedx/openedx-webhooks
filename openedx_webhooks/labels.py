@@ -13,7 +13,6 @@ GITHUB_STATUS_LABELS: set[str] = set()
 GITHUB_CATEGORY_LABELS = {
     "blended",
     "open-source-contribution",
-    "core contributor",
 }
 
 GITHUB_MERGED_PR_OBSOLETE_LABELS = {
