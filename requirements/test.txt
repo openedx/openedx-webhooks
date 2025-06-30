@@ -25,7 +25,7 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-cachetools==6.0.0
+cachetools==6.1.0
     # via -r requirements/base.in
 celery[redis]==5.5.3
     # via -r requirements/base.in
@@ -47,7 +47,7 @@ click==8.2.1
     #   flask
 click-didyoumean==0.3.1
     # via celery
-click-plugins==1.1.1
+click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
@@ -108,7 +108,7 @@ markupsafe==3.0.2
     #   werkzeug
 nh3==0.2.21
     # via readme-renderer
-oauthlib[signedtoken]==3.2.2
+oauthlib[signedtoken]==3.3.1
     # via
     #   -r requirements/base.in
     #   requests-oauthlib
@@ -129,7 +129,7 @@ prompt-toolkit==3.0.51
     # via click-repl
 pycparser==2.22
     # via cffi
-pygments==2.19.1
+pygments==2.19.2
     # via
     #   pytest
     #   readme-renderer
@@ -138,7 +138,7 @@ pyjwt[crypto]==2.10.1
     # via
     #   github3-py
     #   oauthlib
-pytest==8.4.0
+pytest==8.4.1
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -191,7 +191,7 @@ roman-numerals-py==3.1.0
     # via sphinx
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.30.0
+sentry-sdk[flask]==2.32.0
     # via -r requirements/base.in
 six==1.17.0
     # via
