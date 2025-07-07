@@ -21,7 +21,7 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-cachetools==6.0.0
+cachetools==6.1.0
     # via -r requirements/base.in
 celery[redis]==5.5.3
     # via -r requirements/base.in
@@ -43,11 +43,11 @@ click==8.2.1
     #   flask
 click-didyoumean==0.3.1
     # via celery
-click-plugins==1.1.1
+click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
-cryptography==45.0.4
+cryptography==45.0.5
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -87,7 +87,7 @@ markupsafe==3.0.2
     #   jinja2
     #   sentry-sdk
     #   werkzeug
-oauthlib[signedtoken]==3.2.2
+oauthlib[signedtoken]==3.3.1
     # via
     #   -r requirements/base.in
     #   requests-oauthlib
@@ -96,7 +96,7 @@ packaging==25.0
     #   gunicorn
     #   jira
     #   kombu
-pillow==11.2.1
+pillow==11.3.0
     # via jira
 prompt-toolkit==3.0.51
     # via click-repl
@@ -130,13 +130,13 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.30.0
+sentry-sdk[flask]==2.32.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
 types-python-dateutil==2.9.0.20250516
     # via arrow
-typing-extensions==4.14.0
+typing-extensions==4.14.1
     # via jira
 tzdata==2025.2
     # via kombu
