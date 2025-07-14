@@ -10,7 +10,7 @@ amqp==5.3.1
     # via kombu
 arrow==1.3.0
     # via -r requirements/base.in
-astroid==3.3.10
+astroid==3.3.11
     # via
     #   pylint
     #   pylint-celery
@@ -33,11 +33,11 @@ boltons==25.0.0
     #   glom
 build==1.2.2.post1
     # via pip-tools
-cachetools==6.0.0
+cachetools==6.1.0
     # via -r requirements/base.in
 celery[redis]==5.5.3
     # via -r requirements/base.in
-certifi==2025.6.15
+certifi==2025.7.9
     # via
     #   requests
     #   sentry-sdk
@@ -64,15 +64,15 @@ click-log==0.4.0
     # via
     #   edx-lint
     #   scriv
-click-plugins==1.1.1
+click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
 code-annotations==2.3.0
     # via edx-lint
-coverage[toml]==7.9.1
+coverage[toml]==7.9.2
     # via pytest-cov
-cryptography==45.0.4
+cryptography==45.0.5
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -97,7 +97,7 @@ flask==3.1.1
     #   sentry-sdk
 flask-sslify==0.1.5
     # via -r requirements/base.in
-freezegun==1.5.2
+freezegun==1.5.3
     # via -r requirements/test.in
 github3-py==4.0.1
     # via -r requirements/base.in
@@ -141,13 +141,13 @@ mccabe==0.7.0
     # via pylint
 mdurl==0.1.2
     # via markdown-it-py
-mypy==1.16.0
+mypy==1.16.1
     # via -r requirements/dev.in
 mypy-extensions==1.1.0
     # via mypy
 nh3==0.2.21
     # via readme-renderer
-oauthlib[signedtoken]==3.2.2
+oauthlib[signedtoken]==3.3.1
     # via
     #   -r requirements/base.in
     #   requests-oauthlib
@@ -163,7 +163,7 @@ pathspec==0.12.1
     # via mypy
 pbr==6.1.1
     # via stevedore
-pillow==11.2.1
+pillow==11.3.0
     # via jira
 pip-tools==7.4.1
     # via -r requirements/dev.in
@@ -177,7 +177,7 @@ prompt-toolkit==3.0.51
     # via click-repl
 pycparser==2.22
     # via cffi
-pygments==2.19.1
+pygments==2.19.2
     # via
     #   readme-renderer
     #   sphinx
@@ -196,7 +196,7 @@ pylint-celery==0.3
     # via edx-lint
 pylint-django==2.6.1
     # via edx-lint
-pylint-plugin-utils==0.8.2
+pylint-plugin-utils==0.9.0
     # via
     #   pylint-celery
     #   pylint-django
@@ -225,7 +225,7 @@ python-dateutil==2.9.0.post0
     #   celery
     #   freezegun
     #   github3-py
-python-dotenv==1.1.0
+python-dotenv==1.1.1
     # via -r requirements/dev.in
 python-slugify==8.0.4
     # via code-annotations
@@ -268,7 +268,7 @@ schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.7.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.30.0
+sentry-sdk[flask]==2.32.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -309,13 +309,13 @@ tomlkit==0.13.3
     # via pylint
 types-cachetools==6.0.0.20250525
     # via -r requirements/dev.in
-types-python-dateutil==2.9.0.20250516
+types-python-dateutil==2.9.0.20250708
     # via arrow
 types-pyyaml==6.0.12.20250516
     # via -r requirements/dev.in
 types-requests==2.32.4.20250611
     # via -r requirements/dev.in
-typing-extensions==4.14.0
+typing-extensions==4.14.1
     # via
     #   jira
     #   mypy
@@ -329,7 +329,7 @@ urllib3==2.2.3
     #   requests
     #   sentry-sdk
     #   types-requests
-urlobject==2.4.3
+urlobject==3.0.0
     # via -r requirements/base.in
 vine==5.1.0
     # via
