@@ -29,7 +29,7 @@ cachetools==6.1.0
     # via -r requirements/base.in
 celery[redis]==5.5.3
     # via -r requirements/base.in
-certifi==2025.7.9
+certifi==2025.7.14
     # via
     #   requests
     #   sentry-sdk
@@ -106,7 +106,7 @@ markupsafe==3.0.2
     #   jinja2
     #   sentry-sdk
     #   werkzeug
-nh3==0.2.21
+nh3==0.3.0
     # via readme-renderer
 oauthlib[signedtoken]==3.3.1
     # via
@@ -191,7 +191,7 @@ roman-numerals-py==3.1.0
     # via sphinx
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.32.0
+sentry-sdk[flask]==2.33.0
     # via -r requirements/base.in
 six==1.17.0
     # via

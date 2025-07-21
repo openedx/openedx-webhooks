@@ -25,7 +25,7 @@ cachetools==6.1.0
     # via -r requirements/base.in
 celery[redis]==5.5.3
     # via -r requirements/base.in
-certifi==2025.7.9
+certifi==2025.7.14
     # via
     #   requests
     #   sentry-sdk
@@ -130,7 +130,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.32.0
+sentry-sdk[flask]==2.33.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
