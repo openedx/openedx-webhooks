@@ -75,7 +75,7 @@ itsdangerous==2.2.0
     # via flask
 jinja2==3.1.6
     # via flask
-jira==3.8.0
+jira==3.10.4
     # via -r requirements/base.in
 kombu[redis]==5.5.4
     # via celery
@@ -96,8 +96,6 @@ packaging==25.0
     #   gunicorn
     #   jira
     #   kombu
-pillow==11.3.0
-    # via jira
 prompt-toolkit==3.0.51
     # via click-repl
 pycparser==2.22
@@ -130,7 +128,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.33.0
+sentry-sdk[flask]==2.33.2
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
