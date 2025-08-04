@@ -25,7 +25,7 @@ cachetools==6.1.0
     # via -r requirements/base.in
 celery[redis]==5.5.3
     # via -r requirements/base.in
-certifi==2025.7.14
+certifi==2025.8.3
     # via
     #   requests
     #   sentry-sdk
@@ -75,7 +75,7 @@ itsdangerous==2.2.0
     # via flask
 jinja2==3.1.6
     # via flask
-jira==3.10.4
+jira==3.10.5
     # via -r requirements/base.in
 kombu[redis]==5.5.4
     # via celery
@@ -128,7 +128,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.33.2
+sentry-sdk[flask]==2.34.1
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
@@ -140,9 +140,8 @@ tzdata==2025.2
     # via kombu
 uritemplate==4.2.0
     # via github3-py
-urllib3==2.2.3
+urllib3==2.5.0
     # via
-    #   -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   requests
     #   sentry-sdk
 urlobject==3.0.0
