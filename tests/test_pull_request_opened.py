@@ -346,14 +346,26 @@ def test_add_to_multiple_projects(fake_github):
     ("pdpinch", True),  # CC
     ("jarv", False),    # Not CC
 ])
-def test_core_contributor_label(fake_github, username, cc_label):
+def test_automatic_core_contributor_label(fake_github, username, cc_label):
     pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user=username, title="fix: XYZ")
     prj = pr.as_json()
-    result = pull_request_changed(prj)
+    pull_request_changed(prj)
     if cc_label:
         assert "core contributor" in pr.labels
     else:
         assert "core contributor" not in pr.labels
+
+@pytest.mark.parametrize("username", [
+    "feanil",   # CC but not OSPR
+    "pdpinch",  # CC
+    "jarv",     # Not CC
+])
+def test_manual_core_contributor_label(fake_github, username):
+    pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user=username, title="fix: XYZ")
+    pr.set_labels(["core contributor"])
+    prj = pr.as_json()
+    pull_request_changed(prj)
+    assert "core contributor" in pr.labels
 
 def test_crash_label(fake_github):
     pr = fake_github.make_pull_request("openedx", user="nedbat")
