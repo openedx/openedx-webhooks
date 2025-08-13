@@ -466,6 +466,12 @@ class PrTrackingFixer:
                 project=settings.GITHUB_OSPR_PROJECT
             )
         elif state == "merged":
+            merged_date = self.pr.get("merged_at")
+            if not merged_date:
+                # Something has gone wrong, this should be a required field
+                # but it's not being provided, some of our assumptions are wrong
+                # provide some logging data
+                logger.warning(f"No `merged_at` date in PR webhook data. {self.pr=}")
             self.actions.update_project_pr_custom_field(
                 field_name="Date merged/closed",
                 field_value=self.pr["merged_at"],
