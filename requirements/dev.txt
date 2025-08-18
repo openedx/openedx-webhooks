@@ -70,7 +70,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==2.3.0
     # via edx-lint
-coverage[toml]==7.10.3
+coverage[toml]==7.10.4
     # via pytest-cov
 cryptography==45.0.6
     # via
@@ -129,7 +129,7 @@ kombu[redis]==5.5.4
     # via celery
 logging-tree==1.10
     # via -r requirements/base.in
-markdown-it-py==3.0.0
+markdown-it-py==4.0.0
     # via scriv
 markupsafe==3.0.2
     # via
@@ -161,7 +161,7 @@ packaging==25.0
     #   sphinx
 pathspec==0.12.1
     # via mypy
-pbr==6.1.1
+pbr==7.0.0
     # via stevedore
 pip-tools==7.5.0
     # via -r requirements/dev.in
@@ -266,7 +266,7 @@ schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.7.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.34.1
+sentry-sdk[flask]==2.35.0
     # via -r requirements/base.in
 six==1.17.0
     # via
