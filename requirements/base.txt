@@ -56,7 +56,7 @@ defusedxml==0.7.1
     # via jira
 face==24.0.0
     # via glom
-flask==3.1.1
+flask==3.1.2
     # via
     #   -r requirements/base.in
     #   flask-sslify
@@ -115,7 +115,7 @@ redis==5.2.1
     # via
     #   -r requirements/base.in
     #   kombu
-requests==2.32.4
+requests==2.32.5
     # via
     #   -r requirements/base.in
     #   github3-py
@@ -128,11 +128,11 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.34.1
+sentry-sdk[flask]==2.35.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
-types-python-dateutil==2.9.0.20250809
+types-python-dateutil==2.9.0.20250822
     # via arrow
 typing-extensions==4.14.1
     # via jira

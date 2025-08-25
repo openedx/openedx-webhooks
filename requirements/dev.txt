@@ -70,7 +70,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==2.3.0
     # via edx-lint
-coverage[toml]==7.10.3
+coverage[toml]==7.10.5
     # via pytest-cov
 cryptography==45.0.6
     # via
@@ -90,7 +90,7 @@ edx-lint==5.6.0
     # via -r requirements/dev.in
 face==24.0.0
     # via glom
-flask==3.1.1
+flask==3.1.2
     # via
     #   -r requirements/base.in
     #   flask-sslify
@@ -129,7 +129,7 @@ kombu[redis]==5.5.4
     # via celery
 logging-tree==1.10
     # via -r requirements/base.in
-markdown-it-py==3.0.0
+markdown-it-py==4.0.0
     # via scriv
 markupsafe==3.0.2
     # via
@@ -161,7 +161,7 @@ packaging==25.0
     #   sphinx
 pathspec==0.12.1
     # via mypy
-pbr==6.1.1
+pbr==7.0.1
     # via stevedore
 pip-tools==7.5.0
     # via -r requirements/dev.in
@@ -242,7 +242,7 @@ redis==5.2.1
     #   kombu
 repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.git
     # via -r requirements/test.in
-requests==2.32.4
+requests==2.32.5
     # via
     #   -r requirements/base.in
     #   github3-py
@@ -266,7 +266,7 @@ schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.7.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.34.1
+sentry-sdk[flask]==2.35.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -307,9 +307,9 @@ tomlkit==0.13.3
     # via pylint
 types-cachetools==6.1.0.20250717
     # via -r requirements/dev.in
-types-python-dateutil==2.9.0.20250809
+types-python-dateutil==2.9.0.20250822
     # via arrow
-types-pyyaml==6.0.12.20250809
+types-pyyaml==6.0.12.20250822
     # via -r requirements/dev.in
 types-requests==2.32.4.20250809
     # via -r requirements/dev.in
