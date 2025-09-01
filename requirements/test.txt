@@ -25,7 +25,7 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-cachetools==6.1.0
+cachetools==6.2.0
     # via -r requirements/base.in
 celery[redis]==5.5.3
     # via -r requirements/base.in
@@ -51,7 +51,7 @@ click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
-coverage[toml]==7.10.5
+coverage[toml]==7.10.6
     # via pytest-cov
 cryptography==45.0.6
     # via
@@ -123,7 +123,7 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-prompt-toolkit==3.0.51
+prompt-toolkit==3.0.52
     # via click-repl
 pycparser==2.22
     # via cffi
@@ -189,7 +189,7 @@ roman-numerals-py==3.1.0
     # via sphinx
 schema==0.7.7
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.35.0
+sentry-sdk[flask]==2.35.1
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -223,7 +223,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 types-python-dateutil==2.9.0.20250822
     # via arrow
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via jira
 tzdata==2025.2
     # via kombu

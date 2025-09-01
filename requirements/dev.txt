@@ -33,7 +33,7 @@ boltons==25.0.0
     #   glom
 build==1.3.0
     # via pip-tools
-cachetools==6.1.0
+cachetools==6.2.0
     # via -r requirements/base.in
 celery[redis]==5.5.3
     # via -r requirements/base.in
@@ -70,7 +70,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==2.3.0
     # via edx-lint
-coverage[toml]==7.10.5
+coverage[toml]==7.10.6
     # via pytest-cov
 cryptography==45.0.6
     # via
@@ -161,17 +161,15 @@ packaging==25.0
     #   sphinx
 pathspec==0.12.1
     # via mypy
-pbr==7.0.1
-    # via stevedore
 pip-tools==7.5.0
     # via -r requirements/dev.in
-platformdirs==4.3.8
+platformdirs==4.4.0
     # via pylint
 pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-prompt-toolkit==3.0.51
+prompt-toolkit==3.0.52
     # via click-repl
 pycparser==2.22
     # via cffi
@@ -266,7 +264,7 @@ schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.7.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.35.0
+sentry-sdk[flask]==2.35.1
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -299,13 +297,13 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-stevedore==5.4.1
+stevedore==5.5.0
     # via code-annotations
 text-unidecode==1.3
     # via python-slugify
 tomlkit==0.13.3
     # via pylint
-types-cachetools==6.1.0.20250717
+types-cachetools==6.2.0.20250827
     # via -r requirements/dev.in
 types-python-dateutil==2.9.0.20250822
     # via arrow
@@ -313,7 +311,7 @@ types-pyyaml==6.0.12.20250822
     # via -r requirements/dev.in
 types-requests==2.32.4.20250809
     # via -r requirements/dev.in
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via
     #   jira
     #   mypy
@@ -346,6 +344,4 @@ pip==24.2
     #   -c https:/raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   pip-tools
 setuptools==80.9.0
-    # via
-    #   pbr
-    #   pip-tools
+    # via pip-tools
