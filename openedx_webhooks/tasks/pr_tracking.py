@@ -466,7 +466,11 @@ class PrTrackingFixer:
                 project=settings.GITHUB_OSPR_PROJECT
             )
         elif state == "merged":
-            merged_at = self.pr.get("pull_request", {}).get("merged_at")
+            merged_at = self.pr.get("merged_at")
+            if not merged_at:
+                # Some webhooks have this data in a pull_request sub dict
+                # and not at the top level so we try both.
+                merged_at = self.pr.get("pull_request", {}).get("merged_at")
             if not merged_at:
                 # Something has gone wrong, this should be a required field
                 # but it's not being provided, some of our assumptions are wrong
