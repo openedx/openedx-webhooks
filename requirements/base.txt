@@ -29,7 +29,7 @@ certifi==2025.8.3
     # via
     #   requests
     #   sentry-sdk
-cffi==1.17.1
+cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.3
     # via requests
@@ -47,7 +47,7 @@ click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
-cryptography==45.0.6
+cryptography==45.0.7
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -98,7 +98,7 @@ packaging==25.0
     #   kombu
 prompt-toolkit==3.0.52
     # via click-repl
-pycparser==2.22
+pycparser==2.23
     # via cffi
 pyjwt[crypto]==2.10.1
     # via
@@ -128,7 +128,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.35.1
+sentry-sdk[flask]==2.37.1
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
