@@ -317,7 +317,12 @@ def get_bot_comments(prid: PrId) -> Iterable[PrCommentDict]:
 def get_catalog_info(repo_fullname: str) -> Dict:
     """Get the parsed catalog-info.yaml data from a repo, or {} if missing."""
     yml = read_github_file(repo_fullname, "catalog-info.yaml", not_there="{}")
-    return yaml.safe_load(yml)
+    try:
+        data = yaml.safe_load(yml)
+    except yaml.YAMLError:
+        logging.warning(f"Failed to parse catalog-info.yaml file in {repo_fullname}.")
+        return {}
+    return data
 
 
 @memoize_timed(minutes=60)
