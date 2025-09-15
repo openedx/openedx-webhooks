@@ -11,6 +11,7 @@ from openedx_webhooks.info import (
     is_draft_pull_request,
     is_internal_pull_request,
     jira_details_for_pr,
+    get_catalog_info,
 )
 
 
@@ -163,3 +164,25 @@ def test_jira_details_for_pr(fake_github, owner, repo, project, issuetype):
     actual_project, actual_issuetype = jira_details_for_pr("test1", pr.as_json())
     assert project == actual_project
     assert issuetype == actual_issuetype
+
+
+def test_get_malformed_catalog_info(mocker, caplog):
+    mocker.patch(
+        "openedx_webhooks.info.read_github_file",
+        lambda *args,**kwargs: "bad: 'yaml"
+    )
+    info = get_catalog_info("foo")
+    assert info == {}
+    assert "Failed to parse catalog-info.yaml file in foo." in caplog.text
+
+def test_get_valid_catalog_info(mocker):
+    mocker.patch(
+        "openedx_webhooks.info.read_github_file",
+        lambda *args,**kwargs: "good: 'yaml'"
+    )
+    info = get_catalog_info("foo")
+    assert info == {"good": "yaml"}
+
+
+
+
