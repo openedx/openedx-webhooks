@@ -41,7 +41,7 @@ certifi==2025.8.3
     # via
     #   requests
     #   sentry-sdk
-cffi==1.17.1
+cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.3
     # via requests
@@ -72,7 +72,7 @@ code-annotations==2.3.0
     # via edx-lint
 coverage[toml]==7.10.6
     # via pytest-cov
-cryptography==45.0.6
+cryptography==45.0.7
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -141,7 +141,7 @@ mccabe==0.7.0
     # via pylint
 mdurl==0.1.2
     # via markdown-it-py
-mypy==1.17.1
+mypy==1.18.1
     # via -r requirements/dev.in
 mypy-extensions==1.1.0
     # via mypy
@@ -171,7 +171,7 @@ pluggy==1.6.0
     #   pytest-cov
 prompt-toolkit==3.0.52
     # via click-repl
-pycparser==2.22
+pycparser==2.23
     # via cffi
 pygments==2.19.2
     # via
@@ -209,9 +209,9 @@ pytest==8.2.0
     #   pytest-cov
     #   pytest-mock
     #   pytest-repeat
-pytest-cov==6.2.1
+pytest-cov==7.0.0
     # via -r requirements/test.in
-pytest-mock==3.14.1
+pytest-mock==3.15.0
     # via -r requirements/test.in
 pytest-repeat==0.9.4
     # via -r requirements/test.in
@@ -264,7 +264,7 @@ schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.7.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.35.1
+sentry-sdk[flask]==2.37.1
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -309,7 +309,7 @@ types-python-dateutil==2.9.0.20250822
     # via arrow
 types-pyyaml==6.0.12.20250822
     # via -r requirements/dev.in
-types-requests==2.32.4.20250809
+types-requests==2.32.4.20250913
     # via -r requirements/dev.in
 typing-extensions==4.15.0
     # via
