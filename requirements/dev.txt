@@ -131,7 +131,7 @@ logging-tree==1.10
     # via -r requirements/base.in
 markdown-it-py==4.0.0
     # via scriv
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via
     #   flask
     #   jinja2
@@ -227,7 +227,7 @@ python-slugify==8.0.4
     # via code-annotations
 pytz==2025.2
     # via -r requirements/test.in
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via
     #   -r requirements/base.in
     #   code-annotations
@@ -264,7 +264,7 @@ schema==0.7.7
     # via repo-tools-data-schema
 scriv==1.7.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.38.0
+sentry-sdk[flask]==2.39.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -331,7 +331,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.13
+wcwidth==0.2.14
     # via prompt-toolkit
 werkzeug==3.1.3
     # via flask

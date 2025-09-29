@@ -81,7 +81,7 @@ kombu[redis]==5.5.4
     # via celery
 logging-tree==1.10
     # via -r requirements/base.in
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via
     #   flask
     #   jinja2
@@ -109,7 +109,7 @@ python-dateutil==2.9.0.post0
     #   arrow
     #   celery
     #   github3-py
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via -r requirements/base.in
 redis==5.2.1
     # via
@@ -128,7 +128,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.38.0
+sentry-sdk[flask]==2.39.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
@@ -151,7 +151,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.13
+wcwidth==0.2.14
     # via prompt-toolkit
 werkzeug==3.1.3
     # via flask
