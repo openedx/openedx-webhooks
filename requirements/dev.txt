@@ -37,7 +37,7 @@ cachetools==6.2.0
     # via -r requirements/base.in
 celery[redis]==5.5.3
     # via -r requirements/base.in
-certifi==2025.8.3
+certifi==2025.10.5
     # via
     #   requests
     #   sentry-sdk
@@ -72,7 +72,7 @@ code-annotations==2.3.0
     # via edx-lint
 coverage[toml]==7.10.7
     # via pytest-cov
-cryptography==46.0.1
+cryptography==46.0.2
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -111,7 +111,7 @@ imagesize==1.4.1
     # via sphinx
 iniconfig==2.1.0
     # via pytest
-isort==6.0.1
+isort==6.1.0
     # via
     #   -r requirements/dev.in
     #   pylint
@@ -161,7 +161,7 @@ packaging==25.0
     #   sphinx
 pathspec==0.12.1
     # via mypy
-pip-tools==7.5.0
+pip-tools==7.5.1
     # via -r requirements/dev.in
 platformdirs==4.4.0
     # via pylint
@@ -181,7 +181,7 @@ pyjwt[crypto]==2.10.1
     # via
     #   github3-py
     #   oauthlib
-pylint==3.3.8
+pylint==3.3.9
     # via
     #   edx-lint
     #   pylint-celery
@@ -339,9 +339,7 @@ wheel==0.45.1
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==24.2
-    # via
-    #   -c https:/raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
-    #   pip-tools
+pip==25.2
+    # via pip-tools
 setuptools==80.9.0
     # via pip-tools
