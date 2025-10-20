@@ -8,9 +8,9 @@ alabaster==1.0.0
     # via sphinx
 amqp==5.3.1
     # via kombu
-arrow==1.3.0
+arrow==1.4.0
     # via -r requirements/base.in
-attrs==25.3.0
+attrs==25.4.0
     # via glom
 babel==2.17.0
     # via sphinx
@@ -25,7 +25,7 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-cachetools==6.2.0
+cachetools==6.2.1
     # via -r requirements/base.in
 celery[redis]==5.5.3
     # via -r requirements/base.in
@@ -35,7 +35,7 @@ certifi==2025.10.5
     #   sentry-sdk
 cffi==2.0.0
     # via cryptography
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
 click==8.3.0
     # via
@@ -51,9 +51,9 @@ click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
-coverage[toml]==7.10.7
+coverage[toml]==7.11.0
     # via pytest-cov
-cryptography==46.0.2
+cryptography==46.0.3
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -82,11 +82,11 @@ glom==24.11.0
     # via -r requirements/base.in
 gunicorn==23.0.0
     # via -r requirements/base.in
-idna==3.10
+idna==3.11
     # via requests
 imagesize==1.4.1
     # via sphinx
-iniconfig==2.1.0
+iniconfig==2.3.0
     # via pytest
 itsdangerous==2.2.0
     # via flask
@@ -106,7 +106,7 @@ markupsafe==3.0.3
     #   jinja2
     #   sentry-sdk
     #   werkzeug
-nh3==0.3.0
+nh3==0.3.1
     # via readme-renderer
 oauthlib[signedtoken]==3.3.1
     # via
@@ -187,9 +187,9 @@ requests-toolbelt==1.0.0
     # via jira
 roman-numerals-py==3.1.0
     # via sphinx
-schema==0.7.7
+schema==0.7.8
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.39.0
+sentry-sdk[flask]==2.42.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -221,12 +221,12 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-types-python-dateutil==2.9.0.20250822
-    # via arrow
 typing-extensions==4.15.0
     # via jira
 tzdata==2025.2
-    # via kombu
+    # via
+    #   arrow
+    #   kombu
 uritemplate==4.2.0
     # via github3-py
 urllib3==2.5.0
