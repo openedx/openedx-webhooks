@@ -145,7 +145,7 @@ mypy==1.18.2
     # via -r requirements/dev.in
 mypy-extensions==1.1.0
     # via mypy
-nh3==0.3.1
+nh3==0.3.2
     # via readme-renderer
 oauthlib[signedtoken]==3.3.1
     # via
@@ -221,7 +221,7 @@ python-dateutil==2.9.0.post0
     #   celery
     #   freezegun
     #   github3-py
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via -r requirements/dev.in
 python-slugify==8.0.4
     # via code-annotations
@@ -264,7 +264,7 @@ schema==0.7.8
     # via repo-tools-data-schema
 scriv==1.7.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.42.0
+sentry-sdk[flask]==2.43.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -303,7 +303,7 @@ text-unidecode==1.3
     # via python-slugify
 tomlkit==0.13.3
     # via pylint
-types-cachetools==6.2.0.20250827
+types-cachetools==6.2.0.20251022
     # via -r requirements/dev.in
 types-pyyaml==6.0.12.20250915
     # via -r requirements/dev.in
@@ -340,6 +340,8 @@ wheel==0.45.1
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==25.2
-    # via pip-tools
+    # via
+    #   -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
+    #   pip-tools
 setuptools==80.9.0
     # via pip-tools
