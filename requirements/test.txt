@@ -138,7 +138,7 @@ pyjwt[crypto]==2.10.1
     # via
     #   github3-py
     #   oauthlib
-pytest==9.0.1
+pytest==9.0.2
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -191,7 +191,7 @@ roman-numerals-py==3.1.0
     # via sphinx
 schema==0.7.8
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.46.0
+sentry-sdk[flask]==2.47.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -235,7 +235,7 @@ tzlocal==5.3.1
     # via celery
 uritemplate==4.2.0
     # via github3-py
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   requests
     #   sentry-sdk
