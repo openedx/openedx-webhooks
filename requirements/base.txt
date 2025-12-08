@@ -130,7 +130,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.46.0
+sentry-sdk[flask]==2.47.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
@@ -146,7 +146,7 @@ tzlocal==5.3.1
     # via celery
 uritemplate==4.2.0
     # via github3-py
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   requests
     #   sentry-sdk
