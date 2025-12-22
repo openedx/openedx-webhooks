@@ -25,7 +25,7 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-cachetools==6.2.3
+cachetools==6.2.4
     # via -r requirements/base.in
 celery[redis]==5.6.0
     # via -r requirements/base.in
@@ -187,11 +187,15 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-roman-numerals-py==3.1.0
+roman-numerals==4.1.0
+    # via
+    #   roman-numerals-py
+    #   sphinx
+roman-numerals-py==4.1.0
     # via sphinx
 schema==0.7.8
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.47.0
+sentry-sdk[flask]==2.48.0
     # via -r requirements/base.in
 six==1.17.0
     # via
