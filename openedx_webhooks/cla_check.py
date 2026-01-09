@@ -81,10 +81,7 @@ def cla_status_on_pr(pull_request: PrDict) -> Optional[Dict[str, str]]:
 # A status is a dict of values. We only have a few that we use, so build them
 # all here.
 CLA_CONTEXT = "openedx/cla"
-CLA_DETAIL_URL = (
-    "https://openedx.atlassian.net/wiki/spaces/COMM/pages/941457737/" +
-        "How+to+start+contributing+to+the+Open+edX+code+base"
-)
+CLA_DETAIL_URL = "https://docs.openedx.org/en/latest/developers/quickstarts/so_you_want_to_contribute.html#id175"
 
 CLA_STATUS_GOOD = {
     "context": CLA_CONTEXT,
