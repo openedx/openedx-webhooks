@@ -31,7 +31,7 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-build==1.3.0
+build==1.4.0
     # via pip-tools
 cachetools==6.2.4
     # via -r requirements/base.in
@@ -161,7 +161,7 @@ packaging==25.0
     #   kombu
     #   pytest
     #   sphinx
-pathspec==0.12.1
+pathspec==1.0.3
     # via mypy
 pip-tools==7.5.2
     # via -r requirements/dev.in
@@ -270,7 +270,7 @@ schema==0.7.8
     # via repo-tools-data-schema
 scriv==1.8.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.48.0
+sentry-sdk[flask]==2.49.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -313,7 +313,7 @@ types-cachetools==6.2.0.20251022
     # via -r requirements/dev.in
 types-pyyaml==6.0.12.20250915
     # via -r requirements/dev.in
-types-requests==2.32.4.20250913
+types-requests==2.32.4.20260107
     # via -r requirements/dev.in
 typing-extensions==4.15.0
     # via
@@ -327,7 +327,7 @@ tzlocal==5.3.1
     # via celery
 uritemplate==4.2.0
     # via github3-py
-urllib3==2.6.2
+urllib3==2.6.3
     # via
     #   requests
     #   sentry-sdk
@@ -341,7 +341,7 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.14
     # via prompt-toolkit
-werkzeug==3.1.4
+werkzeug==3.1.5
     # via flask
 wheel==0.45.1
     # via pip-tools
