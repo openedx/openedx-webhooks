@@ -193,7 +193,7 @@ roman-numerals-py==4.1.0
     # via sphinx
 schema==0.7.8
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.48.0
+sentry-sdk[flask]==2.49.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -235,7 +235,7 @@ tzlocal==5.3.1
     # via celery
 uritemplate==4.2.0
     # via github3-py
-urllib3==2.6.2
+urllib3==2.6.3
     # via
     #   requests
     #   sentry-sdk
@@ -248,5 +248,5 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.14
     # via prompt-toolkit
-werkzeug==3.1.4
+werkzeug==3.1.5
     # via flask
