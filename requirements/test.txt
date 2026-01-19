@@ -60,7 +60,7 @@ cryptography==46.0.3
     #   pyjwt
 defusedxml==0.7.1
     # via jira
-docutils==0.21.2
+docutils==0.22.4
     # via
     #   readme-renderer
     #   sphinx
@@ -186,10 +186,6 @@ requests-oauthlib==2.0.0
 requests-toolbelt==1.0.0
     # via jira
 roman-numerals==4.1.0
-    # via
-    #   roman-numerals-py
-    #   sphinx
-roman-numerals-py==4.1.0
     # via sphinx
 schema==0.7.8
     # via repo-tools-data-schema
@@ -201,13 +197,13 @@ six==1.17.0
     #   sphinxcontrib-httpdomain
 snowballstemmer==3.0.1
     # via sphinx
-sphinx==8.2.3
+sphinx==9.0.4
     # via
     #   -r requirements/doc.in
     #   sphinx-rtd-theme
     #   sphinxcontrib-httpdomain
     #   sphinxcontrib-jquery
-sphinx-rtd-theme==3.0.2
+sphinx-rtd-theme==3.1.0
     # via -r requirements/doc.in
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
