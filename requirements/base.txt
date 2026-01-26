@@ -21,7 +21,7 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-cachetools==6.2.4
+cachetools==6.2.5
     # via -r requirements/base.in
 celery[redis]==5.6.2
     # via -r requirements/base.in
@@ -67,7 +67,7 @@ github3-py==4.0.1
     # via -r requirements/base.in
 glom==25.12.0
     # via -r requirements/base.in
-gunicorn==23.0.0
+gunicorn==24.1.1
     # via -r requirements/base.in
 idna==3.11
     # via requests
@@ -91,14 +91,14 @@ oauthlib[signedtoken]==3.3.1
     # via
     #   -r requirements/base.in
     #   requests-oauthlib
-packaging==25.0
+packaging==26.0
     # via
     #   gunicorn
     #   jira
     #   kombu
 prompt-toolkit==3.0.52
     # via click-repl
-pycparser==2.23
+pycparser==3.0
     # via cffi
 pyjwt[crypto]==2.10.1
     # via
@@ -128,7 +128,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.49.0
+sentry-sdk[flask]==2.50.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
@@ -153,7 +153,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.14
+wcwidth==0.3.5
     # via prompt-toolkit
 werkzeug==3.1.5
     # via flask
