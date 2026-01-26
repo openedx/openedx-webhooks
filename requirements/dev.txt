@@ -33,7 +33,7 @@ boltons==25.0.0
     #   glom
 build==1.4.0
     # via pip-tools
-cachetools==6.2.4
+cachetools==6.2.5
     # via -r requirements/base.in
 celery[redis]==5.6.2
     # via -r requirements/base.in
@@ -70,7 +70,7 @@ click-repl==0.3.0
     # via celery
 code-annotations==2.3.0
     # via edx-lint
-coverage[toml]==7.13.1
+coverage[toml]==7.13.2
     # via pytest-cov
 cryptography==46.0.3
     # via
@@ -79,7 +79,7 @@ cryptography==46.0.3
     #   pyjwt
 defusedxml==0.7.1
     # via jira
-dill==0.4.0
+dill==0.4.1
     # via pylint
 docutils==0.22.4
     # via
@@ -103,7 +103,7 @@ github3-py==4.0.1
     # via -r requirements/base.in
 glom==25.12.0
     # via -r requirements/base.in
-gunicorn==23.0.0
+gunicorn==24.1.1
     # via -r requirements/base.in
 idna==3.11
     # via requests
@@ -153,7 +153,7 @@ oauthlib[signedtoken]==3.3.1
     # via
     #   -r requirements/base.in
     #   requests-oauthlib
-packaging==25.0
+packaging==26.0
     # via
     #   build
     #   gunicorn
@@ -161,6 +161,7 @@ packaging==25.0
     #   kombu
     #   pytest
     #   sphinx
+    #   wheel
 pathspec==1.0.3
     # via mypy
 pip-tools==7.5.2
@@ -173,7 +174,7 @@ pluggy==1.6.0
     #   pytest-cov
 prompt-toolkit==3.0.52
     # via click-repl
-pycparser==2.23
+pycparser==3.0
     # via cffi
 pygments==2.19.2
     # via
@@ -266,7 +267,7 @@ schema==0.7.8
     # via repo-tools-data-schema
 scriv==1.8.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.49.0
+sentry-sdk[flask]==2.50.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -335,15 +336,15 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.14
+wcwidth==0.3.5
     # via prompt-toolkit
 werkzeug==3.1.5
     # via flask
-wheel==0.45.1
+wheel==0.46.3
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==25.3
     # via pip-tools
-setuptools==80.9.0
+setuptools==80.10.2
     # via pip-tools
