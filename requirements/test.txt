@@ -27,7 +27,7 @@ boltons==25.0.0
     #   glom
 cachetools==7.0.5
     # via -r requirements/base.in
-celery[redis]==5.6.2
+celery[redis]==5.6.3
     # via -r requirements/base.in
 certifi==2026.2.25
     # via
@@ -53,7 +53,7 @@ click-repl==0.3.0
     # via celery
 coverage[toml]==7.13.5
     # via pytest-cov
-cryptography==46.0.5
+cryptography==46.0.6
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -80,7 +80,7 @@ github3-py==4.0.1
     # via -r requirements/base.in
 glom==25.12.0
     # via -r requirements/base.in
-gunicorn==25.1.0
+gunicorn==25.3.0
     # via -r requirements/base.in
 idna==3.11
     # via requests
@@ -106,7 +106,7 @@ markupsafe==3.0.3
     #   jinja2
     #   sentry-sdk
     #   werkzeug
-nh3==0.3.3
+nh3==0.3.4
     # via readme-renderer
 oauthlib[signedtoken]==3.3.1
     # via
@@ -127,7 +127,7 @@ prompt-toolkit==3.0.52
     # via click-repl
 pycparser==3.0
     # via cffi
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   pytest
     #   readme-renderer
@@ -168,7 +168,7 @@ redis==6.4.0
     #   kombu
 repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.git
     # via -r requirements/test.in
-requests==2.32.5
+requests==2.33.0
     # via
     #   -r requirements/base.in
     #   github3-py
@@ -189,7 +189,7 @@ roman-numerals==4.1.0
     # via sphinx
 schema==0.7.8
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.55.0
+sentry-sdk[flask]==2.56.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
@@ -242,5 +242,5 @@ vine==5.1.0
     #   kombu
 wcwidth==0.6.0
     # via prompt-toolkit
-werkzeug==3.1.6
+werkzeug==3.1.7
     # via flask
