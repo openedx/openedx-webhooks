@@ -43,9 +43,9 @@ certifi==2026.2.25
     #   sentry-sdk
 cffi==2.0.0
     # via cryptography
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
-click==8.3.1
+click==8.3.2
     # via
     #   -r requirements/base.in
     #   celery
@@ -143,7 +143,7 @@ mccabe==0.7.0
     # via pylint
 mdurl==0.1.2
     # via markdown-it-py
-mypy==1.19.1
+mypy==1.20.0
     # via -r requirements/dev.in
 mypy-extensions==1.1.0
     # via mypy
@@ -243,7 +243,7 @@ redis==6.4.0
     #   kombu
 repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.git
     # via -r requirements/test.in
-requests==2.33.0
+requests==2.33.1
     # via
     #   -r requirements/base.in
     #   github3-py
@@ -267,7 +267,7 @@ schema==0.7.8
     # via repo-tools-data-schema
 scriv==1.8.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.56.0
+sentry-sdk[flask]==2.57.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -309,13 +309,13 @@ types-cachetools==6.2.0.20260317
     # via -r requirements/dev.in
 types-pyyaml==6.0.12.20250915
     # via -r requirements/dev.in
-types-requests==2.33.0.20260327
+types-requests==2.33.0.20260402
     # via -r requirements/dev.in
 typing-extensions==4.15.0
     # via
     #   jira
     #   mypy
-tzdata==2025.3
+tzdata==2026.1
     # via
     #   arrow
     #   kombu
@@ -337,7 +337,7 @@ vine==5.1.0
     #   kombu
 wcwidth==0.6.0
     # via prompt-toolkit
-werkzeug==3.1.7
+werkzeug==3.1.8
     # via flask
 wheel==0.46.3
     # via pip-tools

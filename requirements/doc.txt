@@ -10,7 +10,7 @@ babel==2.18.0
     # via sphinx
 certifi==2026.2.25
     # via requests
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
 docutils==0.22.4
     # via
@@ -35,7 +35,7 @@ pygments==2.20.0
     #   sphinx
 readme-renderer==44.0
     # via -r requirements/doc.in
-requests==2.33.0
+requests==2.33.1
     # via sphinx
 roman-numerals==4.1.0
     # via sphinx

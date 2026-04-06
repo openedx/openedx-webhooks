@@ -35,9 +35,9 @@ certifi==2026.2.25
     #   sentry-sdk
 cffi==2.0.0
     # via cryptography
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
-click==8.3.1
+click==8.3.2
     # via
     #   -r requirements/base.in
     #   celery
@@ -168,7 +168,7 @@ redis==6.4.0
     #   kombu
 repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.git
     # via -r requirements/test.in
-requests==2.33.0
+requests==2.33.1
     # via
     #   -r requirements/base.in
     #   github3-py
@@ -189,7 +189,7 @@ roman-numerals==4.1.0
     # via sphinx
 schema==0.7.8
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.56.0
+sentry-sdk[flask]==2.57.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
@@ -221,7 +221,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 typing-extensions==4.15.0
     # via jira
-tzdata==2025.3
+tzdata==2026.1
     # via
     #   arrow
     #   kombu
@@ -242,5 +242,5 @@ vine==5.1.0
     #   kombu
 wcwidth==0.6.0
     # via prompt-toolkit
-werkzeug==3.1.7
+werkzeug==3.1.8
     # via flask
