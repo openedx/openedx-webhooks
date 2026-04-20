@@ -112,7 +112,7 @@ oauthlib[signedtoken]==3.3.1
     # via
     #   -r requirements/base.in
     #   requests-oauthlib
-packaging==26.0
+packaging==26.1
     # via
     #   gunicorn
     #   jira
@@ -189,7 +189,7 @@ roman-numerals==4.1.0
     # via sphinx
 schema==0.7.8
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.57.0
+sentry-sdk[flask]==2.58.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
