@@ -8,7 +8,7 @@ alabaster==1.0.0
     # via sphinx
 babel==2.18.0
     # via sphinx
-certifi==2026.2.25
+certifi==2026.4.22
     # via requests
 charset-normalizer==3.4.7
     # via requests
@@ -17,7 +17,7 @@ docutils==0.22.4
     #   readme-renderer
     #   sphinx
     #   sphinx-rtd-theme
-idna==3.11
+idna==3.13
     # via requests
 imagesize==2.0.0
     # via sphinx
@@ -25,9 +25,9 @@ jinja2==3.1.6
     # via sphinx
 markupsafe==3.0.3
     # via jinja2
-nh3==0.3.4
+nh3==0.3.5
     # via readme-renderer
-packaging==26.1
+packaging==26.2
     # via sphinx
 pygments==2.20.0
     # via
