@@ -21,7 +21,7 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-cachetools==7.0.6
+cachetools==7.1.1
     # via -r requirements/base.in
 celery[redis]==5.6.3
     # via -r requirements/base.in
@@ -153,7 +153,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.6.0
+wcwidth==0.7.0
     # via prompt-toolkit
 werkzeug==3.1.8
     # via flask
