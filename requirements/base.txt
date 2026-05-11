@@ -47,7 +47,7 @@ click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
-cryptography==47.0.0
+cryptography==48.0.0
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -67,9 +67,9 @@ github3-py==4.0.1
     # via -r requirements/base.in
 glom==25.12.0
     # via -r requirements/base.in
-gunicorn==25.3.0
+gunicorn==26.0.0
     # via -r requirements/base.in
-idna==3.13
+idna==3.14
     # via requests
 itsdangerous==2.2.0
     # via flask
@@ -128,7 +128,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.58.0
+sentry-sdk[flask]==2.59.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
@@ -142,7 +142,7 @@ tzlocal==5.3.1
     # via celery
 uritemplate==4.2.0
     # via github3-py
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   requests
     #   sentry-sdk
