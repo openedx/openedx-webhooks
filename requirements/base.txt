@@ -21,7 +21,7 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-cachetools==7.1.1
+cachetools==7.1.2
     # via -r requirements/base.in
 celery[redis]==5.6.3
     # via -r requirements/base.in
@@ -33,7 +33,7 @@ cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.7
     # via requests
-click==8.3.3
+click==8.4.0
     # via
     #   -r requirements/base.in
     #   celery
@@ -69,7 +69,7 @@ glom==25.12.0
     # via -r requirements/base.in
 gunicorn==26.0.0
     # via -r requirements/base.in
-idna==3.14
+idna==3.15
     # via requests
 itsdangerous==2.2.0
     # via flask
@@ -115,7 +115,7 @@ redis==6.4.0
     # via
     #   -r requirements/base.in
     #   kombu
-requests==2.33.1
+requests==2.34.2
     # via
     #   -r requirements/base.in
     #   github3-py
@@ -128,7 +128,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.59.0
+sentry-sdk[flask]==2.60.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
