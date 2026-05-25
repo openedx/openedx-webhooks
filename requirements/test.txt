@@ -25,11 +25,11 @@ boltons==25.0.0
     # via
     #   face
     #   glom
-cachetools==7.1.1
+cachetools==7.1.4
     # via -r requirements/base.in
 celery[redis]==5.6.3
     # via -r requirements/base.in
-certifi==2026.4.22
+certifi==2026.5.20
     # via
     #   requests
     #   sentry-sdk
@@ -37,7 +37,7 @@ cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.7
     # via requests
-click==8.3.3
+click==8.4.1
     # via
     #   -r requirements/base.in
     #   celery
@@ -82,7 +82,7 @@ glom==25.12.0
     # via -r requirements/base.in
 gunicorn==26.0.0
     # via -r requirements/base.in
-idna==3.14
+idna==3.16
     # via requests
 imagesize==2.0.0
     # via sphinx
@@ -132,7 +132,7 @@ pygments==2.20.0
     #   pytest
     #   readme-renderer
     #   sphinx
-pyjwt[crypto]==2.12.1
+pyjwt[crypto]==2.13.0
     # via
     #   github3-py
     #   oauthlib
@@ -168,7 +168,7 @@ redis==6.4.0
     #   kombu
 repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.git
     # via -r requirements/test.in
-requests==2.33.1
+requests==2.34.2
     # via
     #   -r requirements/base.in
     #   github3-py
@@ -189,11 +189,11 @@ roman-numerals==4.1.0
     # via sphinx
 schema==0.7.8
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.59.0
+sentry-sdk[flask]==2.60.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
-snowballstemmer==3.0.1
+snowballstemmer==3.1.0
     # via sphinx
 sphinx==9.1.0
     # via
