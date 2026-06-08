@@ -82,7 +82,7 @@ glom==25.12.0
     # via -r requirements/base.in
 gunicorn==26.0.0
     # via -r requirements/base.in
-idna==3.17
+idna==3.18
     # via requests
 imagesize==2.0.0
     # via sphinx
@@ -189,11 +189,11 @@ roman-numerals==4.1.0
     # via sphinx
 schema==0.7.8
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.61.0
+sentry-sdk[flask]==2.61.1
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
-snowballstemmer==3.1.0
+snowballstemmer==3.1.1
     # via sphinx
 sphinx==9.1.0
     # via
@@ -240,7 +240,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.7.0
+wcwidth==0.8.0
     # via prompt-toolkit
 werkzeug==3.1.8
     # via flask
