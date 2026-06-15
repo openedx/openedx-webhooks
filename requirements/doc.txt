@@ -33,7 +33,7 @@ pygments==2.20.0
     # via
     #   readme-renderer
     #   sphinx
-readme-renderer==44.0
+readme-renderer==45.0
     # via -r requirements/doc.in
 requests==2.34.2
     # via sphinx

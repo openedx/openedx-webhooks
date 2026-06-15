@@ -74,7 +74,7 @@ code-annotations==3.0.0
     # via edx-lint
 coverage[toml]==7.14.1
     # via pytest-cov
-cryptography==48.0.0
+cryptography==49.0.0
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -186,7 +186,7 @@ pyjwt[crypto]==2.13.0
     # via
     #   github3-py
     #   oauthlib
-pylint==4.0.5
+pylint==4.0.6
     # via
     #   edx-lint
     #   pylint-celery
@@ -237,7 +237,7 @@ pyyaml==6.0.3
     #   -r requirements/base.in
     #   code-annotations
     #   repo-tools-data-schema
-readme-renderer==44.0
+readme-renderer==45.0
     # via -r requirements/doc.in
 redis==6.4.0
     # via
@@ -269,7 +269,7 @@ schema==0.7.8
     # via repo-tools-data-schema
 scriv==1.8.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.61.1
+sentry-sdk[flask]==2.62.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -339,7 +339,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.8.0
+wcwidth==0.8.1
     # via prompt-toolkit
 werkzeug==3.1.8
     # via flask
