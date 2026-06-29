@@ -37,7 +37,7 @@ cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.7
     # via requests
-click==8.4.1
+click==8.4.2
     # via
     #   -r requirements/base.in
     #   celery
@@ -51,7 +51,7 @@ click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
-coverage[toml]==7.14.2
+coverage[toml]==7.14.3
     # via pytest-cov
 cryptography==49.0.0
     # via
@@ -106,7 +106,7 @@ markupsafe==3.0.3
     #   jinja2
     #   sentry-sdk
     #   werkzeug
-nh3==0.3.5
+nh3==0.3.6
     # via readme-renderer
 oauthlib[signedtoken]==3.3.1
     # via
