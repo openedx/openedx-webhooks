@@ -45,8 +45,10 @@ def route(path_regex, http_method="GET", data_type="json"):
         data_type: "json" or "text", the type of data the function will return.
 
     """
+
     def _decorator(func):
         func.callback_spec = (path_regex, http_method.upper(), data_type)
+
         @functools.wraps(func)
         def _decorated(self, request, context) -> Any:
             for fn in self.middleware:
@@ -59,7 +61,9 @@ def route(path_regex, http_method="GET", data_type="json"):
             except FakerException as ex:
                 context.status_code = ex.status_code
                 return ex.as_json()
+
         return _decorated
+
     return _decorator
 
 
@@ -99,7 +103,7 @@ class Faker:
                 path_regex, http_method, data_type = method.callback_spec
                 self.requests_mocker.register_uri(
                     http_method,
-                    re.compile(fr"^{self.host}{path_regex}(\?.*)?$"),
+                    re.compile(rf"^{self.host}{path_regex}(\?.*)?$"),
                     **{data_type: method},
                 )
 

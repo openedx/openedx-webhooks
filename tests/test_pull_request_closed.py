@@ -36,7 +36,7 @@ def closed_pull_request(is_merged, fake_github, fake_jira):
         owner="openedx",
         user="tusbar",
         title=random_text(),
-        )
+    )
     result = pull_request_changed(pr.as_json())
     assert not result.jira_issues
     pr.add_comment(user="nedbat", body="Please make some changes")
@@ -56,7 +56,7 @@ def test_external_pr_closed_but_issue_deleted(fake_jira, closed_pull_request):
     assert not result.jira_issues
 
     pr_comments = pr.list_comments()
-    assert len(pr_comments) == 3    # 1 welcome, closed_pull_request makes two
+    assert len(pr_comments) == 3  # 1 welcome, closed_pull_request makes two
     # We leave the old issue id in the comment.
     body = pr_comments[0].body
     check_issue_link_in_markdown(body, None)
@@ -84,13 +84,13 @@ def test_cc_pr_closed(fake_github, fake_jira, is_merged):
     pull_request_changed(pr.as_json())
 
     pr_comments = pr.list_comments()
-    assert len(pr_comments) == 1    # welcome comment
+    assert len(pr_comments) == 1  # welcome comment
 
     # Processing it again won't change anything.
     pull_request_changed(pr.as_json())
 
     pr_comments = pr.list_comments()
-    assert len(pr_comments) == 1    # welcome comment
+    assert len(pr_comments) == 1  # welcome comment
 
 
 @pytest.mark.parametrize("org", ["openedx", "edx"])
@@ -141,6 +141,6 @@ def test_pr_closed_labels(fake_github, is_merged):
 def test_pr_closed_date_on_close(closed_pull_request):
     pr = closed_pull_request
     pull_request_changed(pr.as_json())
-    assert pr.repo.github.project_items['date-closed-id'] == {
-        pr.closed_at.isoformat(timespec='seconds') + 'Z',
+    assert pr.repo.github.project_items["date-closed-id"] == {
+        pr.closed_at.isoformat(timespec="seconds") + "Z",
     }

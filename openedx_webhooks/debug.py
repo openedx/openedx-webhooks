@@ -14,11 +14,8 @@ def is_debug(module_name):
 def print_long(label, long_text):
     """Print a long data dump in a logging-safe way."""
     data = base64.b85encode(gzip.compress(long_text.encode())).decode()
-    print(
-        f"{label}:",
-        "import base64,gzip;" +
-        f"print(gzip.decompress(base64.b85decode({data!r})).decode())"
-    )
+    print(f"{label}:", "import base64,gzip;" + f"print(gzip.decompress(base64.b85decode({data!r})).decode())")
+
 
 def print_long_json(label, jdata):
     """Like print_long, but for JSON data."""

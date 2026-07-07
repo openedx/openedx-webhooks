@@ -2,7 +2,7 @@
 Jira manipulations.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from openedx_webhooks.auth import get_jira_session
 from openedx_webhooks.utils import (
@@ -11,16 +11,16 @@ from openedx_webhooks.utils import (
 
 
 def update_jira_issue(
-        jira_nick: str,
-        issue_key: str,
-        summary: Optional[str]=None,
-        description: Optional[str]=None,
-        labels: Optional[List[str]]=None,
-    ) -> None:
+    jira_nick: str,
+    issue_key: str,
+    summary: str | None = None,
+    description: str | None = None,
+    labels: list[str] | None = None,
+) -> None:
     """
     Update some fields on a Jira issue.
     """
-    fields: Dict[str, Any] = {}
+    fields: dict[str, Any] = {}
     notify = "false"
     if summary is not None:
         fields["summary"] = summary

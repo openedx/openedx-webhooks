@@ -4,8 +4,6 @@ Queuable background tasks to do large work.
 
 import traceback
 
-from typing import Dict, Set
-
 from urlobject import URLObject
 
 from openedx_webhooks import celery
@@ -13,11 +11,11 @@ from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.info import is_internal_pull_request
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.pr_tracking import (
-    current_support_state,
-    desired_support_state,
     DryRunFixingActions,
     FixResult,
     PrTrackingFixer,
+    current_support_state,
+    desired_support_state,
 )
 from openedx_webhooks.types import JiraId, PrDict
 from openedx_webhooks.utils import (
@@ -73,6 +71,7 @@ class PaginateCallback:
     """
     A callback for paginated_get which updates the celery task with URL progress.
     """
+
     def __init__(self, task, meta):
         self.task = task
         self.meta = meta
@@ -83,16 +82,13 @@ class PaginateCallback:
             current_page = int(current_url.query_dict.get("page", 1))
             link_last = response.links.get("last")
             if link_last:
-                last_url = URLObject(link_last['url'])
+                last_url = URLObject(link_last["url"])
                 last_page = int(last_url.query_dict["page"])
             else:
                 last_page = current_page
-            state_meta = {
-                "current_page": current_page,
-                "last_page": last_page
-            }
+            state_meta = {"current_page": current_page, "last_page": last_page}
             state_meta.update(self.meta)
-            self.task.update_state(state='STARTED', meta=state_meta)
+            self.task.update_state(state="STARTED", meta=state_meta)
 
 
 @celery.task(bind=True)
@@ -105,13 +101,13 @@ def rescan_repository_task(task, repo, allpr, dry_run, earliest, latest):
 
 
 def rescan_repository(
-        repo: str,
-        allpr: bool,
-        dry_run: bool = False,
-        earliest: str = "",
-        latest: str = "",
-        page_callback=None,
-    ) -> Dict:
+    repo: str,
+    allpr: bool,
+    dry_run: bool = False,
+    earliest: str = "",
+    latest: str = "",
+    page_callback=None,
+) -> dict:
     """
     Re-scans a single repo for external pull requests.
 
@@ -132,8 +128,8 @@ def rescan_repository(
     state = "all" if allpr else "open"
     url = f"/repos/{repo}/pulls?state={state}"
 
-    changed: Dict[int, Set[JiraId]] = {}
-    errors: Dict[int, str] = {}
+    changed: dict[int, set[JiraId]] = {}
+    errors: dict[int, str] = {}
     dry_run_actions = {}
 
     # Pull requests before this will not be rescanned. Contractor messages
@@ -164,7 +160,7 @@ def rescan_repository(
             pull_request = resp.json()
 
             result = pull_request_changed(pull_request, actions=actions)
-        except Exception:       # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             errors[pull_request["number"]] = traceback.format_exc()
         else:
             if result.changed_jira_issues:
@@ -175,12 +171,10 @@ def rescan_repository(
 
     if not dry_run:
         logger.info(
-            "Changed {num} JIRA issues on repo {repo}. PRs are {prs}".format(
-                num=len(changed), repo=repo, prs=list(changed.keys()),
-            ),
+            f"Changed {len(changed)} JIRA issues on repo {repo}. PRs are {list(changed.keys())}",
         )
 
-    info: Dict = {
+    info: dict = {
         "repo": repo,
         "changed": changed,
         "errors": errors,
@@ -198,14 +192,15 @@ def rescan_organization_task(task, org, allpr, dry_run, earliest, latest):
     callback = PaginateCallback(task, meta)
     return rescan_organization(org, allpr, dry_run, earliest, latest, page_callback=callback)
 
+
 def rescan_organization(
-        org: str,
-        allpr: bool = False,
-        dry_run: bool = False,
-        earliest: str = "",
-        latest: str = "",
-        page_callback=None,
-    ) -> Dict:
+    org: str,
+    allpr: bool = False,
+    dry_run: bool = False,
+    earliest: str = "",
+    latest: str = "",
+    page_callback=None,
+) -> dict:
     """
     Re-scan an entire organization.
 
@@ -217,7 +212,7 @@ def rescan_organization(
     for irepo, repo in enumerate(repos):
         repo_name = repo["full_name"]
         if page_callback is not None:
-            page_callback.meta = {"repo": repo_name, "repo_num": f"{irepo+1}/{len(repos)}"}
+            page_callback.meta = {"repo": repo_name, "repo_num": f"{irepo + 1}/{len(repos)}"}
         info = rescan_repository(repo_name, allpr, dry_run, earliest, latest, page_callback=page_callback)
         if list(info) != ["repo"]:
             infos[repo_name] = info

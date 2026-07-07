@@ -1,12 +1,11 @@
 """Settings for how the webhook should behave."""
 
 import os
-from typing import Optional
 
 from openedx_webhooks.types import GhProject
 
 
-def read_project_setting(setting_name: str) -> Optional[GhProject]:
+def read_project_setting(setting_name: str) -> GhProject | None:
     """Read a project spec from a setting.
 
     Project number NUM in org ORG is specified as ``ORG:NUM``.

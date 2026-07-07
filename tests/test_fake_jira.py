@@ -3,13 +3,14 @@
 import pytest
 import requests
 
-
 # pylint: disable=missing-timeout
+
 
 class TestIssues:
     """
     Tests of the correct behavior of issuees.
     """
+
     def test_get_issue(self, fake_jira):
         fake_jira.make_issue(key="HELLO-123", summary="This is a bad bug!", labels=["bad-bug"])
         resp = requests.get("https://test.atlassian.net/rest/api/2/issue/HELLO-123")
@@ -48,7 +49,7 @@ class TestIssues:
         resp = requests.get(f"https://test.atlassian.net/rest/api/2/issue/{key1}")
         assert resp.status_code == 200
         jissue1 = resp.json()
-        assert jissue1["key"] == key2   # it has the new key.
+        assert jissue1["key"] == key2  # it has the new key.
         assert jissue1["fields"]["summary"] == "This is a bad bug!"
 
         # Look it up under the new key.
@@ -72,6 +73,7 @@ class TestBadRequests:
     """
     Tests of the error edge cases.
     """
+
     def test_no_such_put(self, fake_jira):
         resp = requests.put("https://test.atlassian.net/rest/api/2/issue/XYZ-999")
         assert resp.status_code == 404

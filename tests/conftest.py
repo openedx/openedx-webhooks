@@ -2,7 +2,6 @@
 
 import re
 from pathlib import Path
-from typing import Dict
 
 import pytest
 import requests_mock
@@ -26,9 +25,11 @@ def requests_mocker():
     finally:
         mocker.stop()
 
+
 # URLs we use to grab data from GitHub.  We use requests_mock to provide
 # canned data during tests.
 DATA_REGEX = re.compile(r"https://raw.githubusercontent.com/([^/]+/[^/]+)/HEAD/(.*)")
+
 
 @pytest.fixture
 def fake_repo_data(requests_mocker):
@@ -56,13 +57,15 @@ def hard_cache_yaml_data_files(session_mocker) -> None:
     Read them once per test run, and re-use the data.
     """
     real_read_yaml_data_file = openedx_webhooks.info._read_yaml_data_file
-    data_files: Dict[str, Dict] = {}
+    data_files: dict[str, dict] = {}
+
     def new_read_yaml_data_file(filename):
         data = data_files.get(filename)
         if data is None:
             data = real_read_yaml_data_file(filename)
             data_files[filename] = data
         return data
+
     session_mocker.patch("openedx_webhooks.info._read_yaml_data_file", new_read_yaml_data_file)
 
 
@@ -81,6 +84,7 @@ def settings_for_tests(mocker):
         if name.isupper():
             mocker.patch(f"openedx_webhooks.settings.{name}", value)
 
+
 @pytest.fixture
 def fake_github(pytestconfig, mocker, requests_mocker, fake_repo_data):
     fraction_404 = float(pytestconfig.getoption("percent_404")) / 100.0
@@ -94,13 +98,16 @@ def fake_github(pytestconfig, mocker, requests_mocker, fake_repo_data):
 
 def fake_jira_fixture(url):
     """A function to make fake Jira fixtures!"""
+
     @pytest.fixture
     def _fake_jira(requests_mocker, fake_repo_data):
         """A FakeJira for the first server configured in our jira-info.yaml."""
         the_fake_jira = FakeJira(url)
         the_fake_jira.install_mocks(requests_mocker)
         return the_fake_jira
+
     return _fake_jira
+
 
 fake_jira = fake_jira_fixture("https://test.atlassian.net")
 fake_jira2 = fake_jira_fixture("https://test2.atlassian.net")
@@ -114,7 +121,7 @@ def configure_flask_app():
     initialized properly.
     """
     app = openedx_webhooks.create_app(config="testing")
-    with app.test_request_context('/', base_url="https://openedx-webhooks.herokuapp.com"):
+    with app.test_request_context("/", base_url="https://openedx-webhooks.herokuapp.com"):
         yield
 
 
@@ -124,10 +131,12 @@ def reset_all_memoized_functions():
     openedx_webhooks.utils.clear_memoized_values()
 
 
-@pytest.fixture(params=[
-    pytest.param(False, id="pr:closed"),
-    pytest.param(True, id="pr:merged"),
-])
+@pytest.fixture(
+    params=[
+        pytest.param(False, id="pr:closed"),
+        pytest.param(True, id="pr:merged"),
+    ]
+)
 def is_merged(request):
     """Makes tests try both merged and closed pull requests."""
     return request.param

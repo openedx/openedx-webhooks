@@ -2,14 +2,13 @@
 
 import pytest
 import requests
-
 from freezegun import freeze_time
 from glom import glom
 
 from .fake_github import FakeGitHub
 
-
 # pylint: disable=missing-timeout
+
 
 class TestUsers:
     def test_get_me(self, fake_github):
@@ -117,11 +116,14 @@ class TestPullRequestList:
         # When listing pull requests, not all fields are returned.
         assert not any(k in prj for prj in prjs for k in ["merged"])
 
-    @pytest.mark.parametrize("state, number, specific", [
-        ("open", 3, True),
-        ("closed", 2, True),
-        ("all", 5, False),
-    ])
+    @pytest.mark.parametrize(
+        "state, number, specific",
+        [
+            ("open", 3, True),
+            ("closed", 2, True),
+            ("all", 5, False),
+        ],
+    )
     def test_list_pull_requests_count(self, pull_requests_to_list, state, number, specific):
         resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/pulls?state={state}")
         prjs = resp.json()
@@ -149,9 +151,7 @@ class TestPullRequestLabels:
         assert repo.get_label("bug").color == "d73a4a"
         assert repo.get_label("another label").color == "ededed"
 
-        resp = requests.get(
-            f"https://api.github.com/repos/an-org/a-repo/pulls/{pr.number}"
-        )
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/pulls/{pr.number}")
         assert resp.status_code == 200
         prj = resp.json()
         assert prj["title"] == "Here is a pull request"
@@ -177,9 +177,7 @@ class TestPullRequestLabels:
         assert repo.get_label("bug").color == "d73a4a"
         assert repo.get_label("another label").color == "ededed"
 
-        resp = requests.get(
-            f"https://api.github.com/repos/an-org/a-repo/pulls/{pr.number}"
-        )
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/pulls/{pr.number}")
         assert resp.status_code == 200
         prj = resp.json()
         assert prj["title"] == "Here is a pull request"
@@ -196,17 +194,13 @@ class TestComments:
         repo = fake_github.make_repo("an-org", "a-repo")
         pr = repo.make_pull_request()
         assert pr.comments == []
-        resp = requests.get(
-            f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments"
-        )
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments")
         assert resp.status_code == 200
         assert resp.json() == []
 
         pr.add_comment(user="tusbar", body="This is my comment")
         pr.add_comment(user="feanil", body="I love this change!")
-        resp = requests.get(
-            f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments"
-        )
+        resp = requests.get(f"https://api.github.com/repos/an-org/a-repo/issues/{pr.number}/comments")
         assert resp.status_code == 200
         summary = glom(resp.json(), [{"u": "user.login", "b": "body"}])
         assert summary == [
@@ -307,6 +301,7 @@ def flaky_github(requests_mocker, fake_repo_data):
     the_fake_github = FakeGitHub(login="webhook-bot", fraction_404=1)
     the_fake_github.install_mocks(requests_mocker)
     return the_fake_github
+
 
 class TestFlakyGitHub:
     def test_get(self, flaky_github):

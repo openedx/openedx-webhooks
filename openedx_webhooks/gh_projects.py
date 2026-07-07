@@ -2,8 +2,6 @@
 Functions for working with GitHub projects with the GraphQL API.
 """
 
-from typing import Set
-
 from glom import glom
 
 from openedx_webhooks.tasks import logger
@@ -44,26 +42,20 @@ def pull_request_projects_info(pr: PrDict) -> list[PrGhProject]:
 
     example: [{"id": "some-id", "org": "login_id", "number": "1"}]
     """
-    variables = glom(pr, {
-        "owner": "base.repo.owner.login",
-        "name": "base.repo.name",
-        "number": "number"
-    })
+    variables = glom(pr, {"owner": "base.repo.owner.login", "name": "base.repo.name", "number": "number"})
     logger.debug(f"Getting projects for PR: {variables}")
     data = graphql_query(query=PROJECTS_FOR_PR, variables=variables)
     projects = glom(
         data,
         (
             "repository.pullRequest.projectItems.nodes",
-            [
-                {"id": "id", "org": "project.owner.login", "number": "project.number"}
-            ]
-        )
+            [{"id": "id", "org": "project.owner.login", "number": "project.number"}],
+        ),
     )
     return projects
 
 
-def pull_request_projects(pr: PrDict, projects: list[PrGhProject] | None = None) -> Set[GhProject]:
+def pull_request_projects(pr: PrDict, projects: list[PrGhProject] | None = None) -> set[GhProject]:
     """
     Helper method for expressing projects info as sets of tuples with owning org and number:
     {("openedx", 19)}
@@ -203,6 +195,5 @@ def update_project_pr_custom_field(field_name: str, field_value, item_id: str, p
     field_type_name = target_field["dataType"].lower()
     field_type = value_graphql_type(field_type_name)
     graphql_query(
-        query=UPDATE_PROJECT_ITEM.format(fieldType=field_type, fieldTypeName=field_type_name),
-        variables=variables
+        query=UPDATE_PROJECT_ITEM.format(fieldType=field_type, fieldTypeName=field_type_name), variables=variables
     )

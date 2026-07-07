@@ -78,17 +78,18 @@ def test_pr_in_nocontrib_repo_opened(fake_github, user):
     assert pull_request_projects(pr.as_json()) == set()
 
 
-@pytest.mark.parametrize("owner,tag", [
-    ("group:arch-bom", "@openedx/arch-bom"),
-    ("user:feanil", "@feanil"),
-    ("feanil", "@feanil"),
-])
+@pytest.mark.parametrize(
+    "owner,tag",
+    [
+        ("group:arch-bom", "@openedx/arch-bom"),
+        ("user:feanil", "@feanil"),
+        ("feanil", "@feanil"),
+    ],
+)
 @mock.patch("openedx_webhooks.info.get_catalog_info")
 def test_pr_with_owner_repo_opened(get_catalog_info, fake_github, owner, tag, mocker):
     mocker.patch("openedx_webhooks.tasks.pr_tracking.get_github_user_info", lambda x: {"name": x})
-    get_catalog_info.return_value = {
-        'spec': {'owner': owner, 'lifecycle': 'production'}
-    }
+    get_catalog_info.return_value = {"spec": {"owner": owner, "lifecycle": "production"}}
     pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform")
     result = pull_request_changed(pr.as_json())
     assert not result.jira_issues
@@ -101,9 +102,7 @@ def test_pr_with_owner_repo_opened(get_catalog_info, fake_github, owner, tag, mo
 @pytest.mark.parametrize("lifecycle", ["production", "deprecated", None])
 @mock.patch("openedx_webhooks.info.get_catalog_info")
 def test_pr_without_owner_repo_opened(get_catalog_info, fake_github, lifecycle):
-    get_catalog_info.return_value = {
-        'spec': {'lifecycle': lifecycle}
-    } if lifecycle else None
+    get_catalog_info.return_value = {"spec": {"lifecycle": lifecycle}} if lifecycle else None
     pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform")
     result = pull_request_changed(pr.as_json())
     assert not result.jira_issues
@@ -338,14 +337,20 @@ def test_add_to_multiple_projects(fake_github):
     pr = fake_github.make_pull_request(owner="anotherorg", repo="multi-project", user="tusbar")
     pull_request_changed(pr.as_json())
     assert pull_request_projects(pr.as_json()) == {
-        settings.GITHUB_OSPR_PROJECT, ("openedx", 23), ("anotherorg", 17),
+        settings.GITHUB_OSPR_PROJECT,
+        ("openedx", 23),
+        ("anotherorg", 17),
     }
 
-@pytest.mark.parametrize("username, cc_label", [
-    ("feanil", False),  # CC but not OSPR
-    ("pdpinch", True),  # CC
-    ("jarv", False),    # Not CC
-])
+
+@pytest.mark.parametrize(
+    "username, cc_label",
+    [
+        ("feanil", False),  # CC but not OSPR
+        ("pdpinch", True),  # CC
+        ("jarv", False),  # Not CC
+    ],
+)
 def test_automatic_core_contributor_label(fake_github, username, cc_label):
     pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user=username, title="fix: XYZ")
     prj = pr.as_json()
@@ -355,17 +360,22 @@ def test_automatic_core_contributor_label(fake_github, username, cc_label):
     else:
         assert "core contributor" not in pr.labels
 
-@pytest.mark.parametrize("username", [
-    "feanil",   # CC but not OSPR
-    "pdpinch",  # CC
-    "jarv",     # Not CC
-])
+
+@pytest.mark.parametrize(
+    "username",
+    [
+        "feanil",  # CC but not OSPR
+        "pdpinch",  # CC
+        "jarv",  # Not CC
+    ],
+)
 def test_manual_core_contributor_label(fake_github, username):
     pr = fake_github.make_pull_request(owner="openedx", repo="some-code", user=username, title="fix: XYZ")
     pr.set_labels(["core contributor"])
     prj = pr.as_json()
     pull_request_changed(prj)
     assert "core contributor" in pr.labels
+
 
 def test_crash_label(fake_github):
     pr = fake_github.make_pull_request("openedx", user="nedbat")
@@ -399,8 +409,7 @@ def test_jira_labelling(fake_github, fake_jira, fake_jira_another):
 
         Line1
         Line2
-        """
-    )
+        """)
     assert jira_issue.labels == {"from-GitHub"}
 
     # Processing the pull request again won't make another issue.
@@ -484,10 +493,7 @@ def test_bad_jira_labelling_no_repo_map(fake_github, fake_jira2, mocker):
     assert len(pr.list_comments()) == 1
 
     # The repo gets a mapping to a project.
-    mocker.patch(
-        "openedx_webhooks.tasks.pr_tracking.jira_details_for_pr",
-        lambda nick, pr: ("NEWPROJ", "Task")
-    )
+    mocker.patch("openedx_webhooks.tasks.pr_tracking.jira_details_for_pr", lambda nick, pr: ("NEWPROJ", "Task"))
 
     # Processing the PR again won't add another comment.
     pull_request_changed(pr.as_json())
@@ -513,33 +519,27 @@ def test_bad_jira_labelling_no_repo_map(fake_github, fake_jira2, mocker):
 @pytest.mark.parametrize("owner", ["user:navin", "group:auth-group"])
 def test_pr_project_fields_data(fake_github, mocker, owner):
     # Create user "navin" to fake `get_github_user_info` api.
-    fake_github.make_user(login='navin', name='Navin')
+    fake_github.make_user(login="navin", name="Navin")
     mocker.patch(
-        "openedx_webhooks.info.get_catalog_info",
-        lambda _: {
-            'spec': {'owner': owner, 'lifecycle': 'production'}
-        }
+        "openedx_webhooks.info.get_catalog_info", lambda _: {"spec": {"owner": owner, "lifecycle": "production"}}
     )
     created_at = datetime(2024, 12, 1)
     pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform", created_at=created_at)
     pull_request_changed(pr.as_json())
-    assert pr.repo.github.project_items['date-opened-id'] == {created_at.isoformat() + 'Z'}
-    assert pr.repo.github.project_items['date-closed-id'] == set()
+    assert pr.repo.github.project_items["date-opened-id"] == {created_at.isoformat() + "Z"}
+    assert pr.repo.github.project_items["date-closed-id"] == set()
     owner_type, owner_name = owner.split(":")
     if owner_type == "user":
-        assert pr.repo.github.project_items['repo-owner-id'] == {f"{owner_name.title()} (@{owner_name})"}
+        assert pr.repo.github.project_items["repo-owner-id"] == {f"{owner_name.title()} (@{owner_name})"}
     else:
-        assert pr.repo.github.project_items['repo-owner-id'] == {f"openedx/{owner_name}"}
+        assert pr.repo.github.project_items["repo-owner-id"] == {f"openedx/{owner_name}"}
 
 
 def test_pr_project_fields_invalid_field_name(fake_github, mocker, caplog):
     # Create user "navin" to fake `get_github_user_info` api.
-    fake_github.make_user(login='navin', name='Navin')
+    fake_github.make_user(login="navin", name="Navin")
     mocker.patch(
-        "openedx_webhooks.info.get_catalog_info",
-        lambda _: {
-            'spec': {'owner': "user:navin", 'lifecycle': 'production'}
-        }
+        "openedx_webhooks.info.get_catalog_info", lambda _: {"spec": {"owner": "user:navin", "lifecycle": "production"}}
     )
     # mock project metadata
     mocker.patch(
@@ -548,18 +548,18 @@ def test_pr_project_fields_invalid_field_name(fake_github, mocker, caplog):
             "id": "some-project-id",
             "fields": [
                 {"name": "Name", "id": "name-id", "dataType": "text"},
-            ]
-        }
+            ],
+        },
     )
     created_at = datetime(2024, 12, 1)
     pr = fake_github.make_pull_request(owner="openedx", repo="edx-platform", created_at=created_at)
     pull_request_changed(pr.as_json())
-    assert pr.repo.github.project_items['date-opened-id'] == set()
-    assert pr.repo.github.project_items['repo-owner-id'] == set()
+    assert pr.repo.github.project_items["date-opened-id"] == set()
+    assert pr.repo.github.project_items["repo-owner-id"] == set()
     error_logs = [log for log in caplog.records if log.levelno == logging.ERROR]
     expected_msgs = (
         f"Could not find field with name: Date opened in project: {settings.GITHUB_OSPR_PROJECT}",
-        f"Could not find field with name: Repo Owner / Owning Team in project: {settings.GITHUB_OSPR_PROJECT}"
+        f"Could not find field with name: Repo Owner / Owning Team in project: {settings.GITHUB_OSPR_PROJECT}",
     )
     assert error_logs[0].msg == expected_msgs[0]
     assert error_logs[1].msg == expected_msgs[1]

@@ -5,26 +5,26 @@ These are the views that process webhook events coming from Github.
 import logging
 from typing import cast
 
-from flask import current_app as app
 from flask import Blueprint, jsonify, render_template, request
+from flask import current_app as app
 
 from openedx_webhooks import celery
 from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.debug import is_debug, print_long_json
 from openedx_webhooks.info import get_bot_username
 from openedx_webhooks.tasks.github import (
-    pull_request_changed_task, rescan_repository, rescan_repository_task,
+    pull_request_changed_task,
     rescan_organization_task,
+    rescan_repository,
+    rescan_repository_task,
 )
-from openedx_webhooks.utils import (
-    is_valid_payload, queue_task, requires_auth, sentry_extra_context
-)
+from openedx_webhooks.utils import is_valid_payload, queue_task, requires_auth, sentry_extra_context
 
-github_bp = Blueprint('github_views', __name__)
+github_bp = Blueprint("github_views", __name__)
 logger = logging.getLogger(__name__)
 
 
-@github_bp.route('/hook-receiver', methods=('POST',))
+@github_bp.route("/hook-receiver", methods=("POST",))
 def hook_receiver():
     """
     Process incoming GitHub webhook events.
@@ -38,8 +38,8 @@ def hook_receiver():
         A response, or Tuple[str, int]: Message payload and HTTP status code
     """
     signature = request.headers.get("X-Hub-Signature")
-    secret = app.config.get('GITHUB_WEBHOOKS_SECRET')
-    if not is_valid_payload(secret, signature, request.data):   # type: ignore[arg-type]
+    secret = app.config.get("GITHUB_WEBHOOKS_SECRET")
+    if not is_valid_payload(secret, signature, request.data):  # type: ignore[arg-type]
         msg = "Rejecting because signature doesn't match!"
         logging.info(msg)
         return msg, 403
@@ -82,6 +82,7 @@ def hook_receiver():
             # Ignore all other events.
             return "Thank you", 202
 
+
 # Actions on pull requests that we'll act on.
 PR_ACTIONS = {
     "opened",
@@ -94,6 +95,7 @@ PR_ACTIONS = {
     "enqueued",
     "labeled",
 }
+
 
 def handle_pull_request_event(event):
     """Handle a webhook event about a pull request."""
@@ -123,10 +125,9 @@ def handle_comment_event(event):
             pass
 
         case {
-            "issue": {"closed_at": closed}, 
+            "issue": {"closed_at": closed},
             "comment": {"created_at": commented},
-            } if closed == commented:
-
+        } if closed == commented:
             # This is a "Close with comment" comment. Don't do anything for the
             # comment, because we'll also get a "pull request closed" event at
             # the same time, and it will do whatever we need.
@@ -170,21 +171,21 @@ def rescan():
     repo = cast(str, request.form.get("repo"))
     inline = bool(request.form.get("inline", False))
 
-    rescan_kwargs = dict(   # pylint: disable=use-dict-literal
-        allpr=bool(request.form.get("allpr", False)),
-        dry_run=bool(request.form.get("dry_run", False)),
-        earliest=request.form.get("earliest", ""),
-        latest=request.form.get("latest", ""),
-    )
+    rescan_kwargs = {
+        "allpr": bool(request.form.get("allpr", False)),
+        "dry_run": bool(request.form.get("dry_run", False)),
+        "earliest": request.form.get("earliest", ""),
+        "latest": request.form.get("latest", ""),
+    }
 
-    if repo.startswith('all:'):
+    if repo.startswith("all:"):
         if inline:
             return "Don't be silly."
 
         org = repo[4:]
         return queue_task(rescan_organization_task, org, **rescan_kwargs)
     elif inline:
-        return jsonify(rescan_repository(repo, **rescan_kwargs))    # type: ignore[arg-type]
+        return jsonify(rescan_repository(repo, **rescan_kwargs))  # type: ignore[arg-type]
     else:
         return queue_task(rescan_repository_task, repo, **rescan_kwargs)
 

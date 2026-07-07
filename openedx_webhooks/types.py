@@ -3,30 +3,30 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Dict, Tuple
 
 # A pull request as described by a JSON object.
-PrDict = Dict
+PrDict = dict
 
 # A pull request comment as described by a JSON object.
-PrCommentDict = Dict
+PrCommentDict = dict
 
 # A Jira issue described by a JSON object.
-JiraDict = Dict
+JiraDict = dict
 
 # A GitHub project: org name, and number.
-GhProject = Tuple[str, int]
+GhProject = tuple[str, int]
 
 # A GitHub project info: org name, number and pr node id in project.
-PrGhProject = Dict
+PrGhProject = dict
 
 # A GitHub project metadata json object.
-GhPrMetaDict = Dict
+GhPrMetaDict = dict
 
 
 @dataclasses.dataclass(frozen=True)
 class PrId:
     """An id of a pull request, with a repo full_name and an id."""
+
     full_name: str
     number: int
 
@@ -46,6 +46,7 @@ class PrId:
 @dataclasses.dataclass(frozen=True)
 class JiraServer:
     """A Jira server and its credentials."""
+
     # The URL of the Jira server.
     server: str
 
@@ -69,6 +70,7 @@ class JiraServer:
 @dataclasses.dataclass(frozen=True)
 class JiraId:
     """A JiraServer nickname and an issue key."""
+
     nick: str
     key: str
 

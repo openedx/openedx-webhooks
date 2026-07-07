@@ -9,12 +9,12 @@ import sys
 import time
 from functools import wraps
 from hashlib import sha1
-from time import sleep as retry_sleep   # so that we can patch it for tests.
-from typing import Dict, Optional
+from time import sleep as retry_sleep  # so that we can patch it for tests.
+from typing import Any
 
 import cachetools.func
 import requests
-from flask import jsonify, request, Response, url_for
+from flask import Response, jsonify, request, url_for
 from urlobject import URLObject
 
 from openedx_webhooks import logger
@@ -36,20 +36,21 @@ def _check_auth(username, password):
     """
     Checks if a username / password combination is valid.
     """
-    return (
-        username == os.environ.get('HTTP_BASIC_AUTH_USERNAME') and
-        password == os.environ.get('HTTP_BASIC_AUTH_PASSWORD')
+    return username == os.environ.get("HTTP_BASIC_AUTH_USERNAME") and password == os.environ.get(
+        "HTTP_BASIC_AUTH_PASSWORD"
     )
+
 
 def _authenticate():
     """
     Sends a 401 response that enables basic auth
     """
     return Response(
-        'Could not verify your access level for that URL.\n'
-        'You have to login with proper credentials', 401,
-        {'WWW-Authenticate': 'Basic realm="Login Required"'}
+        "Could not verify your access level for that URL.\nYou have to login with proper credentials",
+        401,
+        {"WWW-Authenticate": 'Basic realm="Login Required"'},
     )
+
 
 def requires_auth(f):
     @wraps(f)
@@ -58,11 +59,13 @@ def requires_auth(f):
         if not auth or not _check_auth(auth.username, auth.password):
             return _authenticate()
         return f(*args, **kwargs)
+
     return decorated
 
 
 class RequestFailed(Exception):
     pass
+
 
 def log_check_response(response, raise_for_status=True):
     """
@@ -73,22 +76,24 @@ def log_check_response(response, raise_for_status=True):
         raise_for_status (bool): if True, call raise_for_status on the response
             also.
     """
-    msg = "Request: {0.method} {0.url}: {0.body!r}".format(response.request)
+    msg = f"Request: {response.request.method} {response.request.url}: {response.request.body!r}"
     logger.debug(msg)
-    msg = "Response: {0.status_code} {0.reason!r} for {0.url}: {0.content!r}".format(response)
+    msg = f"Response: {response.status_code} {response.reason!r} for {response.url}: {response.content!r}"
     logger.debug(msg)
     if raise_for_status:
         try:
             response.raise_for_status()
         except Exception as exc:
             req = response.request
-            raise RequestFailed(f"HTTP request failed: {req.method} {req.url}. Response body: {response.content}") from exc
+            raise RequestFailed(
+                f"HTTP request failed: {req.method} {req.url}. Response body: {response.content}"
+            ) from exc
 
 
 def log_rate_limit():
     """Get stats from GitHub about the current rate limit, and log them."""
-    rate = get_github_session().get("/rate_limit").json()['rate']
-    reset = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(rate['reset']))
+    rate = get_github_session().get("/rate_limit").json()["rate"]
+    reset = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(rate["reset"]))
     logger.info(f"Rate limit: {rate['limit']}, used {rate['used']}, remaining {rate['remaining']}. Reset is at {reset}")
 
 
@@ -109,7 +114,7 @@ def is_valid_payload(secret: str, signature: str, payload: bytes) -> bool:
         bool: Is the payload legit?
     """
     mac = hmac.new(secret.encode(), msg=payload, digestmod=sha1)
-    digest = 'sha1=' + mac.hexdigest()
+    digest = "sha1=" + mac.hexdigest()
     return hmac.compare_digest(digest.encode(), signature.encode())
 
 
@@ -143,7 +148,7 @@ def retry_get(session, url, **kwargs):
             tries -= 1
             if tries == 0:
                 break
-            retry_sleep(.5)
+            retry_sleep(0.5)
             continue
         else:
             break
@@ -163,7 +168,7 @@ def paginated_get(url, session=None, limit=None, per_page=100, callback=None, **
     limit of 250, three requests will be made, and you'll get 300 objects.
 
     """
-    url = URLObject(url).set_query_param('per_page', str(per_page))
+    url = URLObject(url).set_query_param("per_page", str(per_page))
     limit = limit or 999999999
     session = session or requests.Session()
     returned = 0
@@ -180,9 +185,9 @@ def paginated_get(url, session=None, limit=None, per_page=100, callback=None, **
             url = resp.links.get("next", {}).get("url", "")
 
 
-def jira_paginated_get(url, session=None,
-                       start=0, start_param="startAt", obj_name=None,
-                       retries=3, debug=False, **fields):
+def jira_paginated_get(
+    url, session=None, start=0, start_param="startAt", obj_name=None, retries=3, debug=False, **fields
+):
     """
     Like ``paginated_get``, but uses JIRA's conventions for a paginated API, which
     are different from Github's conventions.
@@ -191,10 +196,7 @@ def jira_paginated_get(url, session=None,
     url = URLObject(url)
     more_results = True
     while more_results:
-        result_url = (
-            url.set_query_param(start_param, str(start))
-               .set_query_params(**fields)
-        )
+        result_url = url.set_query_param(start_param, str(start)).set_query_params(**fields)
         for _ in range(retries):
             try:
                 if debug:
@@ -212,8 +214,7 @@ def jira_paginated_get(url, session=None,
             objs = result[obj_name]
         else:
             objs = result
-        for obj in objs:
-            yield obj
+        yield from objs
         # are we done yet?
         if isinstance(result, dict):
             returned = len(objs)
@@ -237,14 +238,14 @@ def value_graphql_type(field_type: str) -> str:
         return "String"
 
 
-def graphql_query(query: str, variables: Dict = {}) -> Dict:    # pylint: disable=dangerous-default-value
+def graphql_query(query: str, variables: dict | None = None) -> dict:
     """
     Make a GraphQL query against GitHub.
     """
     url = "https://api.github.com/graphql"
     body = {
         "query": query,
-        "variables": variables,
+        "variables": variables or {},
     }
     response = get_github_session().post(url, json=body)
     log_check_response(response)
@@ -256,7 +257,8 @@ def graphql_query(query: str, variables: Dict = {}) -> Dict:    # pylint: disabl
 
 # A list of all the memoized functions, so that `clear_memoized_values` can
 # clear them all.
-_memoized_functions = []
+_memoized_functions: list[Any] = []
+
 
 def memoize(func):
     """Cache the value returned by a function call forever."""
@@ -264,18 +266,23 @@ def memoize(func):
     _memoized_functions.append(func)
     return func
 
+
 def memoize_timed(minutes):
     """Cache the value of a function for `minutes` minutes."""
+
     def _timed(func):
         # We use time.time as the timer so that freezegun can test it, and in a
         # new function so that freezegun's patching will work.  Freezegun doesn't
         # patch time.monotonic, and we aren't that picky about the time anyway.
         def patchable_timer():
             return time.time()
+
         func = cachetools.func.ttl_cache(ttl=60 * minutes, timer=patchable_timer)(func)
         _memoized_functions.append(func)
         return func
+
     return _timed
+
 
 def clear_memoized_values():
     """Clear all the values saved by @memoize and @memoize_timed, to ensure isolated tests."""
@@ -285,11 +292,16 @@ def clear_memoized_values():
 
 def minimal_wsgi_environ():
     values = {
-        "HTTP_HOST", "SERVER_NAME", "SERVER_PORT", "REQUEST_METHOD",
-        "SCRIPT_NAME", "PATH_INFO", "QUERY_STRING", "wsgi.url_scheme",
+        "HTTP_HOST",
+        "SERVER_NAME",
+        "SERVER_PORT",
+        "REQUEST_METHOD",
+        "SCRIPT_NAME",
+        "PATH_INFO",
+        "QUERY_STRING",
+        "wsgi.url_scheme",
     }
-    return {key: value for key, value in request.environ.items()
-            if key in values}
+    return {key: value for key, value in request.environ.items() if key in values}
 
 
 def queue_task(task, *args, **kwargs):
@@ -310,12 +322,13 @@ def queue_task(task, *args, **kwargs):
 def sentry_extra_context(data_dict):
     """Apply the keys and values from data_dict to the Sentry extra context."""
     from sentry_sdk import configure_scope
+
     with configure_scope() as scope:
         for key, value in data_dict.items():
             scope.set_extra(key, value)
 
 
-def get_jira_issue(jira_nick: str, key: str, missing_ok: bool = False) -> Optional[JiraDict]:
+def get_jira_issue(jira_nick: str, key: str, missing_ok: bool = False) -> JiraDict | None:
     """
     Get the dictionary for a Jira issue, from its key.
 
@@ -328,7 +341,7 @@ def get_jira_issue(jira_nick: str, key: str, missing_ok: bool = False) -> Option
         is missing.
 
     """
-    resp = jira_get(jira_nick, "/rest/api/2/issue/{key}".format(key=key))
+    resp = jira_get(jira_nick, f"/rest/api/2/issue/{key}")
     if resp.status_code == 404 and missing_ok:
         return None
     log_check_response(resp)

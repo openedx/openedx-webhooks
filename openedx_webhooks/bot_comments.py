@@ -5,9 +5,7 @@ The bot makes comments on pull requests. This is stuff needed to do it well.
 import binascii
 import json
 import re
-
 from enum import Enum, auto
-from typing import Dict
 
 import arrow
 from flask import render_template
@@ -26,10 +24,12 @@ GITHUB_NEW_AUTHOR_ASSOCIATIONS = (
     "FIRST_TIME_CONTRIBUTOR",  # Author has not previously committed to the repository.
 )
 
+
 class BotComment(Enum):
     """
     Comments the bot can leave on pull requests.
     """
+
     WELCOME = auto()
     WELCOME_CLOSED = auto()
     NEED_CLA = auto()
@@ -132,26 +132,29 @@ def github_blended_pr_comment(pull_request: PrDict) -> str:
     """
     Create a Blended PR comment.
     """
-    return render_template("github_blended_pr_comment.md.j2",
+    return render_template(
+        "github_blended_pr_comment.md.j2",
         user=pull_request["user"]["login"],
         is_draft=is_draft_pull_request(pull_request),
     )
 
 
 SURVEY_URL = (
-    'https://docs.google.com/forms/d/e'
-    '/1FAIpQLSceJOyGJ6JOzfy6lyR3T7EW_71OWUnNQXp68Fymsk3MkNoSDg/viewform'
-    '?usp=pp_url'
-    '&entry.1671973413={repo_full_name}'
-    '&entry.867055334={pull_request_url}'
-    '&entry.1484655318={contributor_url}'
-    '&entry.752974735={created_at}'
-    '&entry.1917517419={closed_at}'
-    '&entry.2133058324={is_merged}'
+    "https://docs.google.com/forms/d/e"
+    "/1FAIpQLSceJOyGJ6JOzfy6lyR3T7EW_71OWUnNQXp68Fymsk3MkNoSDg/viewform"
+    "?usp=pp_url"
+    "&entry.1671973413={repo_full_name}"
+    "&entry.867055334={pull_request_url}"
+    "&entry.1484655318={contributor_url}"
+    "&entry.752974735={created_at}"
+    "&entry.1917517419={closed_at}"
+    "&entry.2133058324={is_merged}"
 )
 
+
 def _format_datetime(datetime_string):
-    return arrow.get(datetime_string).format('YYYY-MM-DD+HH:mm')
+    return arrow.get(datetime_string).format("YYYY-MM-DD+HH:mm")
+
 
 def github_end_survey_comment(pull_request: PrDict) -> str:
     """
@@ -174,7 +177,7 @@ def github_end_survey_comment(pull_request: PrDict) -> str:
     )
 
 
-def jira_issue_comment(pull_request: PrDict, jira_id: JiraId) -> str:   # pylint: disable=unused-argument
+def jira_issue_comment(pull_request: PrDict, jira_id: JiraId) -> str:  # pylint: disable=unused-argument
     """Render a comment about making a new Jira issue."""
     jira_server = get_jira_server_info(jira_id.nick)
     body = render_template(
@@ -187,7 +190,7 @@ def jira_issue_comment(pull_request: PrDict, jira_id: JiraId) -> str:   # pylint
     return body
 
 
-def no_contributions_thanks(pull_request: PrDict) -> str:   # pylint: disable=unused-argument
+def no_contributions_thanks(pull_request: PrDict) -> str:  # pylint: disable=unused-argument
     """
     Create a "no contributions" comment.
     """
@@ -219,7 +222,7 @@ def no_jira_server_comment(jira_nick: str) -> str:
     return body
 
 
-def extract_data_from_comment(text: str) -> Dict:
+def extract_data_from_comment(text: str) -> dict:
     """
     Extract the data from a data HTML comment in the comment text.
     """
@@ -231,7 +234,7 @@ def extract_data_from_comment(text: str) -> Dict:
     return {}
 
 
-def format_data_for_comment(data: Dict) -> str:
+def format_data_for_comment(data: dict) -> str:
     """
     Format a data dictionary for appending to a comment.
     """

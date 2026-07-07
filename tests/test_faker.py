@@ -8,8 +8,8 @@ import requests_mock
 
 from . import faker
 
-
 # pylint: disable=missing-timeout
+
 
 class MyException(faker.FakerException):
     status_code = 501
@@ -19,6 +19,7 @@ class MyFake(faker.Faker):
     """
     Our Faker-derived fake API for these tests.
     """
+
     def __init__(self, host):
         super().__init__(host)
         self.add_middleware(self.no_foo_middleware)
@@ -76,20 +77,24 @@ def test_json_data(my_fake):
     assert resp.status_code == 200
     assert resp.json() == {"hello": "there", "id": "ME-123"}
 
+
 def test_post(my_fake):
     resp = requests.post("https://myapi.com/api/something/ME-456")
     assert resp.status_code == 200
     assert resp.json() == {"created": "ME-456"}
+
 
 def test_exception(my_fake):
     resp = requests.get("https://myapi.com/api/bad")
     assert resp.status_code == 501
     assert resp.json() == {"error": "Bad!"}
 
+
 def test_query_and_status(my_fake):
     resp = requests.get("https://myapi.com/api/status?code=477")
     assert resp.status_code == 477
     assert resp.text == ""
+
 
 def test_middleware(my_fake):
     """Middleware can interrupt handler execution."""
@@ -97,16 +102,20 @@ def test_middleware(my_fake):
     assert resp.status_code == 789
 
 
-@pytest.mark.parametrize("method, url", [
-    ("GET", "https://myapi.com/nothing"),
-    ("GET", "https://myapi.com"),
-    ("POST", "https://myapi.com/api/status"),
-    ("GET", "http://myapi.com/api/something/ME-123"),
-    ("GET", "https://otherapi.com/api/something/ME-123"),
-])
+@pytest.mark.parametrize(
+    "method, url",
+    [
+        ("GET", "https://myapi.com/nothing"),
+        ("GET", "https://myapi.com"),
+        ("POST", "https://myapi.com/api/status"),
+        ("GET", "http://myapi.com/api/something/ME-123"),
+        ("GET", "https://otherapi.com/api/something/ME-123"),
+    ],
+)
 def test_no_address(my_fake, method, url):
     with pytest.raises(requests_mock.NoMockAddress):
         requests.request(method, url)
+
 
 def test_requests_made(my_fake):
     requests.get("https://myapi.com/api/something/1")
@@ -132,6 +141,7 @@ def test_requests_made(my_fake):
         ("/api/something/1234", "GET"),
     ]
 
+
 def test_reset_mock(my_fake):
     requests.get("https://myapi.com/api/something/1")
     requests.get("https://myapi.com/api/something/1234")
@@ -144,11 +154,13 @@ def test_reset_mock(my_fake):
         ("/api/something/bug123", "DELETE"),
     ]
 
+
 def test_readonly(my_fake):
     requests.get("https://myapi.com/api/something/1")
     requests.get("https://myapi.com/api/something/1234")
     requests.get("https://some.other.host/")
     my_fake.assert_readonly()
+
 
 def test_not_readonly(my_fake):
     requests.get("https://myapi.com/api/something/1")

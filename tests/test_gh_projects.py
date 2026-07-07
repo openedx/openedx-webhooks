@@ -18,7 +18,7 @@ def test_adding_pr_to_project(fake_github):
 
     add_pull_request_to_project(prid, pr.node_id, ("myorg", 23))
     project_info = pull_request_projects_info(prj)
-    assert project_info == [{'id': 'PROJECT:myorg.23', 'org': 'myorg', 'number': 23}]
+    assert project_info == [{"id": "PROJECT:myorg.23", "org": "myorg", "number": 23}]
     projects = set(pull_request_projects(prj, project_info))
     assert projects == {("myorg", 23)}
     assert pr.is_in_project(("myorg", 23))

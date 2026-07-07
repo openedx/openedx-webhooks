@@ -1,19 +1,21 @@
 """
 Get information about people, repos, orgs, pull requests, etc.
 """
-from collections import namedtuple
+
 import csv
 import fnmatch
 import logging
 import re
-from typing import Dict, Iterable, Literal, Optional
+from collections import namedtuple
+from collections.abc import Iterable
+from typing import Literal
 
 import yaml
 from glom import glom
 
 from openedx_webhooks import settings
 from openedx_webhooks.auth import get_github_session
-from openedx_webhooks.types import GhProject, JiraServer, PrDict, PrCommentDict, PrId
+from openedx_webhooks.types import GhProject, JiraServer, PrCommentDict, PrDict, PrId
 from openedx_webhooks.utils import (
     memoize,
     memoize_timed,
@@ -30,9 +32,11 @@ def _github_file_url(repo_fullname: str, file_path: str) -> str:
     # uses master or main.
     return f"https://raw.githubusercontent.com/{repo_fullname}/HEAD/{file_path}"
 
+
 def _read_yaml_data_file(filename):
     """Read a YAML file from openedx-webhooks-data."""
     return yaml.safe_load(_read_data_file(filename))
+
 
 def _read_csv_data_file(filename):
     """
@@ -41,6 +45,7 @@ def _read_csv_data_file(filename):
     used to assign dictionary keys.
     """
     return csv.DictReader(_read_data_file(filename).splitlines())
+
 
 # Cache the webhooks data files, because every PR change reads them.
 @memoize_timed(minutes=15)
@@ -51,7 +56,7 @@ def _read_data_file(filename):
     return read_github_file("openedx/openedx-webhooks-data", filename)
 
 
-def read_github_file(repo_fullname: str, file_path: str, not_there: Optional[str] = None) -> str:
+def read_github_file(repo_fullname: str, file_path: str, not_there: str | None = None) -> str:
     """
     Read a GitHub file from the main or master branch of a repo.
 
@@ -69,7 +74,7 @@ def read_github_file(repo_fullname: str, file_path: str, not_there: Optional[str
     return _read_github_url(_github_file_url(repo_fullname, file_path), not_there)
 
 
-def _read_github_url(url: str, not_there: Optional[str] = None) -> str:
+def _read_github_url(url: str, not_there: str | None = None) -> str:
     """
     Read the content of a GitHub URL.
 
@@ -108,18 +113,24 @@ def get_people_file():
     people_data_csv = _read_csv_data_file("salesforce-export.csv")
     # Simple assurance that the data is what we expect.
     assert people_data_csv.fieldnames == [
-        "First Name", "Last Name", "Number of Active Ind. CLA Contracts",
-        "Title", "Account Name", "Number of Active Entity CLA Contracts", "GitHub Username","Is Core Contributor"
+        "First Name",
+        "Last Name",
+        "Number of Active Ind. CLA Contracts",
+        "Title",
+        "Account Name",
+        "Number of Active Entity CLA Contracts",
+        "GitHub Username",
+        "Is Core Contributor",
     ]
 
     people = {}
 
     for row in people_data_csv:
-        first_name = row['First Name']
-        last_name = row['Last Name']
-        acct_name = row['Account Name']
-        github_username = row['GitHub Username'].lower()
-        is_cc = row['Is Core Contributor'] == '1'
+        first_name = row["First Name"]
+        last_name = row["Last Name"]
+        acct_name = row["Account Name"]
+        github_username = row["GitHub Username"].lower()
+        is_cc = row["Is Core Contributor"] == "1"
 
         people[github_username] = {
             "name": f"{first_name} {last_name}",
@@ -127,11 +138,11 @@ def get_people_file():
         }
 
         if acct_name == "Individual Contributors":
-            people[github_username]["agreement"] = 'individual'
+            people[github_username]["agreement"] = "individual"
         elif not acct_name:
             people[github_username]["agreement"] = "none"
         else:
-            people[github_username]["agreement"] = 'institution'
+            people[github_username]["agreement"] = "institution"
             people[github_username]["institution"] = acct_name
 
     return people
@@ -159,6 +170,7 @@ def get_jira_info() -> dict[str, JiraServer]:
 class NoJiraServer(Exception):
     """Raised when there is no Jira with a given nickname."""
 
+
 class NoJiraMapping(Exception):
     """Raised when the repo isn't mapped to a Jira project."""
 
@@ -173,6 +185,7 @@ def get_jira_server_info(jira_nick: str) -> JiraServer:
     except KeyError as exc:
         raise NoJiraServer(f"No Jira server configured with nick {jira_nick!r}") from exc
     return jira_server
+
 
 def is_pr_author_cc(pull_request: PrDict) -> bool:
     """
@@ -219,13 +232,13 @@ def is_internal_pull_request(pull_request: PrDict) -> bool:
 # logic should be generalized, but this is good for now.
 PRIVATABLE_ORGS = {"edx"}
 
+
 def is_private_repo_no_cla_pull_request(pull_request: PrDict) -> bool:
     """
     Is this a private edX pull request?
     """
-    return (
-        pull_request["base"]["repo"]["owner"]["login"] in PRIVATABLE_ORGS and
-        pull_request["base"]["repo"].get("private", False)
+    return pull_request["base"]["repo"]["owner"]["login"] in PRIVATABLE_ORGS and pull_request["base"]["repo"].get(
+        "private", False
     )
 
 
@@ -243,7 +256,7 @@ def is_draft_pull_request(pull_request: PrDict) -> bool:
     return pull_request.get("draft", False) or bool(re.search(r"\b(WIP|wip)\b", pull_request["title"]))
 
 
-def _pr_author_data(pull_request: PrDict) -> Optional[Dict]:
+def _pr_author_data(pull_request: PrDict) -> dict | None:
     """
     Get data about the author of the pull request, as of the
     creation of the pull request.
@@ -256,6 +269,7 @@ def _pr_author_data(pull_request: PrDict) -> Optional[Dict]:
 
 
 NO_CONTRIBUTION_ORGS = {"edx"}
+
 
 def repo_refuses_contributions(pull_request: PrDict) -> bool:
     """
@@ -276,7 +290,7 @@ def pull_request_has_cla(pull_request: PrDict) -> bool:
     return agreement != "none"
 
 
-def get_blended_project_id(pull_request: PrDict) -> Optional[int]:
+def get_blended_project_id(pull_request: PrDict) -> int | None:
     """
     Find the blended project id in the pull request, if any.
 
@@ -314,7 +328,7 @@ def get_bot_comments(prid: PrId) -> Iterable[PrCommentDict]:
 
 
 @memoize_timed(minutes=15)
-def get_catalog_info(repo_fullname: str) -> Dict:
+def get_catalog_info(repo_fullname: str) -> dict:
     """Get the parsed catalog-info.yaml data from a repo, or {} if missing."""
     yml = read_github_file(repo_fullname, "catalog-info.yaml", not_there="{}")
     try:
@@ -326,7 +340,7 @@ def get_catalog_info(repo_fullname: str) -> Dict:
 
 
 @memoize_timed(minutes=60)
-def get_github_user_info(username: str) -> Dict | None:
+def get_github_user_info(username: str) -> dict | None:
     """Get github user information"""
     resp = get_github_session().get(f"/users/{username}")
     if resp.ok:
@@ -336,7 +350,7 @@ def get_github_user_info(username: str) -> Dict | None:
 
 
 Lifecycle = Literal["experimental", "production", "deprecated"]
-RepoSpec: (str | None, Lifecycle | None, bool) = namedtuple('RepoSpec', ['owner', 'lifecycle', 'is_owner_individual'])
+RepoSpec: (str | None, Lifecycle | None, bool) = namedtuple("RepoSpec", ["owner", "lifecycle", "is_owner_individual"])
 
 
 def get_repo_spec(repo_full_name: str) -> RepoSpec:

@@ -8,8 +8,8 @@ class DefaultConfig:
     CELERY_TASK_SERIALIZER = "json"
     CELERY_RESULT_SERIALIZER = "json"
     CELERY_EAGER_PROPAGATES = True
-    BROKER_URL = os.environ.get('REDIS_TLS_URL', os.environ.get("REDIS_URL", "redis://"))
-    CELERY_RESULT_BACKEND = os.environ.get('REDIS_TLS_URL', os.environ.get("REDIS_URL", "redis://"))
+    BROKER_URL = os.environ.get("REDIS_TLS_URL", os.environ.get("REDIS_URL", "redis://"))
+    CELERY_RESULT_BACKEND = os.environ.get("REDIS_TLS_URL", os.environ.get("REDIS_URL", "redis://"))
 
     def __init__(self):
         # Don't require cert validation if usng redis over TLS because heroku redis uses self signed certs.
@@ -21,9 +21,7 @@ class DefaultConfig:
 
 
 class WorkerConfig(DefaultConfig):
-    CELERY_IMPORTS = (
-        'openedx_webhooks.tasks.github',
-    )
+    CELERY_IMPORTS = ("openedx_webhooks.tasks.github",)
 
 
 class DevelopmentConfig(DefaultConfig):

@@ -2,15 +2,13 @@
 Management of the CLA check (actually a commit status).
 """
 
-from typing import Dict, Optional
-
 from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.types import PrDict
 from openedx_webhooks.utils import log_check_response
 
 
-def _get_latest_commit_for_pull_request(repo_name_full: str, number: int) -> Optional[str]:
+def _get_latest_commit_for_pull_request(repo_name_full: str, number: int) -> str | None:
     """
     Get the HEAD commit for a pull request.
     """
@@ -18,12 +16,12 @@ def _get_latest_commit_for_pull_request(repo_name_full: str, number: int) -> Opt
     response = get_github_session().get(url)
     log_check_response(response)
     data = response.json()
-    sha = data['head']['sha']
+    sha = data["head"]["sha"]
     logger.debug("CLA: SHA %s", sha)
     return sha
 
 
-def _get_commit_status_for_cla(url) -> Optional[Dict[str, str]]:
+def _get_commit_status_for_cla(url) -> dict[str, str] | None:
     """
     Send a GET request to the GitHub API to lookup the build status.
 
@@ -35,18 +33,11 @@ def _get_commit_status_for_cla(url) -> Optional[Dict[str, str]]:
     log_check_response(response)
     data = response.json()
     logger.debug("CLA: GOT %s %s", url, data)
-    cla_statuses = [
-        status
-        for status in data
-        if status['context'] == CLA_CONTEXT
-    ]
+    cla_statuses = [status for status in data if status["context"] == CLA_CONTEXT]
     status = None
     if cla_statuses:
         cla_status = cla_statuses[-1]
-        status = {
-            k: v for k, v in cla_status.items()
-            if k in ["context", "state", "description", "target_url"]
-        }
+        status = {k: v for k, v in cla_status.items() if k in ["context", "state", "description", "target_url"]}
     return status
 
 
@@ -62,21 +53,22 @@ def _update_commit_status_for_cla(url, payload):
     return data
 
 
-def cla_status_on_pr(pull_request: PrDict) -> Optional[Dict[str, str]]:
+def cla_status_on_pr(pull_request: PrDict) -> dict[str, str] | None:
     """
     Get the CLA status for a pull request.
 
     Returns:
         a dict with context, state, description, and target_url.
     """
-    repo_name_full = pull_request['base']['repo']['full_name']
-    number = pull_request['number']
+    repo_name_full = pull_request["base"]["repo"]["full_name"]
+    number = pull_request["number"]
     sha = _get_latest_commit_for_pull_request(repo_name_full, number)
     if not sha:
         return None
     url = f"https://api.github.com/repos/{repo_name_full}/statuses/{sha}"
     status = _get_commit_status_for_cla(url)
     return status
+
 
 # A status is a dict of values. We only have a few that we use, so build them
 # all here.
@@ -117,7 +109,7 @@ CLA_STATUS_NO_CONTRIBUTIONS = {
 }
 
 
-def set_cla_status_on_pr(repo_name_full: str, number: int, status: Dict[str, str]) -> bool:
+def set_cla_status_on_pr(repo_name_full: str, number: int, status: dict[str, str]) -> bool:
     """
     Set the CLA check status on a pull request.
 
@@ -133,7 +125,7 @@ def set_cla_status_on_pr(repo_name_full: str, number: int, status: Dict[str, str
     sha = _get_latest_commit_for_pull_request(repo_name_full, number)
     logger.debug("CLA: Update status to %r for commit %r", status, sha)
     payload = {
-        'context': CLA_CONTEXT,
+        "context": CLA_CONTEXT,
         **status,
     }
     url = f"https://api.github.com/repos/{repo_name_full}/statuses/{sha}"

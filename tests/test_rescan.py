@@ -38,17 +38,26 @@ def make_rescannable_repo(fake_github, org_name="an-org", repo_name="a-repo"):
     # Numbers of internal pull requsts are odd, external are even.
     repo.make_pull_request(user="nedbat", number=101, created_at=datetime(2019, 1, 1))
     repo.make_pull_request(user="tusbar", number=102, created_at=datetime(2019, 2, 1))
-    repo.make_pull_request(user="nedbat", number=103, state="closed", created_at=datetime(2019, 3, 1),
-        closed_at=datetime(2020,7,1))
+    repo.make_pull_request(
+        user="nedbat", number=103, state="closed", created_at=datetime(2019, 3, 1), closed_at=datetime(2020, 7, 1)
+    )
     repo.make_pull_request(user="feanil", number=105, created_at=datetime(2019, 4, 1))
     repo.make_pull_request(user="tusbar", number=106, created_at=datetime(2019, 5, 1))
     # A closed PR that had been processed when it opened.
-    pr = repo.make_pull_request(user="tusbar", number=108, created_at=datetime(2019, 6, 1), closed_at=datetime(2020,7,1))
+    pr = repo.make_pull_request(
+        user="tusbar", number=108, created_at=datetime(2019, 6, 1), closed_at=datetime(2020, 7, 1)
+    )
     pull_request_changed(pr.as_json())
     pr.close(merge=False)
     # One of the PRs already has a bot comment with a Jira issue.
-    pr = repo.make_pull_request(user="tusbar", number=110, state="closed", merged=True, created_at=datetime(2019, 7, 1),
-        closed_at=datetime(2020,7,1))
+    pr = repo.make_pull_request(
+        user="tusbar",
+        number=110,
+        state="closed",
+        merged=True,
+        created_at=datetime(2019, 7, 1),
+        closed_at=datetime(2020, 7, 1),
+    )
     pr.add_comment(user=get_bot_username(), body=github_community_pr_comment(pr.as_json()))
 
     # Issues before 2018 should not be rescanned.
@@ -58,10 +67,13 @@ def make_rescannable_repo(fake_github, org_name="an-org", repo_name="a-repo"):
     return repo
 
 
-@pytest.mark.parametrize("allpr", [
-    pytest.param(False, id="allpr:no"),
-    pytest.param(True, id="allpr:yes"),
-])
+@pytest.mark.parametrize(
+    "allpr",
+    [
+        pytest.param(False, id="allpr:no"),
+        pytest.param(True, id="allpr:yes"),
+    ],
+)
 def test_rescan_repository(rescannable_repo, pull_request_changed_fn, allpr):
     ret = rescan_repository(rescannable_repo.full_name, allpr=allpr)
     changed = ret["changed"]
@@ -102,22 +114,24 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
 
     # Get the names of the actions. We won't worry about the details, those
     # are tested in the non-dry-run tests of rescanning pull requests.
-    import json,sys; json.dump(ret["dry_run_actions"], sys.stdout, indent=4)
+    import sys
+
+    json.dump(ret["dry_run_actions"], sys.stdout, indent=4)
     actions = {k: [name for name, kwargs in actions] for k, actions in ret["dry_run_actions"].items()}
     assert actions == {
         102: [
             "initial_state",
-            "set_cla_status",                   # "The author is authorized to contribute"
-            "update_labels_on_pull_request",    # ["open-source-contribution"]
-            "add_comment_to_pull_request",      # "Thanks for the pull request, @tusbar!"
+            "set_cla_status",  # "The author is authorized to contribute"
+            "update_labels_on_pull_request",  # ["open-source-contribution"]
+            "add_comment_to_pull_request",  # "Thanks for the pull request, @tusbar!"
             "add_pull_request_to_project",
             "update_project_pr_custom_field",
         ],
         106: [
             "initial_state",
-            "set_cla_status",                   # "The author is authorized to contribute"
-            "update_labels_on_pull_request",    # ["open-source-contribution"]
-            "add_comment_to_pull_request",      # "Thanks for the pull request, @tusbar!"
+            "set_cla_status",  # "The author is authorized to contribute"
+            "update_labels_on_pull_request",  # ["open-source-contribution"]
+            "add_comment_to_pull_request",  # "Thanks for the pull request, @tusbar!"
             "add_pull_request_to_project",
             "update_project_pr_custom_field",
         ],
@@ -127,18 +141,22 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
         ],
         110: [
             "initial_state",
-            "set_cla_status",                   # "The author is authorized to contribute"
+            "set_cla_status",  # "The author is authorized to contribute"
         ],
     }
 
     # The value returned should be json-encodable.
     json.dumps(ret)
 
-@pytest.mark.parametrize("earliest, latest, nums", [
-    ("", "", [102, 106, 108, 110]),
-    ("2019-06-01", "", [108, 110]),
-    ("2019-06-01", "2019-06-30", [108]),
-])
+
+@pytest.mark.parametrize(
+    "earliest, latest, nums",
+    [
+        ("", "", [102, 106, 108, 110]),
+        ("2019-06-01", "", [108, 110]),
+        ("2019-06-01", "2019-06-30", [108]),
+    ],
+)
 def test_rescan_repository_date_limits(rescannable_repo, pull_request_changed_fn, earliest, latest, nums):
     rescan_repository(rescannable_repo.full_name, allpr=True, earliest=earliest, latest=latest)
 
@@ -158,12 +176,15 @@ def rescannable_org(fake_github):
             make_rescannable_repo(fake_github, org_name, repo_name)
 
 
-@pytest.mark.parametrize("allpr, earliest, latest, nums", [
-    (False, "", "", [102, 106]),
-    (True, "", "", [102, 106, 108, 110]),
-    (True, "2019-06-01", "", [108, 110]),
-    (True, "2019-06-01", "2019-06-30", [108]),
-])
+@pytest.mark.parametrize(
+    "allpr, earliest, latest, nums",
+    [
+        (False, "", "", [102, 106]),
+        (True, "", "", [102, 106, 108, 110]),
+        (True, "2019-06-01", "", [108, 110]),
+        (True, "2019-06-01", "2019-06-30", [108]),
+    ],
+)
 def test_rescan_organization(rescannable_org, pull_request_changed_fn, allpr, earliest, latest, nums):
     rescan_organization("org1", allpr=allpr, earliest=earliest, latest=latest)
     prs = [PrId.from_pr_dict(c.args[0]) for c in pull_request_changed_fn.call_args_list]
@@ -174,7 +195,7 @@ def test_rescan_organization(rescannable_org, pull_request_changed_fn, allpr, ea
 def test_rescan_failure(mocker, rescannable_repo):
     def flaky_pull_request_changed(pr, actions):
         if pr["number"] == 108:
-            return 1/0 # BOOM
+            return 1 / 0  # BOOM
         else:
             return pull_request_changed(pr, actions)
 
@@ -185,5 +206,5 @@ def test_rescan_failure(mocker, rescannable_repo):
     err = ret["errors"][108]
     assert err.startswith("Traceback (most recent call last):\n")
     assert " in flaky_pull_request_changed\n" in err
-    assert "1/0 # BOOM" in err
+    assert "1 / 0  # BOOM" in err
     assert "ZeroDivisionError: division by zero" in err

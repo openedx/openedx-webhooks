@@ -6,11 +6,11 @@ from freezegun import freeze_time
 
 from openedx_webhooks.bot_comments import (
     BotComment,
-    is_comment_kind,
-    github_community_pr_comment,
-    github_end_survey_comment,
     extract_data_from_comment,
     format_data_for_comment,
+    github_community_pr_comment,
+    github_end_survey_comment,
+    is_comment_kind,
 )
 
 from .helpers import check_good_markdown
@@ -59,6 +59,7 @@ COMMENT_DATA = {
     "non-ascii": "ИФИ-ДSCII ΓΞЖΓ",
     "lists": [1, 2, 3, [4, 5, 6]],
 }
+
 
 def test_data_in_comments():
     comment = "blah blah" + format_data_for_comment(COMMENT_DATA)

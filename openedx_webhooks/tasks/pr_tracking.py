@@ -9,7 +9,7 @@ import copy
 import dataclasses
 import itertools
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, cast
+from typing import cast
 
 from openedx_webhooks import settings
 from openedx_webhooks.auth import get_github_session, get_jira_session
@@ -53,12 +53,12 @@ from openedx_webhooks.info import (
     is_bot_pull_request,
     is_draft_pull_request,
     is_internal_pull_request,
+    is_pr_author_cc,
     is_private_repo_no_cla_pull_request,
     jira_details_for_pr,
     projects_for_pr,
     pull_request_has_cla,
     repo_refuses_contributions,
-    is_pr_author_cc,
 )
 from openedx_webhooks.labels import (
     GITHUB_CATEGORY_LABELS,
@@ -84,12 +84,13 @@ class BotData:
     """
     The data we store hidden in bot comments, to track our work.
     """
+
     # Is this a draft pull request?
     draft: bool = False
     # The Jira issues associated with the pull request.
-    jira_issues: Set[JiraId] = field(default_factory=set)
+    jira_issues: set[JiraId] = field(default_factory=set)
     # Jira nick labels that have created error comments.
-    jira_errors: Set[str] = field(default_factory=set)
+    jira_errors: set[str] = field(default_factory=set)
 
     def update(self, data: dict) -> None:
         """Add data from `data` to this BotData."""
@@ -106,32 +107,33 @@ class PrCurrentInfo:
     """
     The current information we have for a pull request.
     """
-    bot_comments: Set[BotComment] = field(default_factory=set)
+
+    bot_comments: set[BotComment] = field(default_factory=set)
 
     # The text of the first bot comment.
-    bot_comment0_text: Optional[str] = None
+    bot_comment0_text: str | None = None
 
     # The comment id of the survey comment, if any.
-    bot_survey_comment_id: Optional[str] = None
+    bot_survey_comment_id: str | None = None
 
     # The last-seen state stored in the first bot comment.
     bot_data: BotData = field(default_factory=BotData)
 
     # The actual Jira issue id.  Can differ from jira_mentioned_id if the
     # issue was moved, or can be None if the issue has been deleted.
-    jira_id: Optional[str] = None
+    jira_id: str | None = None
 
     # The actual set of labels on the pull request.
-    github_labels: Set[str] = field(default_factory=set)
+    github_labels: set[str] = field(default_factory=set)
 
     # The GitHub projects the PR is in.
-    github_projects: Set[GhProject] = field(default_factory=set)
+    github_projects: set[GhProject] = field(default_factory=set)
 
     # The GitHub projects the PR is in.
     github_projects_info: list[PrGhProject] = field(default_factory=list)
 
     # The status of the cla check.
-    cla_check: Optional[Dict[str, str]] = None
+    cla_check: dict[str, str] | None = None
 
 
 @dataclass
@@ -139,28 +141,29 @@ class PrDesiredInfo:
     """
     The information we want to have for a pull request.
     """
+
     # Is this an "external" pull request (True), or internal (False)?
     is_ospr: bool = False
     # Is this pull request being refused?
     is_refused: bool = False
 
-    bot_comments: Set[BotComment] = field(default_factory=set)
-    bot_comments_to_remove: Set[BotComment] = field(default_factory=set)
-    jira_title: Optional[str] = None
-    jira_description: Optional[str] = None
+    bot_comments: set[BotComment] = field(default_factory=set)
+    bot_comments_to_remove: set[BotComment] = field(default_factory=set)
+    jira_title: str | None = None
+    jira_description: str | None = None
 
     # The Jira instances we want to have issues on.
-    jira_nicks: Set[str] = field(default_factory=set)
+    jira_nicks: set[str] = field(default_factory=set)
 
     # The bot-controlled labels we want to on the pull request.
     # See labels.py:CATEGORY_LABELS
-    github_labels: Set[str] = field(default_factory=set)
+    github_labels: set[str] = field(default_factory=set)
 
     # The GitHub projects we want the PR in.
-    github_projects: Set[GhProject] = field(default_factory=set)
+    github_projects: set[GhProject] = field(default_factory=set)
 
     # The status of the cla check.
-    cla_check: Optional[Dict[str, str]] = None
+    cla_check: dict[str, str] | None = None
 
 
 @dataclass
@@ -168,10 +171,11 @@ class FixResult:
     """
     Return value from PrTrackingFixer.result.
     """
+
     # The Jira issues associated with the pull request.
-    jira_issues: Set[JiraId] = field(default_factory=set)
+    jira_issues: set[JiraId] = field(default_factory=set)
     # The Jira issues that were created or changed.
-    changed_jira_issues: Set[JiraId] = field(default_factory=set)
+    changed_jira_issues: set[JiraId] = field(default_factory=set)
 
 
 def current_support_state(pr: PrDict) -> PrCurrentInfo:
@@ -194,7 +198,7 @@ def current_support_state(pr: PrDict) -> PrCurrentInfo:
                     current.bot_survey_comment_id = comment["id"]
         current.bot_data.update(extract_data_from_comment(body))
 
-    current.github_labels = set(lbl["name"] for lbl in pr["labels"])
+    current.github_labels = {lbl["name"] for lbl in pr["labels"]}
     current.github_projects_info = pull_request_projects_info(pr)
     current.github_projects = pull_request_projects(pr, current.github_projects_info)
     current.cla_check = cla_status_on_pr(pr)
@@ -211,7 +215,7 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
     user = pr["user"]["login"]
     repo = pr["base"]["repo"]["full_name"]
     num = pr["number"]
-    label_names = set(lbl["name"] for lbl in pr["labels"])
+    label_names = {lbl["name"] for lbl in pr["labels"]}
 
     user_is_bot = is_bot_pull_request(pr)
     no_cla_is_needed = is_private_repo_no_cla_pull_request(pr)
@@ -244,13 +248,11 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
         raise Exception(f"A crash label was applied by {user}")
 
     desired.jira_title = pr["title"]
-    desired.jira_description = (
-        "(From {url} by {user_url})\n------\n\n{body}"
-        ).format(
-            url=pr["html_url"],
-            body=(pr["body"] or ""),
-            user_url=pr["user"]["html_url"],
-        )
+    desired.jira_description = ("(From {url} by {user_url})\n------\n\n{body}").format(
+        url=pr["html_url"],
+        body=(pr["body"] or ""),
+        user_url=pr["user"]["html_url"],
+    )
 
     blended_id = get_blended_project_id(pr)
     if blended_id is not None:
@@ -298,10 +300,10 @@ def desired_support_state(pr: PrDict) -> PrDesiredInfo:
         if state == "reopened":
             desired.bot_comments_to_remove.add(BotComment.SURVEY)
 
-#        # temp: Disable survey link on pull requests
-#        # https://github.com/openedx/openedx-webhooks/issues/259
-#        if state in ["closed", "merged"]:
-#            desired.bot_comments.add(BotComment.SURVEY)
+    #        # temp: Disable survey link on pull requests
+    #        # https://github.com/openedx/openedx-webhooks/issues/259
+    #        if state in ["closed", "merged"]:
+    #            desired.bot_comments.add(BotComment.SURVEY)
 
     if desired.is_refused and state not in ["closed", "merged"]:
         desired.bot_comments.add(BotComment.NO_CONTRIBUTIONS)
@@ -313,7 +315,7 @@ def json_safe_dict(dc):
     """
     Make a JSON-safe dict from a dataclass, for recording info during dry runs.
     """
-    return {k:repr(v) for k, v in dataclasses.asdict(dc).items()}
+    return {k: repr(v) for k, v in dataclasses.asdict(dc).items()}
 
 
 class PrTrackingFixer:
@@ -336,7 +338,7 @@ class PrTrackingFixer:
 
         self.bot_data = copy.deepcopy(current.bot_data)
         self.fix_result: FixResult = FixResult()
-        self.exceptions: List[Exception] = []
+        self.exceptions: list[Exception] = []
 
     def result(self) -> FixResult:
         return self.fix_result
@@ -350,7 +352,7 @@ class PrTrackingFixer:
         """
         try:
             yield
-        except Exception as exc:    # pylint: disable=broad-exception-caught
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             self.exceptions.append(exc)
 
     def fix(self) -> None:
@@ -418,20 +420,22 @@ class PrTrackingFixer:
         """
         Update projects for pr.
         """
-        for project in (self.desired.github_projects - self.current.github_projects):
-            project_item_id = self.actions.add_pull_request_to_project(
-                pr_node_id=self.pr["node_id"], project=project
+        for project in self.desired.github_projects - self.current.github_projects:
+            project_item_id = self.actions.add_pull_request_to_project(pr_node_id=self.pr["node_id"], project=project)
+            self.current.github_projects_info.append(
+                {
+                    "id": project_item_id,
+                    "org": project[0],
+                    "number": project[1],
+                }
             )
-            self.current.github_projects_info.append({
-                "id": project_item_id,
-                "org": project[0],
-                "number": project[1],
-            })
 
     def _fix_project_node_fields(self) -> None:
         """
         Update pr fields in OSPR project board.
         """
+        if settings.GITHUB_OSPR_PROJECT is None:
+            return
         for project in self.current.github_projects_info:
             if (
                 project["org"] == settings.GITHUB_OSPR_PROJECT[0]
@@ -447,7 +451,7 @@ class PrTrackingFixer:
                 field_name="Date opened",
                 field_value=self.pr["created_at"],
                 item_id=project_item_id,
-                project=settings.GITHUB_OSPR_PROJECT
+                project=settings.GITHUB_OSPR_PROJECT,
             )
             # get base repo owner info
             repo_spec = get_repo_spec(self.pr["base"]["repo"]["full_name"])
@@ -463,7 +467,7 @@ class PrTrackingFixer:
                 field_name="Repo Owner / Owning Team",
                 field_value=owner,
                 item_id=project_item_id,
-                project=settings.GITHUB_OSPR_PROJECT
+                project=settings.GITHUB_OSPR_PROJECT,
             )
         elif state == "merged":
             merged_at = self.pr.get("merged_at")
@@ -480,14 +484,14 @@ class PrTrackingFixer:
                 field_name="Date merged/closed",
                 field_value=merged_at,
                 item_id=project_item_id,
-                project=settings.GITHUB_OSPR_PROJECT
+                project=settings.GITHUB_OSPR_PROJECT,
             )
         elif state == "closed":
             self.actions.update_project_pr_custom_field(
                 field_name="Date merged/closed",
                 field_value=self.pr["closed_at"],
                 item_id=project_item_id,
-                project=settings.GITHUB_OSPR_PROJECT
+                project=settings.GITHUB_OSPR_PROJECT,
             )
 
     def _make_jira_issue(self, jira_nick) -> None:
@@ -584,9 +588,7 @@ class PrTrackingFixer:
             # No body, no comment to make.
             return
 
-        comment_body += format_data_for_comment({
-            "draft": is_draft_pull_request(self.pr)
-        })
+        comment_body += format_data_for_comment({"draft": is_draft_pull_request(self.pr)})
 
         if comment_body != self.current.bot_comment0_text:
             # If there are current-state comments, then we need to edit the
@@ -624,6 +626,7 @@ class DryRunFixingActions:
     """
     Implementation of actions for dry runs.
     """
+
     jira_ids = itertools.count(start=9000)
 
     def __init__(self):
@@ -644,6 +647,7 @@ class DryRunFixingActions:
     def __getattr__(self, name):
         def fn(**kwargs):
             self.action_calls.append((name, kwargs))
+
         return fn
 
 
@@ -660,20 +664,21 @@ class FixingActions:
     def __init__(self, prid: PrId):
         self.prid = prid
 
-    def initial_state(self, *, current: Dict, desired: Dict) -> None:
+    def initial_state(self, *, current: dict, desired: dict) -> None:
         """
         Does nothing when really fixing, but captures information for dry runs.
         """
 
     def create_jira_issue(
-        self, *,
+        self,
+        *,
         jira_nick: str,
         project: str,
         issuetype: str,
-        summary: Optional[str],
-        description: Optional[str],
-        labels: List[str],
-    ) -> Dict:
+        summary: str | None,
+        description: str | None,
+        labels: list[str],
+    ) -> dict:
         """
         Create a new Jira issue for a pull request.
 
@@ -736,7 +741,7 @@ class FixingActions:
         resp = get_github_session().delete(url)
         log_check_response(resp)
 
-    def update_labels_on_pull_request(self, *, labels: List[str]) -> None:
+    def update_labels_on_pull_request(self, *, labels: list[str]) -> None:
         """
         Change the labels on a pull request.
 
@@ -754,7 +759,7 @@ class FixingActions:
         """
         try:
             return add_pull_request_to_project(self.prid, pr_node_id, project)
-        except Exception:    # pylint: disable=broad-exception-caught
+        except Exception:  # pylint: disable=broad-exception-caught
             logger.exception("Couldn't add PR to project")
         return None
 
@@ -764,8 +769,8 @@ class FixingActions:
         """
         try:
             update_project_pr_custom_field(field_name, field_value, item_id, project)
-        except Exception:    # pylint: disable=broad-exception-caught
+        except Exception:  # pylint: disable=broad-exception-caught
             logger.exception(f"Couldn't update: {field_name} for a PR in project")
 
-    def set_cla_status(self, *, status: Dict[str, str]) -> None:
+    def set_cla_status(self, *, status: dict[str, str]) -> None:
         set_cla_status_on_pr(self.prid.full_name, self.prid.number, status)

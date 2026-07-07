@@ -5,8 +5,9 @@ from flask import Blueprint, render_template
 from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.utils import requires_auth
 
-ui = Blueprint('ui', __name__)
+ui = Blueprint("ui", __name__)
 logger = logging.getLogger(__name__)
+
 
 @ui.route("/")
 @requires_auth
@@ -21,7 +22,7 @@ def index():
         try:
             github_username = gh_user_resp.json()["login"]
         except Exception:
-            logger.error("Failed to process response: {}".format(gh_user_resp.text))
+            logger.error(f"Failed to process response: {gh_user_resp.text}")
             raise
 
     return render_template("main.html", github_username=github_username)

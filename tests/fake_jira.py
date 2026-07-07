@@ -4,12 +4,11 @@ import dataclasses
 import itertools
 import re
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Set
 
 from . import faker
 
-
 issue_ids = itertools.count(start=101, step=13)
+
 
 def _make_issue_key(project: str) -> str:
     """Generate the next issue key for a project."""
@@ -20,12 +19,13 @@ def _make_issue_key(project: str) -> str:
 @dataclass
 class Issue:
     """A Jira issue."""
+
     key: str
     status: str
-    issuetype: Optional[str] = None
-    description: Optional[str] = None
-    summary: Optional[str] = None
-    labels: Set[str] = field(default_factory=set)
+    issuetype: str | None = None
+    description: str | None = None
+    summary: str | None = None
+    labels: set[str] = field(default_factory=set)
 
     def __post_init__(self) -> None:
         # Jira labels can't have spaces in them. Check that they are only
@@ -36,7 +36,7 @@ class Issue:
             if len(label) < 3:
                 raise ValueError(f"Label {label!r} is too short")
 
-    def as_json(self) -> Dict:
+    def as_json(self) -> dict:
         return {
             "key": self.key,
             "fields": {
@@ -60,20 +60,22 @@ class FakeJira(faker.Faker):
     # state. Other projects could be much more complex.
     TRANSITIONS = {
         name: str(i + 901)
-        for i, name in enumerate([
-            "Needs Triage",
-            "Waiting on Author",
-            "Blocked by Other Work",
-            "Rejected",
-            "Merged",
-            "Community Manager Review",
-            "Open edX Community Review",
-            "Awaiting Prioritization",
-            "Product Review",
-            "Engineering Review",
-            "Architecture Review",
-            "Changes Requested",
-        ])
+        for i, name in enumerate(
+            [
+                "Needs Triage",
+                "Waiting on Author",
+                "Blocked by Other Work",
+                "Rejected",
+                "Merged",
+                "Community Manager Review",
+                "Open edX Community Review",
+                "Awaiting Prioritization",
+                "Product Review",
+                "Engineering Review",
+                "Architecture Review",
+                "Changes Requested",
+            ]
+        )
     }
 
     TRANSITION_IDS = {id: name for name, id in TRANSITIONS.items()}
@@ -81,11 +83,11 @@ class FakeJira(faker.Faker):
     def __init__(self, host) -> None:
         super().__init__(host=host)
         # Map from issue keys to Issue objects.
-        self.issues: Dict[str, Issue] = {}
+        self.issues: dict[str, Issue] = {}
         # Map from old keys to new keys for moved issues.
-        self.moves: Dict[str, str] = {}
+        self.moves: dict[str, str] = {}
 
-    def make_issue(self, key: Optional[str] = None, project: str = "OSPR", **kwargs) -> Issue:
+    def make_issue(self, key: str | None = None, project: str = "OSPR", **kwargs) -> Issue:
         """Make fake issue data."""
         if key is None:
             key = _make_issue_key(project)
@@ -93,7 +95,7 @@ class FakeJira(faker.Faker):
         self.issues[key] = issue
         return issue
 
-    def find_issue(self, key: str) -> Optional[Issue]:
+    def find_issue(self, key: str) -> Issue | None:
         """
         Find an issue, even across moves.
 
@@ -115,7 +117,7 @@ class FakeJira(faker.Faker):
         return the_issue
 
     @faker.route(r"/rest/api/2/issue/(?P<key>\w+-\d+)")
-    def _get_issue(self, match, _request, context) -> Dict:
+    def _get_issue(self, match, _request, context) -> dict:
         """Implement the GET issue endpoint."""
         if (issue := self.find_issue(match["key"])) is not None:
             return issue.as_json()
@@ -130,12 +132,12 @@ class FakeJira(faker.Faker):
         fields = issue_data["fields"]
         project = fields["project"]["key"]
         key = _make_issue_key(project)
-        kwargs = dict(  # pylint: disable=use-dict-literal
-            issuetype=fields["issuetype"]["name"],
-            summary=fields.get("summary"),
-            description=fields.get("description"),
-            labels=set(fields.get("labels")),
-        )
+        kwargs = {
+            "issuetype": fields["issuetype"]["name"],
+            "summary": fields.get("summary"),
+            "description": fields.get("description"),
+            "labels": set(fields.get("labels")),
+        }
         self.make_issue(key, **kwargs)
         # Response is only some information:
         # {"id":"184975","key":"OSPR-4836","self":"https://test.atlassian.net/rest/api/2/issue/184975"}

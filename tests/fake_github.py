@@ -9,8 +9,9 @@ import dataclasses
 import datetime
 import itertools
 import random
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Optional, Set
+from typing import Any
 
 from openedx_webhooks.cla_check import CLA_CONTEXT
 from openedx_webhooks.types import GhProject
@@ -20,21 +21,26 @@ from .helpers import check_good_graphql, check_good_markdown
 
 
 class FakeGitHubException(faker.FakerException):
-    def as_json(self) -> Dict:
+    def as_json(self) -> dict:
         j = {"message": str(self)}
         return j
 
+
 class DoesNotExist(FakeGitHubException):
     """A requested object does not exist."""
+
     status_code = 404
+
 
 def fake_sha():
     """A realistic stand-in for a commit sha."""
     return "".join(random.choice("0123456789abcdef") for c in range(32))
 
+
 def fake_node_id():
     """A plausible stand-in for a node id."""
     return "NODE_" + "".join(random.choice("0123456789abcdef") for c in range(16))
+
 
 @dataclass
 class User:
@@ -55,11 +61,12 @@ class User:
 @dataclass
 class Label:
     name: str
-    color: Optional[str] = "ededed"
-    description: Optional[str] = None
+    color: str | None = "ededed"
+    description: str | None = None
 
     def as_json(self):
         return dataclasses.asdict(self)
+
 
 DEFAULT_LABELS = [
     {"name": "bug", "color": "d73a4a", "description": "Something isn't working"},
@@ -75,11 +82,13 @@ DEFAULT_LABELS = [
 
 comment_ids = itertools.count(start=1001, step=137)
 
+
 @dataclass
 class Comment:
     """
     A comment on an issue or pull request.
     """
+
     id: int = field(init=False, default_factory=comment_ids.__next__)
     user: User
     body: str
@@ -90,7 +99,7 @@ class Comment:
     def validate(self):
         check_good_markdown(self.body)
 
-    def as_json(self) -> Dict:
+    def as_json(self) -> dict:
         return {
             "id": self.id,
             "body": self.body,
@@ -109,20 +118,20 @@ class PullRequest:
     number: int
     user: User
     title: str = ""
-    body: Optional[str] = ""
+    body: str | None = ""
     node_id: str = field(default_factory=fake_node_id)
     created_at: datetime.datetime = field(default_factory=patchable_now)
-    closed_at: Optional[datetime.datetime] = None
-    merged_at: Optional[datetime.datetime] = None
-    comments: List[int] = field(default_factory=list)
-    labels: Set[str] = field(default_factory=set)
+    closed_at: datetime.datetime | None = None
+    merged_at: datetime.datetime | None = None
+    comments: list[int] = field(default_factory=list)
+    labels: set[str] = field(default_factory=set)
     state: str = "open"
     merged: bool = False
     draft: bool = False
-    commits: List[str] = field(default_factory=list)
+    commits: list[str] = field(default_factory=list)
     ref: str = ""
 
-    def as_json(self, brief=False) -> Dict:
+    def as_json(self, brief=False) -> dict:
         j = {
             "number": self.number,
             "node_id": self.node_id,
@@ -172,7 +181,7 @@ class PullRequest:
         self.comments.append(comment.id)
         return comment
 
-    def list_comments(self) -> List[Comment]:
+    def list_comments(self) -> list[Comment]:
         return [com for cid in self.comments if (com := self.repo.comments.get(cid))]
 
     def delete_comment(self, comment_number) -> None:
@@ -205,15 +214,15 @@ class Repo:
     owner: str
     repo: str
     private: bool
-    labels: Dict[str, Label] = field(default_factory=dict)
-    pull_requests: Dict[int, PullRequest] = field(default_factory=dict)
-    comments: Dict[int, Comment] = field(default_factory=dict)
+    labels: dict[str, Label] = field(default_factory=dict)
+    pull_requests: dict[int, PullRequest] = field(default_factory=dict)
+    comments: dict[int, Comment] = field(default_factory=dict)
 
     @property
     def full_name(self):
         return f"{self.owner}/{self.repo}"
 
-    def as_json(self) -> Dict:
+    def as_json(self) -> dict:
         return {
             "full_name": self.full_name,
             "name": self.repo,
@@ -234,14 +243,14 @@ class Repo:
         self.github.pr_nodes[pr.node_id] = pr
         return pr
 
-    def list_pull_requests(self, state: str) -> List[PullRequest]:
+    def list_pull_requests(self, state: str) -> list[PullRequest]:
         return [pr for pr in self.pull_requests.values() if (state == "all") or (pr.state == state)]
 
     def get_pull_request(self, number: int) -> PullRequest:
         try:
             return self.pull_requests[number]
         except KeyError:
-            raise DoesNotExist(f"Pull request {self.full_name} #{number} does not exist")
+            raise DoesNotExist(f"Pull request {self.full_name} #{number} does not exist") from None
 
     def make_comment(self, user, **kwargs) -> Comment:
         user = self.github.get_user(user, create=True)
@@ -253,12 +262,12 @@ class Repo:
         try:
             return self.labels[name]
         except KeyError:
-            raise DoesNotExist(f"Label {self.full_name} {name!r} does not exist")
+            raise DoesNotExist(f"Label {self.full_name} {name!r} does not exist") from None
 
     def has_label(self, name: str) -> bool:
         return name in self.labels
 
-    def _set_labels(self, data: List[Dict]) -> None:
+    def _set_labels(self, data: list[dict]) -> None:
         self.labels = {}
         for kwargs in data:
             self.add_label(**kwargs)
@@ -273,6 +282,7 @@ class Flaky404:
     """
     A middleware to emulate flaky behavior of GitHub's.
     """
+
     def __init__(self, fraction_404):
         self.fraction_404 = fraction_404
         self.paths = set()
@@ -293,27 +303,26 @@ class Flaky404:
 
 
 class FakeGitHub(faker.Faker):
-
     def __init__(self, login, fraction_404=0) -> None:
         super().__init__(host="https://api.github.com")
         if fraction_404:
             self.add_middleware(Flaky404(fraction_404).middleware)
 
         self.login = login
-        self.users: Dict[str, User] = {}
-        self.repos: Dict[str, Repo] = {}
+        self.users: dict[str, User] = {}
+        self.repos: dict[str, Repo] = {}
 
         # Map from PR node id to pull request.
-        self.pr_nodes: Dict[str, PullRequest] = {}
+        self.pr_nodes: dict[str, PullRequest] = {}
         # Map from Project node id to (orgname, number) pairs.
-        self.project_nodes: Dict[str, GhProject] = {}
+        self.project_nodes: dict[str, GhProject] = {}
         # Map from (orgname, number) project ids to project node id.
-        self.projects: Dict[GhProject, str] = {}
+        self.projects: dict[GhProject, str] = {}
         # Map from PR node id to Project node ids, and from Project node id
         # to PR node ids.
-        self.project_items: Dict[str, Set[str]] = collections.defaultdict(set)
+        self.project_items: dict[str, set[str]] = collections.defaultdict(set)
 
-        self.cla_statuses: Dict[str, Dict[str, str]] = {}
+        self.cla_statuses: dict[str, dict[str, str]] = {}
 
     def make_user(self, login: str, **kwargs) -> User:
         u = self.users[login] = User(login, **kwargs)
@@ -328,7 +337,7 @@ class FakeGitHub(faker.Faker):
                 raise DoesNotExist(f"User {login!r} does not exist")
         return user
 
-    def make_repo(self, owner: str, repo: str, private: bool=False) -> Repo:
+    def make_repo(self, owner: str, repo: str, private: bool = False) -> Repo:
         r = Repo(self, owner, repo, private)
         r._set_labels(DEFAULT_LABELS)
         self.repos[f"{owner}/{repo}"] = r
@@ -338,7 +347,7 @@ class FakeGitHub(faker.Faker):
         try:
             return self.repos[f"{owner}/{repo}"]
         except KeyError:
-            raise DoesNotExist(f"Repo {owner}/{repo} does not exist")
+            raise DoesNotExist(f"Repo {owner}/{repo} does not exist") from None
 
     def make_pull_request(self, owner: str = "an-org", repo: str = "a-repo", **kwargs) -> PullRequest:
         """Convenience: make a repo and a pull request."""
@@ -349,18 +358,18 @@ class FakeGitHub(faker.Faker):
     # Users
 
     @faker.route(r"/user")
-    def _get_user(self, _match, _request, _context) -> Dict:
+    def _get_user(self, _match, _request, _context) -> dict:
         return {"login": self.login}
 
     @faker.route(r"/users/(?P<login>[^/]+)")
-    def _get_users(self, match, _request, _context) -> Dict:
+    def _get_users(self, match, _request, _context) -> dict:
         # https://developer.github.com/v3/users/#get-a-user
         return self.users[match["login"]].as_json()
 
     # Organization repos
 
     @faker.route(r"/orgs/(?P<org>[^/]+)/repos")
-    def _get_org_repos(self, match, _request, _context) -> List[Dict]:
+    def _get_org_repos(self, match, _request, _context) -> list[dict]:
         org_prefix = match["org"] + "/"
         repos = [repo for name, repo in self.repos.items() if name.startswith(org_prefix)]
         return [repo.as_json() for repo in repos]
@@ -368,21 +377,21 @@ class FakeGitHub(faker.Faker):
     # Pull requests
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pulls")
-    def _get_pulls(self, match, request, _context) -> List[Dict]:
+    def _get_pulls(self, match, request, _context) -> list[dict]:
         # https://developer.github.com/v3/pulls/#list-pull-requests
         r = self.get_repo(match["owner"], match["repo"])
         state = request.qs.get("state", ["open"])[0]
         return [pr.as_json(brief=True) for pr in r.list_pull_requests(state)]
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pulls/(?P<number>\d+)")
-    def _get_pull(self, match, _request, _context) -> Dict:
+    def _get_pull(self, match, _request, _context) -> dict:
         # https://developer.github.com/v3/pulls/#get-a-pull-request
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))
         return pr.as_json()
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/(?P<number>\d+)", "PATCH")
-    def _patch_issues(self, match, request, _context) -> Dict:
+    def _patch_issues(self, match, request, _context) -> dict:
         # https://developer.github.com/v3/issues/#update-an-issue
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))
@@ -395,31 +404,31 @@ class FakeGitHub(faker.Faker):
     # Commmits
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?")
-    def _get_pr_status_check(self, match, _request, _context) -> List[Dict[str, Any]]:
+    def _get_pr_status_check(self, match, _request, _context) -> list[dict[str, Any]]:
         sha: str = match["sha"]
         if sha in self.cla_statuses:
             return [self.cla_statuses[sha]]
         else:
             return []
 
-    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?", 'POST')
-    def _post_pr_status_update(self, match, request, _context) -> List[Dict[str, Any]]:
+    @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?", "POST")
+    def _post_pr_status_update(self, match, request, _context) -> list[dict[str, Any]]:
         data = request.json()
-        assert data['context'] == CLA_CONTEXT
-        self.cla_statuses[match['sha']] = data
+        assert data["context"] == CLA_CONTEXT
+        self.cla_statuses[match["sha"]] = data
         return [data]
 
     # Comments
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/(?P<number>\d+)/comments(\?.*)?")
-    def _get_issues_comments(self, match, _request, _context) -> List[Dict]:
+    def _get_issues_comments(self, match, _request, _context) -> list[dict]:
         # https://developer.github.com/v3/issues/comments/#list-issue-comments
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))
         return [com.as_json() for cid in pr.comments if (com := r.comments.get(cid))]
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/(?P<number>\d+)/comments", "POST")
-    def _post_issues_comments(self, match, request, _context) -> Dict:
+    def _post_issues_comments(self, match, request, _context) -> dict:
         # https://developer.github.com/v3/issues/comments/#create-an-issue-comment
         r = self.get_repo(match["owner"], match["repo"])
         pr = r.get_pull_request(int(match["number"]))
@@ -427,7 +436,7 @@ class FakeGitHub(faker.Faker):
         return comment.as_json()
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/issues/comments/(?P<comment_id>\d+)", "PATCH")
-    def _patch_issues_comments(self, match, request, _context) -> Dict:
+    def _patch_issues_comments(self, match, request, _context) -> dict:
         # https://developer.github.com/v3/issues/comments/#update-an-issue-comment
         r = self.get_repo(match["owner"], match["repo"])
         comment = r.comments[int(match["comment_id"])]
@@ -445,7 +454,7 @@ class FakeGitHub(faker.Faker):
     # GraphQL
 
     @faker.route(r"/graphql", "POST")
-    def _graphql(self, _match, request, _context) -> Dict:
+    def _graphql(self, _match, request, _context) -> dict:
         """Dispatch a GraphQL request."""
         data = request.json()
         query = data["query"]
@@ -457,16 +466,14 @@ class FakeGitHub(faker.Faker):
             raise Exception(f"Unknown GraphQL slug in FakeGitHub: {slug = }")
         return method(**kwargs)
 
-    def _graphql_ProjectsForPr(self, owner: str, name: str, number: int) -> Dict:
+    def _graphql_ProjectsForPr(self, owner: str, name: str, number: int) -> dict:
         r = self.get_repo(owner, name)
         pr = r.get_pull_request(number)
         project_node_ids = self.project_items[pr.node_id]
         nodes = []
         for node_id in project_node_ids:
             org, num = self.project_nodes[node_id]
-            nodes.append(
-                {"project": {"owner": {"login": org}, "number": num}, "id": node_id}
-            )
+            nodes.append({"project": {"owner": {"login": org}, "number": num}, "id": node_id})
         return {
             "data": {
                 "repository": {
@@ -479,35 +486,21 @@ class FakeGitHub(faker.Faker):
             }
         }
 
-    def _graphql_OrgProjectId(self, owner: str, number: int) -> Dict:
+    def _graphql_OrgProjectId(self, owner: str, number: int) -> dict:
         proj_id = f"PROJECT:{owner}.{number}"
         self.project_nodes[proj_id] = (owner, number)
         self.projects[(owner, number)] = proj_id
-        return {
-            "data": {
-                "organization": {
-                    "projectV2": {
-                        "id": proj_id
-                    }
-                }
-            }
-        }
+        return {"data": {"organization": {"projectV2": {"id": proj_id}}}}
 
-    def _graphql_AddProjectItem(self, projectId: str, prNodeId: str) -> Dict:
+    def _graphql_AddProjectItem(self, projectId: str, prNodeId: str) -> dict:
         self.project_items[projectId].add(prNodeId)
         self.project_items[prNodeId].add(projectId)
-        return {
-            'data': {
-                'addProjectV2ItemById': {
-                    'item': {'id': 'saul goodman'}
-                }
-            }
-        }
+        return {"data": {"addProjectV2ItemById": {"item": {"id": "saul goodman"}}}}
 
     def _graphql_UpdateProjectItem(self, projectId: str, itemId: str, fieldId: str, value) -> dict:
         self.project_items[projectId].add(itemId)
         self.project_items[fieldId].add(value)
-        return {'data': {}}
+        return {"data": {}}
 
     def _graphql_OrgProjectMetadata(self, orgname: str, number: int) -> dict:
         proj_id = f"PROJECT:{orgname}.{number}"
@@ -525,7 +518,7 @@ class FakeGitHub(faker.Faker):
                                 {"name": "Date merged/closed", "id": "date-closed-id", "dataType": "date"},
                                 {"name": "Repo Owner / Owning Team", "id": "repo-owner-id", "dataType": "text"},
                             ]
-                        }
+                        },
                     }
                 }
             }

@@ -1,2 +1,0 @@
-[MASTER]
-load-plugins = edx_lint.pylint,pylint_celery,pylint_pytest

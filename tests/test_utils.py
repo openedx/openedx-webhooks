@@ -18,15 +18,27 @@ from openedx_webhooks.utils import (
 )
 
 
-@pytest.mark.parametrize("args, summary", [
-    (["Hello"], "Hello"),
-    ([""], ""),
-    (["lorem ipsum quia dolor sit amet consecte"], "lorem ipsum quia dolor sit amet consecte"),
-    (["lorem ipsum quia dolor sit amet consectetur adipisci velit, sed quia non numquam eius modi tempora incidunt."],
-      "lorem ipsum quia d...i tempora incidunt."),
-    (["lorem ipsum quia dolor sit amet consectetur adipisci velit, quia non numquam eius modi tempora incidunt.", 80],
-      "lorem ipsum quia dolor sit amet consec...non numquam eius modi tempora incidunt."),
-])
+@pytest.mark.parametrize(
+    "args, summary",
+    [
+        (["Hello"], "Hello"),
+        ([""], ""),
+        (["lorem ipsum quia dolor sit amet consecte"], "lorem ipsum quia dolor sit amet consecte"),
+        (
+            [
+                "lorem ipsum quia dolor sit amet consectetur adipisci velit, sed quia non numquam eius modi tempora incidunt."
+            ],
+            "lorem ipsum quia d...i tempora incidunt.",
+        ),
+        (
+            [
+                "lorem ipsum quia dolor sit amet consectetur adipisci velit, quia non numquam eius modi tempora incidunt.",
+                80,
+            ],
+            "lorem ipsum quia dolor sit amet consec...non numquam eius modi tempora incidunt.",
+        ),
+    ],
+)
 def test_text_summary(args, summary):
     assert summary == text_summary(*args)
 
@@ -50,20 +62,17 @@ def test_bad_graphql_query(requests_mocker):
         json={"errors": ["You blew it"]},
     )
     with pytest.raises(Exception, match=re.escape("GraphQL error: {'errors': ['You blew it']}")):
-        graphql_query("query Something {}", variables={"a":1, "b": 2})
+        graphql_query("query Something {}", variables={"a": 1, "b": 2})
 
 
 def _make_signature(secret, payload):
     """Compute a signature from a secret and a payload."""
-    return (
-        'sha1=' +
-        hmac.new(secret.encode(), msg=payload, digestmod=hashlib.sha1).hexdigest()
-    )
+    return "sha1=" + hmac.new(secret.encode(), msg=payload, digestmod=hashlib.sha1).hexdigest()
 
 
 SECRET1 = "top secret"
 SECRET2 = "not so top secret"
-PAYLOAD = json.dumps('payload').encode("utf8")
+PAYLOAD = json.dumps("payload").encode("utf8")
 
 
 def test_everything_matches():
@@ -83,12 +92,13 @@ def test_bad_secret():
 
 def test_mismatched_payload():
     signature = _make_signature(SECRET1, PAYLOAD)
-    wrong_payload = json.dumps('x').encode("utf8")
+    wrong_payload = json.dumps("x").encode("utf8")
     assert is_valid_payload(SECRET1, signature, wrong_payload) is False
 
 
 def test_memoize():
     vals = []
+
     @memoize
     def add_to_vals(x):
         vals.append(x)
@@ -107,8 +117,10 @@ def test_memoize():
         assert add_to_vals(15) == 30
         assert vals == [10, 15]
 
+
 def test_memoize_timed():
     vals = []
+
     @memoize_timed(minutes=10)
     def add_to_vals_timed(x):
         vals.append(x)
@@ -132,8 +144,10 @@ def test_memoize_timed():
         assert add_to_vals_timed(10) == 20
         assert vals == [10, 15, 20, 10]
 
+
 def test_clear_memoized_values():
     vals = []
+
     @memoize
     def add_to_vals(x):
         vals.append(x)

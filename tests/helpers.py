@@ -36,7 +36,7 @@ def check_good_markdown(text: str) -> None:
         raise ValueError(f"Markdown has a link to a None url: {text!r}")
 
 
-def check_issue_link_in_markdown(text: str, jira_id: JiraId|None) -> None:
+def check_issue_link_in_markdown(text: str, jira_id: JiraId | None) -> None:
     """
     Check that `text` has properly formatted links to `jira_id`.
 
@@ -89,7 +89,7 @@ def check_good_graphql(text: str) -> None:
     for ch in code:
         if ch in pairs.values():
             stack.append(ch)
-        elif ch in pairs.keys():            # pylint: disable=consider-iterating-dictionary
+        elif ch in pairs.keys():  # pylint: disable=consider-iterating-dictionary
             if not stack or stack[-1] != pairs[ch]:
                 raise ValueError(f"GraphQL query has unbalanced parens: {text!r}")
             stack.pop()

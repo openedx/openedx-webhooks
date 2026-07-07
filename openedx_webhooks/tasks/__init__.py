@@ -8,7 +8,6 @@ from flask import Blueprint, jsonify
 from openedx_webhooks import celery, log_level
 from openedx_webhooks.utils import requires_auth
 
-
 # Set up Celery logging.
 logger = get_task_logger(__name__)
 logger.setLevel(log_level)
@@ -19,28 +18,35 @@ logger.setLevel(log_level)
 #  print_long("logging_tree output", logging_tree.format.build_description())
 
 # create a Flask blueprint for getting task status info
-tasks = Blueprint('tasks', __name__)
+tasks = Blueprint("tasks", __name__)
 
-@tasks.route('/status/<task_id>')
+
+@tasks.route("/status/<task_id>")
 @requires_auth
 def status(task_id):
     result = celery.AsyncResult(task_id)
-    return jsonify({
-        "status": result.state,
-        "info": result.info,
-    })
+    return jsonify(
+        {
+            "status": result.state,
+            "info": result.info,
+        }
+    )
 
-@tasks.route('/statusrepr/<task_id>')
+
+@tasks.route("/statusrepr/<task_id>")
 @requires_auth
 def statusrepr(task_id):
     """Get the status of a task, but repr() everything so we can see JSON failures from /status/<task_id>"""
     result = celery.AsyncResult(task_id)
-    return jsonify({
-        "status": repr(result.state),
-        "info": repr(result.info),
-    })
+    return jsonify(
+        {
+            "status": repr(result.state),
+            "info": repr(result.info),
+        }
+    )
 
-@tasks.route('/status/group:<group_id>')
+
+@tasks.route("/status/group:<group_id>")
 @requires_auth
 def group_status(group_id):
     # NOTE: This will only work if the GroupResult
@@ -56,12 +62,14 @@ def group_status(group_id):
             failed_task_ids.append(result.id)
         else:
             pending_task_ids.append(result.id)
-    return jsonify({
-        "task_count": len(group_result.results),
-        "completed_task_count": len(completed_task_ids),
-        "completed_task_ids": completed_task_ids,
-        "failed_task_count": len(failed_task_ids),
-        "failed_task_info": failed_task_ids,
-        "pending_task_count": len(pending_task_ids),
-        "pending_task_info": pending_task_ids,
-    })
+    return jsonify(
+        {
+            "task_count": len(group_result.results),
+            "completed_task_count": len(completed_task_ids),
+            "completed_task_ids": completed_task_ids,
+            "failed_task_count": len(failed_task_ids),
+            "failed_task_info": failed_task_ids,
+            "pending_task_count": len(pending_task_ids),
+            "pending_task_info": pending_task_ids,
+        }
+    )
