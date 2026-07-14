@@ -22,6 +22,7 @@ from openedx_webhooks.cla_check import (
 )
 from openedx_webhooks.gh_projects import pull_request_projects
 from openedx_webhooks.tasks.github import pull_request_changed
+from openedx_webhooks.tasks.pr_tracking import PrCurrentInfo, PrDesiredInfo, PrTrackingFixer
 
 from .helpers import check_issue_link_in_markdown
 
@@ -533,6 +534,24 @@ def test_pr_project_fields_data(fake_github, mocker, owner):
         assert pr.repo.github.project_items["repo-owner-id"] == {f"{owner_name.title()} (@{owner_name})"}
     else:
         assert pr.repo.github.project_items["repo-owner-id"] == {f"openedx/{owner_name}"}
+
+
+def test_pr_project_fields_skipped_when_no_ospr_project(mocker):
+    """_fix_project_node_fields returns early without error when GITHUB_OSPR_PROJECT is None."""
+    mocker.patch("openedx_webhooks.settings.GITHUB_OSPR_PROJECT", None)
+
+    pr_dict = {
+        "base": {"repo": {"full_name": "openedx/edx-platform"}},
+        "number": 42,
+    }
+    current = PrCurrentInfo()
+    current.github_projects_info = [{"id": "item-1", "org": "someorg", "number": 5}]
+
+    mock_actions = mocker.MagicMock()
+    fixer = PrTrackingFixer(pr=pr_dict, current=current, desired=PrDesiredInfo(), actions=mock_actions)
+    fixer._fix_project_node_fields()
+
+    mock_actions.update_project_pr_custom_field.assert_not_called()
 
 
 def test_pr_project_fields_invalid_field_name(fake_github, mocker, caplog):
