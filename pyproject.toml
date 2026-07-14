@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools-scm>=8.0"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "openedx-webhooks"
-dynamic = ["version"]
+version = "0.1.0"
 description = "Automated tasks for Open edX"
 readme = "README.rst"
 requires-python = ">=3.12"
@@ -55,10 +55,6 @@ Repository = "https://github.com/openedx/openedx-webhooks"
 
 [tool.setuptools.packages.find]
 exclude = ["tests*", "*.tests", "*.tests.*", "docs*"]
-
-[tool.setuptools_scm]
-version_scheme = "only-version"
-local_scheme = "no-local-version"
 
 [dependency-groups]
 # Base test packages
