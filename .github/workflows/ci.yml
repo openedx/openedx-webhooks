@@ -1,41 +1,48 @@
-name: Python CI
+name: CI
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
   pull_request:
-    branches:
-      - '**'
+  # Allow this workflow to be called from other workflows
+  workflow_call:
 
 jobs:
   run_tests:
-    name: Tests
-    runs-on: ${{ matrix.os }}
+    # matrix.job-name overrides the display name for specific entries; used to
+    # preserve "Tests (ubuntu-latest, 3.12)" which is a required branch-
+    # protection status check on the main branch and cannot be renamed there.
+    name: ${{ matrix.job-name || matrix.toxenv }}
+    runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-        python-version:
-          - "3.12"
+        python-version: ["3.12"]
+        toxenv: [lint, mypy, docs, py312-test]
+        include:
+          - toxenv: py312-test
+            job-name: "Tests (ubuntu-latest, 3.12)"
 
     steps:
-    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-    - name: setup python
-      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Install dependencies
-      run: pip install -r requirements/test.txt
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+          python-version: "${{ matrix.python-version }}"
 
-    - name: Run Tests
-      run: |
-        make test
-        cd docs && make html
+      - name: Install CI dependencies
+        run: uv sync --group ci
 
-    - name: Run Coverage
-      uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: true
+      - name: Run tox
+        run: uv run tox -e ${{ matrix.toxenv }}
+
+      - name: Upload coverage to Codecov
+        if: matrix.toxenv == 'py312-test'
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unittests
+          fail_ci_if_error: true

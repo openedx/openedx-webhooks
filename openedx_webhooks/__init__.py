@@ -12,8 +12,6 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import import_string
 
-__version__ = "0.1.0"
-
 log_level = os.environ.get('LOGLEVEL', 'INFO').upper()
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler(sys.stderr)
