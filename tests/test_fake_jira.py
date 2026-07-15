@@ -3,7 +3,6 @@
 import pytest
 import requests
 
-
 # pylint: disable=missing-timeout
 
 class TestIssues:

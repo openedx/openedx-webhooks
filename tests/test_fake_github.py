@@ -2,12 +2,10 @@
 
 import pytest
 import requests
-
 from freezegun import freeze_time
 from glom import glom
 
 from .fake_github import FakeGitHub
-
 
 # pylint: disable=missing-timeout
 

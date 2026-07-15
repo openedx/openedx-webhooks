@@ -1,9 +1,8 @@
 """Tests for gh_projects.py"""
 
 from openedx_webhooks.gh_projects import (
-    add_pull_request_to_project,
-    pull_request_projects,
-    pull_request_projects_info,
+    add_pull_request_to_project, pull_request_projects,
+    pull_request_projects_info
 )
 from openedx_webhooks.types import PrId
 

@@ -5,9 +5,7 @@ Jira manipulations.
 from typing import Any, Dict, List, Optional
 
 from openedx_webhooks.auth import get_jira_session
-from openedx_webhooks.utils import (
-    log_check_response,
-)
+from openedx_webhooks.utils import log_check_response
 
 
 def update_jira_issue(

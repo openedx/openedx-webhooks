@@ -14,68 +14,38 @@ from typing import Dict, List, Optional, Set, cast
 from openedx_webhooks import settings
 from openedx_webhooks.auth import get_github_session, get_jira_session
 from openedx_webhooks.bot_comments import (
-    BOT_COMMENT_INDICATORS,
-    BOT_COMMENTS_FIRST,
-    BotComment,
-    extract_data_from_comment,
-    format_data_for_comment,
-    github_blended_pr_comment,
-    github_community_pr_comment,
-    github_community_pr_comment_closed,
-    github_end_survey_comment,
-    jira_issue_comment,
-    no_contributions_thanks,
-    no_jira_mapping_comment,
-    no_jira_server_comment,
+    BOT_COMMENT_INDICATORS, BOT_COMMENTS_FIRST, BotComment,
+    extract_data_from_comment, format_data_for_comment,
+    github_blended_pr_comment, github_community_pr_comment,
+    github_community_pr_comment_closed, github_end_survey_comment,
+    jira_issue_comment, no_contributions_thanks, no_jira_mapping_comment,
+    no_jira_server_comment
 )
 from openedx_webhooks.cla_check import (
-    CLA_STATUS_BAD,
-    CLA_STATUS_BOT,
-    CLA_STATUS_GOOD,
-    CLA_STATUS_NO_CONTRIBUTIONS,
-    CLA_STATUS_PRIVATE,
-    cla_status_on_pr,
-    set_cla_status_on_pr,
+    CLA_STATUS_BAD, CLA_STATUS_BOT, CLA_STATUS_GOOD,
+    CLA_STATUS_NO_CONTRIBUTIONS, CLA_STATUS_PRIVATE, cla_status_on_pr,
+    set_cla_status_on_pr
 )
 from openedx_webhooks.gh_projects import (
-    add_pull_request_to_project,
-    pull_request_projects,
-    pull_request_projects_info,
-    update_project_pr_custom_field,
+    add_pull_request_to_project, pull_request_projects,
+    pull_request_projects_info, update_project_pr_custom_field
 )
 from openedx_webhooks.info import (
-    NoJiraMapping,
-    NoJiraServer,
-    get_blended_project_id,
-    get_bot_comments,
-    get_github_user_info,
-    get_repo_spec,
-    is_bot_pull_request,
-    is_draft_pull_request,
-    is_internal_pull_request,
-    is_private_repo_no_cla_pull_request,
-    jira_details_for_pr,
-    projects_for_pr,
-    pull_request_has_cla,
-    repo_refuses_contributions,
-    is_pr_author_cc,
+    NoJiraMapping, NoJiraServer, get_blended_project_id, get_bot_comments,
+    get_github_user_info, get_repo_spec, is_bot_pull_request,
+    is_draft_pull_request, is_internal_pull_request, is_pr_author_cc,
+    is_private_repo_no_cla_pull_request, jira_details_for_pr, projects_for_pr,
+    pull_request_has_cla, repo_refuses_contributions
 )
 from openedx_webhooks.labels import (
-    GITHUB_CATEGORY_LABELS,
-    GITHUB_CLOSED_PR_OBSOLETE_LABELS,
-    GITHUB_MERGED_PR_OBSOLETE_LABELS,
-    GITHUB_STATUS_LABELS,
+    GITHUB_CATEGORY_LABELS, GITHUB_CLOSED_PR_OBSOLETE_LABELS,
+    GITHUB_MERGED_PR_OBSOLETE_LABELS, GITHUB_STATUS_LABELS
 )
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.tasks.jira_work import (
-    update_jira_issue,
-)
+from openedx_webhooks.tasks.jira_work import update_jira_issue
 from openedx_webhooks.types import GhProject, JiraId, PrDict, PrGhProject, PrId
 from openedx_webhooks.utils import (
-    get_pr_state,
-    log_check_response,
-    sentry_extra_context,
-    text_summary,
+    get_pr_state, log_check_response, sentry_extra_context, text_summary
 )
 
 
@@ -432,10 +402,13 @@ class PrTrackingFixer:
         """
         Update pr fields in OSPR project board.
         """
+        if settings.GITHUB_OSPR_PROJECT is None:
+            return
+        github_ospr_project = settings.GITHUB_OSPR_PROJECT
         for project in self.current.github_projects_info:
             if (
-                project["org"] == settings.GITHUB_OSPR_PROJECT[0]
-                and project["number"] == settings.GITHUB_OSPR_PROJECT[1]
+                project["org"] == github_ospr_project[0]
+                and project["number"] == github_ospr_project[1]
             ):
                 project_item_id = project["id"]
                 break
@@ -447,7 +420,7 @@ class PrTrackingFixer:
                 field_name="Date opened",
                 field_value=self.pr["created_at"],
                 item_id=project_item_id,
-                project=settings.GITHUB_OSPR_PROJECT
+                project=github_ospr_project
             )
             # get base repo owner info
             repo_spec = get_repo_spec(self.pr["base"]["repo"]["full_name"])
@@ -463,7 +436,7 @@ class PrTrackingFixer:
                 field_name="Repo Owner / Owning Team",
                 field_value=owner,
                 item_id=project_item_id,
-                project=settings.GITHUB_OSPR_PROJECT
+                project=github_ospr_project
             )
         elif state == "merged":
             merged_at = self.pr.get("merged_at")
@@ -480,14 +453,14 @@ class PrTrackingFixer:
                 field_name="Date merged/closed",
                 field_value=merged_at,
                 item_id=project_item_id,
-                project=settings.GITHUB_OSPR_PROJECT
+                project=github_ospr_project
             )
         elif state == "closed":
             self.actions.update_project_pr_custom_field(
                 field_name="Date merged/closed",
                 field_value=self.pr["closed_at"],
                 item_id=project_item_id,
-                project=settings.GITHUB_OSPR_PROJECT
+                project=github_ospr_project
             )
 
     def _make_jira_issue(self, jira_nick) -> None:

@@ -8,9 +8,7 @@ import pytest
 from openedx_webhooks.bot_comments import github_community_pr_comment
 from openedx_webhooks.info import get_bot_username
 from openedx_webhooks.tasks.github import (
-    pull_request_changed,
-    rescan_organization,
-    rescan_repository,
+    pull_request_changed, rescan_organization, rescan_repository
 )
 from openedx_webhooks.types import PrId
 
@@ -43,7 +41,9 @@ def make_rescannable_repo(fake_github, org_name="an-org", repo_name="a-repo"):
     repo.make_pull_request(user="feanil", number=105, created_at=datetime(2019, 4, 1))
     repo.make_pull_request(user="tusbar", number=106, created_at=datetime(2019, 5, 1))
     # A closed PR that had been processed when it opened.
-    pr = repo.make_pull_request(user="tusbar", number=108, created_at=datetime(2019, 6, 1), closed_at=datetime(2020,7,1))
+    pr = repo.make_pull_request(
+        user="tusbar", number=108, created_at=datetime(2019, 6, 1), closed_at=datetime(2020, 7, 1)
+    )
     pull_request_changed(pr.as_json())
     pr.close(merge=False)
     # One of the PRs already has a bot comment with a Jira issue.
@@ -102,7 +102,6 @@ def test_rescan_repository_dry_run(rescannable_repo, fake_github, fake_jira, pul
 
     # Get the names of the actions. We won't worry about the details, those
     # are tested in the non-dry-run tests of rescanning pull requests.
-    import json,sys; json.dump(ret["dry_run_actions"], sys.stdout, indent=4)
     actions = {k: [name for name, kwargs in actions] for k, actions in ret["dry_run_actions"].items()}
     assert actions == {
         102: [

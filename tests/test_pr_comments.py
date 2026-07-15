@@ -5,12 +5,8 @@ import re
 from freezegun import freeze_time
 
 from openedx_webhooks.bot_comments import (
-    BotComment,
-    is_comment_kind,
-    github_community_pr_comment,
-    github_end_survey_comment,
-    extract_data_from_comment,
-    format_data_for_comment,
+    BotComment, extract_data_from_comment, format_data_for_comment,
+    github_community_pr_comment, github_end_survey_comment, is_comment_kind
 )
 
 from .helpers import check_good_markdown

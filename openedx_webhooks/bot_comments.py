@@ -5,7 +5,6 @@ The bot makes comments on pull requests. This is stuff needed to do it well.
 import binascii
 import json
 import re
-
 from enum import Enum, auto
 from typing import Dict
 
@@ -13,10 +12,8 @@ import arrow
 from flask import render_template
 
 from openedx_webhooks.info import (
-    get_jira_server_info,
-    get_repo_spec,
-    is_draft_pull_request,
-    pull_request_has_cla,
+    get_jira_server_info, get_repo_spec, is_draft_pull_request,
+    pull_request_has_cla
 )
 from openedx_webhooks.types import JiraId, PrDict
 

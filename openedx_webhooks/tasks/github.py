@@ -3,7 +3,6 @@ Queuable background tasks to do large work.
 """
 
 import traceback
-
 from typing import Dict, Set
 
 from urlobject import URLObject
@@ -13,18 +12,12 @@ from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.info import is_internal_pull_request
 from openedx_webhooks.tasks import logger
 from openedx_webhooks.tasks.pr_tracking import (
-    current_support_state,
-    desired_support_state,
-    DryRunFixingActions,
-    FixResult,
-    PrTrackingFixer,
+    DryRunFixingActions, FixResult, PrTrackingFixer, current_support_state,
+    desired_support_state
 )
 from openedx_webhooks.types import JiraId, PrDict
 from openedx_webhooks.utils import (
-    log_rate_limit,
-    paginated_get,
-    retry_get,
-    sentry_extra_context,
+    log_rate_limit, paginated_get, retry_get, sentry_extra_context
 )
 
 

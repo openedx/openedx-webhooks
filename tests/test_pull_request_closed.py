@@ -2,10 +2,7 @@
 
 import pytest
 
-from openedx_webhooks.cla_check import (
-    CLA_CONTEXT,
-    CLA_STATUS_GOOD,
-)
+from openedx_webhooks.cla_check import CLA_CONTEXT, CLA_STATUS_GOOD
 from openedx_webhooks.gh_projects import pull_request_projects
 from openedx_webhooks.tasks.github import pull_request_changed
 

@@ -73,6 +73,7 @@ test = [
     {include-group = "test-base"},
 ]
 quality = [
+    {include-group = "test-base"},
     "edx-lint",
     "mypy",
     "isort",

@@ -1,11 +1,11 @@
 """
 Get information about people, repos, orgs, pull requests, etc.
 """
-from collections import namedtuple
 import csv
 import fnmatch
 import logging
 import re
+from collections import namedtuple
 from typing import Dict, Iterable, Literal, Optional
 
 import yaml
@@ -13,12 +13,11 @@ from glom import glom
 
 from openedx_webhooks import settings
 from openedx_webhooks.auth import get_github_session
-from openedx_webhooks.types import GhProject, JiraServer, PrDict, PrCommentDict, PrId
+from openedx_webhooks.types import (
+    GhProject, JiraServer, PrCommentDict, PrDict, PrId
+)
 from openedx_webhooks.utils import (
-    memoize,
-    memoize_timed,
-    paginated_get,
-    retry_get,
+    memoize, memoize_timed, paginated_get, retry_get
 )
 
 logger = logging.getLogger(__name__)

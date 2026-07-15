@@ -8,7 +8,6 @@ from typing import Dict, Optional, Set
 
 from . import faker
 
-
 issue_ids = itertools.count(start=101, step=13)
 
 def _make_issue_key(project: str) -> str:

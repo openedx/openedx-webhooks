@@ -1,2 +1,60 @@
 [MASTER]
 load-plugins = edx_lint.pylint,pylint_celery,pylint_pytest
+
+[MESSAGES CONTROL]
+disable =
+	# Preserved from original edx-lint 5.3.4 base config
+	bad-indentation,
+	broad-exception-raised,
+	consider-using-f-string,
+	duplicate-code,
+	file-ignored,
+	fixme,
+	global-statement,
+	invalid-name,
+	locally-disabled,
+	no-else-return,
+	suppressed-message,
+	too-few-public-methods,
+	too-many-ancestors,
+	too-many-arguments,
+	too-many-branches,
+	too-many-instance-attributes,
+	too-many-lines,
+	too-many-locals,
+	too-many-public-methods,
+	too-many-return-statements,
+	ungrouped-imports,
+	unspecified-encoding,
+	unused-wildcard-import,
+	use-maxsplit-arg,
+	feature-toggle-needs-doc,
+	illegal-waffle-usage,
+	logging-fstring-interpolation,
+	# Pre-existing: many modules and functions lack docstrings
+	missing-module-docstring,
+	missing-class-docstring,
+	missing-function-docstring,
+	# Pre-existing: intentional import patterns (circular-avoiding lazy imports)
+	import-outside-toplevel,
+	cyclic-import,
+	# Pre-existing: broad-exception-caught is the pylint 4.x rename of broad-except
+	broad-exception-caught,
+	# Pre-existing: logging .format() usage throughout codebase
+	logging-format-interpolation,
+	# Pre-existing: functions with >5 positional args (new rule in pylint 3.3+)
+	too-many-positional-arguments,
+	# Pre-existing: else-after-continue style (new rule)
+	no-else-continue,
+	# Pre-existing: yield-from style (new rule)
+	use-yield-from,
+	# Pre-existing: too many statements in a single function
+	too-many-statements,
+	# Pre-existing: test helpers access private members
+	protected-access,
+	# Pre-existing: raise without chaining in test helpers
+	raise-missing-from,
+	# Pre-existing: comparison style in tests
+	consider-using-in,
+	# Pre-existing: implicit boolean comparison style (new rule)
+	use-implicit-booleaness-not-comparison,

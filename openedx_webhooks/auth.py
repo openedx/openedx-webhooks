@@ -16,7 +16,7 @@ class BaseUrlSession(requests.Session):
         super().__init__()
         self.base_url = URLObject(base_url)
 
-    def request(self, method, url, data=None, headers=None, **kwargs):
+    def request(self, method, url, data=None, headers=None, **kwargs):  # type: ignore[override]  # pylint: disable=arguments-differ
         return super().request(
             method=method,
             url=self.base_url.relative(url),

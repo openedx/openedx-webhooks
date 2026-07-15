@@ -5,15 +5,9 @@ Tests of the functions in info.py
 import pytest
 
 from openedx_webhooks.info import (
-    get_blended_project_id,
-    get_jira_info,
-    get_people_file,
-    is_draft_pull_request,
-    is_internal_pull_request,
-    jira_details_for_pr,
-    get_catalog_info,
+    get_blended_project_id, get_catalog_info, get_jira_info, get_people_file,
+    is_draft_pull_request, is_internal_pull_request, jira_details_for_pr
 )
-
 
 # These tests should run when we want to test flaky GitHub behavior.
 pytestmark = [
@@ -182,7 +176,3 @@ def test_get_valid_catalog_info(mocker):
     )
     info = get_catalog_info("foo")
     assert info == {"good": "yaml"}
-
-
-
-

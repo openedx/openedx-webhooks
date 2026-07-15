@@ -8,7 +8,6 @@ from flask import Blueprint, jsonify
 from openedx_webhooks import celery, log_level
 from openedx_webhooks.utils import requires_auth
 
-
 # Set up Celery logging.
 logger = get_task_logger(__name__)
 logger.setLevel(log_level)

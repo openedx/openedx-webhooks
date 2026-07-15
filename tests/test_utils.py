@@ -9,12 +9,8 @@ import pytest
 from freezegun import freeze_time
 
 from openedx_webhooks.utils import (
-    clear_memoized_values,
-    graphql_query,
-    is_valid_payload,
-    memoize,
-    memoize_timed,
-    text_summary,
+    clear_memoized_values, graphql_query, is_valid_payload, memoize,
+    memoize_timed, text_summary
 )
 
 

@@ -7,8 +7,12 @@ from typing import Set
 from glom import glom
 
 from openedx_webhooks.tasks import logger
-from openedx_webhooks.types import GhPrMetaDict, GhProject, PrDict, PrGhProject, PrId
-from openedx_webhooks.utils import graphql_query, memoize_timed, value_graphql_type
+from openedx_webhooks.types import (
+    GhPrMetaDict, GhProject, PrDict, PrGhProject, PrId
+)
+from openedx_webhooks.utils import (
+    graphql_query, memoize_timed, value_graphql_type
+)
 
 # The name of the query is used by FakeGitHub while testing.
 

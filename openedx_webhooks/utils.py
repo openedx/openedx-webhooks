@@ -9,12 +9,12 @@ import sys
 import time
 from functools import wraps
 from hashlib import sha1
-from time import sleep as retry_sleep   # so that we can patch it for tests.
+from time import sleep as retry_sleep  # so that we can patch it for tests.
 from typing import Dict, Optional
 
 import cachetools.func
 import requests
-from flask import jsonify, request, Response, url_for
+from flask import Response, jsonify, request, url_for
 from urlobject import URLObject
 
 from openedx_webhooks import logger
@@ -82,7 +82,9 @@ def log_check_response(response, raise_for_status=True):
             response.raise_for_status()
         except Exception as exc:
             req = response.request
-            raise RequestFailed(f"HTTP request failed: {req.method} {req.url}. Response body: {response.content}") from exc
+            raise RequestFailed(
+                f"HTTP request failed: {req.method} {req.url}. Response body: {response.content}"
+            ) from exc
 
 
 def log_rate_limit():
@@ -256,7 +258,7 @@ def graphql_query(query: str, variables: Dict = {}) -> Dict:    # pylint: disabl
 
 # A list of all the memoized functions, so that `clear_memoized_values` can
 # clear them all.
-_memoized_functions = []
+_memoized_functions: list = []
 
 def memoize(func):
     """Cache the value returned by a function call forever."""

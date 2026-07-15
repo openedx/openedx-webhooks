@@ -5,16 +5,17 @@ These are the views that process webhook events coming from Github.
 import logging
 from typing import cast
 
+from flask import Blueprint
 from flask import current_app as app
-from flask import Blueprint, jsonify, render_template, request
+from flask import jsonify, render_template, request
 
 from openedx_webhooks import celery
 from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.debug import is_debug, print_long_json
 from openedx_webhooks.info import get_bot_username
 from openedx_webhooks.tasks.github import (
-    pull_request_changed_task, rescan_repository, rescan_repository_task,
-    rescan_organization_task,
+    pull_request_changed_task, rescan_organization_task, rescan_repository,
+    rescan_repository_task
 )
 from openedx_webhooks.utils import (
     is_valid_payload, queue_task, requires_auth, sentry_extra_context

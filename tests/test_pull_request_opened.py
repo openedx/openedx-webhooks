@@ -8,17 +8,10 @@ from unittest import mock
 import pytest
 
 from openedx_webhooks import settings
-from openedx_webhooks.bot_comments import (
-    BotComment,
-    is_comment_kind,
-)
+from openedx_webhooks.bot_comments import BotComment, is_comment_kind
 from openedx_webhooks.cla_check import (
-    CLA_CONTEXT,
-    CLA_STATUS_BAD,
-    CLA_STATUS_BOT,
-    CLA_STATUS_GOOD,
-    CLA_STATUS_NO_CONTRIBUTIONS,
-    CLA_STATUS_PRIVATE,
+    CLA_CONTEXT, CLA_STATUS_BAD, CLA_STATUS_BOT, CLA_STATUS_GOOD,
+    CLA_STATUS_NO_CONTRIBUTIONS, CLA_STATUS_PRIVATE
 )
 from openedx_webhooks.gh_projects import pull_request_projects
 from openedx_webhooks.tasks.github import pull_request_changed
@@ -242,8 +235,6 @@ def test_external_pr_rescanned(fake_github):
 
 @pytest.mark.parametrize("pr_type", ["normal", "blended", "nocla"])
 def test_draft_pr_opened(pr_type, fake_github, mocker):
-    # pylint: disable=too-many-statements
-
     # Set the GITHUB_STATUS_LABEL variable with a set() of labels that should map to jira issues.
     # We set this explicitly here because the production version of the list can change and we don't
     # want that to break the test.

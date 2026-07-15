@@ -3,10 +3,10 @@ import os
 import sys
 import traceback
 
+import sentry_sdk
 from celery import Celery
 from flask import Flask
 from flask_sslify import SSLify
-import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.middleware.proxy_fix import ProxyFix
