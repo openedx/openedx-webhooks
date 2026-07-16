@@ -17,8 +17,8 @@ test:  ## Run tests
 	uv run tox -e py312-test
 
 fulltest:  ## Run tests including flaky GitHub emulation
-	uv run pytest -rxefs --cov=openedx_webhooks --cov=tests --cov-report=
-	uv run pytest -rxefs --cov=openedx_webhooks --cov=tests --cov-report= --cov-append -m flaky_github --disable-warnings --percent-404=1 --count=100
+	uv run pytest -rxefs --cov=openedx_webhooks --cov=tests --cov-report= --cov-config=pyproject.toml
+	uv run pytest -rxefs --cov=openedx_webhooks --cov=tests --cov-report= --cov-config=pyproject.toml --cov-append -m flaky_github --disable-warnings --percent-404=1 --count=100
 	uv run coverage html
 
 test-html-coverage-report: test  ## Run tests and open coverage report in browser
@@ -28,7 +28,7 @@ lint:  ## Run linting checks
 	uv run tox -e lint
 
 pylint:  ## Run pylint
-	-uv run pylint --rcfile=pylintrc openedx_webhooks tests
+	-uv run pylint --rcfile=pylintrc src/openedx_webhooks tests
 
 mypy:  ## Run mypy type checks
 	uv run tox -e mypy

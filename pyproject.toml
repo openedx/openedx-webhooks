@@ -54,6 +54,7 @@ dependencies = [
 Repository = "https://github.com/openedx/openedx-webhooks"
 
 [tool.setuptools.packages.find]
+where = ["src"]
 exclude = ["tests*", "*.tests", "*.tests.*", "docs*"]
 
 [tool.setuptools.package-data]
@@ -137,7 +138,7 @@ filterwarnings = [
 # https://coverage.readthedocs.io/en/latest/config.html
 [tool.coverage.run]
 branch = true
-source = ["openedx_webhooks"]
+source_pkgs = ["openedx_webhooks"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",
