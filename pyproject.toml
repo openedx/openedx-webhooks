@@ -56,6 +56,9 @@ Repository = "https://github.com/openedx/openedx-webhooks"
 [tool.setuptools.packages.find]
 exclude = ["tests*", "*.tests", "*.tests.*", "docs*"]
 
+[tool.setuptools.package-data]
+openedx_webhooks = ["templates/*"]
+
 [dependency-groups]
 # Base test packages
 test-base = [
