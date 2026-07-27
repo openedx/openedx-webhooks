@@ -35,11 +35,11 @@ boltons==26.1.0
     #   glom
 build==1.5.0
     # via pip-tools
-cachetools==7.1.4
+cachetools==7.1.6
     # via -r requirements/base.in
 celery[redis]==5.6.3
     # via -r requirements/base.in
-certifi==2026.6.17
+certifi==2026.7.22
     # via
     #   requests
     #   sentry-sdk
@@ -168,13 +168,13 @@ pathspec==1.1.1
     # via mypy
 pip-tools==7.6.0
     # via -r requirements/dev.in
-platformdirs==4.10.1
+platformdirs==4.11.0
     # via pylint
 pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-prompt-toolkit==3.0.52
+prompt-toolkit==3.0.53
     # via click-repl
 pycparser==3.0
     # via cffi
@@ -230,7 +230,7 @@ python-dotenv==1.2.2
     # via -r requirements/dev.in
 python-slugify==8.0.4
     # via code-annotations
-pytz==2026.2
+pytz==2026.3.post1
     # via -r requirements/test.in
 pyyaml==6.0.3
     # via
@@ -269,7 +269,7 @@ schema==0.7.8
     # via repo-tools-data-schema
 scriv==1.8.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.66.0
+sentry-sdk[flask]==2.66.1
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -311,7 +311,7 @@ tomlkit==0.15.1
     #   pylint
 types-cachetools==7.0.0.20260713
     # via -r requirements/dev.in
-types-pyyaml==6.0.12.20260518
+types-pyyaml==6.0.12.20260724
     # via -r requirements/dev.in
 types-requests==2.33.0.20260712
     # via -r requirements/dev.in

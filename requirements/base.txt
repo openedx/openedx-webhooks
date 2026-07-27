@@ -21,11 +21,11 @@ boltons==26.1.0
     # via
     #   face
     #   glom
-cachetools==7.1.4
+cachetools==7.1.6
     # via -r requirements/base.in
 celery[redis]==5.6.3
     # via -r requirements/base.in
-certifi==2026.6.17
+certifi==2026.7.22
     # via
     #   requests
     #   sentry-sdk
@@ -96,7 +96,7 @@ packaging==26.2
     #   gunicorn
     #   jira
     #   kombu
-prompt-toolkit==3.0.52
+prompt-toolkit==3.0.53
     # via click-repl
 pycparser==3.0
     # via cffi
@@ -128,7 +128,7 @@ requests-oauthlib==2.0.0
     #   jira
 requests-toolbelt==1.0.0
     # via jira
-sentry-sdk[flask]==2.66.0
+sentry-sdk[flask]==2.66.1
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil

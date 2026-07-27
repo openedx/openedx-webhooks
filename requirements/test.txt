@@ -25,11 +25,11 @@ boltons==26.1.0
     # via
     #   face
     #   glom
-cachetools==7.1.4
+cachetools==7.1.6
     # via -r requirements/base.in
 celery[redis]==5.6.3
     # via -r requirements/base.in
-certifi==2026.6.17
+certifi==2026.7.22
     # via
     #   requests
     #   sentry-sdk
@@ -123,7 +123,7 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-prompt-toolkit==3.0.52
+prompt-toolkit==3.0.53
     # via click-repl
 pycparser==3.0
     # via cffi
@@ -154,7 +154,7 @@ python-dateutil==2.9.0.post0
     #   celery
     #   freezegun
     #   github3-py
-pytz==2026.2
+pytz==2026.3.post1
     # via -r requirements/test.in
 pyyaml==6.0.3
     # via
@@ -189,7 +189,7 @@ roman-numerals==4.1.0
     # via sphinx
 schema==0.7.8
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.66.0
+sentry-sdk[flask]==2.66.1
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
