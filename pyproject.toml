@@ -1,0 +1,150 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openedx_webhooks"
+version = "0.1.0"
+description = "Automated tasks for Open edX"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+license-files = ["LICENSE*"]
+authors = [
+    {name = "Open edX Project", email = "oscm@openedx.org"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Flask",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+keywords = [
+    "Python",
+    "edx",
+]
+
+readme = "README.rst"
+
+dependencies = [
+    "Flask",
+    "celery[redis]",
+    "github3.py",
+    "Flask-SSLify",
+    "PyYAML",
+    "URLObject",
+    "arrow",
+    "blinker",
+    "cachetools",
+    "click",
+    "cryptography",
+    "glom",
+    "gunicorn",
+    "jira",
+    "logging_tree",
+    "oauthlib[signedtoken]",
+    "redis",
+    "requests",
+    "requests-oauthlib",
+    "sentry-sdk[flask]",
+]
+
+[project.urls]
+Homepage = "https://github.com/openedx/openedx-webhooks"
+Repository = "https://github.com/openedx/openedx-webhooks"
+
+[dependency-groups]
+test = [
+    "freezegun",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-repeat",
+    "pytz",
+    "requests-mock",
+    "repo-tools-data-schema @ git+https://github.com/openedx/repo-tools-data-schema.git",
+]
+doc = [
+    "Sphinx",
+    "readme_renderer",
+    "sphinx_rtd_theme",
+    "sphinxcontrib-httpdomain",
+]
+quality = [
+    {include-group = "test"},
+    "edx-lint",
+    "mypy",
+    "pylint-pytest",
+    "types-PyYAML",
+    "types-cachetools",
+    "types-requests",
+]
+ci = [
+    "tox",
+    "tox-uv",
+]
+dev = [
+    {include-group = "test"},
+    {include-group = "ci"},
+    "edx-lint",
+    "mypy",
+    "pylint-pytest",
+    "python-dotenv",
+    "scriv",
+    "types-PyYAML",
+    "types-cachetools",
+    "types-requests",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+exclude = ["tests*", "*.tests", "*.tests.*"]
+
+[tool.setuptools.package-data]
+"*" = [
+    "*.html",
+    "*.j2",
+]
+
+[tool.uv]
+package = true
+#  DO NOT EDIT constraint-dependencies DIRECTLY.
+#  This list is managed by `edx_lint write_uv_constraints`
+#  and will be overwritten the next time `make upgrade` is run.
+#  - GLOBAL constraints: edit edx_lint/files/common_constraints.txt
+#  - REPO-SPECIFIC constraints: edit [tool.edx_lint].uv_constraints in this file
+constraint-dependencies = [
+    "Django<6.0",
+    "elasticsearch<7.14.0",
+]
+
+[tool.edx_lint]
+# Repo-specific uv constraints merged with edx-lint's global constraints.
+# Local entries override global ones for the same package.
+# Run `make upgrade` to regenerate [tool.uv].constraint-dependencies.
+uv_constraints = []
+
+[tool.coverage.run]
+source = ["openedx_webhooks"]
+branch = true
+
+[tool.mypy]
+ignore_missing_imports = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+markers = [
+    "flaky_github: tests to run with flaky GitHub behavior emulated",
+]
+filterwarnings = [
+    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning",
+]
+
+[tool.scriv]
+output_file = "README.rst"
+rst_header_chars = "~."
+categories = ""
+version = ""
