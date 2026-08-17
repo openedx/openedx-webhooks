@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import traceback
+from importlib.metadata import PackageNotFoundError, version
 
 from celery import Celery
 from flask import Flask
@@ -12,7 +13,10 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import import_string
 
-__version__ = "0.1.0"
+try:
+    __version__ = version("openedx_webhooks")
+except PackageNotFoundError:  # pragma: no cover
+    __version__ = "unknown"
 
 log_level = os.environ.get('LOGLEVEL', 'INFO').upper()
 logger = logging.getLogger(__name__)

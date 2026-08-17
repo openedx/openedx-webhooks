@@ -28,12 +28,11 @@ RUN apt-get install -qy \
 RUN apt update -qy
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
 
-RUN pip install tox
+RUN pip install uv
 
 RUN mkdir -p /edx/app/openedx-webhooks
 WORKDIR /edx/app/openedx-webhooks
-COPY Makefile ./
-COPY requirements ./requirements
+COPY Makefile pyproject.toml uv.lock ./
 RUN make install-dev-requirements
 
 COPY . /edx/app/openedx-webhooks
