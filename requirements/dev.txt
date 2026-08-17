@@ -10,7 +10,7 @@ amqp==5.3.1
     # via kombu
 arrow==1.4.0
     # via -r requirements/base.in
-ast-serialize==0.6.0
+ast-serialize==0.8.0
     # via mypy
 astroid==4.0.4
     # via
@@ -35,17 +35,17 @@ boltons==26.1.0
     #   glom
 build==1.5.0
     # via pip-tools
-cachetools==7.1.4
+cachetools==7.1.7
     # via -r requirements/base.in
 celery[redis]==5.6.3
     # via -r requirements/base.in
-certifi==2026.6.17
+certifi==2026.7.22
     # via
     #   requests
     #   sentry-sdk
-cffi==2.1.0
+cffi==2.1.1
     # via cryptography
-charset-normalizer==3.4.9
+charset-normalizer==3.5.1
     # via requests
 click==8.4.2
     # via
@@ -72,9 +72,9 @@ click-repl==0.3.0
     # via celery
 code-annotations==3.0.0
     # via edx-lint
-coverage[toml]==7.15.2
+coverage[toml]==7.15.4
     # via pytest-cov
-cryptography==49.0.0
+cryptography==50.0.0
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -129,7 +129,7 @@ jira==3.10.5
     # via -r requirements/base.in
 kombu[redis]==5.6.2
     # via celery
-librt==0.13.0
+librt==0.15.0
     # via mypy
 logging-tree==1.10
     # via -r requirements/base.in
@@ -145,7 +145,7 @@ mccabe==0.7.0
     # via pylint
 mdurl==0.1.2
     # via markdown-it-py
-mypy==2.3.0
+mypy==2.3.1
     # via -r requirements/dev.in
 mypy-extensions==1.1.0
     # via mypy
@@ -155,7 +155,7 @@ oauthlib[signedtoken]==3.3.1
     # via
     #   -r requirements/base.in
     #   requests-oauthlib
-packaging==26.2
+packaging==26.3
     # via
     #   build
     #   gunicorn
@@ -166,15 +166,15 @@ packaging==26.2
     #   wheel
 pathspec==1.1.1
     # via mypy
-pip-tools==7.6.0
+pip-tools==7.6.1
     # via -r requirements/dev.in
-platformdirs==4.10.1
+platformdirs==4.11.3
     # via pylint
 pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-prompt-toolkit==3.0.52
+prompt-toolkit==3.0.53
     # via click-repl
 pycparser==3.0
     # via cffi
@@ -186,7 +186,7 @@ pyjwt[crypto]==2.13.0
     # via
     #   github3-py
     #   oauthlib
-pylint==4.0.6
+pylint==4.0.7
     # via
     #   edx-lint
     #   pylint-celery
@@ -226,11 +226,11 @@ python-dateutil==2.9.0.post0
     #   celery
     #   freezegun
     #   github3-py
-python-dotenv==1.2.2
+python-dotenv==1.2.3
     # via -r requirements/dev.in
 python-slugify==8.0.4
     # via code-annotations
-pytz==2026.2
+pytz==2026.3.post1
     # via -r requirements/test.in
 pyyaml==6.0.3
     # via
@@ -269,7 +269,7 @@ schema==0.7.8
     # via repo-tools-data-schema
 scriv==1.8.0
     # via -r requirements/dev.in
-sentry-sdk[flask]==2.66.0
+sentry-sdk[flask]==2.68.0
     # via -r requirements/base.in
 six==1.17.0
     # via
@@ -311,7 +311,7 @@ tomlkit==0.15.1
     #   pylint
 types-cachetools==7.0.0.20260713
     # via -r requirements/dev.in
-types-pyyaml==6.0.12.20260518
+types-pyyaml==6.0.12.20260815
     # via -r requirements/dev.in
 types-requests==2.33.0.20260712
     # via -r requirements/dev.in
@@ -343,11 +343,13 @@ wcwidth==0.8.2
     # via prompt-toolkit
 werkzeug==3.1.8
     # via flask
-wheel==0.47.0
+wheel==0.48.0
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==26.1.2
-    # via pip-tools
-setuptools==83.0.0
+pip==26.2
+    # via
+    #   -c https://raw.githubusercontent.com/openedx/edx-lint/master/edx_lint/files/common_constraints.txt
+    #   pip-tools
+setuptools==84.0.0
     # via pip-tools
