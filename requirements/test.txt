@@ -25,17 +25,17 @@ boltons==26.1.0
     # via
     #   face
     #   glom
-cachetools==7.1.4
+cachetools==7.1.7
     # via -r requirements/base.in
 celery[redis]==5.6.3
     # via -r requirements/base.in
-certifi==2026.6.17
+certifi==2026.7.22
     # via
     #   requests
     #   sentry-sdk
-cffi==2.1.0
+cffi==2.1.1
     # via cryptography
-charset-normalizer==3.4.9
+charset-normalizer==3.5.1
     # via requests
 click==8.4.2
     # via
@@ -51,9 +51,9 @@ click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
-coverage[toml]==7.15.2
+coverage[toml]==7.15.4
     # via pytest-cov
-cryptography==49.0.0
+cryptography==50.0.0
     # via
     #   -r requirements/base.in
     #   oauthlib
@@ -112,7 +112,7 @@ oauthlib[signedtoken]==3.3.1
     # via
     #   -r requirements/base.in
     #   requests-oauthlib
-packaging==26.2
+packaging==26.3
     # via
     #   gunicorn
     #   jira
@@ -123,7 +123,7 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-prompt-toolkit==3.0.52
+prompt-toolkit==3.0.53
     # via click-repl
 pycparser==3.0
     # via cffi
@@ -154,7 +154,7 @@ python-dateutil==2.9.0.post0
     #   celery
     #   freezegun
     #   github3-py
-pytz==2026.2
+pytz==2026.3.post1
     # via -r requirements/test.in
 pyyaml==6.0.3
     # via
@@ -189,7 +189,7 @@ roman-numerals==4.1.0
     # via sphinx
 schema==0.7.8
     # via repo-tools-data-schema
-sentry-sdk[flask]==2.66.0
+sentry-sdk[flask]==2.68.0
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
