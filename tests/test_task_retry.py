@@ -94,6 +94,23 @@ def test_rate_limited_project_write_retries(fake_github, mocker):
     assert isinstance(retry.call_args.kwargs["exc"], RateLimited)
 
 
+def test_retry_refreshes_the_pull_request(fake_github):
+    pr = fake_github.make_pull_request("openedx", "some-code", user="tusbar")
+    stale = pr.as_json()
+    # Someone labels the PR while the task waits for the limit to reset.
+    pr.set_labels(["needs-help"])
+
+    pull_request_changed_task.push_request(retries=1)
+    try:
+        pull_request_changed_task(stale)
+    finally:
+        pull_request_changed_task.pop_request()
+
+    # The bot's labels were added without dropping the new one.
+    assert "needs-help" in pr.labels
+    assert "open-source-contribution" in pr.labels
+
+
 def test_other_failures_do_not_retry(fake_github, mocker):
     fake_github.add_middleware(FailOnce(is_status_post, 500, {"message": "Server Error"}).middleware)
     pr = fake_github.make_pull_request("openedx", user="nedbat")

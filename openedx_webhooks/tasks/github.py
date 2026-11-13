@@ -35,6 +35,9 @@ from openedx_webhooks.utils import (
 def pull_request_changed_task(self, pull_request):
     """A bound Celery task to call pull_request_changed."""
     try:
+        if self.request.retries:
+            # The webhook payload could be an hour old by now.
+            pull_request = refreshed_pull_request(pull_request)
         pull_request_changed(pull_request)
         log_rate_limit()
     except RateLimited as exc:
@@ -47,6 +50,22 @@ def pull_request_changed_task(self, pull_request):
     except Exception:
         logger.exception("Couldn't pull_request_changed_task")
         raise
+
+
+def refreshed_pull_request(pr: PrDict) -> PrDict:
+    """
+    Get the current state of the pull request `pr` from GitHub.
+
+    The `hook_action` from the webhook payload is kept, since it says why we
+    are processing the pull request.
+    """
+    repo = pr["base"]["repo"]["full_name"]
+    resp = retry_get(get_github_session(), f"/repos/{repo}/pulls/{pr['number']}")
+    log_check_response(resp)
+    fresh = resp.json()
+    if "hook_action" in pr:
+        fresh["hook_action"] = pr["hook_action"]
+    return fresh
 
 
 def pull_request_changed(pr: PrDict, actions=None) -> FixResult:
