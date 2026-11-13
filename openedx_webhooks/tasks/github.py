@@ -2,6 +2,7 @@
 Queuable background tasks to do large work.
 """
 
+import time
 import traceback
 
 from typing import Dict, Set
@@ -21,6 +22,7 @@ from openedx_webhooks.tasks.pr_tracking import (
 )
 from openedx_webhooks.types import JiraId, PrDict
 from openedx_webhooks.utils import (
+    RateLimited,
     log_rate_limit,
     paginated_get,
     retry_get,
@@ -28,12 +30,19 @@ from openedx_webhooks.utils import (
 )
 
 
-@celery.task(bind=True)
-def pull_request_changed_task(_, pull_request):
+@celery.task(bind=True, max_retries=5)
+def pull_request_changed_task(self, pull_request):
     """A bound Celery task to call pull_request_changed."""
     try:
         pull_request_changed(pull_request)
         log_rate_limit()
+    except RateLimited as exc:
+        # GitHub cut us off.  pull_request_changed is idempotent, so run the
+        # whole task again once the limit resets rather than drop the work
+        # (the CLA check, bot comments) on the floor.  The 5 seconds is slack
+        # for clock skew between us and GitHub.
+        countdown = max(int(exc.reset_at - time.time()), 0) + 5
+        raise self.retry(exc=exc, countdown=countdown)
     except Exception:
         logger.exception("Couldn't pull_request_changed_task")
         raise
