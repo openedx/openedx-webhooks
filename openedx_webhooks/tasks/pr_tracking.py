@@ -759,6 +759,8 @@ class FixingActions:
         """
         try:
             return add_pull_request_to_project(self.prid, pr_node_id, project)
+        except RateLimited:
+            raise
         except Exception:    # pylint: disable=broad-exception-caught
             logger.exception("Couldn't add PR to project")
         return None
@@ -769,6 +771,8 @@ class FixingActions:
         """
         try:
             update_project_pr_custom_field(field_name, field_value, item_id, project)
+        except RateLimited:
+            raise
         except Exception:    # pylint: disable=broad-exception-caught
             logger.exception(f"Couldn't update: {field_name} for a PR in project")
 

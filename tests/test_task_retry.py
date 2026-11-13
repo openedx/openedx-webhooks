@@ -16,18 +16,19 @@ from .helpers import RATE_LIMIT_BODY
 RESET_AT = 1700000000
 
 
-class FailStatusPost:
+class FailOnce:
     """
-    Middleware for FakeGitHub: the first POST of a commit status fails.
+    Middleware for FakeGitHub: the first request that `when` accepts fails.
     """
-    def __init__(self, status_code, body, headers=None):
+    def __init__(self, when, status_code, body, headers=None):
+        self.when = when
         self.status_code = status_code
         self.body = body
         self.headers = headers or {}
         self.tripped = False
 
     def middleware(self, request, context):
-        if self.tripped or request.method != "POST" or "/statuses/" not in request.path:
+        if self.tripped or not self.when(request):
             return None
         self.tripped = True
         context.status_code = self.status_code
@@ -35,15 +36,27 @@ class FailStatusPost:
         return self.body
 
 
+def rate_limit_once(when):
+    return FailOnce(when, 403, RATE_LIMIT_BODY, {
+        "X-RateLimit-Remaining": "0",
+        "X-RateLimit-Reset": str(RESET_AT),
+    }).middleware
+
+
+def is_status_post(request):
+    return request.method == "POST" and "/statuses/" in request.path
+
+
+def is_project_add(request):
+    return request.path == "/graphql" and "addProjectV2ItemById" in request.json()["query"]
+
+
 @pytest.mark.parametrize("now, countdown", [
     (RESET_AT - 100, 105),
     (RESET_AT + 100, 5),
 ])
 def test_rate_limited_task_retries(fake_github, requests_mocker, mocker, now, countdown):
-    fake_github.add_middleware(FailStatusPost(403, RATE_LIMIT_BODY, {
-        "X-RateLimit-Remaining": "0",
-        "X-RateLimit-Reset": str(RESET_AT),
-    }).middleware)
+    fake_github.add_middleware(rate_limit_once(is_status_post))
     pr = fake_github.make_pull_request("openedx", "some-code", user="tusbar")
     retry = mocker.patch.object(pull_request_changed_task, "retry", side_effect=Retry("later"))
 
@@ -69,8 +82,20 @@ def test_rate_limited_task_retries(fake_github, requests_mocker, mocker, now, co
     assert len(pr.list_comments()) == 1
 
 
+def test_rate_limited_project_write_retries(fake_github, mocker):
+    """The project-write wrappers swallow most errors, but not a rate limit."""
+    fake_github.add_middleware(rate_limit_once(is_project_add))
+    pr = fake_github.make_pull_request("openedx", "some-code", user="tusbar")
+    retry = mocker.patch.object(pull_request_changed_task, "retry", side_effect=Retry("later"))
+
+    with pytest.raises(Retry):
+        pull_request_changed_task(pr.as_json())
+
+    assert isinstance(retry.call_args.kwargs["exc"], RateLimited)
+
+
 def test_other_failures_do_not_retry(fake_github, mocker):
-    fake_github.add_middleware(FailStatusPost(500, {"message": "Server Error"}).middleware)
+    fake_github.add_middleware(FailOnce(is_status_post, 500, {"message": "Server Error"}).middleware)
     pr = fake_github.make_pull_request("openedx", user="nedbat")
     retry = mocker.patch.object(pull_request_changed_task, "retry", side_effect=Retry("later"))
 
