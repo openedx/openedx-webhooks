@@ -95,3 +95,7 @@ def check_good_graphql(text: str) -> None:
             stack.pop()
     if stack:
         raise ValueError(f"GraphQL query has unbalanced parens: {text!r}")
+
+
+# What GitHub says when the primary rate limit is exhausted.
+RATE_LIMIT_BODY = {"message": "API rate limit exceeded for user ID 1234."}

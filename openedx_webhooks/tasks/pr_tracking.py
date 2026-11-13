@@ -72,6 +72,7 @@ from openedx_webhooks.tasks.jira_work import (
 )
 from openedx_webhooks.types import GhProject, JiraId, PrDict, PrGhProject, PrId
 from openedx_webhooks.utils import (
+    RateLimited,
     get_pr_state,
     log_check_response,
     sentry_extra_context,
@@ -350,6 +351,10 @@ class PrTrackingFixer:
         """
         try:
             yield
+        except RateLimited:
+            # GitHub has cut us off, so every later step would fail too.
+            # Stop here and let the task retry once the limit resets.
+            raise
         except Exception as exc:    # pylint: disable=broad-exception-caught
             self.exceptions.append(exc)
 
@@ -754,6 +759,8 @@ class FixingActions:
         """
         try:
             return add_pull_request_to_project(self.prid, pr_node_id, project)
+        except RateLimited:
+            raise
         except Exception:    # pylint: disable=broad-exception-caught
             logger.exception("Couldn't add PR to project")
         return None
@@ -764,6 +771,8 @@ class FixingActions:
         """
         try:
             update_project_pr_custom_field(field_name, field_value, item_id, project)
+        except RateLimited:
+            raise
         except Exception:    # pylint: disable=broad-exception-caught
             logger.exception(f"Couldn't update: {field_name} for a PR in project")
 

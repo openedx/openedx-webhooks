@@ -64,6 +64,42 @@ def requires_auth(f):
 class RequestFailed(Exception):
     pass
 
+
+class RateLimited(RequestFailed):
+    """
+    A GitHub request failed because we've hit the API rate limit.
+
+    `reset_at` is the Unix time when GitHub says the limit resets.
+    """
+    def __init__(self, message, reset_at):
+        super().__init__(message)
+        self.reset_at = reset_at
+
+
+def _rate_limit_reset(response) -> Optional[int]:
+    """
+    If `response` is GitHub refusing us for rate limiting, return the Unix
+    time when we can try again.  Otherwise return None.
+
+    GitHub answers 403 or 429 for both the primary limit (X-RateLimit-Remaining
+    is 0, X-RateLimit-Reset says when) and the secondary limits (Retry-After
+    says how long to wait).
+    https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
+    """
+    if response.status_code not in (403, 429):
+        return None
+    headers = response.headers
+    now = int(time.time())
+    if headers.get("Retry-After"):
+        return now + int(headers["Retry-After"])
+    if headers.get("X-RateLimit-Remaining") == "0" and headers.get("X-RateLimit-Reset"):
+        return int(headers["X-RateLimit-Reset"])
+    if b"rate limit" in response.content.lower():
+        # Rate-limited, but we don't know for how long.
+        return now + 60
+    return None
+
+
 def log_check_response(response, raise_for_status=True):
     """
     Logs HTTP request and response at debug level and checks if it succeeded.
@@ -82,7 +118,11 @@ def log_check_response(response, raise_for_status=True):
             response.raise_for_status()
         except Exception as exc:
             req = response.request
-            raise RequestFailed(f"HTTP request failed: {req.method} {req.url}. Response body: {response.content}") from exc
+            msg = f"HTTP request failed: {req.method} {req.url}. Response body: {response.content}"
+            reset_at = _rate_limit_reset(response)
+            if reset_at is not None:
+                raise RateLimited(msg, reset_at=reset_at) from exc
+            raise RequestFailed(msg) from exc
 
 
 def log_rate_limit():

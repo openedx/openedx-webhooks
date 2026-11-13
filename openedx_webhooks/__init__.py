@@ -5,6 +5,7 @@ import traceback
 from importlib.metadata import PackageNotFoundError, version
 
 from celery import Celery
+from celery.exceptions import Retry
 from flask import Flask
 from flask_sslify import SSLify
 import sentry_sdk
@@ -88,6 +89,10 @@ def create_celery_app(app=None, config="worker"):
                             return self.run(*args, **kwargs)
                     else:
                         return self.run(*args, **kwargs)
+            except Retry:
+                # Task.retry() asks the worker to run the task again later
+                # by raising Retry; it has to reach the worker.
+                raise
             except Exception:
                 # By default, celery will store an exception if it occurs,
                 # but we don't want the exception object, we want a traceback.

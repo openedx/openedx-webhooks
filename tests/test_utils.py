@@ -6,12 +6,18 @@ import json
 import re
 
 import pytest
+import requests
 from freezegun import freeze_time
 
+from .helpers import RATE_LIMIT_BODY
+
 from openedx_webhooks.utils import (
+    RateLimited,
+    RequestFailed,
     clear_memoized_values,
     graphql_query,
     is_valid_payload,
+    log_check_response,
     memoize,
     memoize_timed,
     text_summary,
@@ -158,3 +164,46 @@ def test_clear_memoized_values():
     assert add_to_vals(15) == 30
     assert add_to_vals_timed(20) == 40
     assert vals == [10, 15, 20, 15, 20]
+
+
+def test_log_check_response_primary_rate_limit(requests_mocker):
+    requests_mocker.get(
+        "https://api.github.com/thing", status_code=403, json=RATE_LIMIT_BODY,
+        headers={"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1700000000"},
+    )
+    with pytest.raises(RateLimited) as excinfo:
+        log_check_response(requests.get("https://api.github.com/thing"))
+    assert excinfo.value.reset_at == 1700000000
+    assert "API rate limit exceeded" in str(excinfo.value)
+
+
+@freeze_time("2023-11-14 22:13:20")  # Unix time 1700000000
+def test_log_check_response_secondary_rate_limit(requests_mocker):
+    requests_mocker.get(
+        "https://api.github.com/thing", status_code=429,
+        json={"message": "You have exceeded a secondary rate limit."},
+        headers={"Retry-After": "30"},
+    )
+    with pytest.raises(RateLimited) as excinfo:
+        log_check_response(requests.get("https://api.github.com/thing"))
+    assert excinfo.value.reset_at == 1700000030
+
+
+@freeze_time("2023-11-14 22:13:20")  # Unix time 1700000000
+def test_log_check_response_rate_limit_without_headers(requests_mocker):
+    requests_mocker.get("https://api.github.com/thing", status_code=403, json=RATE_LIMIT_BODY)
+    with pytest.raises(RateLimited) as excinfo:
+        log_check_response(requests.get("https://api.github.com/thing"))
+    assert excinfo.value.reset_at == 1700000060
+
+
+@pytest.mark.parametrize("status_code", [403, 500])
+def test_log_check_response_other_failures(requests_mocker, status_code):
+    requests_mocker.get(
+        "https://api.github.com/thing", status_code=status_code, json={"message": "Nope"},
+        headers={"X-RateLimit-Remaining": "4999"},
+    )
+    with pytest.raises(RequestFailed) as excinfo:
+        log_check_response(requests.get("https://api.github.com/thing"))
+    assert not isinstance(excinfo.value, RateLimited)
+
