@@ -8,11 +8,15 @@ from openedx_webhooks.info import (
     get_blended_project_id,
     get_jira_info,
     get_people_file,
+    github_whoami,
     is_draft_pull_request,
     is_internal_pull_request,
     jira_details_for_pr,
     get_catalog_info,
 )
+from openedx_webhooks.utils import RateLimited
+
+from .helpers import RATE_LIMIT_BODY
 
 
 # These tests should run when we want to test flaky GitHub behavior.
@@ -184,5 +188,10 @@ def test_get_valid_catalog_info(mocker):
     assert info == {"good": "yaml"}
 
 
-
-
+def test_github_whoami_rate_limited(requests_mocker):
+    requests_mocker.get(
+        "https://api.github.com/user", status_code=403, json=RATE_LIMIT_BODY,
+        headers={"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1700000000"},
+    )
+    with pytest.raises(RateLimited):
+        github_whoami()

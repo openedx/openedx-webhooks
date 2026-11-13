@@ -23,6 +23,7 @@ from openedx_webhooks.tasks.pr_tracking import (
 from openedx_webhooks.types import JiraId, PrDict
 from openedx_webhooks.utils import (
     RateLimited,
+    log_check_response,
     log_rate_limit,
     paginated_get,
     retry_get,
@@ -169,7 +170,7 @@ def rescan_repository(
             # Listed pull requests don't have all the information we need,
             # so get the full description.
             resp = retry_get(get_github_session(), pull_request["url"])
-            resp.raise_for_status()
+            log_check_response(resp)
             pull_request = resp.json()
 
             result = pull_request_changed(pull_request, actions=actions)

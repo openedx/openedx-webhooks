@@ -15,6 +15,7 @@ from openedx_webhooks import settings
 from openedx_webhooks.auth import get_github_session
 from openedx_webhooks.types import GhProject, JiraServer, PrDict, PrCommentDict, PrId
 from openedx_webhooks.utils import (
+    log_check_response,
     memoize,
     memoize_timed,
     paginated_get,
@@ -88,7 +89,7 @@ def _read_github_url(url: str, not_there: Optional[str] = None) -> str:
     resp = github.get(url)
     if resp.status_code == 404 and not_there is not None:
         return not_there
-    resp.raise_for_status()
+    log_check_response(resp)
     return resp.text
 
 
@@ -293,7 +294,7 @@ def get_blended_project_id(pull_request: PrDict) -> Optional[int]:
 @memoize
 def github_whoami():
     self_resp = retry_get(get_github_session(), "/user")
-    self_resp.raise_for_status()
+    log_check_response(self_resp)
     return self_resp.json()
 
 
