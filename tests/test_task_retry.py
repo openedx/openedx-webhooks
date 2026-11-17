@@ -8,6 +8,7 @@ from freezegun import freeze_time
 
 import openedx_webhooks
 from openedx_webhooks.cla_check import CLA_CONTEXT, CLA_STATUS_GOOD
+from openedx_webhooks.config import DefaultConfig
 from openedx_webhooks.tasks.github import RETRY_JITTER, pull_request_changed_task
 from openedx_webhooks.utils import RateLimited
 
@@ -176,3 +177,13 @@ def test_task_wrapper_lets_retry_through():
         retrying()
 
     assert "ValueError: boom" in failing()
+
+
+def test_retry_countdown_fits_the_visibility_timeout():
+    """
+    With the Redis broker, a countdown longer than the visibility timeout
+    gets the task redelivered and run again in a loop.  The longest
+    countdown is a full rate-limit window plus the slack and the jitter.
+    """
+    timeout = DefaultConfig.BROKER_TRANSPORT_OPTIONS["visibility_timeout"]
+    assert timeout > 60 * 60 + 5 + RETRY_JITTER

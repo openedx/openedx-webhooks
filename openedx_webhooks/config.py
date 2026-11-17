@@ -9,6 +9,11 @@ class DefaultConfig:
     CELERY_RESULT_SERIALIZER = "json"
     CELERY_EAGER_PROPAGATES = True
     BROKER_URL = os.environ.get('REDIS_TLS_URL', os.environ.get("REDIS_URL", "redis://"))
+    # With the Redis broker, a task whose countdown is longer than the
+    # visibility timeout (one hour by default) is redelivered and run again.
+    # A rate-limit retry can wait up to an hour plus jitter, so give it room.
+    # https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html#visibility-timeout
+    BROKER_TRANSPORT_OPTIONS = {"visibility_timeout": 2 * 60 * 60}
     CELERY_RESULT_BACKEND = os.environ.get('REDIS_TLS_URL', os.environ.get("REDIS_URL", "redis://"))
 
     def __init__(self):
