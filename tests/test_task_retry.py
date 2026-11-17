@@ -8,7 +8,7 @@ from freezegun import freeze_time
 
 import openedx_webhooks
 from openedx_webhooks.cla_check import CLA_CONTEXT, CLA_STATUS_GOOD
-from openedx_webhooks.tasks.github import pull_request_changed_task
+from openedx_webhooks.tasks.github import RETRY_JITTER, pull_request_changed_task
 from openedx_webhooks.utils import RateLimited
 
 from .helpers import RATE_LIMIT_BODY
@@ -74,7 +74,8 @@ def test_rate_limited_task_retries(fake_github, requests_mocker, mocker, now, co
 
     retry.assert_called_once()
     kwargs = retry.call_args.kwargs
-    assert kwargs["countdown"] == countdown
+    # Plus some jitter, so the tasks refused together don't all retry together.
+    assert countdown <= kwargs["countdown"] <= countdown + RETRY_JITTER
     assert isinstance(kwargs["exc"], RateLimited)
     assert kwargs["exc"].reset_at == RESET_AT
     # The refused POST was the last request: nothing else was tried against
@@ -119,6 +120,28 @@ def test_retry_refreshes_the_pull_request(fake_github):
     # The bot's labels were added without dropping the new one.
     assert "needs-help" in pr.labels
     assert "open-source-contribution" in pr.labels
+
+
+def test_retries_exhausted_is_logged(fake_github, mocker, caplog):
+    """
+    When the retries run out, Task.retry raises the RateLimited without
+    logging it, and ContextTask would record the task as succeeded.  Say so.
+    """
+    fake_github.add_middleware(rate_limit_once(is_status_post))
+    pr = fake_github.make_pull_request("openedx", "some-code", user="tusbar")
+    retry = mocker.patch.object(pull_request_changed_task, "retry", side_effect=Retry("later"))
+
+    pull_request_changed_task.push_request(retries=pull_request_changed_task.max_retries)
+    try:
+        with pytest.raises(RateLimited):
+            pull_request_changed_task(pr.as_json())
+    finally:
+        pull_request_changed_task.pop_request()
+
+    retry.assert_not_called()
+    errors = [rec for rec in caplog.records if rec.levelname == "ERROR"]
+    assert len(errors) == 1
+    assert f"Giving up on PR openedx/some-code#{pr.number} after 5 rate-limit retries" in errors[0].message
 
 
 def test_other_failures_do_not_retry(fake_github, mocker):

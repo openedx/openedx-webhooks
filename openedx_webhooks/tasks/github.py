@@ -2,6 +2,7 @@
 Queuable background tasks to do large work.
 """
 
+import random
 import time
 import traceback
 
@@ -31,6 +32,10 @@ from openedx_webhooks.utils import (
 )
 
 
+# The most seconds added to a rate-limit retry's countdown, at random.
+RETRY_JITTER = 60
+
+
 @celery.task(bind=True, max_retries=5)
 def pull_request_changed_task(self, pull_request):
     """A bound Celery task to call pull_request_changed."""
@@ -43,9 +48,19 @@ def pull_request_changed_task(self, pull_request):
     except RateLimited as exc:
         # GitHub cut us off.  pull_request_changed is idempotent, so run the
         # whole task again once the limit resets rather than drop the work
-        # (the CLA check, bot comments) on the floor.  The 5 seconds is slack
-        # for clock skew between us and GitHub.
-        countdown = max(int(exc.reset_at - time.time()), 0) + 5
+        # (the CLA check, bot comments) on the floor.
+        if self.request.retries >= self.max_retries:
+            # Task.retry would raise exc without logging, and ContextTask
+            # would record the task as succeeded.
+            logger.error(
+                f"Giving up on PR {pull_request['base']['repo']['full_name']}#{pull_request['number']} "
+                f"after {self.request.retries} rate-limit retries: {exc}"
+            )
+            raise
+        # The 5 seconds is slack for clock skew between us and GitHub.  The
+        # jitter spreads out the tasks refused in the same window, so they
+        # don't all come back at once against the new budget.
+        countdown = max(int(exc.reset_at - time.time()), 0) + 5 + random.randint(0, RETRY_JITTER)
         raise self.retry(exc=exc, countdown=countdown)
     except Exception:
         logger.exception("Couldn't pull_request_changed_task")
