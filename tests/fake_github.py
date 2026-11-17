@@ -392,6 +392,12 @@ class FakeGitHub(faker.Faker):
         r.pull_requests[pr.number] = pr
         return pr.as_json()
 
+    # Rate limit
+
+    @faker.route(r"/rate_limit")
+    def _get_rate_limit(self, _match, _request, _context) -> Dict:
+        return {"rate": {"limit": 5000, "used": 1, "remaining": 4999, "reset": 1700000000}}
+
     # Commmits
 
     @faker.route(r"/repos/(?P<owner>[^/]+)/(?P<repo>[^/]+)/statuses/(?P<sha>[a-fA-F0-9]+)(\?.*)?")

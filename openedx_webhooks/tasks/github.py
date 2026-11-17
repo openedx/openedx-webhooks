@@ -2,6 +2,8 @@
 Queuable background tasks to do large work.
 """
 
+import random
+import time
 import traceback
 
 from typing import Dict, Set
@@ -21,6 +23,8 @@ from openedx_webhooks.tasks.pr_tracking import (
 )
 from openedx_webhooks.types import JiraId, PrDict
 from openedx_webhooks.utils import (
+    RateLimited,
+    log_check_response,
     log_rate_limit,
     paginated_get,
     retry_get,
@@ -28,15 +32,55 @@ from openedx_webhooks.utils import (
 )
 
 
-@celery.task(bind=True)
-def pull_request_changed_task(_, pull_request):
+# The most seconds added to a rate-limit retry's countdown, at random.
+RETRY_JITTER = 60
+
+
+@celery.task(bind=True, max_retries=5)
+def pull_request_changed_task(self, pull_request):
     """A bound Celery task to call pull_request_changed."""
     try:
+        if self.request.retries:
+            # The webhook payload could be an hour old by now.
+            pull_request = refreshed_pull_request(pull_request)
         pull_request_changed(pull_request)
         log_rate_limit()
+    except RateLimited as exc:
+        # GitHub cut us off.  pull_request_changed is idempotent, so run the
+        # whole task again once the limit resets rather than drop the work
+        # (the CLA check, bot comments) on the floor.
+        if self.request.retries >= self.max_retries:
+            # Task.retry would raise exc without logging, and ContextTask
+            # would record the task as succeeded.
+            logger.error(
+                f"Giving up on PR {pull_request['base']['repo']['full_name']}#{pull_request['number']} "
+                f"after {self.request.retries} rate-limit retries: {exc}"
+            )
+            raise
+        # The 5 seconds is slack for clock skew between us and GitHub.  The
+        # jitter spreads out the tasks refused in the same window, so they
+        # don't all come back at once against the new budget.
+        countdown = max(int(exc.reset_at - time.time()), 0) + 5 + random.randint(0, RETRY_JITTER)
+        raise self.retry(exc=exc, countdown=countdown)
     except Exception:
         logger.exception("Couldn't pull_request_changed_task")
         raise
+
+
+def refreshed_pull_request(pr: PrDict) -> PrDict:
+    """
+    Get the current state of the pull request `pr` from GitHub.
+
+    The `hook_action` from the webhook payload is kept, since it says why we
+    are processing the pull request.
+    """
+    repo = pr["base"]["repo"]["full_name"]
+    resp = retry_get(get_github_session(), f"/repos/{repo}/pulls/{pr['number']}")
+    log_check_response(resp)
+    fresh = resp.json()
+    if "hook_action" in pr:
+        fresh["hook_action"] = pr["hook_action"]
+    return fresh
 
 
 def pull_request_changed(pr: PrDict, actions=None) -> FixResult:
@@ -160,10 +204,14 @@ def rescan_repository(
             # Listed pull requests don't have all the information we need,
             # so get the full description.
             resp = retry_get(get_github_session(), pull_request["url"])
-            resp.raise_for_status()
+            log_check_response(resp)
             pull_request = resp.json()
 
             result = pull_request_changed(pull_request, actions=actions)
+        except RateLimited:
+            # Every later pull request would fail the same way, so stop the
+            # rescan here rather than record an error for each of them.
+            raise
         except Exception:       # pylint: disable=broad-except
             errors[pull_request["number"]] = traceback.format_exc()
         else:
