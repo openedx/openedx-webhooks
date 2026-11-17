@@ -187,3 +187,21 @@ def test_rescan_failure(mocker, rescannable_repo):
     assert " in flaky_pull_request_changed\n" in err
     assert "1/0 # BOOM" in err
     assert "ZeroDivisionError: division by zero" in err
+
+
+def test_rescan_stops_at_a_rate_limit(mocker, rescannable_repo, pull_request_changed_fn):
+    """A rate limit ends the rescan rather than being recorded as one error per PR."""
+    from openedx_webhooks.utils import RateLimited
+
+    def rate_limited_pull_request_changed(pr, actions):
+        if pr["number"] == 102:
+            raise RateLimited("cut off", reset_at=1700000000)
+        return pull_request_changed(pr, actions)
+
+    pull_request_changed_fn.side_effect = rate_limited_pull_request_changed
+
+    with pytest.raises(RateLimited):
+        rescan_repository(rescannable_repo.full_name, allpr=True)
+
+    # Nothing after the refused pull request was tried.
+    assert pull_request_changed_fn.call_count == 1

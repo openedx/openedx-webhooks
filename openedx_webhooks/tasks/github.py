@@ -193,6 +193,10 @@ def rescan_repository(
             pull_request = resp.json()
 
             result = pull_request_changed(pull_request, actions=actions)
+        except RateLimited:
+            # Every later pull request would fail the same way, so stop the
+            # rescan here rather than record an error for each of them.
+            raise
         except Exception:       # pylint: disable=broad-except
             errors[pull_request["number"]] = traceback.format_exc()
         else:
