@@ -43,6 +43,14 @@ def rate_limit_once(when):
     }).middleware
 
 
+def graphql_rate_limit_once(when):
+    """GraphQL reports the primary rate limit with a 200, not a 403."""
+    return FailOnce(when, 200, {"errors": [{"type": "RATE_LIMITED", "message": RATE_LIMIT_BODY["message"]}]}, {
+        "X-RateLimit-Remaining": "0",
+        "X-RateLimit-Reset": str(RESET_AT),
+    }).middleware
+
+
 def is_status_post(request):
     return request.method == "POST" and "/statuses/" in request.path
 
@@ -84,14 +92,16 @@ def test_rate_limited_task_retries(fake_github, requests_mocker, mocker, now, co
 
 def test_rate_limited_project_write_retries(fake_github, mocker):
     """The project-write wrappers swallow most errors, but not a rate limit."""
-    fake_github.add_middleware(rate_limit_once(is_project_add))
+    fake_github.add_middleware(graphql_rate_limit_once(is_project_add))
     pr = fake_github.make_pull_request("openedx", "some-code", user="tusbar")
     retry = mocker.patch.object(pull_request_changed_task, "retry", side_effect=Retry("later"))
 
     with pytest.raises(Retry):
         pull_request_changed_task(pr.as_json())
 
-    assert isinstance(retry.call_args.kwargs["exc"], RateLimited)
+    exc = retry.call_args.kwargs["exc"]
+    assert isinstance(exc, RateLimited)
+    assert exc.reset_at == RESET_AT
 
 
 def test_retry_refreshes_the_pull_request(fake_github):

@@ -76,28 +76,37 @@ class RateLimited(RequestFailed):
         self.reset_at = reset_at
 
 
-def _rate_limit_reset(response) -> Optional[int]:
+def _rate_limit_reset_from_headers(headers) -> Optional[int]:
     """
-    If `response` is GitHub refusing us for rate limiting, return the Unix
+    If the response headers say GitHub is rate limiting us, return the Unix
     time when we can try again.  Otherwise return None.
 
-    GitHub answers 403 or 429 for both the primary limit (X-RateLimit-Remaining
-    is 0, X-RateLimit-Reset says when) and the secondary limits (Retry-After
-    says how long to wait).
+    The primary limit sets X-RateLimit-Remaining to 0 and X-RateLimit-Reset
+    to the reset time; the secondary limits set Retry-After to a number of
+    seconds.
     https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
+    """
+    if headers.get("Retry-After"):
+        return int(time.time()) + int(headers["Retry-After"])
+    if headers.get("X-RateLimit-Remaining") == "0" and headers.get("X-RateLimit-Reset"):
+        return int(headers["X-RateLimit-Reset"])
+    return None
+
+
+def _rate_limit_reset(response) -> Optional[int]:
+    """
+    If `response` is GitHub refusing a REST request for rate limiting, return
+    the Unix time when we can try again.  Otherwise return None.
+
+    GitHub answers 403 or 429 for both the primary and the secondary limits.
     """
     if response.status_code not in (403, 429):
         return None
-    headers = response.headers
-    now = int(time.time())
-    if headers.get("Retry-After"):
-        return now + int(headers["Retry-After"])
-    if headers.get("X-RateLimit-Remaining") == "0" and headers.get("X-RateLimit-Reset"):
-        return int(headers["X-RateLimit-Reset"])
-    if b"rate limit" in response.content.lower():
+    reset_at = _rate_limit_reset_from_headers(response.headers)
+    if reset_at is None and b"rate limit" in response.content.lower():
         # Rate-limited, but we don't know for how long.
-        return now + 60
-    return None
+        reset_at = int(time.time()) + 60
+    return reset_at
 
 
 def log_check_response(response, raise_for_status=True):
@@ -290,7 +299,19 @@ def graphql_query(query: str, variables: Dict = {}) -> Dict:    # pylint: disabl
     log_check_response(response)
     returned = response.json()
     if "errors" in returned and returned["errors"]:
-        raise Exception(f"GraphQL error: {returned!r}")
+        msg = f"GraphQL error: {returned!r}"
+        # GraphQL reports the primary rate limit with a 200, an error of type
+        # RATE_LIMITED and X-RateLimit-Remaining 0, so log_check_response
+        # doesn't see it.
+        # https://docs.github.com/en/graphql/overview/rate-limits-and-query-limits-for-the-graphql-api
+        reset_at = _rate_limit_reset_from_headers(response.headers)
+        rate_limited = any(
+            isinstance(err, dict) and err.get("type") == "RATE_LIMITED"
+            for err in returned["errors"]
+        )
+        if reset_at is not None or rate_limited:
+            raise RateLimited(msg, reset_at=reset_at or int(time.time()) + 60)
+        raise Exception(msg)
     return returned["data"]
 
 

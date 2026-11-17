@@ -59,6 +59,42 @@ def test_bad_graphql_query(requests_mocker):
         graphql_query("query Something {}", variables={"a":1, "b": 2})
 
 
+GRAPHQL_RATE_LIMIT_BODY = {
+    "errors": [{"type": "RATE_LIMITED", "message": "API rate limit exceeded for user ID 1234."}],
+}
+
+
+def test_graphql_primary_rate_limit(requests_mocker):
+    """GraphQL reports the primary rate limit with a 200, not a 403."""
+    requests_mocker.post(
+        "https://api.github.com/graphql", status_code=200, json=GRAPHQL_RATE_LIMIT_BODY,
+        headers={"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1700000000"},
+    )
+    with pytest.raises(RateLimited) as excinfo:
+        graphql_query("query Something {}")
+    assert excinfo.value.reset_at == 1700000000
+
+
+@freeze_time("2023-11-14 22:13:20")  # Unix time 1700000000
+def test_graphql_secondary_rate_limit(requests_mocker):
+    requests_mocker.post(
+        "https://api.github.com/graphql", status_code=200,
+        json={"errors": [{"message": "You have exceeded a secondary rate limit."}]},
+        headers={"Retry-After": "30"},
+    )
+    with pytest.raises(RateLimited) as excinfo:
+        graphql_query("query Something {}")
+    assert excinfo.value.reset_at == 1700000030
+
+
+@freeze_time("2023-11-14 22:13:20")  # Unix time 1700000000
+def test_graphql_rate_limit_without_headers(requests_mocker):
+    requests_mocker.post("https://api.github.com/graphql", status_code=200, json=GRAPHQL_RATE_LIMIT_BODY)
+    with pytest.raises(RateLimited) as excinfo:
+        graphql_query("query Something {}")
+    assert excinfo.value.reset_at == 1700000060
+
+
 def _make_signature(secret, payload):
     """Compute a signature from a secret and a payload."""
     return (
